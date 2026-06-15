@@ -1,0 +1,28 @@
+services:
+  dashboard:
+    build:
+      context: ./repo
+      dockerfile: Dockerfile
+    container_name: premium-dashboard
+    restart: unless-stopped
+    ports:
+      - "12345:80"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - /opt/data:/opt/data:ro
+      - /opt/data/kanban.db:/data/kanban.db:rw
+      - /opt/data/uploads:/opt/data/uploads:rw
+      - /:/host:ro
+    networks:
+      - default
+      - hermes-net
+    mem_limit: 256M
+    logging:
+      driver: journald
+
+networks:
+  default:
+    name: premium-dashboard
+  hermes-net:
+    external: true
+    name: hermes-net

@@ -1,0 +1,24 @@
+# Ignore everything at root level
+/*
+!.gitignore
+!README.md
+!AGENTS.md
+!/*/
+
+# Ignore all files/dirs inside project directories by default
+/*/*
+# Then un-ignore specific files we want to track
+!/*/docker-compose.yml
+!/*/AGENTS.md
+!/*/base.env
+!/*/build/
+!/*/build/**
+
+# Ignore repo/ contents (the cloned source repos)
+/*/repo/**
+
+# Ignore .env credential files
+/*/.env
+
+# Ignore macOS artifacts
+.DS_Store
