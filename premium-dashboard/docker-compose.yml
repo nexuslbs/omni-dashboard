@@ -11,7 +11,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /opt/data:/opt/data:ro
       - /opt/data/kanban.db:/data/kanban.db:rw
-      - /tmp/data/user/uploads:/tmp/data/user/uploads:rw
+      - /tmp/data/user:/tmp/data/user:rw
       - /:/host:ro
     networks:
       - default
