@@ -48,3 +48,15 @@ docker exec premium-dashboard curl -s "http://127.0.0.1:3001/api/agents/events?l
 ```bash
 cd /opt/workspace/premium-dashboard && docker compose build --no-cache && docker compose up -d
 ```
+
+### File Upload Deployment
+
+After making changes to the upload feature:
+```bash
+cd /opt/workspace/premium-dashboard/repo
+node build.cjs
+npx tsc -p tsconfig.server.json
+docker cp dist/. premium-dashboard:/usr/share/nginx/html/
+docker cp server-dist/. premium-dashboard:/app/server/
+docker restart premium-dashboard
+```
