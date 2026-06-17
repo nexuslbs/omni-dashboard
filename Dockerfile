@@ -22,6 +22,9 @@ RUN npm run build:server
 # Stage 2: Production image — node serves both static + API
 FROM node:22-alpine
 
+# Install sqlite3 for agent_interactions queries
+RUN apk add --no-cache sqlite
+
 # Copy built frontend
 COPY --from=builder /build/dist /app/dist
 

@@ -11,7 +11,7 @@ export function renderOverview(container: HTMLElement): void {
       <div class="card-body" id="overview-table"><div class="loading">Loading...</div></div>
     </div>
   `;
-  loadOverview();
+  void loadOverview();
 }
 
 async function loadOverview(): Promise<void> {
@@ -27,12 +27,12 @@ async function loadOverview(): Promise<void> {
         <table class="data-table">
           <thead>
             <tr>
+              <th>Status</th>
               <th>Channel</th>
               <th>Timestamp</th>
               <th>Thread ID</th>
               <th>Thread Count</th>
               <th>Message Preview</th>
-              <th>Status</th>
               <th>Time (ms)</th>
               <th>Tokens</th>
             </tr>
@@ -51,7 +51,7 @@ async function loadOverview(): Promise<void> {
           const url = `/messages?thread_id=${encodeURIComponent(threadId)}`;
           history.pushState({}, "", url);
           // Import router dynamically to avoid circular deps
-          import("../lib/router").then(({ router }) => {
+          void import("../lib/router").then(({ router }) => {
             router.go("messages");
             // Update sidebar active state to "messages"
             document.querySelectorAll(".nav-item, .mobile-nav-item").forEach((n) => {
@@ -68,32 +68,22 @@ async function loadOverview(): Promise<void> {
 
 function renderRow(row: OverviewRow): string {
   const preview = row.content_preview
-    ? escapeHtml(row.content_preview.slice(0, 100)) + (row.content_preview.length > 100 ? "…" : "")
+    ? escapeHtml(row.content_preview.slice(0, 100)) + (row.content_preview.length > 100 ? "\u2026" : "")
     : "<em>Empty</em>";
   const ts = formatDateTime(row.created_at);
-  const tokens =
-    (row.prompt_tokens || 0) + (row.completion_tokens || 0);
-  const sColor = statusColor(row.status || "unknown");
+  const tokens = (row.prompt_tokens || 0) + (row.completion_tokens || 0);
   return `
     <tr class="overview-row" data-thread-id="${escapeHtml(row.thread_id || "")}" style="cursor:pointer;">
-      <td><span class="badge badge-neutral">${escapeHtml(row.channel_name || "—")}</span></td>
+      <td><span class="badge status-badge-${row.status ? row.status.toLowerCase() : "unknown"}">${escapeHtml(row.status || "unknown")}</span></td>
+      <td><span class="badge badge-neutral">${escapeHtml(row.channel_name || "\u2014")}</span></td>
       <td class="cell-timestamp">${ts}</td>
-      <td class="cell-mono">${escapeHtml(row.thread_id ? truncateMiddle(row.thread_id, 12) : "—")}</td>
+      <td class="cell-mono">${escapeHtml(row.thread_id ? truncateMiddle(row.thread_id, 12) : "\u2014")}</td>
       <td class="cell-num">${row.thread_count}</td>
       <td class="cell-preview">${preview}</td>
-      <td><span class="badge status-badge-${row.status ? row.status.toLowerCase() : 'unknown'}">${escapeHtml(row.status || "unknown")}</span></td>
-      <td class="cell-num">${row.processing_time_ms !== null ? row.processing_time_ms.toFixed(0) : "—"}</td>
-      <td class="cell-num">${tokens > 0 ? tokens.toLocaleString() : "—"}</td>
+      <td class="cell-num">${row.processing_time_ms !== null ? row.processing_time_ms.toFixed(0) : "\u2014"}</td>
+      <td class="cell-num">${tokens > 0 ? tokens.toLocaleString() : "\u2014"}</td>
     </tr>
   `;
-}
-
-function statusColor(status: string): string {
-  const s = status.toLowerCase();
-  if (s === "completed" || s === "success") return "#10b981";
-  if (s === "processing" || s === "pending") return "#f59e0b";
-  if (s === "error" || s === "failed") return "#f43f5e";
-  return "#64748b";
 }
 
 function formatDateTime(dateStr: string): string {
@@ -124,5 +114,5 @@ function escapeHtml(text: string): string {
 function truncateMiddle(str: string, maxLen: number): string {
   if (str.length <= maxLen) return str;
   const half = Math.floor((maxLen - 3) / 2);
-  return str.slice(0, half) + "…" + str.slice(str.length - half);
+  return str.slice(0, half) + "\u2026" + str.slice(str.length - half);
 }

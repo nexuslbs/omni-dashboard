@@ -11,6 +11,8 @@ services:
     volumes:
       - /opt/workspace/omniagent/data/:/opt/data/:ro
       - /opt/workspace/omniagent/data/user/:/opt/data/user:rw
+      - /opt/data/agent-interactions.db:/hermes-data/agent-interactions.db:ro
+      - /opt/data/state.db:/hermes-data/state.db:ro
     networks:
       - omniagent_default
 

@@ -1,0 +1,6 @@
+dist/
+server-dist/
+node_modules/
+*.js
+*.cjs
+*.mjs

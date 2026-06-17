@@ -40,12 +40,8 @@ wikiSearchRouter.post("/", async (req: Request, res: Response) => {
       const payload = p.payload || {};
       const title: string = payload.title || "";
       const path: string = payload.path || "";
-      const updated: string = payload.updated || "";
 
-      return (
-        title.toLowerCase().includes(queryLower) ||
-        path.toLowerCase().includes(queryLower)
-      );
+      return title.toLowerCase().includes(queryLower) || path.toLowerCase().includes(queryLower);
     });
 
     // Sort by relevance: path match > title match

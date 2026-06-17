@@ -1,5 +1,8 @@
-import { apiGet, apiPost, apiDelete, type KanbanBoard, type KanbanTask } from "../lib/api";
+import { apiGet, apiPost, type KanbanBoardResponse, type KanbanTask } from "../lib/api";
 import { router } from "../lib/router";
+
+let showArchived = false;
+let _dropdownListenerAttached = false;
 
 export function renderKanban(container: HTMLElement): void {
   container.innerHTML = `
@@ -8,8 +11,9 @@ export function renderKanban(container: HTMLElement): void {
         <h1 class="page-title">Kanban</h1>
         <p class="page-subtitle">Task board</p>
       </div>
-      <div style="display:flex;align-items:center;gap:0.75rem;">
-        <span class="kanban-summary" id="kanban-summary"></span>
+      <div class="kanban-summary" id="kanban-summary" style="display:flex;align-items:center;gap:0.75rem;">
+        <button id="toggle-archived-btn">Show archived</button>
+        <span id="kanban-count" style="font-size:0.85rem;color:var(--text-muted);"></span>
         <button id="create-task-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ Create Task</button>
       </div>
     </div>
@@ -39,7 +43,7 @@ export function renderKanban(container: HTMLElement): void {
             </select>
           </div>
           <div>
-            <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Board</label>
+            <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Status</label>
             <select id="task-create-status" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.85rem;box-sizing:border-box;">
               <option value="backlog">Backlog</option>
               <option value="todo">Todo</option>
@@ -79,15 +83,19 @@ export function renderKanban(container: HTMLElement): void {
     const title = titleInput.value.trim();
     if (!title) return;
 
-    const body = (document.getElementById("task-create-body") as HTMLTextAreaElement)?.value.trim() || undefined;
-    const priority = parseInt((document.getElementById("task-create-priority") as HTMLSelectElement)?.value || "0");
-    const assignee = (document.getElementById("task-create-assignee") as HTMLInputElement)?.value.trim() || undefined;
+    const body =
+      (document.getElementById("task-create-body") as HTMLTextAreaElement)?.value.trim() || undefined;
+    const priority = parseInt(
+      (document.getElementById("task-create-priority") as HTMLSelectElement)?.value || "0",
+    );
+    const assignee =
+      (document.getElementById("task-create-assignee") as HTMLInputElement)?.value.trim() || undefined;
     const status = (document.getElementById("task-create-status") as HTMLSelectElement)?.value || "backlog";
 
     try {
       await apiPost<any>("/kanban/tasks", { title, body, priority, assignee, status });
       closeCreateModal();
-      loadBoard();
+      void loadBoard();
     } catch (e) {
       alert("Failed to create task: " + (e instanceof Error ? e.message : "Unknown error"));
     }
@@ -96,7 +104,31 @@ export function renderKanban(container: HTMLElement): void {
   enhanceSelect("task-create-priority");
   enhanceSelect("task-create-status");
 
-  loadBoard();
+  // Toggle archived button
+  document.getElementById("toggle-archived-btn")!.addEventListener("click", () => {
+    showArchived = !showArchived;
+    const btn = document.getElementById("toggle-archived-btn")!;
+    if (showArchived) {
+      btn.textContent = "Showing archived";
+      btn.classList.add("showing-archived");
+    } else {
+      btn.textContent = "Show archived";
+      btn.classList.remove("showing-archived");
+    }
+    void loadBoard();
+  });
+
+  // Attach document-level dropdown close handler exactly once (not on every loadBoard)
+  if (!_dropdownListenerAttached) {
+    _dropdownListenerAttached = true;
+    document.addEventListener("click", () => {
+      document.querySelectorAll(".kanban-move-dropdown").forEach((d) => {
+        (d as HTMLElement).style.display = "none";
+      });
+    });
+  }
+
+  void loadBoard();
 }
 
 function closeCreateModal(): void {
@@ -117,14 +149,19 @@ function closeCreateModal(): void {
 async function loadBoard(): Promise<void> {
   const boardEl = document.getElementById("kanban-board")!;
   const summaryEl = document.getElementById("kanban-summary")!;
+  const countEl = document.getElementById("kanban-count")!;
   try {
-    const board = await apiGet<KanbanBoard>("/kanban/board");
+    const board = await apiGet<KanbanBoardResponse>(
+      "/kanban/board" + (showArchived ? "?show_archived=true" : ""),
+    );
     if (board.columns.length === 0 || board.total === 0) {
-      boardEl.innerHTML = `<div class="empty-state">No tasks on the board</div>`;
+      boardEl.innerHTML = `<div class="empty-state">No tasks yet</div>`;
+      countEl.textContent = "";
       return;
     }
 
-    summaryEl.innerHTML = `<span class="badge badge-info">${board.total} tasks</span>`;
+    countEl.textContent = `${board.total} tasks`;
+    summaryEl.style.display = "flex";
 
     boardEl.innerHTML = `
       <div class="kanban-columns">
@@ -132,10 +169,17 @@ async function loadBoard(): Promise<void> {
       </div>
     `;
 
+    // Only enable native drag on non-touch devices (prevents mobile touch interference)
+    const isTouchDevice = "ontouchstart" in window || navigator.maxTouchPoints > 0;
+
     // Wire up card click handlers for navigation
     document.querySelectorAll(".kanban-card").forEach((card) => {
+      if (!isTouchDevice) {
+        (card as HTMLElement).draggable = true;
+      }
       card.addEventListener("click", (e) => {
-        if ((e.target as HTMLElement).closest("button, select, input, textarea, .kanban-move-dropdown")) return;
+        if ((e.target as HTMLElement).closest("button, select, input, textarea, .kanban-move-dropdown"))
+          return;
         const taskId = card.getAttribute("data-task-id");
         if (taskId) {
           history.pushState({}, "", `/kanban/${taskId}`);
@@ -155,7 +199,9 @@ async function loadBoard(): Promise<void> {
             (d as HTMLElement).style.display = "none";
           }
         });
-        const dropdown = document.querySelector(`.kanban-move-dropdown[data-task-id="${taskId}"]`) as HTMLElement;
+        const dropdown = document.querySelector(
+          `.kanban-move-dropdown[data-task-id="${taskId}"]`,
+        ) as HTMLElement;
         if (dropdown) {
           dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
         }
@@ -171,65 +217,116 @@ async function loadBoard(): Promise<void> {
         const moveTo = (e.target as HTMLElement).getAttribute("data-move-to");
         if (taskId && moveTo) {
           if (dropdown) dropdown.style.display = "none";
-          moveTask(taskId, moveTo);
+          void moveTask(taskId, moveTo);
         }
       });
     });
 
-    // Close dropdowns on outside click
-    document.addEventListener("click", () => {
-      document.querySelectorAll(".kanban-move-dropdown").forEach((d) => {
-        (d as HTMLElement).style.display = "none";
-      });
-    }, { once: false });
-
-    // Wire up drag and drop
-    document.querySelectorAll(".kanban-card").forEach((card) => {
-      card.addEventListener("dragstart", (e) => {
-        if ((e.target as HTMLElement).closest("button, select, input, textarea")) {
-          e.preventDefault();
-          return;
-        }
+    // Wire up archive buttons
+    document.querySelectorAll(".kanban-archive-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
         const taskId = (e.currentTarget as HTMLElement).getAttribute("data-task-id");
-        if (taskId && (e as DragEvent).dataTransfer) {
-          (e as DragEvent).dataTransfer!.setData("text/plain", taskId);
-          (e as DragEvent).dataTransfer!.effectAllowed = "move";
-        }
-      });
-    });
-
-    document.querySelectorAll(".kanban-col-body").forEach((col) => {
-      col.addEventListener("dragover", (e) => {
-        e.preventDefault();
-        if ((e as DragEvent).dataTransfer) {
-          (e as DragEvent).dataTransfer!.dropEffect = "move";
-        }
-      });
-      col.addEventListener("drop", async (e) => {
-        e.preventDefault();
-        const taskId = (e as DragEvent).dataTransfer?.getData("text/plain");
         if (!taskId) return;
-        const colBody = (e.currentTarget as HTMLElement).closest(".kanban-col-body");
-        const newStatus = colBody?.getAttribute("data-column");
-        if (!newStatus) return;
-
         try {
-          const res = await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId) + "/status", {
+          const res = await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId), {
             method: "PATCH",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ status: newStatus }),
+            body: JSON.stringify({
+              archived: !(e.currentTarget as HTMLElement).textContent?.startsWith("Unarchive"),
+            }),
           });
-          if (!res.ok) {
-            const text = await res.text().catch(() => "Unknown error");
-            console.error("Status move failed:", `${res.status}: ${text}`);
-          }
-          loadBoard();
+          if (!res.ok) throw new Error((await res.text()) || "Archive failed");
+          void loadBoard();
         } catch (err) {
-          console.error("Drop move failed:", err);
-          loadBoard();
+          console.error("Archive failed:", err);
         }
       });
     });
+
+    // Wire up delete buttons on cards
+    document.querySelectorAll(".kanban-del-card-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.stopPropagation();
+        const taskId = (e.currentTarget as HTMLElement).getAttribute("data-task-id");
+        if (!taskId) return;
+        if (!confirm("Delete this task?")) return;
+        try {
+          await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId), { method: "DELETE" });
+          void loadBoard();
+        } catch (err) {
+          console.error("Delete failed:", err);
+        }
+      });
+    });
+
+    if (!isTouchDevice) {
+      // Wire up drag and drop (desktop only)
+      document.querySelectorAll(".kanban-card").forEach((card) => {
+        card.addEventListener("dragstart", (e) => {
+          if ((e.target as HTMLElement).closest("button, select, input, textarea")) {
+            e.preventDefault();
+            return;
+          }
+          const taskId = (e.currentTarget as HTMLElement).getAttribute("data-task-id");
+          if (taskId && (e as DragEvent).dataTransfer) {
+            (e as DragEvent).dataTransfer!.setData("text/plain", taskId);
+            (e as DragEvent).dataTransfer!.effectAllowed = "move";
+          }
+        });
+      });
+
+      document.querySelectorAll(".kanban-col-body").forEach((col) => {
+        col.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          if ((e as DragEvent).dataTransfer) {
+            (e as DragEvent).dataTransfer!.dropEffect = "move";
+          }
+        });
+        col.addEventListener("drop", async (e) => {
+          e.preventDefault();
+          const taskId = (e as DragEvent).dataTransfer?.getData("text/plain");
+          if (!taskId) return;
+          const colBody = (e.currentTarget as HTMLElement).closest(".kanban-col-body");
+          const newStatus = colBody?.getAttribute("data-column");
+          if (!newStatus) return;
+
+          // Determine insert position based on drop Y coordinate
+          const cards = Array.from(colBody!.querySelectorAll(".kanban-card"))
+            .map((card) => ({
+              el: card as HTMLElement,
+              rect: (card as HTMLElement).getBoundingClientRect(),
+            }))
+            .sort((a, b) => a.rect.top - b.rect.top);
+
+          const dropY = e.clientY;
+          let insertIndex = cards.length; // default: end of list
+          for (let i = 0; i < cards.length; i++) {
+            const midY = cards[i].rect.top + cards[i].rect.height / 2;
+            if (dropY < midY) {
+              insertIndex = i;
+              break;
+            }
+          }
+
+          try {
+            const res = await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId) + "/position", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ status: newStatus, position: insertIndex }),
+            });
+            if (!res.ok) {
+              const text = await res.text().catch(() => "Unknown error");
+              console.error("Position move failed:", `${res.status}: ${text}`);
+            }
+            void loadBoard();
+          } catch (err) {
+            console.error("Drop move failed:", err);
+            void loadBoard();
+          }
+        });
+      });
+    }
   } catch (e) {
     boardEl.innerHTML = `<div class="error-state">Failed to load board: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
   }
@@ -246,7 +343,7 @@ async function moveTask(taskId: string, status: string): Promise<void> {
       const text = await res.text().catch(() => "Unknown error");
       throw new Error(`${res.status}: ${text}`);
     }
-    loadBoard();
+    void loadBoard();
   } catch (e) {
     alert("Failed to move task: " + (e instanceof Error ? e.message : "Unknown error"));
   }
@@ -254,13 +351,21 @@ async function moveTask(taskId: string, status: string): Promise<void> {
 
 function renderColumn(id: string, title: string, tasks: KanbanTask[]): string {
   const colorClass =
-    id === "backlog" ? "kanban-col-neutral" :
-    id === "todo" ? "kanban-col-purple" :
-    id === "ready" ? "kanban-col-orange" :
-    id === "running" ? "kanban-col-cyan" :
-    id === "review" ? "kanban-col-sky" :
-    id === "done" ? "kanban-col-emerald" :
-    id === "blocked" ? "kanban-col-rose" : "kanban-col-neutral";
+    id === "backlog"
+      ? "kanban-col-neutral"
+      : id === "todo"
+        ? "kanban-col-purple"
+        : id === "ready"
+          ? "kanban-col-orange"
+          : id === "running"
+            ? "kanban-col-cyan"
+            : id === "review"
+              ? "kanban-col-sky"
+              : id === "done"
+                ? "kanban-col-emerald"
+                : id === "blocked"
+                  ? "kanban-col-rose"
+                  : "kanban-col-neutral";
 
   return `
     <div class="kanban-column ${colorClass}">
@@ -269,34 +374,42 @@ function renderColumn(id: string, title: string, tasks: KanbanTask[]): string {
         <span class="kanban-col-count">${tasks.length}</span>
       </div>
       <div class="kanban-col-body" data-column="${id}">
-        ${tasks.length === 0 ? `<div class="kanban-empty">No tasks</div>` :
-          tasks.map((t) => renderTaskCard(t)).join("")}
+        ${
+          tasks.length === 0
+            ? `<div class="kanban-empty">No tasks</div>`
+            : tasks.map((t) => renderTaskCard(t)).join("")
+        }
       </div>
     </div>
   `;
 }
 
 function renderTaskCard(task: KanbanTask): string {
-  const priorityLabel =
-    task.priority >= 3 ? "High" :
-    task.priority >= 1 ? "Med" : "Low";
+  const priorityLabel = task.priority >= 3 ? "High" : task.priority >= 1 ? "Med" : "Low";
 
   const priorityClass =
-    task.priority >= 3 ? "kanban-priority-high" :
-    task.priority >= 1 ? "kanban-priority-med" : "kanban-priority-low";
+    task.priority >= 3
+      ? "kanban-priority-high"
+      : task.priority >= 1
+        ? "kanban-priority-med"
+        : "kanban-priority-low";
 
   const timeAgo = formatRelativeTime(task.created_at);
 
   const status = task.status || "todo";
   const moveableStatuses = ["backlog", "todo", "ready", "running", "review", "done", "blocked"];
   const statusLabels: Record<string, string> = {
-    backlog: "Backlog", todo: "Todo", ready: "Ready",
-    running: "In Progress", review: "Review",
-    done: "Done", blocked: "Blocked",
+    backlog: "Backlog",
+    todo: "Todo",
+    ready: "Ready",
+    running: "In Progress",
+    review: "Review",
+    done: "Done",
+    blocked: "Blocked",
   };
 
   return `
-    <div class="kanban-card" data-task-id="${task.id}" draggable="true">
+    <div class="kanban-card" data-task-id="${task.id}">
       <div class="kanban-card-top">
         <span class="kanban-priority ${priorityClass}">${priorityLabel}</span>
       </div>
@@ -310,11 +423,17 @@ function renderTaskCard(task: KanbanTask): string {
         <div style="position:relative;">
           <button class="kanban-move-toggle" data-task-id="${task.id}" style="background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:4px;padding:0.15rem 0.4rem;cursor:pointer;font-size:0.65rem;white-space:nowrap;">↳ Move</button>
           <div class="kanban-move-dropdown" data-task-id="${task.id}" style="display:none;position:absolute;top:100%;left:0;z-index:10;background:#1a1a2e;border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem;min-width:110px;box-shadow:0 4px 12px rgba(0,0,0,0.4);">
-            ${moveableStatuses.filter(s => s !== status).map(s =>
-              `<button class="kanban-move-btn" data-move-to="${s}" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text-primary);padding:0.3rem 0.5rem;cursor:pointer;font-size:0.7rem;border-radius:4px;">→ ${statusLabels[s] || s.charAt(0).toUpperCase() + s.slice(1)}</button>`
-            ).join("")}
+            ${moveableStatuses
+              .filter((s) => s !== status)
+              .map(
+                (s) =>
+                  `<button class="kanban-move-btn" data-move-to="${s}" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text-primary);padding:0.3rem 0.5rem;cursor:pointer;font-size:0.7rem;border-radius:4px;">→ ${statusLabels[s] || s.charAt(0).toUpperCase() + s.slice(1)}</button>`,
+              )
+              .join("")}
           </div>
         </div>
+        <button class="kanban-archive-btn" data-task-id="${task.id}" style="background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-muted);border-radius:4px;padding:0.15rem 0.4rem;cursor:pointer;font-size:0.65rem;white-space:nowrap;">${task.archived ? "Unarchive" : "Archive"}</button>
+        <button class="kanban-del-card-btn" data-task-id="${task.id}" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:var(--accent-rose);border-radius:4px;padding:0.15rem 0.4rem;cursor:pointer;font-size:0.65rem;white-space:nowrap;">✕ Delete</button>
       </div>
     </div>
   `;
@@ -331,6 +450,7 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
       </div>
       <div style="display:flex;align-items:center;gap:0.5rem;">
         <button id="task-edit-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.625rem;cursor:pointer;font-size:0.75rem;font-weight:500;">Edit</button>
+        <button id="task-archive-btn" style="background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:6px;padding:0.375rem 0.625rem;cursor:pointer;font-size:0.75rem;font-weight:500;">Archive</button>
         <button id="task-delete-btn" style="background:rgba(244,63,94,0.15);border:1px solid rgba(244,63,94,0.3);color:var(--accent-rose);border-radius:6px;padding:0.375rem 0.625rem;cursor:pointer;font-size:0.75rem;font-weight:500;">Delete</button>
         <a href="/kanban" class="back-link" id="back-to-kanban">← Back to Board</a>
       </div>
@@ -396,7 +516,7 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
     });
   }
 
-  loadTaskDetail(taskId);
+  void loadTaskDetail(taskId);
   enhanceSelect("task-edit-priority");
   enhanceSelect("task-edit-status");
 }
@@ -422,9 +542,34 @@ async function loadTaskDetail(taskId: string): Promise<void> {
     });
   }
 
+  // Wire up archive button
+  const archiveBtn = document.getElementById("task-archive-btn");
+  if (archiveBtn) {
+    archiveBtn.addEventListener("click", async () => {
+      try {
+        const isArchived = archiveBtn.textContent === "Unarchive";
+        const res = await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId), {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ archived: !isArchived }),
+        });
+        if (!res.ok) throw new Error((await res.text()) || "Failed");
+        void loadTaskDetail(taskId);
+      } catch (e) {
+        alert("Failed to archive/unarchive: " + (e instanceof Error ? e.message : "Unknown error"));
+      }
+    });
+  }
+
   try {
     const task = await apiGet<any>("/kanban/tasks/" + encodeURIComponent(taskId));
     if (subtitle) subtitle.textContent = `Task: ${escapeHtml(task.title)}`;
+
+    // Update archive button text
+    if (archiveBtn) {
+      archiveBtn.textContent = task.archived ? "Unarchive" : "Archive";
+      archiveBtn.classList.toggle("archived", task.archived);
+    }
 
     el.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
@@ -434,7 +579,7 @@ async function loadTaskDetail(taskId: string): Promise<void> {
         </div>
         <div>
           <div class="detail-label">Priority</div>
-          <div><span class="badge ${task.priority >= 3 ? "badge-error" : task.priority >= 1 ? "badge-warning" : "badge-neutral"}">${task.priority}</span></div>
+          <div><span class="badge ${task.priority >= 3 ? "badge-error" : task.priority >= 1 ? "badge-warning" : "badge-neutral"}">${task.priority} - ${task.priority >= 3 ? "High" : task.priority >= 1 ? "Med" : "Low"}</span></div>
         </div>
         <div>
           <div class="detail-label">Assignee</div>
@@ -450,12 +595,16 @@ async function loadTaskDetail(taskId: string): Promise<void> {
         </div>
       </div>
 
-      ${task.body ? `
+      ${
+        task.body
+          ? `
         <div style="margin-top:1.5rem;">
           <div class="detail-label">Description</div>
           <div class="detail-body">${escapeHtml(task.body)}</div>
         </div>
-      ` : ""}
+      `
+          : ""
+      }
     `;
 
     // Wire up Edit button
@@ -485,10 +634,14 @@ async function loadTaskDetail(taskId: string): Promise<void> {
     document.getElementById("task-edit-submit")?.addEventListener("click", async () => {
       const title = (document.getElementById("task-edit-title") as HTMLInputElement)?.value.trim();
       if (!title) return;
-      const body = (document.getElementById("task-edit-body") as HTMLTextAreaElement)?.value.trim() || undefined;
-      const priority = parseInt((document.getElementById("task-edit-priority") as HTMLSelectElement)?.value || "0");
+      const body =
+        (document.getElementById("task-edit-body") as HTMLTextAreaElement)?.value.trim() || undefined;
+      const priority = parseInt(
+        (document.getElementById("task-edit-priority") as HTMLSelectElement)?.value || "0",
+      );
       const status = (document.getElementById("task-edit-status") as HTMLSelectElement)?.value || "backlog";
-      const assignee = (document.getElementById("task-edit-assignee") as HTMLInputElement)?.value.trim() || undefined;
+      const assignee =
+        (document.getElementById("task-edit-assignee") as HTMLInputElement)?.value.trim() || undefined;
 
       try {
         const res = await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId), {
@@ -502,7 +655,7 @@ async function loadTaskDetail(taskId: string): Promise<void> {
         }
         const modal = document.getElementById("edit-task-modal");
         if (modal) modal.style.display = "none";
-        loadTaskDetail(taskId);
+        void loadTaskDetail(taskId);
       } catch (e) {
         alert("Failed to update task: " + (e instanceof Error ? e.message : "Unknown error"));
       }
@@ -516,12 +669,20 @@ async function loadTaskDetail(taskId: string): Promise<void> {
 
 function statusBadge(status: string): string {
   switch (status) {
-    case "backlog": case "todo": return "badge-neutral";
-    case "ready": case "review": return "badge-info";
-    case "running": return "badge-warning";
-    case "done": return "badge-success";
-    case "blocked": return "badge-error";
-    default: return "badge-neutral";
+    case "backlog":
+    case "todo":
+      return "badge-neutral";
+    case "ready":
+    case "review":
+      return "badge-info";
+    case "running":
+      return "badge-warning";
+    case "done":
+      return "badge-success";
+    case "blocked":
+      return "badge-error";
+    default:
+      return "badge-neutral";
   }
 }
 
@@ -561,7 +722,7 @@ function enhanceSelect(selectId: string): void {
         ${Array.from(select.options)
           .map(
             (o) =>
-              `<div class="select-option${o.selected ? " selected" : ""}" data-value="${o.value}">${escapeHtml(o.label)}</div>`
+              `<div class="select-option${o.selected ? " selected" : ""}" data-value="${o.value}">${escapeHtml(o.label)}</div>`,
           )
           .join("")}
       </div>
@@ -592,6 +753,7 @@ function enhanceSelect(selectId: string): void {
       if (textEl) textEl.textContent = opt.textContent;
       wrapper.querySelectorAll(".select-option").forEach((o) => o.classList.remove("selected"));
       opt.classList.add("selected");
+      select.dispatchEvent(new Event("change", { bubbles: true }));
     }
     wrapper.classList.remove("open");
   });

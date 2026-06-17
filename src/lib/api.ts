@@ -33,6 +33,9 @@ export interface Message {
   model: string | null;
   processing_time_ms: number | null;
   token_usage: TokenUsage | null;
+  channel_name?: string;
+  type: string | null;
+  subtype: string | null;
 }
 
 export interface TokenUsage {
@@ -74,6 +77,8 @@ export interface MessagesFilters {
   roles: string[];
   providers: string[];
   models: string[];
+  types: string[];
+  subtypes: string[];
 }
 
 export interface WikiSearchResult {
@@ -129,6 +134,17 @@ export interface UploadListEntry {
 
 // ── Kanban Types ──
 
+export interface KanbanBoard {
+  id: string;
+  name: string;
+  description: string | null;
+  created_at: string;
+}
+
+export interface KanbanBoardsResponse {
+  boards: KanbanBoard[];
+}
+
 export interface KanbanTask {
   id: string;
   title: string;
@@ -136,6 +152,9 @@ export interface KanbanTask {
   assignee: string | null;
   status: string;
   priority: number;
+  position?: number;
+  board_id?: string;
+  archived?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -146,7 +165,7 @@ export interface KanbanColumn {
   tasks: KanbanTask[];
 }
 
-export interface KanbanBoard {
+export interface KanbanBoardResponse {
   columns: KanbanColumn[];
   total: number;
 }
@@ -158,8 +177,17 @@ export interface CronJob {
   name: string;
   schedule: string;
   prompt_preview: string;
+  prompt?: string;
   skills: string[];
   enabled: boolean;
+  script?: string | null;
+  context_from?: string | string[] | null;
+  no_agent?: boolean;
+  enabled_toolsets?: string | string[] | null;
+  workdir?: string | null;
+  profile?: string | null;
+  deliver?: string | null;
+  repeat?: number | null;
   last_run: string | null;
   next_run: string | null;
   last_run_at: string | null;

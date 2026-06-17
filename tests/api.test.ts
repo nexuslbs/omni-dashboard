@@ -83,6 +83,6 @@ describe("OmniDashboard API", () => {
   it("HTML page includes favicon link", async () => {
     const { status, text } = await apiGetRaw("/");
     assert.equal(status, 200);
-    assert.ok(text.includes('favicon.svg'), "HTML should include favicon.svg reference");
+    assert.ok(text.includes("favicon.svg"), "HTML should include favicon.svg reference");
   });
 });

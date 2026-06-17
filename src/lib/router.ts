@@ -1,7 +1,7 @@
 import { renderOverview } from "../pages/overview";
 import { renderMessages } from "../pages/messages";
 import { renderKanban, renderKanbanDetail } from "../pages/kanban";
-import { renderSchedule } from "../pages/schedule";
+import { renderSchedule, renderScheduleDetail } from "../pages/schedule";
 import { renderWiki } from "../pages/wiki";
 
 type PageRenderer = (container: HTMLElement) => void;
@@ -27,6 +27,7 @@ const routes: Route[] = [
 
 const paramRoutes: ParamRoute[] = [
   { prefix: "kanban/", handler: renderKanbanDetail },
+  { prefix: "schedule/", handler: renderScheduleDetail },
 ];
 
 function createRouter() {

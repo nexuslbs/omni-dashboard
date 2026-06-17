@@ -16,13 +16,17 @@ const VALID_STATUSES = new Set(KANBAN_COLUMNS.map((c) => c.id));
 export const kanbanRouter = Router();
 
 // ── GET /api/kanban/board — Tasks grouped by status ──
-kanbanRouter.get("/board", async (_req: Request, res: Response) => {
+kanbanRouter.get("/board", async (req: Request, res: Response) => {
   try {
+    const showArchived = req.query.show_archived === "true";
+
     const tasks = await queryDb(
       `SELECT id, title, body, assignee, status, priority,
-              created_at, updated_at
+              COALESCE(position, 0) AS position,
+              created_at, updated_at, archived
        FROM kanban_tasks
-       ORDER BY priority DESC, created_at DESC`,
+       WHERE archived = ${showArchived}
+       ORDER BY position ASC, created_at DESC`,
     );
 
     const columns = KANBAN_COLUMNS.map((col) => ({
@@ -49,7 +53,7 @@ kanbanRouter.get("/tasks/:id", async (req: Request, res: Response) => {
 
     const tasks = await queryDb(
       `SELECT id, title, body, assignee, status, priority,
-              created_at, updated_at
+              created_at, updated_at, archived
        FROM kanban_tasks WHERE id = $1`,
       [taskId],
     );
@@ -69,23 +73,28 @@ kanbanRouter.get("/tasks/:id", async (req: Request, res: Response) => {
 // ── POST /api/kanban/tasks — Create task ──
 kanbanRouter.post("/tasks", async (req: Request, res: Response) => {
   try {
-    const { title, body, assignee, priority, status } = req.body;
+    const { title, body, assignee, priority, status, board_id } = req.body;
     if (!title || typeof title !== "string" || title.trim().length === 0) {
       res.status(400).json({ error: "Title is required" });
       return;
     }
 
-    const id =
-      "task_" +
-      Math.random().toString(36).substring(2, 10) +
-      Date.now().toString(36);
+    const id = "task_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
     const taskStatus = status && VALID_STATUSES.has(status) ? status : "backlog";
     const taskPriority = priority != null ? priority : 0;
+    const taskBoardId = board_id || "board_1";
+
+    // Get max position for this status group
+    const posResult = await queryDb(
+      `SELECT COALESCE(MAX(position), -1) + 1 AS next_pos FROM kanban_tasks WHERE status = $1`,
+      [taskStatus],
+    );
+    const nextPos = posResult.length > 0 ? posResult[0].next_pos : 0;
 
     await queryDb(
-      `INSERT INTO kanban_tasks (id, title, body, status, priority, assignee)
-       VALUES ($1, $2, $3, $4, $5, $6)`,
-      [id, title.trim(), body || "", taskStatus, taskPriority, assignee || ""],
+      `INSERT INTO kanban_tasks (id, title, body, status, priority, assignee, board_id, position)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+      [id, title.trim(), body || "", taskStatus, taskPriority, assignee || "", taskBoardId, nextPos],
     );
 
     res.json({ success: true, id });
@@ -104,7 +113,7 @@ kanbanRouter.patch("/tasks/:id/status", async (req: Request, res: Response) => {
       return;
     }
 
-    const { status } = req.body;
+    const { status, position } = req.body;
     if (!VALID_STATUSES.has(status)) {
       res.status(400).json({
         error: `Status must be one of: ${Array.from(VALID_STATUSES).join(", ")}`,
@@ -114,7 +123,7 @@ kanbanRouter.patch("/tasks/:id/status", async (req: Request, res: Response) => {
 
     // Check task exists
     const tasks = await queryDb(
-      `SELECT id FROM kanban_tasks WHERE id = $1`,
+      `SELECT id, status, COALESCE(position, 0) AS position FROM kanban_tasks WHERE id = $1`,
       [taskId],
     );
     if (tasks.length === 0) {
@@ -122,14 +131,143 @@ kanbanRouter.patch("/tasks/:id/status", async (req: Request, res: Response) => {
       return;
     }
 
-    await queryDb(
-      `UPDATE kanban_tasks SET status = $1, updated_at = NOW() WHERE id = $2`,
-      [status, taskId],
-    );
+    const task = tasks[0];
+    const oldStatus = task.status;
+    const oldPosition = task.position;
+
+    // If position is provided, handle shifting; otherwise append to end
+    let targetPosition = position;
+    if (targetPosition === undefined || targetPosition === null) {
+      // Append to end of new status
+      const posResult = await queryDb(
+        `SELECT COALESCE(MAX(position), -1) + 1 AS next_pos FROM kanban_tasks WHERE status = $1`,
+        [status],
+      );
+      targetPosition = posResult.length > 0 ? posResult[0].next_pos : 0;
+    }
+
+    // If status changed, fill gap in old column and make room in new
+    if (oldStatus !== status) {
+      // Fill gap in old column
+      await queryDb(`UPDATE kanban_tasks SET position = position - 1 WHERE status = $1 AND position > $2`, [
+        oldStatus,
+        oldPosition,
+      ]);
+      // Make room in new column
+      await queryDb(
+        `UPDATE kanban_tasks SET position = position + 1 WHERE status = $1 AND position >= $2 AND id != $3`,
+        [status, targetPosition, taskId],
+      );
+    } else {
+      // Reorder within the same column
+      if (targetPosition > oldPosition) {
+        // Moving down: shift intermediate tasks up
+        await queryDb(
+          `UPDATE kanban_tasks SET position = position - 1 WHERE status = $1 AND position > $2 AND position <= $3 AND id != $4`,
+          [status, oldPosition, targetPosition, taskId],
+        );
+      } else if (targetPosition < oldPosition) {
+        // Moving up: shift intermediate tasks down
+        await queryDb(
+          `UPDATE kanban_tasks SET position = position + 1 WHERE status = $1 AND position >= $2 AND position < $3 AND id != $4`,
+          [status, targetPosition, oldPosition, taskId],
+        );
+      }
+    }
+
+    await queryDb(`UPDATE kanban_tasks SET status = $1, position = $2, updated_at = NOW() WHERE id = $3`, [
+      status,
+      targetPosition,
+      taskId,
+    ]);
 
     res.json({ success: true });
   } catch (e: any) {
     console.error("Kanban update status error:", e?.message || e);
+    res.status(500).json({ error: e.message || "Unknown error" });
+  }
+});
+
+// ── PATCH /api/kanban/tasks/:id/position — Update task position within/between columns ──
+kanbanRouter.patch("/tasks/:id/position", async (req: Request, res: Response) => {
+  try {
+    const taskId = req.params.id;
+    if (!taskId) {
+      res.status(400).json({ error: "Invalid task ID" });
+      return;
+    }
+
+    const { status, position } = req.body;
+    if (position === undefined || position === null) {
+      res.status(400).json({ error: "position is required" });
+      return;
+    }
+    if (status && !VALID_STATUSES.has(status)) {
+      res.status(400).json({
+        error: `Status must be one of: ${Array.from(VALID_STATUSES).join(", ")}`,
+      });
+      return;
+    }
+
+    // Check task exists and get current info
+    const tasks = await queryDb(
+      `SELECT id, status, COALESCE(position, 0) AS position FROM kanban_tasks WHERE id = $1`,
+      [taskId],
+    );
+    if (tasks.length === 0) {
+      res.status(404).json({ error: "Task not found" });
+      return;
+    }
+
+    const task = tasks[0];
+    const newStatus = status || task.status;
+    const oldStatus = task.status;
+    const oldPosition = task.position;
+
+    if (oldStatus === newStatus && oldPosition === position) {
+      // No-op: already at that position
+      res.json({ success: true });
+      return;
+    }
+
+    if (oldStatus !== newStatus) {
+      // Cross-column move
+      // Fill gap in old column
+      await queryDb(`UPDATE kanban_tasks SET position = position - 1 WHERE status = $1 AND position > $2`, [
+        oldStatus,
+        oldPosition,
+      ]);
+      // Make room in new column
+      await queryDb(
+        `UPDATE kanban_tasks SET position = position + 1 WHERE status = $1 AND position >= $2 AND id != $3`,
+        [newStatus, position, taskId],
+      );
+    } else {
+      // Reorder within same column
+      if (position > oldPosition) {
+        // Moving down: shift intermediate tasks up
+        await queryDb(
+          `UPDATE kanban_tasks SET position = position - 1 WHERE status = $1 AND position > $2 AND position <= $3 AND id != $4`,
+          [newStatus, oldPosition, position, taskId],
+        );
+      } else if (position < oldPosition) {
+        // Moving up: shift intermediate tasks down
+        await queryDb(
+          `UPDATE kanban_tasks SET position = position + 1 WHERE status = $1 AND position >= $2 AND position < $3 AND id != $4`,
+          [newStatus, position, oldPosition, taskId],
+        );
+      }
+    }
+
+    await queryDb(`UPDATE kanban_tasks SET status = $1, position = $2, updated_at = NOW() WHERE id = $3`, [
+      newStatus,
+      position,
+      taskId,
+    ]);
+
+    res.json({ success: true });
+  } catch (e: any) {
+    console.error("Kanban update position error:", e?.message || e);
     res.status(500).json({ error: e.message || "Unknown error" });
   }
 });
@@ -144,16 +282,13 @@ kanbanRouter.patch("/tasks/:id", async (req: Request, res: Response) => {
     }
 
     // Check task exists
-    const tasks = await queryDb(
-      `SELECT id FROM kanban_tasks WHERE id = $1`,
-      [taskId],
-    );
+    const tasks = await queryDb(`SELECT id FROM kanban_tasks WHERE id = $1`, [taskId]);
     if (tasks.length === 0) {
       res.status(404).json({ error: "Task not found" });
       return;
     }
 
-    const { title, body, assignee, priority, status } = req.body;
+    const { title, body, assignee, priority, status, board_id, archived } = req.body;
     const setClauses: string[] = [];
     const params: any[] = [];
     let paramIdx = 2;
@@ -188,6 +323,14 @@ kanbanRouter.patch("/tasks/:id", async (req: Request, res: Response) => {
       setClauses.push(`status = $${paramIdx++}`);
       params.push(status);
     }
+    if (board_id !== undefined) {
+      setClauses.push(`board_id = $${paramIdx++}`);
+      params.push(board_id);
+    }
+    if (archived !== undefined) {
+      setClauses.push(`archived = $${paramIdx++}`);
+      params.push(archived);
+    }
 
     if (setClauses.length === 0) {
       res.status(400).json({ error: "No fields to update" });
@@ -214,10 +357,7 @@ kanbanRouter.delete("/tasks/:id", async (req: Request, res: Response) => {
       return;
     }
 
-    const result = await queryDb(
-      `DELETE FROM kanban_tasks WHERE id = $1 RETURNING id`,
-      [taskId],
-    );
+    const result = await queryDb(`DELETE FROM kanban_tasks WHERE id = $1 RETURNING id`, [taskId]);
 
     if (result.length === 0) {
       res.status(404).json({ error: "Task not found" });

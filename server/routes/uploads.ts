@@ -1,6 +1,6 @@
 import { Router, Request, Response } from "express";
 import { existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from "fs";
-import { join, normalize, sep } from "path";
+import { join, normalize } from "path";
 import multer from "multer";
 
 export const uploadsRouter = Router();

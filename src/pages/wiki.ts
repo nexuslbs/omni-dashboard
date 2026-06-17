@@ -6,7 +6,6 @@ import hljs from "highlight.js";
 // Functions exposed by the global upload feature (defined in index.ts — same bundle)
 declare function checkExistingFiles(files: File[]): Promise<Set<string>>;
 declare function showUploadModal(files: File[], existingSet: Set<string>): void;
-declare function showToast(message: string, type?: "success" | "error"): void;
 
 // ── Markdown renderer (uses marked — battle-tested GFM parser) ──
 // Configure highlight.js and marked-highlight plugin
@@ -43,7 +42,7 @@ function renderMarkdown(md: string): string {
   const origTable = renderer.table.bind(renderer);
   renderer.table = (token) => {
     const html = origTable(token);
-    return '<div class="table-scroll">' + html + '</div>';
+    return '<div class="table-scroll">' + html + "</div>";
   };
 
   return marked.parse(clean, { gfm: true, renderer }) as string;
@@ -77,10 +76,14 @@ function enhanceCodeBlocks(container: HTMLElement): void {
       try {
         await navigator.clipboard.writeText(code.textContent || "");
         copyBtn.textContent = "Copied!";
-        setTimeout(() => { copyBtn.textContent = "Copy"; }, 2000);
+        setTimeout(() => {
+          copyBtn.textContent = "Copy";
+        }, 2000);
       } catch {
         copyBtn.textContent = "Failed";
-        setTimeout(() => { copyBtn.textContent = "Copy"; }, 2000);
+        setTimeout(() => {
+          copyBtn.textContent = "Copy";
+        }, 2000);
       }
     });
     actions.appendChild(copyBtn);
@@ -112,7 +115,8 @@ function getIcon(entry: FsEntry): string {
   if (name.endsWith(".css")) return "🎨";
   if (name.endsWith(".html")) return "🌐";
   if (name.endsWith(".sh")) return "💻";
-  if (name.endsWith(".svg") || name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".webp")) return "🖼️";
+  if (name.endsWith(".svg") || name.endsWith(".png") || name.endsWith(".jpg") || name.endsWith(".webp"))
+    return "🖼️";
   if (name.endsWith(".toml")) return "🔧";
   return "📄";
 }
@@ -126,7 +130,7 @@ interface TreeNode {
 }
 
 let treeData: TreeNode[] | null = null;
-let expandedPaths = new Set<string>();
+const expandedPaths = new Set<string>();
 let lastOpenedFile: string | null = null;
 
 // ── Main render ──
@@ -168,13 +172,17 @@ export function renderWiki(container: HTMLElement): void {
     </div>
   `;
 
-  // Refresh button — also clears URL file param
-  document.getElementById("explorer-refresh")!.addEventListener("click", () => {
-    loadTree(false);
-    const params = new URLSearchParams(location.search);
-    params.delete("file");
-    const newUrl = location.pathname + (params.toString() ? "?" + params.toString() : "");
-    history.replaceState({}, "", newUrl);
+  // Refresh button — reloads tree, preserves expanded state and selected file
+  document.getElementById("explorer-refresh")!.addEventListener("click", async () => {
+    await loadTree(false);
+    // Reload children for ALL expanded directories, not just the file path
+    await reloadAllExpanded();
+    // Re-render the tree with all children loaded
+    const treeEl = document.getElementById("explorer-tree")!;
+    renderTree(treeEl);
+    if (lastOpenedFile) {
+      void navigateToFile(lastOpenedFile);
+    }
   });
 
   // Upload button — opens file chooser
@@ -223,7 +231,7 @@ export function renderWiki(container: HTMLElement): void {
 
   function restoreLastFile(): void {
     if (lastOpenedFile) {
-      openFile(lastOpenedFile);
+      void openFile(lastOpenedFile);
     } else {
       const contentView = document.getElementById("content-view")!;
       contentView.innerHTML = `
@@ -255,11 +263,11 @@ export function renderWiki(container: HTMLElement): void {
   });
 
   // Load the file tree, then check for persisted file in URL
-  loadTree(false).then(() => {
+  void loadTree(false).then(() => {
     const params = new URLSearchParams(location.search);
     const filePath = params.get("file");
     if (filePath) {
-      navigateToFile(filePath);
+      void navigateToFile(filePath);
     }
   });
 }
@@ -278,10 +286,56 @@ async function loadTree(reset: boolean): Promise<void> {
     const response = await apiGet<{ entries: FsEntry[]; path: string }>("/fs/list?path=/");
     treeData = response.entries
       .filter((e) => e.type === "directory")
-      .map((e) => ({ entry: e, expanded: false, children: null }));
+      .map((e) => ({
+        entry: e,
+        expanded: expandedPaths.has(e.path),
+        children: null,
+      }));
     renderTree(treeEl);
   } catch (e) {
     treeEl.innerHTML = `<div class="error-state">Failed to load: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+  }
+}
+
+/** After a tree reload, re-fetch children for every path in expandedPaths */
+async function reloadAllExpanded(): Promise<void> {
+  if (!treeData) return;
+
+  const expanded = Array.from(expandedPaths).filter((p) => p !== "/");
+  expanded.sort((a, b) => a.split("/").filter(Boolean).length - b.split("/").filter(Boolean).length);
+
+  for (const path of expanded) {
+    const parts = path.split("/").filter(Boolean);
+    let currentLevel: TreeNode[] | null = treeData;
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (!currentLevel) break;
+      const node: TreeNode | undefined = currentLevel.find((n) => n.entry.name === part);
+      if (!node) break;
+
+      // Load children eagerly for EVERY directory on the path,
+      // not just the target — intermediate dirs may not be in expandedPaths
+      if (node.children === null) {
+        try {
+          const response = await apiGet<{ entries: FsEntry[]; path: string }>(
+            `/fs/list?path=${encodeURIComponent(node.entry.path)}`,
+          );
+          node.children = response.entries.map((e) => ({
+            entry: e,
+            expanded: expandedPaths.has(e.path),
+            children: null,
+          }));
+        } catch {
+          node.children = [];
+        }
+      }
+
+      if (node.entry.path === path) {
+        break;
+      }
+      currentLevel = node.children;
+    }
   }
 }
 
@@ -309,9 +363,9 @@ function renderTree(container: HTMLElement): void {
       const path = (el as HTMLElement).dataset.path || "";
       const entryType = (el as HTMLElement).dataset.type || "directory";
       if (entryType === "directory") {
-        toggleDirectory(path);
+        void toggleDirectory(path);
       } else {
-        openFile(path);
+        void openFile(path);
       }
     });
   });
@@ -321,9 +375,10 @@ function renderTreeNode(node: TreeNode, depth: number): string {
   const icon = node.entry.type === "directory" ? "📁" : getIcon(node.entry);
   const expanded = node.expanded ? "tree-expanded" : "tree-collapsed";
   const toggle = node.entry.type === "directory" ? (node.expanded ? "▼" : "▶") : "";
-  const childrenHtml = node.expanded && node.children
-    ? `<div class="tree-children">${node.children.map((c) => renderTreeNode(c, depth + 1)).join("")}</div>`
-    : "";
+  const childrenHtml =
+    node.expanded && node.children
+      ? `<div class="tree-children">${node.children.map((c) => renderTreeNode(c, depth + 1)).join("")}</div>`
+      : "";
 
   return `
     <div class="tree-node">
@@ -352,10 +407,17 @@ async function toggleDirectory(path: string): Promise<void> {
     if (i === parts.length - 1) {
       // Toggle this node
       node.expanded = !node.expanded;
+      if (node.expanded) {
+        expandedPaths.add(path);
+      } else {
+        expandedPaths.delete(path);
+      }
       if (node.expanded && node.children === null) {
         // Load children
         try {
-          const response = await apiGet<{ entries: FsEntry[]; path: string }>(`/fs/list?path=${encodeURIComponent(path)}`);
+          const response = await apiGet<{ entries: FsEntry[]; path: string }>(
+            `/fs/list?path=${encodeURIComponent(path)}`,
+          );
           node.children = response.entries.map((e) => ({
             entry: e,
             expanded: false,
@@ -401,6 +463,7 @@ async function navigateToFile(fullPath: string): Promise<void> {
     // Expand if not already expanded
     if (!node.expanded) {
       node.expanded = true;
+      expandedPaths.add(currentDir);
       if (node.children === null) {
         try {
           const response = await apiGet<{ entries: FsEntry[]; path: string }>(
@@ -424,7 +487,7 @@ async function navigateToFile(fullPath: string): Promise<void> {
   renderTree(treeEl);
 
   // Open the file
-  openFile(fullPath);
+  void openFile(fullPath);
 }
 
 // ── File viewer ──
@@ -438,9 +501,7 @@ function highlightTreeItem(path: string): void {
 
   // Find the tree item with matching data-path
   const escapedPath = CSS.escape(path);
-  const treeItem = document.querySelector<HTMLElement>(
-    `.tree-item[data-path="${escapedPath}"]`,
-  );
+  const treeItem = document.querySelector<HTMLElement>(`.tree-item[data-path="${escapedPath}"]`);
   if (!treeItem) return;
 
   // Highlight it
@@ -452,10 +513,7 @@ function highlightTreeItem(path: string): void {
     const itemRect = treeItem.getBoundingClientRect();
     const treeRect = explorerTree.getBoundingClientRect();
     // Only scroll if the item is outside the visible area
-    if (
-      itemRect.top < treeRect.top ||
-      itemRect.bottom > treeRect.bottom
-    ) {
+    if (itemRect.top < treeRect.top || itemRect.bottom > treeRect.bottom) {
       treeItem.scrollIntoView({ block: "nearest" });
     }
   }
@@ -491,7 +549,10 @@ async function openFile(path: string): Promise<void> {
   try {
     const response = await apiGet<FsReadResponse>(`/fs/read?path=${encodeURIComponent(path)}`);
     const isMarkdown = path.toLowerCase().endsWith(".md");
-    const isText = /\.(md|txt|js|ts|py|json|yaml|yml|css|html|sh|toml|xml|conf|env|gitignore|dockerfile|tf|rb|go|rs|c|cpp|h|hpp|java|kt|swift|pl|lua|sql)$/i.test(path);
+    const isText =
+      /\.(md|txt|js|ts|py|json|yaml|yml|css|html|sh|toml|xml|conf|env|gitignore|dockerfile|tf|rb|go|rs|c|cpp|h|hpp|java|kt|swift|pl|lua|sql)$/i.test(
+        path,
+      );
 
     if (isMarkdown) {
       const rendered = renderMarkdown(response.content);
@@ -566,7 +627,9 @@ async function doSearch(query: string): Promise<void> {
         <span class="file-size">${results.length} results</span>
       </div>
       <div style="display:flex;flex-direction:column;gap:0.75rem;padding:1rem;">
-        ${results.map((r, i) => `
+        ${results
+          .map(
+            (r) => `
           <div class="search-result-item" data-path="${escapeHtml(r.file_path)}" style="cursor:pointer;">
             <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.375rem;">
               <span style="font-size:0.875rem;font-weight:600;color:var(--text-primary);">${escapeHtml(r.section_title)}</span>
@@ -575,7 +638,9 @@ async function doSearch(query: string): Promise<void> {
             <div class="file-path search-result-path" data-file-path="${escapeHtml(r.file_path)}">${escapeHtml(r.file_path)}</div>
             <div style="font-size:0.8125rem;color:var(--text-secondary);line-height:1.5;">${escapeHtml(r.content_preview.slice(0, 300))}</div>
           </div>
-        `).join("")}
+        `,
+          )
+          .join("")}
       </div>
     `;
     contentView.scrollTop = 0;
@@ -585,7 +650,7 @@ async function doSearch(query: string): Promise<void> {
       el.addEventListener("click", () => {
         const filePath = (el as HTMLElement).dataset.path || "";
         if (filePath) {
-          openFile(filePath);
+          void openFile(filePath);
         }
       });
     });
@@ -595,7 +660,7 @@ async function doSearch(query: string): Promise<void> {
         e.stopPropagation();
         const filePath = (el as HTMLElement).dataset.filePath || "";
         if (filePath) {
-          openFile(filePath);
+          void openFile(filePath);
         }
       });
     });

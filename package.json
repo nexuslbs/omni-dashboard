@@ -10,7 +10,13 @@
     "build:server": "tsc -p tsconfig.server.json",
     "build": "npm run build:frontend && npm run build:server",
     "preview": "vite preview",
-    "test": "node --test tests/*.test.ts"
+    "test": "node --test tests/*.test.ts",
+    "test:unit": "node --test tests/lib.test.ts tests/routes.test.ts",
+    "lint": "eslint src/ server/ tests/",
+    "lint:fix": "eslint src/ server/ tests/ --fix",
+    "format": "prettier --write \"src/**/*.ts\" \"server/**/*.ts\" \"tests/**/*.ts\"",
+    "format:check": "prettier --check \"src/**/*.ts\" \"server/**/*.ts\" \"tests/**/*.ts\"",
+    "prepare": "husky"
   },
   "dependencies": {
     "chart.js": "^4.4.0",
@@ -23,12 +29,19 @@
     "shell-quote": "^1.8.4"
   },
   "devDependencies": {
+    "@eslint/js": "^10.0.1",
     "@types/express": "^5.0.0",
     "@types/multer": "^2.1.0",
     "@types/node": "^22.0.0",
     "@types/pg": "^8.20.0",
     "@types/shell-quote": "^1.7.5",
+    "eslint": "^10.5.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-prettier": "^5.5.6",
+    "husky": "^9.1.7",
+    "prettier": "^3.8.4",
     "typescript": "^5.8.0",
+    "typescript-eslint": "^8.61.1",
     "vite": "^6.3.0"
   }
 }

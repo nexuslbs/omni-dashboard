@@ -4,7 +4,7 @@ import { queryDb } from "../db.js";
 export const overviewRouter = Router();
 
 overviewRouter.get("/", (req: Request, res: Response) => {
-  (async () => {
+  void (async () => {
     try {
       const sql = `
         SELECT m.id, m.channel_id, m.thread_id,
@@ -28,9 +28,8 @@ overviewRouter.get("/", (req: Request, res: Response) => {
 
         if (row.token_usage) {
           try {
-            const parsed = typeof row.token_usage === "string"
-              ? JSON.parse(row.token_usage)
-              : row.token_usage;
+            const parsed =
+              typeof row.token_usage === "string" ? JSON.parse(row.token_usage) : row.token_usage;
             promptTokens = parsed.prompt_tokens ?? 0;
             completionTokens = parsed.completion_tokens ?? 0;
           } catch {

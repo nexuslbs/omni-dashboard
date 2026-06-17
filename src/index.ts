@@ -22,12 +22,9 @@ async function checkConnection(): Promise<void> {
 document.querySelectorAll(".nav-item").forEach((item) => {
   item.addEventListener("click", (e) => {
     e.preventDefault();
-    const route =
-      (item as HTMLAnchorElement).getAttribute("data-route") || "overview";
+    const route = (item as HTMLAnchorElement).getAttribute("data-route") || "overview";
     const url = (item as HTMLAnchorElement).getAttribute("href") || "/";
-    document
-      .querySelectorAll(".nav-item, .mobile-nav-item")
-      .forEach((n) => n.classList.remove("active"));
+    document.querySelectorAll(".nav-item, .mobile-nav-item").forEach((n) => n.classList.remove("active"));
     item.classList.add("active");
     history.pushState({}, "", url);
     router.go(route);
@@ -38,12 +35,9 @@ document.querySelectorAll(".nav-item").forEach((item) => {
 document.querySelectorAll(".mobile-nav-item").forEach((item) => {
   item.addEventListener("click", (e) => {
     e.preventDefault();
-    const route =
-      (item as HTMLAnchorElement).getAttribute("data-route") || "overview";
+    const route = (item as HTMLAnchorElement).getAttribute("data-route") || "overview";
     const url = (item as HTMLAnchorElement).getAttribute("href") || "/";
-    document
-      .querySelectorAll(".nav-item, .mobile-nav-item")
-      .forEach((n) => n.classList.remove("active"));
+    document.querySelectorAll(".nav-item, .mobile-nav-item").forEach((n) => n.classList.remove("active"));
     item.classList.add("active");
     history.pushState({}, "", url);
     router.go(route);
@@ -65,14 +59,13 @@ window.addEventListener("popstate", () => {
 const initialRoute = location.pathname.slice(1) || "overview";
 document.querySelectorAll(".nav-item, .mobile-nav-item").forEach((n) => {
   const navRoute = n.getAttribute("data-route") || "";
-  const isActive =
-    initialRoute === navRoute || initialRoute.startsWith(navRoute + "/");
+  const isActive = initialRoute === navRoute || initialRoute.startsWith(navRoute + "/");
   n.classList.toggle("active", isActive);
 });
 router.go(initialRoute);
 
 // Check API connection
-checkConnection();
+void checkConnection();
 setInterval(checkConnection, 30000);
 
 // Sidebar toggle
@@ -135,32 +128,37 @@ async function checkExistingFiles(files: File[]): Promise<Set<string>> {
     const res = await fetch(`${API_BASE}/uploads/check`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ files: files.map(f => f.name) }),
+      body: JSON.stringify({ files: files.map((f) => f.name) }),
     });
     if (!res.ok) return new Set();
     const data = await res.json();
     return new Set(data.existing || []);
-  } catch { return new Set(); }
+  } catch {
+    return new Set();
+  }
 }
 
 function showUploadModal(files: File[], existingSet: Set<string>): void {
   const backdrop = document.createElement("div");
   backdrop.className = "upload-modal-backdrop";
 
-  const fileRows = files.map((f, i) => {
-    const sizeStr = f.size > 1024 * 1024
-      ? `${(f.size / (1024 * 1024)).toFixed(1)} MB`
-      : `${(f.size / 1024).toFixed(0)} KB`;
-    const warnIcon = existingSet.has(f.name)
-      ? `<span class="upload-file-warn" title="File already exists — will be overwritten">⚠️</span>`
-      : "";
-    return `<div class="upload-file-row" data-index="${i}">
+  const fileRows = files
+    .map((f, i) => {
+      const sizeStr =
+        f.size > 1024 * 1024
+          ? `${(f.size / (1024 * 1024)).toFixed(1)} MB`
+          : `${(f.size / 1024).toFixed(0)} KB`;
+      const warnIcon = existingSet.has(f.name)
+        ? `<span class="upload-file-warn" title="File already exists — will be overwritten">⚠️</span>`
+        : "";
+      return `<div class="upload-file-row" data-index="${i}">
       <span class="upload-file-name">${f.name}</span>
       <span style="color:var(--text-muted);font-size:0.8rem;flex-shrink:0">${sizeStr}</span>
       ${warnIcon}
       <button class="upload-file-remove" data-index="${i}" title="Remove file">🗑️</button>
     </div>`;
-  }).join("");
+    })
+    .join("");
 
   backdrop.innerHTML = `<div class="upload-modal">
     <h2>Upload Files</h2>
@@ -176,7 +174,7 @@ function showUploadModal(files: File[], existingSet: Set<string>): void {
 
   let currentFiles = [...files];
 
-  backdrop.querySelectorAll(".upload-file-remove").forEach(btn => {
+  backdrop.querySelectorAll(".upload-file-remove").forEach((btn) => {
     btn.addEventListener("click", () => {
       const idx = parseInt((btn as HTMLElement).dataset.index || "0");
       currentFiles = currentFiles.filter((_, i) => i !== idx);
@@ -185,7 +183,7 @@ function showUploadModal(files: File[], existingSet: Set<string>): void {
         return;
       }
       backdrop.remove();
-      checkExistingFiles(currentFiles).then(existing => showUploadModal(currentFiles, existing));
+      void checkExistingFiles(currentFiles).then((existing) => showUploadModal(currentFiles, existing));
     });
   });
 
@@ -198,7 +196,7 @@ function showUploadModal(files: File[], existingSet: Set<string>): void {
     confirmBtn.textContent = "Uploading...";
     try {
       const formData = new FormData();
-      currentFiles.forEach(f => formData.append("files", f));
+      currentFiles.forEach((f) => formData.append("files", f));
       const res = await fetch(`${API_BASE}/uploads`, { method: "POST", body: formData });
       if (!res.ok) throw new Error((await res.text()) || "Upload failed");
       const result = await res.json();
@@ -212,7 +210,9 @@ function showUploadModal(files: File[], existingSet: Set<string>): void {
   });
 
   backdrop.querySelector("#upload-cancel")?.addEventListener("click", () => backdrop.remove());
-  backdrop.addEventListener("click", (e) => { if (e.target === backdrop) backdrop.remove(); });
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) backdrop.remove();
+  });
 }
 
 // ── Wire global drag-drop ──
@@ -220,6 +220,21 @@ let dragCounter = 0;
 let overlayEl: HTMLDivElement | null = null;
 
 document.body.addEventListener("dragenter", (e) => {
+  // Skip internal drags (kanban cards, text selections, etc.) — only handle file drops
+  // text/plain without Files indicates an internal application drag, not a file upload
+  let dragTypes: string[];
+  try {
+    dragTypes = e.dataTransfer ? Array.from(e.dataTransfer.types) : [];
+  } catch {
+    // dataTransfer.types may throw on some mobile browsers — treat as non-file drag
+    return;
+  }
+  if (dragTypes.includes("text/plain") && !dragTypes.includes("Files")) {
+    return;
+  }
+  if (!dragTypes.includes("Files")) {
+    return;
+  }
   e.preventDefault();
   e.stopPropagation();
   dragCounter++;
@@ -230,11 +245,37 @@ document.body.addEventListener("dragenter", (e) => {
 });
 
 document.body.addEventListener("dragover", (e) => {
+  let dragTypes: string[];
+  try {
+    dragTypes = e.dataTransfer ? Array.from(e.dataTransfer.types) : [];
+  } catch {
+    // dataTransfer.types may throw on some mobile browsers — treat as non-file drag
+    return;
+  }
+  if (dragTypes.includes("text/plain") && !dragTypes.includes("Files")) {
+    return;
+  }
+  if (!dragTypes.includes("Files")) {
+    return;
+  }
   e.preventDefault();
   e.stopPropagation();
 });
 
 document.body.addEventListener("dragleave", (e) => {
+  let dragTypes: string[];
+  try {
+    dragTypes = e.dataTransfer ? Array.from(e.dataTransfer.types) : [];
+  } catch {
+    // dataTransfer.types may throw on some mobile browsers — treat as non-file drag
+    return;
+  }
+  if (dragTypes.includes("text/plain") && !dragTypes.includes("Files")) {
+    return;
+  }
+  if (!dragTypes.includes("Files")) {
+    return;
+  }
   e.preventDefault();
   e.stopPropagation();
   dragCounter--;
@@ -246,10 +287,27 @@ document.body.addEventListener("dragleave", (e) => {
 });
 
 document.body.addEventListener("drop", async (e) => {
+  // Only handle file drops
+  let dragTypes: string[];
+  try {
+    dragTypes = e.dataTransfer ? Array.from(e.dataTransfer.types) : [];
+  } catch {
+    // dataTransfer.types may throw on some mobile browsers — treat as non-file drag
+    return;
+  }
+  if (dragTypes.includes("text/plain") && !dragTypes.includes("Files")) {
+    return;
+  }
+  if (!dragTypes.includes("Files")) {
+    return;
+  }
   e.preventDefault();
   e.stopPropagation();
   dragCounter = 0;
-  if (overlayEl) { overlayEl.remove(); overlayEl = null; }
+  if (overlayEl) {
+    overlayEl.remove();
+    overlayEl = null;
+  }
 
   const droppedFiles = Array.from(e.dataTransfer?.files || []);
   if (droppedFiles.length === 0) return;
