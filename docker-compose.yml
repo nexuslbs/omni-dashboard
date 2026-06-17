@@ -1,0 +1,19 @@
+services:
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "12346:3001"
+    environment:
+      PORT: "3001"
+      PGPASSWORD: omniagent
+    volumes:
+      - /opt/workspace/omniagent/data/:/opt/data/:ro
+      - /opt/workspace/omniagent/data/user/:/opt/data/user:rw
+    networks:
+      - omniagent_default
+
+networks:
+  omniagent_default:
+    external: true
