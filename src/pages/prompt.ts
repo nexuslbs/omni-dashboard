@@ -54,8 +54,9 @@ export async function renderPrompt(container: HTMLElement): Promise<void> {
     </div>
   `;
 
-  // Load channels
-  await loadChannels(container);
+  // Load channels, then enhance the select
+  await loadChannels();
+  enhanceSelect("channel-select");
 
   // Wire up controls
   const channelSelect = document.getElementById("channel-select") as HTMLSelectElement;
@@ -72,11 +73,11 @@ export async function renderPrompt(container: HTMLElement): Promise<void> {
   promptText.addEventListener("input", updateButton);
 
   previewBtn.addEventListener("click", async () => {
-    await submitPreview(container);
+    await submitPreview();
   });
 }
 
-async function loadChannels(_container: HTMLElement): Promise<void> {
+async function loadChannels(): Promise<void> {
   const select = document.getElementById("channel-select") as HTMLSelectElement;
   try {
     const res = await fetch(`${API_BASE}/channels`);
@@ -94,7 +95,67 @@ async function loadChannels(_container: HTMLElement): Promise<void> {
   }
 }
 
-async function submitPreview(_container: HTMLElement): Promise<void> {
+// ── Custom Select Enhancement (matched to messages.ts) ──
+
+function enhanceSelect(selectId: string): void {
+  const select = document.getElementById(selectId) as HTMLSelectElement;
+  if (!select || (select as any).dataset._enhanced) return;
+  (select as any).dataset._enhanced = "1";
+
+  const wrapper = document.createElement("div");
+  wrapper.className = "custom-select";
+
+  function buildOptions(): void {
+    const selected = Array.from(select.options).find((o) => o.selected) || select.options[0];
+    wrapper.innerHTML = `
+      <div class="select-trigger">
+        <span class="select-trigger-text">${selected ? escapeHtml(selected.label) : ""}</span>
+        <span class="select-arrow">▾</span>
+      </div>
+      <div class="select-options">
+        ${Array.from(select.options)
+          .map(
+            (o) =>
+              `<div class="select-option${o.selected ? " selected" : ""}" data-value="${escapeHtml(o.value)}">${escapeHtml(o.label)}</div>`,
+          )
+          .join("")}
+      </div>
+    `;
+  }
+
+  buildOptions();
+
+  select.style.display = "none";
+  select.parentNode?.insertBefore(wrapper, select.nextSibling);
+
+  const trigger = wrapper.querySelector(".select-trigger") as HTMLElement;
+
+  trigger.addEventListener("click", (e) => {
+    e.stopPropagation();
+    const isOpen = wrapper.classList.contains("open");
+    document.querySelectorAll(".custom-select.open").forEach((c) => c.classList.remove("open"));
+    if (!isOpen) wrapper.classList.add("open");
+  });
+
+  wrapper.querySelector(".select-options")!.addEventListener("click", (e) => {
+    const opt = (e.target as HTMLElement).closest(".select-option") as HTMLElement;
+    if (!opt) return;
+    const value = opt.getAttribute("data-value");
+    if (value) {
+      select.value = value;
+      const textEl = wrapper.querySelector(".select-trigger-text") as HTMLElement;
+      if (textEl) textEl.textContent = opt.textContent;
+      wrapper.querySelectorAll(".select-option").forEach((o) => o.classList.remove("selected"));
+      opt.classList.add("selected");
+      select.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    wrapper.classList.remove("open");
+  });
+
+  document.addEventListener("click", () => wrapper.classList.remove("open"));
+}
+
+async function submitPreview(): Promise<void> {
   const channel = (document.getElementById("channel-select") as HTMLSelectElement).value;
   const prompt = (document.getElementById("prompt-text") as HTMLTextAreaElement).value.trim();
   const plan = (document.getElementById("plan-checkbox") as HTMLInputElement).checked;
