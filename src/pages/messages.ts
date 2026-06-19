@@ -9,6 +9,7 @@ interface FilterState {
   model: string;
   types: string[];
   subtype: string;
+  seq0: boolean;
 }
 
 let currentFilters: FilterState = {
@@ -19,6 +20,7 @@ let currentFilters: FilterState = {
   model: "all",
   types: [],
   subtype: "",
+  seq0: false,
 };
 
 let allFilters: MessagesFilters | null = null;
@@ -39,6 +41,7 @@ function syncFiltersToUrl(): void {
     for (const t of currentFilters.types) params.append("type", t);
   }
   if (currentFilters.subtype) params.set("subtype", currentFilters.subtype);
+  if (currentFilters.seq0) params.set("seq0", "true");
   if (currentOffset > 0) params.set("offset", String(currentOffset));
   const qs = params.toString();
   const newUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
@@ -61,6 +64,8 @@ function applyFiltersFromUrl(): void {
   if (types.length > 0) currentFilters.types = types;
   const subtype = p.get("subtype");
   if (subtype) currentFilters.subtype = subtype;
+  const seq0 = p.get("seq0");
+  if (seq0 === "true") currentFilters.seq0 = true;
   const offset = p.get("offset");
   if (offset) currentOffset = parseInt(offset, 10) || 0;
 }
@@ -145,6 +150,13 @@ export function renderMessages(container: HTMLElement): void {
         <input class="filter-input" id="filter-subtype" type="text" placeholder="Filter by subtype..." />
       </div>
       <div class="filter-section">
+        <label class="filter-label">Seq</label>
+        <label class="filter-checkbox-label">
+          <input type="checkbox" id="filter-seq0" />
+          <span>Seq-0 only</span>
+        </label>
+      </div>
+      <div class="filter-section">
         <label class="filter-label">Provider</label>
         <select class="filter-select" id="filter-provider">
           <option value="all">All</option>
@@ -194,6 +206,7 @@ export function renderMessages(container: HTMLElement): void {
     model: "all",
     types: [],
     subtype: "",
+    seq0: false,
   };
   currentOffset = 0;
   allFilters = null;
@@ -351,6 +364,16 @@ function wireFilterEvents(): void {
     }, 300);
   });
 
+  // Seq-0 only checkbox
+  const seq0Checkbox = document.getElementById("filter-seq0") as HTMLInputElement;
+  if (seq0Checkbox) {
+    seq0Checkbox.addEventListener("change", () => {
+      currentFilters.seq0 = seq0Checkbox.checked;
+      currentOffset = 0;
+      void loadMessages();
+    });
+  }
+
   // Refresh button
   document.getElementById("btn-refresh")!.addEventListener("click", () => {
     void loadMessages();
@@ -366,6 +389,7 @@ function wireFilterEvents(): void {
       model: "all",
       types: [],
       subtype: "",
+      seq0: false,
     };
     currentOffset = 0;
     syncFilterStateToControls();
@@ -412,6 +436,9 @@ function syncFilterStateToControls(): void {
 
   const modelSel = document.getElementById("filter-model") as HTMLSelectElement | null;
   if (modelSel) modelSel.value = currentFilters.model;
+
+  const seq0Checkbox = document.getElementById("filter-seq0") as HTMLInputElement | null;
+  if (seq0Checkbox) seq0Checkbox.checked = currentFilters.seq0;
 
   syncSelectDisplay("filter-channel");
   syncSelectDisplay("filter-provider");
@@ -520,6 +547,7 @@ async function loadMessages(): Promise<void> {
       params.append("type", t);
     }
     if (currentFilters.subtype) params.set("subtype", currentFilters.subtype);
+    if (currentFilters.seq0) params.set("seq0", "true");
     const data = await apiGet<MessagesResponse>(`/messages/events?${params.toString()}`);
 
     // Update nav

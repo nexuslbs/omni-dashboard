@@ -5,13 +5,13 @@ export const messagesRouter = Router();
 
 const quoteValue = (val: string): string => `'${val.replace(/'/g, "''")}'`;
 
-messagesRouter.get("/filters", (req: Request, res: Response) => {
+messagesRouter.get("/filters", (_req: Request, res: Response) => {
   void (async () => {
     try {
       const channels = await queryDb(`
-        SELECT DISTINCT c.id, c.name, COUNT(m.id) as count
+        SELECT DISTINCT c.id, c.name, COUNT(t.id) as count
         FROM channels c
-        JOIN messages m ON m.channel_id = c.id
+        JOIN threads t ON t.channel_id = c.id
         GROUP BY c.id, c.name
         ORDER BY c.name
       `);
@@ -20,20 +20,20 @@ messagesRouter.get("/filters", (req: Request, res: Response) => {
         SELECT DISTINCT role FROM messages WHERE role IS NOT NULL ORDER BY role
       `);
 
-      const providers = await queryDb(`
-        SELECT DISTINCT provider FROM messages WHERE provider IS NOT NULL ORDER BY provider
-      `);
-
-      const models = await queryDb(`
-        SELECT DISTINCT model FROM messages WHERE model IS NOT NULL ORDER BY model
-      `);
-
       const types = await queryDb(`
         SELECT DISTINCT msg_type FROM messages WHERE msg_type IS NOT NULL ORDER BY msg_type
       `);
 
       const subtypes = await queryDb(`
         SELECT DISTINCT msg_subtype FROM messages WHERE msg_subtype IS NOT NULL AND msg_subtype != '' ORDER BY msg_subtype
+      `);
+
+      const providers = await queryDb(`
+        SELECT DISTINCT provider FROM threads WHERE provider IS NOT NULL ORDER BY provider
+      `);
+
+      const models = await queryDb(`
+        SELECT DISTINCT model FROM threads WHERE model IS NOT NULL ORDER BY model
       `);
 
       res.json({
@@ -65,6 +65,7 @@ messagesRouter.get("/events", (req: Request, res: Response) => {
       const model = req.query.model as string | undefined;
       const typeParam = req.query.type;
       const subtypeParam = (req.query.subtype as string) || "";
+      const seq0 = req.query.seq0 as string | undefined;
       const limit = Math.min(parseInt((req.query.limit as string) || "50", 10), 500);
       const offset = parseInt((req.query.offset as string) || "0", 10);
 
@@ -86,8 +87,9 @@ messagesRouter.get("/events", (req: Request, res: Response) => {
         conds.push(`m.msg_subtype LIKE '%${subtypeParam.replace(/'/g, "''")}%'`);
       }
 
+      // Channel filter via threads join
       if (channelId && channelId !== "all") {
-        conds.push(`m.channel_id = ${quoteValue(channelId)}`);
+        conds.push(`t.channel_id = ${quoteValue(channelId)}`);
       }
       if (threadId) {
         conds.push(`m.thread_id = ${quoteValue(threadId)}`);
@@ -96,30 +98,64 @@ messagesRouter.get("/events", (req: Request, res: Response) => {
         conds.push(`m.role = ${quoteValue(role)}`);
       }
       if (provider && provider !== "all") {
-        conds.push(`m.provider = ${quoteValue(provider)}`);
+        conds.push(`t.provider = ${quoteValue(provider)}`);
       }
       if (model && model !== "all") {
-        conds.push(`m.model = ${quoteValue(model)}`);
+        conds.push(`t.model = ${quoteValue(model)}`);
+      }
+      if (seq0 === "true") {
+        conds.push("m.thread_sequence = 0");
       }
       const whereClause = conds.length > 0 ? `WHERE ${conds.join(" AND \n      ")}` : "";
 
-      const countRows = await queryDb(
-        `SELECT COUNT(*) as total FROM messages m JOIN channels c ON c.id = m.channel_id ${whereClause}`,
-      );
+      const countSql = `
+        SELECT COUNT(*) as total
+        FROM messages m
+        JOIN threads t ON t.id = m.thread_id
+        JOIN channels c ON c.id = t.channel_id
+        ${whereClause}
+      `;
+      const countRows = await queryDb(countSql);
       const total = countRows.length > 0 ? Number(countRows[0].total) || 0 : 0;
 
-      const rows = await queryDb(
-        `SELECT m.*, c.name as channel_name FROM messages m JOIN channels c ON c.id = m.channel_id ${whereClause} ORDER BY m.id DESC LIMIT ${limit} OFFSET ${offset}`,
-      );
+      const dataSql = `
+        SELECT
+          m.id,
+          m.thread_id,
+          m.role,
+          m.content,
+          m.thread_sequence,
+          m.external_id,
+          m.metadata,
+          m.created_at,
+          m.msg_type,
+          m.msg_subtype,
+          t.channel_id,
+          t.status,
+          t.profile,
+          t.provider,
+          t.model,
+          t.duration_ms as processing_time_ms,
+          t.input_tokens,
+          t.output_tokens,
+          t.cached_tokens,
+          c.name as channel_name
+        FROM messages m
+        JOIN threads t ON t.id = m.thread_id
+        JOIN channels c ON c.id = t.channel_id
+        ${whereClause}
+        ORDER BY m.id DESC
+        LIMIT ${limit} OFFSET ${offset}
+      `;
+      const rows = await queryDb(dataSql);
 
       const messages = rows.map((row: any) => {
         let tokenUsage = null;
-        if (row.token_usage) {
-          try {
-            tokenUsage = typeof row.token_usage === "string" ? JSON.parse(row.token_usage) : row.token_usage;
-          } catch {
-            tokenUsage = { prompt_tokens: 0, completion_tokens: 0 };
-          }
+        const pt = row.input_tokens ? parseInt(row.input_tokens) : 0;
+        const ot = row.output_tokens ? parseInt(row.output_tokens) : 0;
+        const ct = row.cached_tokens ? parseInt(row.cached_tokens) : 0;
+        if (pt > 0 || ot > 0 || ct > 0) {
+          tokenUsage = { prompt_tokens: pt, completion_tokens: ot, cached_tokens: ct };
         }
 
         return {
@@ -136,7 +172,7 @@ messagesRouter.get("/events", (req: Request, res: Response) => {
           profile: row.profile,
           provider: row.provider,
           model: row.model,
-          processing_time_ms: row.processing_time_ms,
+          processing_time_ms: row.processing_time_ms ? parseInt(row.processing_time_ms) : null,
           token_usage: tokenUsage,
           channel_name: row.channel_name,
           type: row.msg_type || null,

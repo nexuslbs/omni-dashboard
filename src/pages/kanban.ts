@@ -398,15 +398,6 @@ function renderTaskCard(task: KanbanTask): string {
 
   const status = task.status || "todo";
   const moveableStatuses = ["backlog", "todo", "ready", "running", "review", "done", "blocked"];
-  const statusLabels: Record<string, string> = {
-    backlog: "Backlog",
-    todo: "Todo",
-    ready: "Ready",
-    running: "In Progress",
-    review: "Review",
-    done: "Done",
-    blocked: "Blocked",
-  };
 
   return `
     <div class="kanban-card" data-task-id="${task.id}">
@@ -427,7 +418,7 @@ function renderTaskCard(task: KanbanTask): string {
               .filter((s) => s !== status)
               .map(
                 (s) =>
-                  `<button class="kanban-move-btn" data-move-to="${s}" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text-primary);padding:0.3rem 0.5rem;cursor:pointer;font-size:0.7rem;border-radius:4px;">→ ${statusLabels[s] || s.charAt(0).toUpperCase() + s.slice(1)}</button>`,
+                  `<button class="kanban-move-btn" data-move-to="${s}" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text-primary);padding:0.3rem 0.5rem;cursor:pointer;font-size:0.7rem;border-radius:4px;">→ ${STATUS_LABELS[s] || s.charAt(0).toUpperCase() + s.slice(1)}</button>`,
               )
               .join("")}
           </div>
@@ -574,8 +565,12 @@ async function loadTaskDetail(taskId: string): Promise<void> {
     el.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
         <div>
+          <div class="detail-label">ID</div>
+          <div><code>${escapeHtml(task.id)}</code></div>
+        </div>
+        <div>
           <div class="detail-label">Status</div>
-          <div><span class="badge ${statusBadge(task.status)}">${task.status}</span></div>
+          <div><span class="badge ${statusBadge(task.status)}">${STATUS_LABELS[task.status] || task.status}</span></div>
         </div>
         <div>
           <div class="detail-label">Priority</div>
@@ -665,18 +660,30 @@ async function loadTaskDetail(taskId: string): Promise<void> {
   }
 }
 
+const STATUS_LABELS: Record<string, string> = {
+  backlog: "Backlog",
+  todo: "Todo",
+  ready: "Ready",
+  running: "In Progress",
+  review: "Review",
+  done: "Done",
+  blocked: "Blocked",
+};
+
 // ── Helpers ──
 
 function statusBadge(status: string): string {
   switch (status) {
     case "backlog":
-    case "todo":
       return "badge-neutral";
+    case "todo":
+      return "badge-purple";
     case "ready":
-    case "review":
-      return "badge-info";
-    case "running":
       return "badge-warning";
+    case "running":
+      return "badge-cyan";
+    case "review":
+      return "badge-blue";
     case "done":
       return "badge-success";
     case "blocked":

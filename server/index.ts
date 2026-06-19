@@ -11,6 +11,7 @@ import { scheduleRouter } from "./routes/schedule.js";
 import { wikiSearchRouter } from "./routes/wiki-search.js";
 import { uploadsRouter } from "./routes/uploads.js";
 import { fsRouter } from "./routes/fs.js";
+import { threadsRouter } from "./routes/threads.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -30,6 +31,7 @@ app.use("/api/schedule", scheduleRouter);
 app.use("/api/wiki-search", wikiSearchRouter);
 app.use("/api/uploads", uploadsRouter);
 app.use("/api/fs", fsRouter);
+app.use("/api/threads", threadsRouter);
 
 // Serve static files from ../dist (built frontend)
 const distPath = join(__dirname, "..", "dist");

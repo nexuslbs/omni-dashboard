@@ -59,6 +59,57 @@ export interface OverviewRow {
   model: string | null;
 }
 
+// ── Dashboard Types ──
+
+export interface DashboardKpis {
+  threads_today: number;
+  avg_response_time: number;
+  tokens_today: number;
+  active_channels: number;
+  threads_yesterday: number;
+  avg_response_yesterday: number;
+  tokens_yesterday: number;
+}
+
+export interface HourlyBucket {
+  bucket: string;
+  count: number;
+}
+
+export interface StatusCount {
+  status: string;
+  count: number;
+}
+
+export interface DailyTokens {
+  day: string;
+  tokens: number;
+}
+
+export interface ChannelHealthRow {
+  name: string;
+  threads_today: number;
+  avg_duration: number;
+  success_rate: number;
+  last_activity: string;
+}
+
+export interface ToolUsage {
+  tool: string;
+  count: number;
+}
+
+export interface DashboardData {
+  kpis: DashboardKpis;
+  threads_over_time: HourlyBucket[];
+  status_distribution: StatusCount[];
+  token_trend: DailyTokens[];
+  recent_activity: OverviewRow[];
+  channel_health: ChannelHealthRow[];
+  top_tools: ToolUsage[];
+  // Kanban snapshot is fetched separately
+}
+
 export interface Channel {
   id: number;
   name: string;

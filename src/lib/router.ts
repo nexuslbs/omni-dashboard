@@ -1,4 +1,5 @@
 import { renderOverview } from "../pages/overview";
+import { renderThreads } from "../pages/threads";
 import { renderMessages } from "../pages/messages";
 import { renderKanban, renderKanbanDetail } from "../pages/kanban";
 import { renderSchedule, renderScheduleDetail } from "../pages/schedule";
@@ -19,6 +20,7 @@ interface ParamRoute {
 
 const routes: Route[] = [
   { name: "overview", handler: renderOverview },
+  { name: "threads", handler: renderThreads },
   { name: "messages", handler: renderMessages },
   { name: "kanban", handler: renderKanban },
   { name: "schedule", handler: renderSchedule },
