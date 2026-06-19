@@ -8,9 +8,16 @@
   <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
   <meta http-equiv="Pragma" content="no-cache" />
   <meta http-equiv="Expires" content="0" />
+  <style>
+    /* Prevent flash of unstyled content on hard refresh */
+    html { background: #0a0f1e; }
+    body { opacity: 0; transition: opacity 0.15s ease; }
+    html.dark body { background: #0a0f1e; }
+  </style>
   <script>if(window.innerWidth>640||screen.width>640)document.write('<style>.mobile-nav{display:none!important;visibility:hidden!important}</style>')</script>
   <link rel="stylesheet" href="/src/style.css" />
   <script type="module" src="/src/index.ts"></script>
+  <script nonce="fade-in">document.addEventListener('DOMContentLoaded',function(){setTimeout(function(){document.body.style.opacity='1'},50)})</script>
 </head>
 <body>
   <div id="app" class="dashboard-layout">
