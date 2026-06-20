@@ -157,7 +157,7 @@ async function submitPreview(): Promise<void> {
 
   resultsEl.style.display = "none";
   errorEl.style.display = "none";
-  loadingEl.style.display = "block";
+  loadingEl.style.display = "flex";
 
   try {
     const res = await fetch(`${API_BASE}/prompt-preview/${encodeURIComponent(channel)}`, {

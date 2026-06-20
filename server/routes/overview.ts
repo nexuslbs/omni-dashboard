@@ -132,11 +132,11 @@ overviewRouter.get("/dashboard", (req: Request, res: Response) => {
         channel_health AS (
           SELECT
             COALESCE(c.name, 'unknown') AS name,
-            COUNT(*) FILTER (WHERE t.created_at >= date_trunc('day', NOW())) AS threads_today,
+            COUNT(*) FILTER (WHERE t.created_at >= date_trunc('day', NOW()) AND t.status != 'system') AS threads_today,
             COALESCE(AVG(t.duration_ms) FILTER (WHERE t.status = 'completed')::bigint, 0) AS avg_duration,
             CASE
-              WHEN COUNT(*) > 0
-              THEN ROUND(COUNT(*) FILTER (WHERE t.status = 'completed')::numeric / GREATEST(COUNT(*), 1), 2)
+              WHEN COUNT(*) FILTER (WHERE t.status != 'system') > 0
+              THEN ROUND(COUNT(*) FILTER (WHERE t.status = 'completed')::numeric / GREATEST(COUNT(*) FILTER (WHERE t.status != 'system'), 1), 2)
               ELSE 0
             END AS success_rate,
             COALESCE(MAX(t.created_at)::text, '') AS last_activity

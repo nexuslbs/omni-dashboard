@@ -2,7 +2,6 @@ import { apiGet, apiPost, type KanbanBoardResponse, type KanbanTask } from "../l
 import { router } from "../lib/router";
 
 let showArchived = false;
-let _dropdownListenerAttached = false;
 
 export function renderKanban(container: HTMLElement): void {
   container.innerHTML = `
@@ -55,8 +54,16 @@ export function renderKanban(container: HTMLElement): void {
             </select>
           </div>
           <div>
-            <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Assignee</label>
-            <input type="text" id="task-create-assignee" placeholder="Optional" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.85rem;box-sizing:border-box;" />
+            <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Channel</label>
+            <select id="task-create-channel" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.85rem;box-sizing:border-box;">
+              <option value="">Loading...</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Profile</label>
+            <select id="task-create-profile" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.85rem;box-sizing:border-box;">
+              <option value="">None</option>
+            </select>
           </div>
         </div>
         <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1rem;">
@@ -68,9 +75,12 @@ export function renderKanban(container: HTMLElement): void {
   `;
 
   // Wire up Create Task button
-  document.getElementById("create-task-btn")?.addEventListener("click", () => {
+  document.getElementById("create-task-btn")?.addEventListener("click", async () => {
     const modal = document.getElementById("create-task-modal");
-    if (modal) modal.style.display = "flex";
+    if (!modal) return;
+    await populateCreateChannelSelect();
+    await populateProfileSelect("task-create-profile");
+    modal.style.display = "flex";
   });
 
   document.getElementById("task-create-cancel")?.addEventListener("click", () => {
@@ -88,12 +98,13 @@ export function renderKanban(container: HTMLElement): void {
     const priority = parseInt(
       (document.getElementById("task-create-priority") as HTMLSelectElement)?.value || "0",
     );
-    const assignee =
-      (document.getElementById("task-create-assignee") as HTMLInputElement)?.value.trim() || undefined;
+    const channel_id =
+      (document.getElementById("task-create-channel") as HTMLSelectElement)?.value || undefined;
+    const profile = (document.getElementById("task-create-profile") as HTMLSelectElement)?.value || undefined;
     const status = (document.getElementById("task-create-status") as HTMLSelectElement)?.value || "backlog";
 
     try {
-      await apiPost<any>("/kanban/tasks", { title, body, priority, assignee, status });
+      await apiPost<any>("/kanban/tasks", { title, body, priority, channel_id, profile, status });
       closeCreateModal();
       void loadBoard();
     } catch (e) {
@@ -118,16 +129,6 @@ export function renderKanban(container: HTMLElement): void {
     void loadBoard();
   });
 
-  // Attach document-level dropdown close handler exactly once (not on every loadBoard)
-  if (!_dropdownListenerAttached) {
-    _dropdownListenerAttached = true;
-    document.addEventListener("click", () => {
-      document.querySelectorAll(".kanban-move-dropdown").forEach((d) => {
-        (d as HTMLElement).style.display = "none";
-      });
-    });
-  }
-
   void loadBoard();
 }
 
@@ -142,8 +143,12 @@ function closeCreateModal(): void {
   if (priority) priority.value = "0";
   syncSelectDisplay("task-create-priority");
   syncSelectDisplay("task-create-status");
-  const assignee = document.getElementById("task-create-assignee") as HTMLInputElement;
-  if (assignee) assignee.value = "";
+  const channel = document.getElementById("task-create-channel") as HTMLSelectElement;
+  if (channel) channel.value = "";
+  syncSelectDisplay("task-create-channel");
+  const profile = document.getElementById("task-create-profile") as HTMLSelectElement;
+  if (profile) profile.value = "";
+  syncSelectDisplay("task-create-profile");
 }
 
 async function loadBoard(): Promise<void> {
@@ -178,84 +183,11 @@ async function loadBoard(): Promise<void> {
         (card as HTMLElement).draggable = true;
       }
       card.addEventListener("click", (e) => {
-        if ((e.target as HTMLElement).closest("button, select, input, textarea, .kanban-move-dropdown"))
-          return;
+        if ((e.target as HTMLElement).closest("button, select, input, textarea")) return;
         const taskId = card.getAttribute("data-task-id");
         if (taskId) {
           history.pushState({}, "", `/kanban/${taskId}`);
           router.go(`kanban/${taskId}`);
-        }
-      });
-    });
-
-    // Wire up move dropdown toggle
-    document.querySelectorAll(".kanban-move-toggle").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const taskId = (e.currentTarget as HTMLElement).getAttribute("data-task-id");
-        if (!taskId) return;
-        document.querySelectorAll(".kanban-move-dropdown").forEach((d) => {
-          if (d.getAttribute("data-task-id") !== taskId) {
-            (d as HTMLElement).style.display = "none";
-          }
-        });
-        const dropdown = document.querySelector(
-          `.kanban-move-dropdown[data-task-id="${taskId}"]`,
-        ) as HTMLElement;
-        if (dropdown) {
-          dropdown.style.display = dropdown.style.display === "block" ? "none" : "block";
-        }
-      });
-    });
-
-    // Wire up dropdown move buttons
-    document.querySelectorAll(".kanban-move-btn").forEach((btn) => {
-      btn.addEventListener("click", (e) => {
-        e.stopPropagation();
-        const dropdown = (e.target as HTMLElement).closest(".kanban-move-dropdown") as HTMLElement;
-        const taskId = dropdown?.getAttribute("data-task-id");
-        const moveTo = (e.target as HTMLElement).getAttribute("data-move-to");
-        if (taskId && moveTo) {
-          if (dropdown) dropdown.style.display = "none";
-          void moveTask(taskId, moveTo);
-        }
-      });
-    });
-
-    // Wire up archive buttons
-    document.querySelectorAll(".kanban-archive-btn").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const taskId = (e.currentTarget as HTMLElement).getAttribute("data-task-id");
-        if (!taskId) return;
-        try {
-          const res = await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId), {
-            method: "PATCH",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              archived: !(e.currentTarget as HTMLElement).textContent?.startsWith("Unarchive"),
-            }),
-          });
-          if (!res.ok) throw new Error((await res.text()) || "Archive failed");
-          void loadBoard();
-        } catch (err) {
-          console.error("Archive failed:", err);
-        }
-      });
-    });
-
-    // Wire up delete buttons on cards
-    document.querySelectorAll(".kanban-del-card-btn").forEach((btn) => {
-      btn.addEventListener("click", async (e) => {
-        e.stopPropagation();
-        const taskId = (e.currentTarget as HTMLElement).getAttribute("data-task-id");
-        if (!taskId) return;
-        if (!confirm("Delete this task?")) return;
-        try {
-          await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId), { method: "DELETE" });
-          void loadBoard();
-        } catch (err) {
-          console.error("Delete failed:", err);
         }
       });
     });
@@ -333,19 +265,14 @@ async function loadBoard(): Promise<void> {
 }
 
 async function moveTask(taskId: string, status: string): Promise<void> {
-  try {
-    const res = await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId) + "/status", {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ status }),
-    });
-    if (!res.ok) {
-      const text = await res.text().catch(() => "Unknown error");
-      throw new Error(`${res.status}: ${text}`);
-    }
-    void loadBoard();
-  } catch (e) {
-    alert("Failed to move task: " + (e instanceof Error ? e.message : "Unknown error"));
+  const res = await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId) + "/status", {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ status }),
+  });
+  if (!res.ok) {
+    const text = await res.text().catch(() => "Unknown error");
+    throw new Error(`${res.status}: ${text}`);
   }
 }
 
@@ -396,9 +323,6 @@ function renderTaskCard(task: KanbanTask): string {
 
   const timeAgo = formatRelativeTime(task.created_at);
 
-  const status = task.status || "todo";
-  const moveableStatuses = ["backlog", "todo", "ready", "running", "review", "done", "blocked"];
-
   return `
     <div class="kanban-card" data-task-id="${task.id}">
       <div class="kanban-card-top">
@@ -410,22 +334,7 @@ function renderTaskCard(task: KanbanTask): string {
         ${task.assignee ? `<span class="kanban-assignee">@${escapeHtml(task.assignee)}</span>` : ""}
         <span class="kanban-time">${timeAgo}</span>
       </div>
-      <div class="kanban-card-actions" style="display:flex;flex-wrap:wrap;gap:0.25rem;padding:0.375rem 0.5rem;border-top:1px solid var(--glass-border,rgba(255,255,255,0.06));margin-top:0.25rem;">
-        <div style="position:relative;">
-          <button class="kanban-move-toggle" data-task-id="${task.id}" style="background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:4px;padding:0.15rem 0.4rem;cursor:pointer;font-size:0.65rem;white-space:nowrap;">↳ Move</button>
-          <div class="kanban-move-dropdown" data-task-id="${task.id}" style="display:none;position:absolute;top:100%;left:0;z-index:10;background:#1a1a2e;border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem;min-width:110px;box-shadow:0 4px 12px rgba(0,0,0,0.4);">
-            ${moveableStatuses
-              .filter((s) => s !== status)
-              .map(
-                (s) =>
-                  `<button class="kanban-move-btn" data-move-to="${s}" style="display:block;width:100%;text-align:left;background:none;border:none;color:var(--text-primary);padding:0.3rem 0.5rem;cursor:pointer;font-size:0.7rem;border-radius:4px;">→ ${STATUS_LABELS[s] || s.charAt(0).toUpperCase() + s.slice(1)}</button>`,
-              )
-              .join("")}
-          </div>
-        </div>
-        <button class="kanban-archive-btn" data-task-id="${task.id}" style="background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-muted);border-radius:4px;padding:0.15rem 0.4rem;cursor:pointer;font-size:0.65rem;white-space:nowrap;">${task.archived ? "Unarchive" : "Archive"}</button>
-        <button class="kanban-del-card-btn" data-task-id="${task.id}" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:var(--accent-rose);border-radius:4px;padding:0.15rem 0.4rem;cursor:pointer;font-size:0.65rem;white-space:nowrap;">✕ Delete</button>
-      </div>
+
     </div>
   `;
 }
@@ -486,8 +395,16 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
             </select>
           </div>
           <div>
-            <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Assignee</label>
-            <input type="text" id="task-edit-assignee" placeholder="Optional" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.85rem;box-sizing:border-box;" />
+            <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Channel</label>
+            <select id="task-edit-channel" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.85rem;box-sizing:border-box;">
+              <option value="">Loading...</option>
+            </select>
+          </div>
+          <div>
+            <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Profile</label>
+            <select id="task-edit-profile" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.85rem;box-sizing:border-box;">
+              <option value="">None</option>
+            </select>
           </div>
         </div>
         <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1rem;">
@@ -577,8 +494,12 @@ async function loadTaskDetail(taskId: string): Promise<void> {
           <div><span class="badge ${task.priority >= 3 ? "badge-error" : task.priority >= 1 ? "badge-warning" : "badge-neutral"}">${task.priority} - ${task.priority >= 3 ? "High" : task.priority >= 1 ? "Med" : "Low"}</span></div>
         </div>
         <div>
-          <div class="detail-label">Assignee</div>
-          <div>${task.assignee ? escapeHtml(task.assignee) : "<em>Unassigned</em>"}</div>
+          <div class="detail-label">Channel</div>
+          <div>${task.channel_id ? escapeHtml(task.channel_id) : "<em>None</em>"}</div>
+        </div>
+        <div>
+          <div class="detail-label">Profile</div>
+          <div>${task.profile ? escapeHtml(task.profile) : "<em>None</em>"}</div>
         </div>
         <div>
           <div class="detail-label">Created</div>
@@ -600,19 +521,45 @@ async function loadTaskDetail(taskId: string): Promise<void> {
       `
           : ""
       }
+
+      <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--glass-border,rgba(255,255,255,0.08));">
+        <div class="detail-label" style="margin-bottom:0.5rem;">Move to</div>
+        <div style="display:flex;flex-wrap:wrap;gap:0.5rem;">
+          ${Object.keys(STATUS_LABELS)
+            .filter((s) => s !== task.status)
+            .map(
+              (s) =>
+                `<button class="detail-move-btn" data-status="${s}" style="background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-primary);border-radius:6px;padding:0.35rem 0.6rem;cursor:pointer;font-size:0.75rem;transition:all 0.15s;">→ ${STATUS_LABELS[s]}</button>`,
+            )
+            .join("")}
+        </div>
+      </div>
     `;
+
+    // Wire up detail move buttons
+    el.querySelectorAll(".detail-move-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        const status = (e.currentTarget as HTMLElement).getAttribute("data-status");
+        if (!status) return;
+        await moveTask(taskId, status);
+        void loadTaskDetail(taskId);
+      });
+    });
 
     // Wire up Edit button
     const editBtn = document.getElementById("task-edit-btn");
     if (editBtn) {
-      editBtn.addEventListener("click", () => {
+      editBtn.addEventListener("click", async () => {
         (document.getElementById("task-edit-title") as HTMLInputElement).value = task.title;
         (document.getElementById("task-edit-body") as HTMLTextAreaElement).value = task.body || "";
         (document.getElementById("task-edit-priority") as HTMLSelectElement).value = String(task.priority);
         (document.getElementById("task-edit-status") as HTMLSelectElement).value = task.status;
         syncSelectDisplay("task-edit-priority");
         syncSelectDisplay("task-edit-status");
-        (document.getElementById("task-edit-assignee") as HTMLInputElement).value = task.assignee || "";
+
+        // Populate channel and profile selects, then set current values
+        await populateEditChannelSelect(task.channel_id || "");
+        await populateProfileSelect("task-edit-profile", task.profile || "");
 
         const modal = document.getElementById("edit-task-modal");
         if (modal) modal.style.display = "flex";
@@ -635,14 +582,15 @@ async function loadTaskDetail(taskId: string): Promise<void> {
         (document.getElementById("task-edit-priority") as HTMLSelectElement)?.value || "0",
       );
       const status = (document.getElementById("task-edit-status") as HTMLSelectElement)?.value || "backlog";
-      const assignee =
-        (document.getElementById("task-edit-assignee") as HTMLInputElement)?.value.trim() || undefined;
+      const channel_id =
+        (document.getElementById("task-edit-channel") as HTMLSelectElement)?.value || undefined;
+      const profile = (document.getElementById("task-edit-profile") as HTMLSelectElement)?.value || undefined;
 
       try {
         const res = await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, body, priority, status, assignee }),
+          body: JSON.stringify({ title, body, priority, status, channel_id, profile }),
         });
         if (!res.ok) {
           const text = await res.text().catch(() => "Unknown error");
@@ -706,6 +654,93 @@ function escapeHtml(text: string): string {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
+}
+
+// ── Channel / Profile population helpers ──
+
+async function populateCreateChannelSelect(): Promise<void> {
+  const select = document.getElementById("task-create-channel") as HTMLSelectElement;
+  if (!select) return;
+  try {
+    const channels = await apiGet<any[]>("/api/channels");
+    const kanbanChannel = channels.find((ch: any) => ch.platform === "kanban");
+    select.innerHTML = '<option value="">None</option>';
+    for (const ch of channels) {
+      const opt = document.createElement("option");
+      opt.value = ch.id || ch.name || ch.channel_id || "";
+      opt.textContent = ch.name || ch.id || "";
+      if (
+        kanbanChannel &&
+        (opt.value === kanbanChannel.id ||
+          opt.value === kanbanChannel.name ||
+          opt.value === kanbanChannel.channel_id)
+      ) {
+        opt.selected = true;
+      }
+      select.appendChild(opt);
+    }
+    refreshEnhancedSelect("task-create-channel");
+  } catch (e) {
+    console.error("Failed to load channels:", e);
+    select.innerHTML = '<option value="">Error loading channels</option>';
+  }
+}
+
+async function populateEditChannelSelect(currentChannelId: string): Promise<void> {
+  const select = document.getElementById("task-edit-channel") as HTMLSelectElement;
+  if (!select) return;
+  try {
+    const channels = await apiGet<any[]>("/api/channels");
+    select.innerHTML = '<option value="">None</option>';
+    for (const ch of channels) {
+      const opt = document.createElement("option");
+      opt.value = ch.id || ch.name || ch.channel_id || "";
+      opt.textContent = ch.name || ch.id || "";
+      if (opt.value === currentChannelId) {
+        opt.selected = true;
+      }
+      select.appendChild(opt);
+    }
+    refreshEnhancedSelect("task-edit-channel");
+  } catch (e) {
+    console.error("Failed to load channels:", e);
+    select.innerHTML = '<option value="">Error loading channels</option>';
+  }
+}
+
+async function populateProfileSelect(selectId: string, currentProfile?: string): Promise<void> {
+  const select = document.getElementById(selectId) as HTMLSelectElement;
+  if (!select) return;
+  try {
+    const profiles = await apiGet<string[]>("/api/profiles");
+    select.innerHTML = '<option value="">None</option>';
+    for (const p of profiles) {
+      const opt = document.createElement("option");
+      opt.value = p;
+      opt.textContent = p;
+      if (currentProfile && p === currentProfile) {
+        opt.selected = true;
+      }
+      select.appendChild(opt);
+    }
+    refreshEnhancedSelect(selectId);
+  } catch (e) {
+    console.error("Failed to load profiles:", e);
+    select.innerHTML = '<option value="">Error loading profiles</option>';
+  }
+}
+
+function refreshEnhancedSelect(selectId: string): void {
+  const select = document.getElementById(selectId) as HTMLSelectElement;
+  if (!select) return;
+  // Remove existing enhanced wrapper if any
+  const wrapper = select.nextElementSibling as HTMLElement;
+  if (wrapper && wrapper.classList.contains("custom-select")) {
+    wrapper.remove();
+  }
+  (select as any).dataset._enhanced = "";
+  select.style.display = "";
+  enhanceSelect(selectId);
 }
 
 // ── Enhanced dropdown helpers (replaces native <select>) ──

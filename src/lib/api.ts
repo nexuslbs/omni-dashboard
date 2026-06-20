@@ -201,6 +201,8 @@ export interface KanbanTask {
   title: string;
   body: string | null;
   assignee: string | null;
+  channel_id: string | null;
+  profile: string | null;
   status: string;
   priority: number;
   position?: number;
@@ -239,6 +241,10 @@ export interface CronJob {
   profile?: string | null;
   deliver?: string | null;
   repeat?: number | null;
+  mode?: string;
+  direct_task_type?: string;
+  active?: boolean;
+  channel_id?: number;
   last_run: string | null;
   next_run: string | null;
   last_run_at: string | null;

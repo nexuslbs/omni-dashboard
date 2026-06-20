@@ -14,6 +14,7 @@ import { fsRouter } from "./routes/fs.js";
 import { threadsRouter } from "./routes/threads.js";
 import { channelsRouter } from "./routes/channels.js";
 import { settingsRouter } from "./routes/settings.js";
+import { profilesRouter } from "./routes/profiles.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -36,6 +37,7 @@ app.use("/api/fs", fsRouter);
 app.use("/api/threads", threadsRouter);
 app.use("/api/channels", channelsRouter);
 app.use("/api/settings", settingsRouter);
+app.use("/api/profiles", profilesRouter);
 
 // Proxy for prompt-preview — forward to OmniAgent HTTP API
 app.post("/api/prompt-preview/:channelName", async (req, res) => {

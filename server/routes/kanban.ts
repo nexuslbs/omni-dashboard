@@ -21,7 +21,7 @@ kanbanRouter.get("/board", async (req: Request, res: Response) => {
     const showArchived = req.query.show_archived === "true";
 
     const tasks = await queryDb(
-      `SELECT id, title, body, assignee, status, priority,
+      `SELECT id, title, body, assignee, channel_id, profile, status, priority,
               COALESCE(position, 0) AS position,
               created_at, updated_at, archived
        FROM kanban_tasks
@@ -52,7 +52,7 @@ kanbanRouter.get("/tasks/:id", async (req: Request, res: Response) => {
     }
 
     const tasks = await queryDb(
-      `SELECT id, title, body, assignee, status, priority,
+      `SELECT id, title, body, assignee, channel_id, profile, status, priority,
               created_at, updated_at, archived
        FROM kanban_tasks WHERE id = $1`,
       [taskId],
@@ -73,7 +73,7 @@ kanbanRouter.get("/tasks/:id", async (req: Request, res: Response) => {
 // ── POST /api/kanban/tasks — Create task ──
 kanbanRouter.post("/tasks", async (req: Request, res: Response) => {
   try {
-    const { title, body, assignee, priority, status, board_id } = req.body;
+    const { title, body, channel_id, profile, priority, status, board_id } = req.body;
     if (!title || typeof title !== "string" || title.trim().length === 0) {
       res.status(400).json({ error: "Title is required" });
       return;
@@ -83,6 +83,8 @@ kanbanRouter.post("/tasks", async (req: Request, res: Response) => {
     const taskStatus = status && VALID_STATUSES.has(status) ? status : "backlog";
     const taskPriority = priority != null ? priority : 0;
     const taskBoardId = board_id || "board_1";
+    const taskChannelId = channel_id != null ? channel_id : null;
+    const taskProfile = profile || null;
 
     // Get max position for this status group
     const posResult = await queryDb(
@@ -92,9 +94,19 @@ kanbanRouter.post("/tasks", async (req: Request, res: Response) => {
     const nextPos = posResult.length > 0 ? posResult[0].next_pos : 0;
 
     await queryDb(
-      `INSERT INTO kanban_tasks (id, title, body, status, priority, assignee, board_id, position)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-      [id, title.trim(), body || "", taskStatus, taskPriority, assignee || "", taskBoardId, nextPos],
+      `INSERT INTO kanban_tasks (id, title, body, status, priority, channel_id, profile, board_id, position)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)`,
+      [
+        id,
+        title.trim(),
+        body || "",
+        taskStatus,
+        taskPriority,
+        taskChannelId,
+        taskProfile,
+        taskBoardId,
+        nextPos,
+      ],
     );
 
     res.json({ success: true, id });
@@ -288,7 +300,7 @@ kanbanRouter.patch("/tasks/:id", async (req: Request, res: Response) => {
       return;
     }
 
-    const { title, body, assignee, priority, status, board_id, archived } = req.body;
+    const { title, body, channel_id, profile, priority, status, board_id, archived } = req.body;
     const setClauses: string[] = [];
     const params: any[] = [];
     let paramIdx = 2;
@@ -305,9 +317,13 @@ kanbanRouter.patch("/tasks/:id", async (req: Request, res: Response) => {
       setClauses.push(`body = $${paramIdx++}`);
       params.push(body);
     }
-    if (assignee !== undefined) {
-      setClauses.push(`assignee = $${paramIdx++}`);
-      params.push(assignee);
+    if (channel_id !== undefined) {
+      setClauses.push(`channel_id = $${paramIdx++}`);
+      params.push(channel_id);
+    }
+    if (profile !== undefined) {
+      setClauses.push(`profile = NULLIF($${paramIdx++}, '')::text`);
+      params.push(profile);
     }
     if (priority !== undefined) {
       setClauses.push(`priority = $${paramIdx++}`);

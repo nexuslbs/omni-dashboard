@@ -127,8 +127,15 @@ async function loadScheduleDetail(cronId: string): Promise<void> {
             <code style="background:var(--bg-card);padding:0.25rem 0.5rem;border-radius:4px;font-size:0.8rem;color:var(--accent-cyan);">${escapeHtml(job.schedule)}</code>
           </div>
           <div style="margin-bottom:0.75rem;">
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Mode</div>
+            <div style="color:var(--text-primary);">${job.mode ? escapeHtml(job.mode) : "—"}</div>
+          </div>
+          <div style="margin-bottom:0.75rem;">
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Status</div>
-            <span class="badge ${job.enabled ? "badge-success" : "badge-neutral"}">${job.enabled ? "Active" : "Paused"}</span>
+            <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+              <span class="badge ${job.enabled ? "badge-success" : "badge-neutral"}">${job.enabled ? "Enabled" : "Disabled"}</span>
+              ${job.active !== undefined ? `<span class="badge ${job.active ? "badge-success" : "badge-warning"}">${job.active ? "Active" : "Inactive"}</span>` : ""}
+            </div>
           </div>
         </div>
         <div>
@@ -139,6 +146,10 @@ async function loadScheduleDetail(cronId: string): Promise<void> {
           <div style="margin-bottom:0.75rem;">
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Next Run</div>
             <div style="color:var(--text-primary);">${formatDate(job.next_run)}</div>
+          </div>
+          <div style="margin-bottom:0.75rem;">
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Direct Task Type</div>
+            <div style="color:var(--text-primary);">${job.direct_task_type ? escapeHtml(job.direct_task_type) : "—"}</div>
           </div>
           <div style="margin-bottom:0.75rem;">
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Created</div>
@@ -228,6 +239,17 @@ async function loadScheduleDetail(cronId: string): Promise<void> {
       <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
         <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Profile</div>
         <code style="background:var(--bg-card);padding:0.25rem 0.5rem;border-radius:4px;font-size:0.8rem;color:var(--accent-cyan);">${escapeHtml(job.profile)}</code>
+      </div>
+      `
+          : ""
+      }
+
+      ${
+        job.channel_id
+          ? `
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Channel</div>
+        <code style="background:var(--bg-card);padding:0.25rem 0.5rem;border-radius:4px;font-size:0.8rem;color:var(--accent-cyan);">#${escapeHtml(String(job.channel_id))}</code>
       </div>
       `
           : ""
