@@ -1,104 +1,155 @@
 import { Router } from "express";
-import { queryDb } from "../db.js";
-import { readdirSync, existsSync } from "fs";
+import { readdirSync, existsSync, readFileSync, writeFileSync, statSync } from "fs";
 import { join } from "path";
 
 const OMNI_DATA_DIR = process.env.OMNI_DATA_DIR || "/opt/data";
 
 export const profilesRouter = Router();
 
-// GET /api/profiles — list all profiles with full details, channel associations, and skills
-profilesRouter.get("/", async (_req, res) => {
+// ── Helpers ──
+
+function getProfilesDir(): string {
+  return join(OMNI_DATA_DIR, "profiles");
+}
+
+function getConfigPath(name: string): string {
+  return join(getProfilesDir(), name, "config.json");
+}
+
+function getSkillsDir(name: string): string {
+  return join(getProfilesDir(), name, "skills");
+}
+
+function listFsProfiles(): string[] {
+  const dir = getProfilesDir();
+  if (!existsSync(dir)) return [];
   try {
-    // Fetch from profiles table
-    const profileRows = await queryDb(
-      `SELECT id, name, provider, model, base_url, max_tokens, temperature, allowed_tools, created_at, updated_at
-       FROM profiles ORDER BY name`,
-    );
-
-    // Fetch each profile's default channels and skills
-    const profiles = [];
-    for (const row of profileRows) {
-      const channelRows = await queryDb(
-        `SELECT id, name, platform, resource_identifier FROM channels WHERE current_profile = $1 ORDER BY name`,
-        [row.name],
-      );
-
-      // Read skill filenames from filesystem
-      const skillsDir = join(OMNI_DATA_DIR, "profiles", row.name, "skills");
-      let skills: string[] = [];
-      if (existsSync(skillsDir)) {
-        try {
-          skills = readdirSync(skillsDir).filter(
-            (f) => f.endsWith(".md") || f.endsWith(".yaml") || f.endsWith(".yml") || !f.includes("."),
-          );
-        } catch {
-          // If directory can't be read, just return empty
-        }
+    return readdirSync(dir).filter((f) => {
+      try {
+        return statSync(join(dir, f)).isDirectory();
+      } catch {
+        return false;
       }
+    });
+  } catch {
+    return [];
+  }
+}
 
-      profiles.push({
-        id: row.id,
-        name: row.name,
-        provider: row.provider,
-        model: row.model,
-        base_url: row.base_url,
-        max_tokens: row.max_tokens,
-        temperature: row.temperature,
-        allowed_tools: row.allowed_tools,
-        skills,
-        created_at: row.created_at,
-        updated_at: row.updated_at,
-        default_channels: channelRows,
-      });
-    }
+function readProfileSkills(name: string): string[] {
+  const dir = getSkillsDir(name);
+  if (!existsSync(dir)) return [];
+  try {
+    return readdirSync(dir).filter(
+      (f) => f.endsWith(".md") || f.endsWith(".yaml") || f.endsWith(".yml") || !f.includes("."),
+    );
+  } catch {
+    return [];
+  }
+}
 
-    res.json(profiles);
+function readProfileConfig(name: string): {
+  provider: string | null;
+  model: string | null;
+  allowed_tools: string[];
+} {
+  const configPath = getConfigPath(name);
+  if (!existsSync(configPath)) {
+    return { provider: null, model: null, allowed_tools: null as any };
+  }
+  try {
+    const raw = readFileSync(configPath, "utf-8");
+    const cfg = JSON.parse(raw);
+    return {
+      provider: cfg.provider ?? null,
+      model: cfg.model ?? null,
+      allowed_tools: Array.isArray(cfg.allowed_tools) ? cfg.allowed_tools : (null as any),
+    };
+  } catch {
+    return { provider: null, model: null, allowed_tools: null as any };
+  }
+}
+
+/** All known tools — must match Rust profile::ALL_KNOWN_TOOLS */
+const ALL_TOOLS = [
+  "filesystem:read",
+  "filesystem:write",
+  "filesystem:list",
+  "filesystem:search",
+  "filesystem:info",
+  "web:fetch",
+  "agent:search_messages",
+  "agent:search_wiki",
+  "agent:promote_to_memory",
+  "agent:list_memories",
+  "agent:review_memories",
+  "agent:get_metrics",
+  "agent:query_database",
+  "git:create_repo",
+  "git:clone",
+  "git:commit_push",
+  "git:status",
+  "docker:compose",
+];
+
+// ── Routes ──
+
+// GET /api/profiles
+profilesRouter.get("/", (_req, res) => {
+  try {
+    const names = listFsProfiles();
+    const result = names.map((name) => {
+      const config = readProfileConfig(name);
+      return {
+        name,
+        provider: config.provider,
+        model: config.model,
+        allowed_tools: config.allowed_tools,
+        skills: readProfileSkills(name),
+        all_tools: ALL_TOOLS, // for multi-select options
+      };
+    });
+    res.json(result);
   } catch (err) {
-    console.error("[profiles] Error:", err);
+    console.error("[profiles] GET error:", err);
     res.status(500).json({ error: "Failed to fetch profiles" });
   }
 });
 
-// PATCH /api/profiles/:name — update profile fields (provider, model, allowed_tools)
-profilesRouter.patch("/:name", async (req, res) => {
+// PATCH /api/profiles/:name — update profile config.json fields
+profilesRouter.patch("/:name", (req, res) => {
   try {
     const { name } = req.params;
     const { provider, model, allowed_tools } = req.body;
 
-    // Check if profile exists
-    const existing = await queryDb(`SELECT name FROM profiles WHERE name = $1`, [name]);
-    if (existing.length === 0) {
-      res.status(404).json({ error: "Profile not found" });
+    // Ensure profile directory exists
+    const configPath = getConfigPath(name);
+    const configDir = join(getProfilesDir(), name);
+    if (!existsSync(configDir)) {
+      res.status(404).json({ error: `Profile '${name}' not found on filesystem` });
       return;
     }
 
-    // Build SET clause dynamically
-    const sets: string[] = [];
-    const params: any[] = [];
-    let paramIdx = 1;
+    // Read existing config or start fresh
+    let config: any = {};
+    if (existsSync(configPath)) {
+      try {
+        config = JSON.parse(readFileSync(configPath, "utf-8"));
+      } catch {
+        config = {};
+      }
+    }
 
-    if (provider !== undefined) {
-      sets.push(`provider = $${paramIdx++}`);
-      params.push(provider);
-    }
-    if (model !== undefined) {
-      sets.push(`model = $${paramIdx++}`);
-      params.push(model);
-    }
+    // Merge updates
+    if (provider !== undefined) config.provider = provider || null;
+    if (model !== undefined) config.model = model || null;
     if (allowed_tools !== undefined) {
-      sets.push(`allowed_tools = $${paramIdx++}`);
-      params.push(allowed_tools);
+      // If empty array or null, set to ALL_TOOLS (reset to defaults)
+      config.allowed_tools =
+        Array.isArray(allowed_tools) && allowed_tools.length > 0 ? allowed_tools : ALL_TOOLS;
     }
 
-    if (sets.length === 0) {
-      res.status(400).json({ error: "No fields to update" });
-      return;
-    }
-
-    params.push(name);
-    const sql = `UPDATE profiles SET ${sets.join(", ")} WHERE name = $${paramIdx}`;
-    await queryDb(sql, params);
+    writeFileSync(configPath, JSON.stringify(config, null, 2) + "\n");
     res.json({ success: true });
   } catch (err) {
     console.error("[profiles] PATCH error:", err);

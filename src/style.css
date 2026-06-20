@@ -606,6 +606,16 @@ a.thread-row {
 }
 
 /* Status badge variants for overview */
+/* Status badge variants — used in dashboard, channels, and overview */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.1rem 0.5rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  white-space: nowrap;
+}
 .status-badge-completed { background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
 .status-badge-success { background: rgba(16, 185, 129, 0.1); color: #34d399; border: 1px solid rgba(16, 185, 129, 0.2); }
 .status-badge-failed { background: rgba(244, 63, 94, 0.1); color: #fb7185; border: 1px solid rgba(244, 63, 94, 0.2); }
@@ -1599,6 +1609,8 @@ a.thread-row {
 }
 
 /* Custom dropdown — replaces native <select> to avoid OS white popup shell */
+/* Note: .select-options is now appended to document.body with inline fixed positioning
+   to escape backdrop-filter stacking contexts. Only trigger and option styles remain here. */
 .custom-select {
   position: relative;
   width: 100%;
@@ -1647,25 +1659,14 @@ a.thread-row {
   transform: rotate(180deg);
 }
 
+/* Floating options appended to document.body — these are base styles;
+   inline fixed-positioning is applied in JS to avoid clipping by parent stacking contexts. */
 .select-options {
-  display: none;
-  position: absolute;
-  top: calc(100% + 4px);
-  left: 0;
-  min-width: 100%;
-  width: max-content;
-  max-width: 360px;
-  background: #1a1a2e;
-  border: 1px solid var(--glass-border);
-  border-radius: 6px;
-  z-index: 1001;
-  max-height: 240px;
-  overflow-y: auto;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-}
-
-.custom-select.open .select-options {
-  display: block;
+  /* Base styles only — position/sizing handled by JS */
+  background: var(--bg-secondary, #1a1a2e);
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.08));
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
 }
 
 .select-option {
@@ -3290,6 +3291,8 @@ a.thread-row {
 }
 
 /* Custom select dropdown */
+/* Note: .select-options is now appended to document.body with inline fixed positioning
+   to escape backdrop-filter stacking contexts. */
 .custom-select {
   position: relative;
   display: inline-block;
@@ -3321,22 +3324,11 @@ a.thread-row {
 }
 
 .select-options {
-  display: none;
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  z-index: 50;
-  background: #1a1a2e;
-  border: 1px solid var(--glass-border);
-  border-radius: 6px;
-  margin-top: 2px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-
-.custom-select.open .select-options {
-  display: block;
+  /* Base styles only — position/sizing handled by JS */
+  background: var(--bg-secondary, #1a1a2e);
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.08));
+  border-radius: 8px;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
 }
 
 .select-option {
@@ -4233,4 +4225,42 @@ a.thread-row {
 
 .subscription-filter-bar .ri-arrow {
   margin-bottom: 0.5rem;
+}
+
+/* ── Tool Chip Multi-Select ── */
+
+.tool-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.tool-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 4px;
+  border: 1px solid var(--glass-border);
+  background: rgba(255, 255, 255, 0.03);
+  color: var(--text-secondary);
+  font-size: 0.78rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.tool-chip:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--text-primary);
+}
+
+.tool-chip-active {
+  background: rgba(139, 92, 246, 0.15);
+  border-color: var(--accent-purple);
+  color: var(--accent-purple);
+}
+
+.tool-chip-cb {
+  display: none;
 }

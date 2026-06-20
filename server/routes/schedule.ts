@@ -16,22 +16,49 @@ function parseJsonArray(val: any): any[] {
   return [];
 }
 
+// Central list of known direct-mode task types (keep in sync with omniagent/src/scheduler.rs)
+const DIRECT_TASK_TYPES = [
+  { value: "kanban_dispatcher", label: "Kanban Dispatcher" },
+  { value: "relevance_indexer", label: "Relevance Indexer" },
+];
+
 export const scheduleRouter = Router();
 
-// ── GET /api/schedule — List all cron jobs ──
-scheduleRouter.get("/", async (_req: Request, res: Response) => {
+// ── GET /api/schedule/direct-task-types — Return known direct task types ──
+scheduleRouter.get("/direct-task-types", (_req: Request, res: Response) => {
+  res.json(DIRECT_TASK_TYPES);
+});
+
+// ── GET /api/schedule — List cron jobs (optionally filter by active) ──
+scheduleRouter.get("/", async (req: Request, res: Response) => {
   try {
-    const jobs = await queryDb(
-      `SELECT DISTINCT ON (name) id, name, schedule, prompt, skills, enabled,
-              last_run_at, next_run_at, created_at, script, context_from,
-              no_agent, enabled_toolsets, workdir, profile
+    const activeOnly = req.query.active !== "false";
+    let sql: string;
+    let params: any[];
+
+    if (activeOnly) {
+      sql = `SELECT DISTINCT ON (name) id, name, display_name, schedule, prompt, skills, enabled, active,
+              mode, direct_task_type, channel_id, profile,
+              last_run_at, next_run_at, created_at, script, no_agent, workdir, deliver, repeat
        FROM cron_jobs
-       ORDER BY name, created_at DESC`,
-    );
+       WHERE active = true
+       ORDER BY name, created_at DESC`;
+      params = [];
+    } else {
+      sql = `SELECT DISTINCT ON (name) id, name, display_name, schedule, prompt, skills, enabled, active,
+              mode, direct_task_type, channel_id, profile,
+              last_run_at, next_run_at, created_at, script, no_agent, workdir, deliver, repeat
+       FROM cron_jobs
+       ORDER BY name, created_at DESC`;
+      params = [];
+    }
+
+    const jobs = await queryDb(sql, params);
 
     const mapped = jobs.map((job: any) => ({
       id: job.id,
       name: job.name,
+      display_name: job.display_name,
       schedule: job.schedule,
       prompt_preview: job.prompt
         ? job.prompt.length > 100
@@ -41,12 +68,16 @@ scheduleRouter.get("/", async (_req: Request, res: Response) => {
       prompt: job.prompt,
       skills: parseJsonArray(job.skills),
       enabled: job.enabled,
+      active: job.active,
+      mode: job.mode,
+      direct_task_type: job.direct_task_type,
+      channel_id: job.channel_id,
+      profile: job.profile,
       script: job.script || null,
-      context_from: parseJsonArray(job.context_from),
       no_agent: !!job.no_agent,
-      enabled_toolsets: parseJsonArray(job.enabled_toolsets),
       workdir: job.workdir || null,
-      profile: job.profile || null,
+      deliver: job.deliver || null,
+      repeat: job.repeat || null,
       last_run: job.last_run_at,
       next_run: job.next_run_at,
       last_run_at: job.last_run_at,
@@ -72,9 +103,9 @@ scheduleRouter.get("/:id", async (req: Request, res: Response) => {
     }
 
     const jobs = await queryDb(
-      `SELECT id, name, schedule, prompt, skills, enabled,
-              last_run_at, next_run_at, created_at, script, context_from,
-              no_agent, enabled_toolsets, workdir, profile, deliver, repeat
+      `SELECT id, name, display_name, schedule, prompt, skills, enabled, active,
+              mode, direct_task_type, channel_id, profile,
+              last_run_at, next_run_at, created_at, script, no_agent, workdir, deliver, repeat
        FROM cron_jobs
        WHERE id = $1`,
       [jobId],
@@ -89,6 +120,7 @@ scheduleRouter.get("/:id", async (req: Request, res: Response) => {
     res.json({
       id: job.id,
       name: job.name,
+      display_name: job.display_name,
       schedule: job.schedule,
       prompt: job.prompt || "",
       prompt_preview: job.prompt
@@ -98,12 +130,14 @@ scheduleRouter.get("/:id", async (req: Request, res: Response) => {
         : "",
       skills: parseJsonArray(job.skills),
       enabled: job.enabled,
+      active: job.active,
+      mode: job.mode,
+      direct_task_type: job.direct_task_type,
+      channel_id: job.channel_id,
+      profile: job.profile,
       script: job.script || null,
-      context_from: parseJsonArray(job.context_from),
       no_agent: !!job.no_agent,
-      enabled_toolsets: parseJsonArray(job.enabled_toolsets),
       workdir: job.workdir || null,
-      profile: job.profile || null,
       deliver: job.deliver || null,
       repeat: job.repeat || null,
       last_run: job.last_run_at,
@@ -115,6 +149,171 @@ scheduleRouter.get("/:id", async (req: Request, res: Response) => {
     });
   } catch (e: any) {
     console.error("Schedule detail error:", e?.message || e);
+    res.status(500).json({ error: e.message || "Unknown error" });
+  }
+});
+
+// ── POST /api/schedule — Create a new cron job ──
+scheduleRouter.post("/", async (req: Request, res: Response) => {
+  try {
+    const {
+      name,
+      display_name,
+      schedule,
+      prompt,
+      active,
+      channel_id,
+      profile,
+      mode,
+      direct_task_type,
+      enabled,
+    } = req.body;
+
+    if (!name || !schedule) {
+      res.status(400).json({ error: "Name and schedule are required" });
+      return;
+    }
+
+    const id = name.toLowerCase().replace(/[^a-z0-9_-]/g, "-");
+    const displayName = display_name || name;
+
+    await queryDb(
+      `INSERT INTO cron_jobs (id, name, display_name, schedule, prompt, active, channel_id, profile, mode, direct_task_type, enabled)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+       ON CONFLICT (id) DO UPDATE SET
+         name = EXCLUDED.name,
+         display_name = EXCLUDED.display_name,
+         schedule = EXCLUDED.schedule,
+         prompt = EXCLUDED.prompt,
+         active = EXCLUDED.active,
+         channel_id = EXCLUDED.channel_id,
+         profile = EXCLUDED.profile,
+         mode = EXCLUDED.mode,
+         direct_task_type = EXCLUDED.direct_task_type,
+         enabled = EXCLUDED.enabled,
+         updated_at = NOW()`,
+      [
+        id,
+        name,
+        displayName,
+        schedule,
+        prompt || "",
+        active !== false, // default true
+        channel_id || null,
+        profile || null,
+        mode || "agentic",
+        direct_task_type || null,
+        enabled !== false, // default true
+      ],
+    );
+
+    res.json({ success: true, id });
+  } catch (e: any) {
+    console.error("Schedule create error:", e?.message || e);
+    res.status(500).json({ error: e.message || "Unknown error" });
+  }
+});
+
+// ── PATCH /api/schedule/:id — Update a cron job ──
+scheduleRouter.patch("/:id", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const {
+      name,
+      display_name,
+      schedule,
+      prompt,
+      active,
+      enabled,
+      channel_id,
+      profile,
+      mode,
+      direct_task_type,
+    } = req.body;
+
+    // Check job exists
+    const existing = await queryDb(`SELECT id FROM cron_jobs WHERE id = $1`, [id]);
+    if (existing.length === 0) {
+      res.status(404).json({ error: "Job not found" });
+      return;
+    }
+
+    // Build SET clause dynamically
+    const sets: string[] = [];
+    const params: any[] = [];
+    let paramIdx = 1;
+
+    if (name !== undefined) {
+      sets.push(`name = $${paramIdx++}`);
+      params.push(name);
+    }
+    if (display_name !== undefined) {
+      sets.push(`display_name = $${paramIdx++}`);
+      params.push(display_name);
+    }
+    if (schedule !== undefined) {
+      sets.push(`schedule = $${paramIdx++}`);
+      params.push(schedule);
+    }
+    if (prompt !== undefined) {
+      sets.push(`prompt = $${paramIdx++}`);
+      params.push(prompt);
+    }
+    if (active !== undefined) {
+      sets.push(`active = $${paramIdx++}`);
+      params.push(active);
+    }
+    if (enabled !== undefined) {
+      sets.push(`enabled = $${paramIdx++}`);
+      params.push(enabled);
+    }
+    if (channel_id !== undefined) {
+      sets.push(`channel_id = $${paramIdx++}`);
+      params.push(channel_id);
+    }
+    if (profile !== undefined) {
+      sets.push(`profile = $${paramIdx++}`);
+      params.push(profile);
+    }
+    if (mode !== undefined) {
+      sets.push(`mode = $${paramIdx++}`);
+      params.push(mode);
+    }
+    if (direct_task_type !== undefined) {
+      sets.push(`direct_task_type = $${paramIdx++}`);
+      params.push(direct_task_type);
+    }
+
+    if (sets.length === 0) {
+      res.status(400).json({ error: "No fields to update" });
+      return;
+    }
+
+    params.push(id);
+    const sql = `UPDATE cron_jobs SET ${sets.join(", ")}, updated_at = NOW() WHERE id = $${paramIdx}`;
+    await queryDb(sql, params);
+    res.json({ success: true });
+  } catch (e: any) {
+    console.error("Schedule PATCH error:", e?.message || e);
+    res.status(500).json({ error: e.message || "Unknown error" });
+  }
+});
+
+// ── PATCH /api/schedule/:id/toggle — Toggle active state ──
+scheduleRouter.patch("/:id/toggle", async (req: Request, res: Response) => {
+  try {
+    const { id } = req.params;
+    const { active } = req.body;
+
+    if (active === undefined) {
+      res.status(400).json({ error: "Missing 'active' field" });
+      return;
+    }
+
+    await queryDb(`UPDATE cron_jobs SET active = $1, updated_at = NOW() WHERE id = $2`, [active, id]);
+    res.json({ success: true, active });
+  } catch (e: any) {
+    console.error("Schedule toggle error:", e?.message || e);
     res.status(500).json({ error: e.message || "Unknown error" });
   }
 });

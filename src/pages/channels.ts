@@ -9,6 +9,9 @@ export function renderChannels(container: HTMLElement): void {
       <a href="/channels" class="settings-tab ${currentRoute === "channels" ? "active" : ""}" data-route="channels">Channels</a>
       <a href="/platforms" class="settings-tab ${currentRoute === "platforms" ? "active" : ""}" data-route="platforms">Platforms</a>
     </div>
+    <div style="display:flex;align-items:center;justify-content:flex-end;padding:0.75rem 0;">
+      <button id="toggle-channels-filter" class="btn-filter" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);">Show All</button>
+    </div>
     <div id="channels-content">
       <div class="loading" style="padding:3rem;text-align:center;">Loading channels...</div>
     </div>
@@ -16,15 +19,31 @@ export function renderChannels(container: HTMLElement): void {
   void loadChannels();
 }
 
+let _showAllChannels = false;
+
 async function loadChannels(): Promise<void> {
   const content = document.getElementById("channels-content")!;
   try {
     const channels = await apiGet<ChannelData[]>("/channels");
     content.innerHTML = renderChannelsPage(channels);
     wireChannels(channels);
+    wireChannelFilterToggle();
   } catch (e) {
     content.innerHTML = `<div class="error-state" style="padding:3rem;text-align:center;">Failed to load channels: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
   }
+}
+
+function wireChannelFilterToggle(): void {
+  const btn = document.getElementById("toggle-channels-filter");
+  if (!btn) return;
+  const existing = btn.getAttribute("data-wired");
+  if (existing === "1") return;
+  btn.setAttribute("data-wired", "1");
+  btn.addEventListener("click", () => {
+    _showAllChannels = !_showAllChannels;
+    btn.textContent = _showAllChannels ? "Open Only" : "Show All";
+    void loadChannels();
+  });
 }
 
 function renderChannelsPage(channels: ChannelData[]): string {
@@ -32,14 +51,19 @@ function renderChannelsPage(channels: ChannelData[]): string {
     return '<div class="empty-state">No channels configured</div>';
   }
 
-  return channels
+  const filtered = _showAllChannels ? channels : channels.filter((ch) => !ch.closed);
+  if (filtered.length === 0) {
+    return '<div class="empty-state">All channels are closed</div>';
+  }
+
+  return filtered
     .map(
       (ch) => `
     <div class="card settings-card" data-channel-id="${ch.id}" data-readonly="${ch.readonly}">
       <div class="card-header">
         <span class="card-title">${escapeHtml(ch.name)}</span>
+        ${ch.readonly ? '<span style="flex:1;text-align:center;"><span class="channel-status-badge badge-neutral">Permanent</span></span>' : '<span style="flex:1;"></span>'}
         <span class="channel-status-badge ${ch.closed ? "badge-error" : "badge-success"}">${ch.closed ? "Closed" : "Open"}</span>
-        ${ch.readonly ? '<span class="channel-status-badge badge-neutral">Read Only</span>' : ""}
       </div>
       <div class="card-body">
         <div class="setting-row">
@@ -71,19 +95,19 @@ function renderChannelsPage(channels: ChannelData[]): string {
         <div class="setting-row">
           <div class="setting-controls">
             <div class="setting-name">Profile</div>
-            ${renderEditableField("profile", ch.current_profile || "default", ch.id, ch.readonly)}
+            ${renderEditableField("profile", ch.current_profile || "default", ch.id)}
           </div>
         </div>
         <div class="setting-row">
           <div class="setting-controls">
             <div class="setting-name">Provider</div>
-            ${renderEditableField("provider", ch.current_provider || "", ch.id, ch.readonly)}
+            ${renderEditableField("provider", ch.current_provider || "", ch.id)}
           </div>
         </div>
         <div class="setting-row">
           <div class="setting-controls">
             <div class="setting-name">Model</div>
-            ${renderEditableField("model", ch.current_model || "", ch.id, ch.readonly)}
+            ${renderEditableField("model", ch.current_model || "", ch.id)}
           </div>
         </div>
       </div>
@@ -94,30 +118,19 @@ function renderChannelsPage(channels: ChannelData[]): string {
 }
 
 function renderStatusControl(ch: ChannelData): string {
-  if (ch.readonly) {
-    return `
-      <div class="setting-readonly-value">
-        <span class="status-badge ${ch.closed ? "status-badge-error" : "status-badge-success"}">${ch.closed ? "Closed" : "Open"}</span>
-        <span class="text-muted" style="font-size:0.75rem;">(read only)</span>
-      </div>
-    `;
-  }
-  const nextStatus = ch.closed ? "Open" : "Closed";
+  const actionLabel = ch.closed ? "Open" : "Close";
   const nextClosed = !ch.closed;
   return `
     <div style="display:flex;align-items:center;gap:0.5rem;">
       <span class="status-badge ${ch.closed ? "status-badge-error" : "status-badge-success"}">${ch.closed ? "Closed" : "Open"}</span>
       <button type="button" class="channel-action-btn channel-toggle-btn" data-channel-id="${ch.id}" data-closed="${nextClosed}">
-        ${nextStatus}
+        ${actionLabel}
       </button>
     </div>
   `;
 }
 
-function renderEditableField(field: string, value: string, channelId: number, readonly: boolean): string {
-  if (readonly) {
-    return `<code class="setting-value-code">${escapeHtml(value || "—")}</code>`;
-  }
+function renderEditableField(field: string, value: string, channelId: number): string {
   const inputId = `ch-${channelId}-${field}`;
   return `
     <div style="display:flex;align-items:center;gap:0.375rem;flex-wrap:wrap;">

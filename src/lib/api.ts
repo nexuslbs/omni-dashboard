@@ -290,18 +290,12 @@ export interface ProfileChannel {
 }
 
 export interface ProfileData {
-  id: number;
   name: string;
   provider: string | null;
   model: string | null;
-  base_url: string | null;
-  max_tokens: number | null;
-  temperature: number | null;
-  allowed_tools: string | null; // JSONB
+  allowed_tools: string[]; // array of tool names
   skills: string[]; // filenames from filesystem
-  created_at: string;
-  updated_at: string;
-  default_channels: ProfileChannel[];
+  all_tools: string[]; // available options for multi-select
 }
 
 // ── Channel Types ──

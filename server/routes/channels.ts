@@ -31,10 +31,21 @@ channelsRouter.patch("/:id", async (req, res) => {
     }
     const channel = existing[0];
 
-    // Read-only channels cannot be modified at all
+    // Permanent channels cannot be renamed or deleted, but open/close,
+    // profile, provider, and model can still be modified.
+    // Only block editing if there are no actual updateable fields.
     if (channel.readonly) {
-      res.status(403).json({ error: "Read-only channels cannot be modified" });
-      return;
+      const canEdit =
+        closed !== undefined ||
+        current_profile !== undefined ||
+        current_provider !== undefined ||
+        current_model !== undefined;
+      if (!canEdit) {
+        res
+          .status(403)
+          .json({ error: "Permanent channels can only update status, profile, provider, and model" });
+        return;
+      }
     }
 
     // Build SET clause dynamically
