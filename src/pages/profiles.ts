@@ -1,10 +1,13 @@
 import { apiGet, type ProfileData } from "../lib/api";
 
 export function renderProfiles(container: HTMLElement): void {
+  const currentRoute = window.location.pathname.slice(1) || "settings";
   container.innerHTML = `
-    <div class="page-header">
-      <h1 class="page-title">Profiles</h1>
-      <p class="page-subtitle">Agent profile configurations and channel assignments</p>
+    <div class="settings-tabs">
+      <a href="/settings" class="settings-tab ${currentRoute === "settings" ? "active" : ""}" data-route="settings">Settings</a>
+      <a href="/profiles" class="settings-tab ${currentRoute === "profiles" ? "active" : ""}" data-route="profiles">Profiles</a>
+      <a href="/channels" class="settings-tab ${currentRoute === "channels" ? "active" : ""}" data-route="channels">Channels</a>
+      <a href="/platforms" class="settings-tab ${currentRoute === "platforms" ? "active" : ""}" data-route="platforms">Platforms</a>
     </div>
     <div id="profiles-content">
       <div class="loading" style="padding:3rem;text-align:center;">Loading profiles...</div>
@@ -25,7 +28,7 @@ async function loadProfiles(): Promise<void> {
 
 function renderProfilesPage(profiles: ProfileData[]): string {
   if (!profiles || profiles.length === 0) {
-    return '<div class="empty-state">No profiles configured</div>';
+    return '<div class="empty-state">No profiles configured in the database. The system uses environment variables as defaults.</div>';
   }
 
   return profiles

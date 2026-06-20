@@ -8,6 +8,9 @@ export function renderSchedule(container: HTMLElement): void {
         <h1 class="page-title">Schedule</h1>
         <p class="page-subtitle">Scheduled tasks and cron jobs</p>
       </div>
+      <div style="display:flex;align-items:center;gap:0.5rem;">
+        <button id="create-cron-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ Create Schedule</button>
+      </div>
     </div>
     <div class="card">
       <div class="card-header"><span class="card-title">Active Jobs</span></div>

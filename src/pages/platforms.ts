@@ -1,10 +1,13 @@
 import { apiGet, apiPost, apiDelete, type PlatformData } from "../lib/api";
 
 export function renderPlatforms(container: HTMLElement): void {
+  const currentRoute = window.location.pathname.slice(1) || "settings";
   container.innerHTML = `
-    <div class="page-header">
-      <h1 class="page-title">Platforms</h1>
-      <p class="page-subtitle">Connected platforms and their channel subscriptions</p>
+    <div class="settings-tabs">
+      <a href="/settings" class="settings-tab ${currentRoute === "settings" ? "active" : ""}" data-route="settings">Settings</a>
+      <a href="/profiles" class="settings-tab ${currentRoute === "profiles" ? "active" : ""}" data-route="profiles">Profiles</a>
+      <a href="/channels" class="settings-tab ${currentRoute === "channels" ? "active" : ""}" data-route="channels">Channels</a>
+      <a href="/platforms" class="settings-tab ${currentRoute === "platforms" ? "active" : ""}" data-route="platforms">Platforms</a>
     </div>
     <div id="platforms-content">
       <div class="loading" style="padding:3rem;text-align:center;">Loading platforms...</div>
@@ -76,7 +79,9 @@ function renderPlatformsPage(platforms: PlatformData[]): string {
         }
 
         <h3 class="settings-subsection-title">Listens To</h3>
-        ${renderSubscriptionSection(p)}
+        <div class="subscription-section">
+          ${renderSubscriptionSection(p)}
+        </div>
       </div>
     </div>
   `,
@@ -110,28 +115,35 @@ function renderSubscriptionSection(platform: PlatformData): string {
     );
   }
 
-  // Add subscription form
+  // Add subscription form using filter-bar styled selects
   const addForm = `
     <div class="add-subscription-form">
-      <div class="add-sub-row">
-        <select class="filter-select add-sub-resource" style="min-width:180px;">
-          <option value="">Select resource...</option>
-          ${platform.resource_identifiers
-            .map(
-              (ri) =>
-                `<option value="${escapeHtml(ri.resource_identifier || "")}">${escapeHtml(ri.resource_identifier || "—")} (${escapeHtml(ri.channel_name)})</option>`,
-            )
-            .join("")}
-        </select>
+      <div class="filter-bar subscription-filter-bar">
+        <div class="filter-section">
+          <label class="filter-label">Resource</label>
+          <select class="filter-select add-sub-resource" style="min-width:180px;">
+            <option value="">Select resource...</option>
+            ${platform.resource_identifiers
+              .map(
+                (ri) =>
+                  `<option value="${escapeHtml(ri.resource_identifier || "")}">${escapeHtml(ri.resource_identifier || "—")} (${escapeHtml(ri.channel_name)})</option>`,
+              )
+              .join("")}
+          </select>
+        </div>
         <span class="ri-arrow">→</span>
-        <select class="filter-select add-sub-channel" style="min-width:200px;">
-          <option value="">Select channel...</option>
-          ${platform.all_channels
-            .map(
-              (ch) => `<option value="${ch.id}">${escapeHtml(ch.name)} (${escapeHtml(ch.platform)})</option>`,
-            )
-            .join("")}
-        </select>
+        <div class="filter-section">
+          <label class="filter-label">Channel</label>
+          <select class="filter-select add-sub-channel" style="min-width:200px;">
+            <option value="">Select channel...</option>
+            ${platform.all_channels
+              .map(
+                (ch) =>
+                  `<option value="${ch.id}">${escapeHtml(ch.name)} (${escapeHtml(ch.platform)})</option>`,
+              )
+              .join("")}
+          </select>
+        </div>
         <button type="button" class="sub-add-btn" data-platform="${escapeHtml(platform.name)}">Subscribe</button>
       </div>
     </div>

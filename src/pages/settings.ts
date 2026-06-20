@@ -3,12 +3,8 @@ import { apiGet, apiPut, type SettingCategory } from "../lib/api";
 export function renderSettings(container: HTMLElement): void {
   const currentRoute = window.location.pathname.slice(1) || "settings";
   container.innerHTML = `
-    <div class="page-header">
-      <h1 class="page-title">Settings</h1>
-      <p class="page-subtitle">Application configuration</p>
-    </div>
     <div class="settings-tabs">
-      <a href="/settings" class="settings-tab ${currentRoute === "settings" ? "active" : ""}" data-route="settings">Environment</a>
+      <a href="/settings" class="settings-tab ${currentRoute === "settings" ? "active" : ""}" data-route="settings">Settings</a>
       <a href="/profiles" class="settings-tab ${currentRoute === "profiles" ? "active" : ""}" data-route="profiles">Profiles</a>
       <a href="/channels" class="settings-tab ${currentRoute === "channels" ? "active" : ""}" data-route="channels">Channels</a>
       <a href="/platforms" class="settings-tab ${currentRoute === "platforms" ? "active" : ""}" data-route="platforms">Platforms</a>

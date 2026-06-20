@@ -662,7 +662,7 @@ async function populateCreateChannelSelect(): Promise<void> {
   const select = document.getElementById("task-create-channel") as HTMLSelectElement;
   if (!select) return;
   try {
-    const channels = await apiGet<any[]>("/api/channels");
+    const channels = await apiGet<any[]>("/channels");
     const kanbanChannel = channels.find((ch: any) => ch.platform === "kanban");
     select.innerHTML = '<option value="">None</option>';
     for (const ch of channels) {
@@ -690,7 +690,7 @@ async function populateEditChannelSelect(currentChannelId: string): Promise<void
   const select = document.getElementById("task-edit-channel") as HTMLSelectElement;
   if (!select) return;
   try {
-    const channels = await apiGet<any[]>("/api/channels");
+    const channels = await apiGet<any[]>("/channels");
     select.innerHTML = '<option value="">None</option>';
     for (const ch of channels) {
       const opt = document.createElement("option");
@@ -712,7 +712,7 @@ async function populateProfileSelect(selectId: string, currentProfile?: string):
   const select = document.getElementById(selectId) as HTMLSelectElement;
   if (!select) return;
   try {
-    const profiles = await apiGet<string[]>("/api/profiles");
+    const profiles = await apiGet<string[]>("/profiles");
     select.innerHTML = '<option value="">None</option>';
     for (const p of profiles) {
       const opt = document.createElement("option");
