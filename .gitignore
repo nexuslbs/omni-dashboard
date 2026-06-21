@@ -7,18 +7,20 @@
 
 # Ignore all files/dirs inside project directories by default
 /*/*
-# Then un-ignore specific files we want to track
+# Then un-ignore specific ones we want to track
 !/*/docker-compose.yml
-!/*/AGENTS.md
 !/*/base.env
 !/*/build/
 !/*/build/**
 
-# Ignore repo/ contents (the cloned source repos)
+# Ignore repo/ contents (the cloned repos)
 /*/repo/**
 
-# Ignore .env credential files
+# Ignore .env credential files (copied from base.env)
 /*/.env
+
+# Ignore projects starting with omni* (avoid container/network name collisions)
+/omni*
 
 # Ignore macOS artifacts
 .DS_Store

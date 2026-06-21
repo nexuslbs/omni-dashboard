@@ -1,0 +1,65 @@
+services:
+  mysql:
+    image: mysql:8.0.45
+    container_name: sql-forge-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_HOST: "%"
+      MYSQL_DATABASE: sql_forge_test
+    ports:
+      - "3306"
+    volumes:
+      - ./repo/tests/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  pg:
+    image: postgres:18.4
+    container_name: sql-forge-pg
+    environment:
+      POSTGRES_PASSWORD: root
+      POSTGRES_DB: sql_forge_test
+    ports:
+      - "5432"
+    volumes:
+      - ./repo/tests/init-pg.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - pg-data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgres"]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+
+  rust:
+    build:
+      context: ./repo
+      dockerfile: tests/Dockerfile
+    container_name: sql-forge-rust
+    environment:
+      SQLX_OFFLINE: "false"
+      CARGO_NET_GIT_FETCH_WITH_CLI: "true"
+    volumes:
+      - ./repo:/app:rw
+      - cargo-registry:/usr/local/cargo/registry
+      - cargo-git:/usr/local/cargo/git
+    depends_on:
+      mysql:
+        condition: service_healthy
+      pg:
+        condition: service_healthy
+    command: >
+      sh -c "
+        rm -f /app/sql_forge_test.db &&
+        sqlite3 /app/sql_forge_test.db < /app/tests/init-sqlite.sql &&
+        tail -f /dev/null
+      "
+
+volumes:
+  mysql-data:
+  pg-data:
+  cargo-registry:
+  cargo-git:

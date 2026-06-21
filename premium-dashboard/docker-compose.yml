@@ -1,21 +1,19 @@
 services:
-  dashboard:
+  premium-dashboard:
     build:
-      context: ./repo
+      context: repo
       dockerfile: Dockerfile
     container_name: premium-dashboard
     restart: unless-stopped
-    ports:
-      - "12345:80"
+    expose:
+      - "80"
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock:ro
       - /opt/data:/opt/data:ro
-      - /opt/data/kanban.db:/data/kanban.db:rw
-      - /tmp/data/user:/tmp/data/user:rw
       - /:/host:ro
     networks:
       - default
-      - hermes-net
+      - omni-net
     mem_limit: 256M
     logging:
       driver: journald
@@ -23,6 +21,6 @@ services:
 networks:
   default:
     name: premium-dashboard
-  hermes-net:
+  omni-net:
     external: true
-    name: hermes-net
+    name: omni-net

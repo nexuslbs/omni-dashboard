@@ -1,0 +1,22 @@
+services:
+  calc:
+    build:
+      context: ../../repo/calc
+      dockerfile: Dockerfile
+    ports:
+      - "12346:12345"
+    mem_limit: ${CALC_MEM_LIMIT:-500M}
+    logging:
+      driver: journald
+
+  calc-builder:
+    build:
+      context: ../../repo/calc
+      dockerfile: Dockerfile.builder
+    working_dir: /app
+    volumes:
+      - ../../repo/calc:/app
+    command: sleep infinity
+    mem_limit: ${CALC_BUILDER_MEM_LIMIT:-500M}
+    logging:
+      driver: journald

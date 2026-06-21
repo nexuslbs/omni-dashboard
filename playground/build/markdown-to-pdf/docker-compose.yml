@@ -1,0 +1,10 @@
+services:
+  md-pdf:
+    build:
+      context: ../../repo/markdown-to-pdf
+      dockerfile: Dockerfile
+    command: sleep infinity
+    volumes:
+      - /opt/data/wiki/:/opt/data/wiki/:ro
+      - ../../markdown-to-pdf/in:/opt/in:ro
+      - ../../markdown-to-pdf/out:/opt/out:rw

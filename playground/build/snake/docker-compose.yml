@@ -1,0 +1,22 @@
+services:
+  snake:
+    build:
+      context: ../../repo/snake
+      dockerfile: Dockerfile
+    ports:
+      - "12347:12345"
+    mem_limit: ${SNAKE_MEM_LIMIT:-500M}
+    logging:
+      driver: journald
+
+  snake-builder:
+    build:
+      context: ../../repo/snake
+      dockerfile: Dockerfile.builder
+    working_dir: /app
+    volumes:
+      - ../../repo/snake:/app
+    command: sleep infinity
+    mem_limit: ${SNAKE_BUILDER_MEM_LIMIT:-500M}
+    logging:
+      driver: journald

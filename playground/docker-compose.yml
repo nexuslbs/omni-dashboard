@@ -1,0 +1,8 @@
+include:
+  - build/calc/docker-compose.yml
+  - build/snake/docker-compose.yml
+  - build/markdown-to-pdf/docker-compose.yml
+
+networks:
+  default:
+    name: playground
