@@ -133,6 +133,16 @@ export function renderThreads(container: HTMLElement): void {
   currentOffset = 0;
   currentStatus = "all";
   currentCause = "all";
+
+  // Read thread_id from URL search params
+  const urlParams = new URLSearchParams(window.location.search);
+  const threadIdFromUrl = urlParams.get("thread_id");
+  if (threadIdFromUrl) {
+    currentThreadId = threadIdFromUrl;
+    const threadInput = document.getElementById("filter-thread-id") as HTMLInputElement | null;
+    if (threadInput) threadInput.value = threadIdFromUrl;
+  }
+
   void loadFilters();
 }
 

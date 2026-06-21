@@ -545,6 +545,23 @@ async function loadMessages(): Promise<void> {
       }
     });
 
+    // Wire up thread link clicks → SPA navigation to threads page
+    listEl.querySelectorAll(".ev-thread-link").forEach((el) => {
+      el.addEventListener("click", (e) => {
+        e.preventDefault();
+        const threadId = (e.currentTarget as HTMLElement).getAttribute("data-thread-id");
+        if (!threadId) return;
+        const url = `/threads?thread_id=${encodeURIComponent(threadId)}`;
+        document.querySelectorAll(".nav-item, .mobile-nav-item").forEach((n) => {
+          const navRoute = n.getAttribute("data-route") || "";
+          n.classList.toggle("active", navRoute === "threads");
+        });
+        history.pushState({}, "", url);
+        // Import router dynamically and navigate (void for @typescript-eslint/no-floating-promises)
+        void import("../lib/router").then(({ router }) => router.go("threads"));
+      });
+    });
+
     // Sync current filters to URL search params
     syncFiltersToUrl();
   } catch (e) {
@@ -589,7 +606,7 @@ function renderMessageCard(msg: any): string {
           ${msg.provider && msg.model ? `<span style="color:var(--text-muted);opacity:0.4">·</span>` : ""}
           ${msg.model ? `<span class="ev-model" title="Model">${escapeHtml(msg.model)}</span>` : ""}
           ${(msg.provider || msg.model) && (msg.thread_id || msg.processing_time_ms !== null || tokens > 0) ? `<span style="color:var(--text-muted);opacity:0.4">·</span>` : ""}
-          ${msg.thread_id ? `<code style="font-size:0.8rem;color:var(--text-secondary);background:rgba(0,0,0,0.2);padding:0.1em 0.3em;border-radius:3px" title="Thread ID">${escapeHtml(truncateMiddle(msg.thread_id, 12))}</code>` : ""}
+          ${msg.thread_id ? `<a href="/?page=threads" class="ev-thread-link" data-thread-id="${escapeHtml(msg.thread_id)}" title="Thread ID">${escapeHtml(truncateMiddle(msg.thread_id, 12))}</a>` : ""}
           ${msg.processing_time_ms !== null ? `<span title="Processing time">${msg.processing_time_ms.toFixed(0)}ms</span>` : ""}
           ${tokens > 0 ? `<span title="Token count">${tokens.toLocaleString()} tokens</span>` : ""}
         </span>
