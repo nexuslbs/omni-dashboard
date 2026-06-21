@@ -1,6 +1,7 @@
 import { apiGet } from "../lib/api";
 import { enhanceSelectElement } from "../lib/dropdown";
 import { router } from "../lib/router";
+import { renderMessageCard, wireMessageCardToggles } from "../lib/message-card";
 
 export function renderSchedule(container: HTMLElement): void {
   container.innerHTML = `
@@ -322,8 +323,8 @@ async function loadScheduleDetail(cronId: string): Promise<any> {
       }
 
       <div id="schedule-threads-section" style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem;">Threads</div>
-        <div id="schedule-threads" style="font-size:0.85rem;color:var(--text-muted);">Loading threads...</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem;">Recent Activity</div>
+        <div id="schedule-threads" style="font-size:0.85rem;color:var(--text-muted);">Loading activity...</div>
       </div>
     `;
     // Load threads
@@ -580,39 +581,33 @@ async function loadScheduleThreads(scheduleId: string): Promise<void> {
   if (!el) return;
   try {
     const res = await fetch(`/api/schedule/${encodeURIComponent(scheduleId)}/threads`);
-    if (!res.ok) throw new Error("Failed to load threads");
+    if (!res.ok) throw new Error("Failed to load thread activity");
     const data = await res.json();
     if (!data.rows || data.rows.length === 0) {
       el.innerHTML =
-        '<div style="color:var(--text-muted);font-size:0.8rem;">No threads created by this task.</div>';
+        '<div style="color:var(--text-muted);font-size:0.8rem;">No activity from this task yet.</div>';
       return;
     }
-    const threadsHtml = data.rows
-      .map(
-        (t: any) => `
-      <div style="display:flex;align-items:center;gap:0.5rem;padding:0.375rem 0;border-bottom:1px solid var(--border-primary);font-size:0.8rem;">
-        <a href="/messages?thread_id=${encodeURIComponent(t.id)}" class="thread-link" style="color:var(--accent-cyan);text-decoration:none;flex:1;"
-           data-route="messages" data-thread-id="${t.id}">
-          ${escapeHtml(t.title || "Thread #" + t.id)}
-        </a>
-        <span style="color:var(--text-muted);font-size:0.75rem;">${t.message_count || 0} msgs</span>
-        <span style="color:var(--text-muted);font-size:0.75rem;">${formatDate(t.created_at)}</span>
-      </div>
-    `,
-      )
-      .join("");
-    el.innerHTML = threadsHtml;
-    // Wire thread links
-    el.querySelectorAll(".thread-link").forEach((a) => {
+    el.innerHTML = data.rows.map((row: any) => renderMessageCard(row)).join("");
+    // Wire up expand/collapse toggles
+    wireMessageCardToggles(el);
+    // Wire up thread link clicks → SPA navigation to threads page
+    el.querySelectorAll(".ev-thread-link").forEach((a) => {
       a.addEventListener("click", (e) => {
         e.preventDefault();
-        const route = a.getAttribute("data-route") || "messages";
-        history.pushState({}, "", "/messages?thread_id=" + a.getAttribute("data-thread-id"));
-        router.go(route);
+        const threadId = (e.currentTarget as HTMLElement).getAttribute("data-thread-id");
+        if (!threadId) return;
+        const url = `/threads?thread_id=${encodeURIComponent(threadId)}`;
+        document.querySelectorAll(".nav-item, .mobile-nav-item").forEach((n) => {
+          const navRoute = n.getAttribute("data-route") || "";
+          n.classList.toggle("active", navRoute === "threads");
+        });
+        history.pushState({}, "", url);
+        router.go("threads");
       });
     });
   } catch (e) {
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;">Failed to load threads.</div>';
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;">Failed to load activity.</div>';
   }
 }
 

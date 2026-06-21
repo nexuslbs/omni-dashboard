@@ -346,7 +346,7 @@ scheduleRouter.patch("/:id/toggle", async (req: Request, res: Response) => {
   }
 });
 
-// ── GET /api/schedule/:id/threads — Threads for a schedule task ──
+// ── GET /api/schedule/:id/threads — Last message of each thread for a schedule task ──
 scheduleRouter.get("/:id/threads", async (req: Request, res: Response) => {
   try {
     const scheduleTaskId = req.params.id;
@@ -354,19 +354,28 @@ scheduleRouter.get("/:id/threads", async (req: Request, res: Response) => {
     const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
 
     // Total count
-    const countResult = await queryDb(`SELECT COUNT(*) AS total FROM threads WHERE schedule_task_id = $1`, [
-      scheduleTaskId,
-    ]);
+    const countResult = await queryDb(
+      `SELECT COUNT(*) AS total FROM threads WHERE schedule_task_id = $1`,
+      [scheduleTaskId],
+    );
     const total = parseInt(countResult[0]?.total) || 0;
 
-    // Paginated rows
+    // Paginated rows — last message per thread with all message fields
     const rows = await queryDb(
-      `SELECT id, status, cause, channel_id, profile, created_at,
-              input_tokens, output_tokens, duration_ms,
-              (SELECT COUNT(*) FROM messages WHERE thread_id = t.id)::int AS message_count
-       FROM threads t
-       WHERE schedule_task_id = $1
-       ORDER BY created_at DESC
+      `SELECT last_msg.*, t.status AS thread_status
+       FROM LATERAL (
+         SELECT m.id, m.thread_id, m.role, m.content, m.msg_type AS type,
+                m.msg_subtype AS subtype, m.provider, m.model,
+                m.processing_time_ms, m.token_usage,
+                m.created_at, m.metadata
+         FROM messages m
+         WHERE m.thread_id = t.id
+         ORDER BY m.id DESC
+         LIMIT 1
+       ) last_msg
+       RIGHT JOIN threads t ON t.id = last_msg.thread_id
+       WHERE t.schedule_task_id = $1
+       ORDER BY last_msg.created_at DESC NULLS LAST
        OFFSET $2
        LIMIT $3`,
       [scheduleTaskId, offset, limit],
