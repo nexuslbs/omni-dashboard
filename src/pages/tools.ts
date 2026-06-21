@@ -1,4 +1,5 @@
 import { apiGet, apiPost, apiDelete, type PluginData } from "../lib/api";
+import { enhanceSelectElement } from "../lib/dropdown";
 
 export function renderTools(container: HTMLElement): void {
   container.innerHTML = `
@@ -125,8 +126,14 @@ function renderPluginConfig(p: PluginData): string {
 
   const fieldsHtml = schema
     .map((field) => {
-      const currentVal = config[field.key] !== undefined ? config[field.key] : (field.default ?? "");
-      return renderConfigField(field, currentVal, p.name);
+      const envVal = p.resolved_env?.[field.key];
+      const currentVal =
+        config[field.key] !== undefined ? config[field.key] : (envVal ?? field.default ?? "");
+      const envBadge =
+        envVal !== undefined && (config[field.key] === undefined || config[field.key] === "")
+          ? '<span class="badge badge-info" style="margin-left:0.375rem;font-size:0.65rem;vertical-align:middle;">env</span>'
+          : "";
+      return renderConfigField(field, currentVal, p.name, envBadge);
     })
     .join("");
 
@@ -142,7 +149,7 @@ function renderPluginConfig(p: PluginData): string {
   `;
 }
 
-function renderConfigField(field: any, value: any, pluginName: string): string {
+function renderConfigField(field: any, value: any, pluginName: string, envBadge?: string): string {
   const fieldId = `cfg-${escapeHtml(pluginName)}-${escapeHtml(field.key)}`;
   const requiredMark = field.required
     ? '<span style="color:var(--accent-rose);margin-left:0.125rem;">*</span>'
@@ -227,7 +234,7 @@ function renderConfigField(field: any, value: any, pluginName: string): string {
   return `
     <div class="setting-row" data-field-key="${escapeHtml(field.key)}">
       <div class="setting-controls">
-        <div class="setting-name">${escapeHtml(field.label)}${requiredMark}</div>
+        <div class="setting-name">${escapeHtml(field.label)}${requiredMark}${envBadge ?? ""}</div>
         <div class="setting-input-group">${inputHtml}</div>
       </div>
       ${descHtml}
@@ -309,6 +316,11 @@ function wireTools(): void {
     });
     // Initial dirty check (should be grayed out)
     dirtyCheckSaveButton(formEl, pluginName);
+  });
+
+  // Enhance native select elements to styled custom dropdowns
+  document.querySelectorAll(".plugin-config-form select.plugin-config-input[data-key]").forEach((el) => {
+    enhanceSelectElement(el as HTMLSelectElement);
   });
 
   // Save buttons

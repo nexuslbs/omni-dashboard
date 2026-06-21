@@ -379,6 +379,7 @@ export interface PluginData {
   status: "enabled" | "disabled" | "error";
   manifest: PluginManifest;
   config: Record<string, any>;
+  resolved_env?: Record<string, string>;
   created_at?: string;
   updated_at?: string;
 }
