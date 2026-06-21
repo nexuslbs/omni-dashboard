@@ -4268,3 +4268,55 @@ a.thread-row {
 .tool-chip-cb {
   display: none;
 }
+
+/* ── Modal styles (generic, used by Actions page and others) ── */
+.modal-backdrop {
+  position: fixed; inset: 0; z-index: 10000;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex; align-items: center; justify-content: center;
+  animation: fadeIn 0.15s ease;
+}
+.modal {
+  background: var(--bg-secondary, #1a1a2e);
+  border: 1px solid var(--glass-border, rgba(255,255,255,0.08));
+  border-radius: 16px;
+  max-width: 640px; width: 90%;
+  max-height: 80vh;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+  display: flex; flex-direction: column;
+}
+.modal-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 20px 24px 0;
+}
+.modal-header h2 {
+  margin: 0; font-size: 1.2rem; color: var(--text-primary);
+}
+.modal-close {
+  background: none; border: none; color: var(--text-muted);
+  font-size: 1.5rem; cursor: pointer; padding: 4px 8px;
+  line-height: 1; border-radius: 6px;
+}
+.modal-close:hover { background: rgba(255,255,255,0.05); color: var(--text-primary); }
+.modal-body {
+  padding: 20px 24px; overflow-y: auto;
+}
+.modal-footer {
+  display: flex; align-items: center; justify-content: flex-end; gap: 8px;
+  padding: 16px 24px;
+  border-top: 1px solid var(--glass-border, rgba(255,255,255,0.06));
+}
+
+/* ── Danger button — matches "failed" status red hue ── */
+.btn-danger {
+  background: rgba(244, 63, 94, 0.1);
+  color: #fb7185;
+  border: 1px solid rgba(244, 63, 94, 0.2);
+}
+.btn-danger:hover:not(:disabled) {
+  background: rgba(244, 63, 94, 0.2);
+  filter: brightness(1.1);
+}
+.btn-danger:disabled {
+  opacity: 0.5; cursor: not-allowed;
+}

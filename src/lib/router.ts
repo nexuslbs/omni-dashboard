@@ -1,4 +1,5 @@
 import { renderOverview } from "../pages/overview";
+import { renderActions } from "../pages/actions";
 import { renderThreads } from "../pages/threads";
 import { renderMessages } from "../pages/messages";
 import { renderKanban, renderKanbanDetail } from "../pages/kanban";
@@ -37,6 +38,7 @@ const routes: Route[] = [
   { name: "channels", handler: renderChannels },
   { name: "platforms", handler: renderPlatforms },
   { name: "tools", handler: renderTools },
+  { name: "actions", handler: renderActions },
 ];
 
 const paramRoutes: ParamRoute[] = [

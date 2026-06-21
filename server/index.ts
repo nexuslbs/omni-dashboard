@@ -64,6 +64,36 @@ app.post("/api/prompt-preview/:channelName", async (req, res) => {
   }
 });
 
+// Proxy for OmniAgent HTTP API — forward /api/actions*, /api/mcp/tools
+const OMNIAGENT_API = "http://omniagent-omniagent-1:8080";
+
+async function omniagentProxy(req: express.Request, res: express.Response): Promise<void> {
+  try {
+    // Strip the /api prefix: /api/actions/5/run → /actions/5/run
+    const targetPath = req.path.replace(/^\/api/, "");
+    const targetUrl = new URL(targetPath, OMNIAGENT_API);
+    const fetchOpts: RequestInit = {
+      method: req.method,
+      headers: { "Content-Type": "application/json" },
+    };
+    if (req.method !== "GET" && req.method !== "HEAD") {
+      fetchOpts.body = JSON.stringify(req.body);
+    }
+    const response = await fetch(targetUrl.toString(), fetchOpts);
+    const data = await response.json();
+    res.status(response.status).json(data);
+  } catch (err) {
+    console.error(`[omniagent-proxy] Error proxying ${req.method} ${req.path}:`, err);
+    res
+      .status(502)
+      .json({ error: "Failed to reach OmniAgent: " + (err instanceof Error ? err.message : String(err)) });
+  }
+}
+
+app.get("/api/mcp/tools", omniagentProxy);
+// Proxy ANY method for /api/actions and sub-paths — use middleware pattern for Express 5 compat
+app.all(/^\/api\/actions(?:\/.*)?$/, omniagentProxy);
+
 // Serve static files from ../dist (built frontend)
 const distPath = join(__dirname, "..", "dist");
 if (existsSync(distPath)) {
