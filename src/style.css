@@ -1643,9 +1643,8 @@ a.thread-row {
 
 /* Smaller padding in filter context to match adjacent filter elements */
 .filter-bar .select-trigger {
-  padding: 0.375rem 0.5rem;
+  padding: 0.375rem 0.625rem;
   font-size: 0.8125rem;
-  line-height: 1;
 }
 
 .filter-bar .custom-select {

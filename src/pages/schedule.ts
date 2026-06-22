@@ -694,6 +694,9 @@ async function loadScheduleThreads(scheduleId: string): Promise<void> {
       prevBottomClone.addEventListener("click", () => {
         threadsOffset = Math.max(0, threadsOffset - threadsLimit);
         void loadScheduleThreads(scheduleId);
+        document
+          .getElementById("recent-activity-card")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     }
     if (nextBottom && nextBottom.parentNode) {
@@ -701,6 +704,9 @@ async function loadScheduleThreads(scheduleId: string): Promise<void> {
       nextBottomClone.addEventListener("click", () => {
         threadsOffset += threadsLimit;
         void loadScheduleThreads(scheduleId);
+        document
+          .getElementById("recent-activity-card")
+          ?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     }
   } catch {
