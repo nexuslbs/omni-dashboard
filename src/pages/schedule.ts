@@ -187,6 +187,9 @@ function wireCronButtons(): void {
 // ── Schedule detail view ──
 
 export async function renderScheduleDetail(container: HTMLElement, cronId: string): Promise<void> {
+  // Reset pagination state for fresh load
+  threadsOffset = 0;
+
   container.innerHTML = `
     <div class="page-header">
       <div>
@@ -204,6 +207,19 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
         <div class="loading">Loading job details</div>
       </div>
     </div>
+    <div class="card" id="recent-activity-card">
+      <div class="card-header">
+        <span class="card-title">Recent Activity</span>
+        <span class="events-nav" id="schedule-threads-nav">
+          <button class="nav-btn" id="threads-prev-page" disabled>← Prev</button>
+          <span id="threads-page-info">Page 1</span>
+          <button class="nav-btn" id="threads-next-page" disabled>Next →</button>
+        </span>
+      </div>
+      <div class="card-body" id="schedule-threads">
+        <div class="loading">Loading activity...</div>
+      </div>
+    </div>
   `;
 
   document.getElementById("back-to-schedule")?.addEventListener("click", (e) => {
@@ -212,9 +228,14 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
     router.go("schedule");
   });
 
-  // Load and wire
+  // Load job details
   const job = await loadScheduleDetail(cronId);
   document.getElementById("detail-edit-btn")?.addEventListener("click", () => showCronModal(job));
+
+  // Load threads (card already exists in the DOM)
+  if (job) {
+    void loadScheduleThreads(job.id);
+  }
 }
 
 async function loadScheduleDetail(cronId: string): Promise<any> {
@@ -328,26 +349,6 @@ async function loadScheduleDetail(cronId: string): Promise<any> {
 
     `;
 
-    // Close the job info card and open a separate Recent Activity card
-    const activityHtml = `
-    </div></div>
-    <div class="card" style="margin-top:1rem;">
-      <div class="card-header">
-        <span class="card-title">Recent Activity</span>
-        <span class="events-nav" id="schedule-threads-nav">
-          <button class="nav-btn" id="threads-prev-page" disabled>← Prev</button>
-          <span id="threads-page-info">Page 1</span>
-          <button class="nav-btn" id="threads-next-page" disabled>Next →</button>
-        </span>
-      </div>
-      <div class="card-body" id="schedule-threads">
-        <div class="loading">Loading activity...</div>
-      </div>
-    </div>
-    `;
-    el.insertAdjacentHTML("afterend", activityHtml);
-    // Load threads
-    void loadScheduleThreads(job.id);
     return job;
   } catch (e) {
     el.innerHTML = `<div class="error-state">Failed to load job details: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
