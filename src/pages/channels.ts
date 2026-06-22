@@ -77,6 +77,7 @@ function applyFiltersFromUrl(): void {
 
 async function loadChannels(): Promise<void> {
   const content = document.getElementById("channels-content")!;
+  content.innerHTML = '<div class="loading">Loading channels...</div>';
   try {
     const channels = await apiGet<ChannelData[]>("/channels");
     try {
