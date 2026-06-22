@@ -417,7 +417,7 @@ async function loadChannelContext(): Promise<void> {
   el.textContent = "Loading context...";
 
   try {
-    const data = await apiGet<{ context: string }>(`/memory/context/${encodeURIComponent(channelName)}`);
+    const data = await apiGet<{ context: string }>(`/context/${encodeURIComponent(channelName)}`);
     el.textContent = data.context;
   } catch (e) {
     el.textContent = `Failed to load context: ${e instanceof Error ? e.message : "Unknown error"}`;
