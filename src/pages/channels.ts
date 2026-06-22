@@ -37,6 +37,8 @@ export function renderChannels(container: HTMLElement): void {
       <div class="loading" style="padding:3rem;text-align:center;">Loading channels...</div>
     </div>
   `;
+  _channelFilters = { channelId: "", platform: "all", status: "all" };
+  applyFiltersFromUrl();
   void loadChannels();
 }
 
@@ -51,6 +53,27 @@ interface ChannelFilters {
   status: string;
 }
 let _channelFilters: ChannelFilters = { channelId: "", platform: "all", status: "all" };
+
+// ── URL search param sync ──
+function syncFiltersToUrl(): void {
+  const params = new URLSearchParams();
+  if (_channelFilters.channelId) params.set("channelId", _channelFilters.channelId);
+  if (_channelFilters.platform !== "all") params.set("platform", _channelFilters.platform);
+  if (_channelFilters.status !== "all") params.set("status", _channelFilters.status);
+  const qs = params.toString();
+  const newUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+  history.replaceState(null, "", newUrl);
+}
+
+function applyFiltersFromUrl(): void {
+  const p = new URLSearchParams(window.location.search);
+  const channelId = p.get("channelId");
+  if (channelId) _channelFilters.channelId = channelId;
+  const platform = p.get("platform");
+  if (platform) _channelFilters.platform = platform;
+  const status = p.get("status");
+  if (status) _channelFilters.status = status;
+}
 
 async function loadChannels(): Promise<void> {
   const content = document.getElementById("channels-content")!;
@@ -127,6 +150,8 @@ async function loadChannels(): Promise<void> {
       enhanceSelect(el.id);
     });
     wireChannelFilterToggle();
+    // Sync current filters to URL search params
+    syncFiltersToUrl();
   } catch (e) {
     content.innerHTML =
       '<div class="error-state" style="padding:3rem;text-align:center;">Failed to load channels: ' +
@@ -139,16 +164,24 @@ function wireChannelFilterToggle(): void {
   const refreshBtn = document.getElementById("refresh-channels-btn");
   if (refreshBtn && !refreshBtn.getAttribute("data-wired")) {
     refreshBtn.setAttribute("data-wired", "1");
-    refreshBtn.addEventListener("click", () => {
-      void loadChannels();
+    refreshBtn.addEventListener("click", async () => {
+      refreshBtn.setAttribute("disabled", "true");
+      refreshBtn.textContent = "⟳ Loading...";
+      await loadChannels();
+      refreshBtn.removeAttribute("disabled");
+      refreshBtn.textContent = "⟳ Refresh";
     });
   }
   const resetBtn = document.getElementById("reset-channels-filter");
   if (resetBtn && !resetBtn.getAttribute("data-wired")) {
     resetBtn.setAttribute("data-wired", "1");
-    resetBtn.addEventListener("click", () => {
+    resetBtn.addEventListener("click", async () => {
+      resetBtn.setAttribute("disabled", "true");
+      resetBtn.textContent = "✕ Resetting...";
       _channelFilters = { channelId: "", platform: "all", status: "all" };
-      void loadChannels();
+      await loadChannels();
+      resetBtn.removeAttribute("disabled");
+      resetBtn.textContent = "✕ Reset";
     });
   }
   // Filter inputs
