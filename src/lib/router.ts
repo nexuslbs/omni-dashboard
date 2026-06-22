@@ -7,6 +7,7 @@ import { renderSchedule, renderScheduleDetail } from "../pages/schedule";
 import { renderExplorer } from "../pages/explorer";
 import { renderPrompt } from "../pages/prompt";
 import { renderSettings } from "../pages/settings";
+import { renderMemory } from "../pages/memory";
 import { renderProfiles } from "../pages/profiles";
 import { renderChannels } from "../pages/channels";
 import { renderPlatforms } from "../pages/platforms";
@@ -41,6 +42,7 @@ const routes: Route[] = [
   { name: "tools", handler: renderTools },
   { name: "providers", handler: renderProviders },
   { name: "actions", handler: renderActions },
+  { name: "memory", handler: renderMemory },
 ];
 
 const paramRoutes: ParamRoute[] = [
