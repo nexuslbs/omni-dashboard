@@ -1,4 +1,4 @@
-import { apiGet } from "../lib/api";
+import { apiGet, apiPost } from "../lib/api";
 import { enhanceSelect, unenhanceSelect } from "../lib/dropdown";
 
 // ── Cached provider/model data ──
@@ -12,6 +12,7 @@ export function renderProfiles(container: HTMLElement): void {
         <h1 class="page-title">Profiles</h1>
         <p class="page-subtitle">LLM profiles — provider, model, and tool configuration</p>
       </div>
+      <button id="create-profile-btn" class="btn btn-primary" style="white-space:nowrap;">+ Create Profile</button>
     </div>
     <div id="profiles-content">
       <div class="loading" style="padding:3rem;text-align:center;">Loading profiles...</div>
@@ -384,6 +385,119 @@ function wireProfiles(): void {
         (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
       }
     });
+  });
+
+  // ── Create Profile button ──
+  const createBtn = document.getElementById("create-profile-btn");
+  if (createBtn && !createBtn.getAttribute("data-wired")) {
+    createBtn.setAttribute("data-wired", "1");
+    createBtn.addEventListener("click", () => showCreateProfileModal());
+  }
+}
+
+// ── Create Profile Modal ──
+
+function showCreateProfileModal(): void {
+  const backdrop = document.createElement("div");
+  backdrop.className = "modal-backdrop";
+  backdrop.innerHTML = `
+    <div class="modal" style="max-width:520px">
+      <div class="modal-header">
+        <h2>Create Profile</h2>
+        <button class="modal-close" id="create-profile-modal-close">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="settings-section">
+          <label class="filter-label">Name *</label>
+          <input class="filter-input" id="create-profile-name" type="text" placeholder="my-profile" style="width:100%;" />
+          <div class="text-muted" style="font-size:0.75rem;margin-top:0.25rem;">Letters, numbers, hyphens, and underscores only — no spaces or special characters.</div>
+        </div>
+        <div class="settings-section">
+          <label class="filter-label">Provider <span class="text-muted" style="font-size:0.75rem;">(optional)</span></label>
+          <select class="filter-select" id="create-profile-provider" style="width:100%;">
+            <option value="">— None —</option>
+            ${_providers.map((p) => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("")}
+          </select>
+        </div>
+        <div class="settings-section" id="create-profile-model-section" style="display:none;">
+          <label class="filter-label">Model *</label>
+          <select class="filter-select" id="create-profile-model" style="width:100%;">
+            <option value="">— Select a model —</option>
+          </select>
+        </div>
+        <div class="settings-section" style="margin-top:0.75rem;">
+          <div class="text-muted" style="font-size:0.8rem;padding:0.5rem;background:rgba(255,255,255,0.03);border-radius:6px;border:1px solid var(--glass-border);">
+            No tools will be enabled by default. You can configure them after creation in the profile settings above.
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" id="create-profile-cancel">Cancel</button>
+        <button class="btn btn-primary" id="create-profile-save" disabled>Create</button>
+      </div>
+    </div>
+  `;
+  document.body.appendChild(backdrop);
+
+  const close = () => backdrop.remove();
+  backdrop.querySelector("#create-profile-modal-close")?.addEventListener("click", close);
+  backdrop.querySelector("#create-profile-cancel")?.addEventListener("click", close);
+
+  const nameInput = backdrop.querySelector("#create-profile-name") as HTMLInputElement;
+  const providerSelect = backdrop.querySelector("#create-profile-provider") as HTMLSelectElement;
+  const modelSelect = backdrop.querySelector("#create-profile-model") as HTMLSelectElement;
+  const modelSection = backdrop.querySelector("#create-profile-model-section") as HTMLElement;
+  const saveBtn = backdrop.querySelector("#create-profile-save") as HTMLButtonElement;
+
+  // Validate on input change
+  function validate(): void {
+    const name = nameInput.value.trim();
+    const nameValid = /^[a-zA-Z0-9_-]+$/.test(name) && name.length > 0;
+    const provider = providerSelect.value;
+    const model = modelSelect.value;
+    const modelValid = !provider || (model && model.trim().length > 0);
+    saveBtn.disabled = !(nameValid && modelValid);
+  }
+
+  nameInput.addEventListener("input", validate);
+
+  // Provider change → update model dropdown, show/hide model section
+  providerSelect.addEventListener("change", () => {
+    const provider = providerSelect.value;
+    if (provider) {
+      const models = getModelsForProvider(provider);
+      modelSelect.innerHTML =
+        models.length > 0
+          ? '<option value="">— Select a model —</option>' +
+            models.map((m) => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("")
+          : '<option value="">— No models available —</option>';
+      modelSection.style.display = "block";
+    } else {
+      modelSelect.innerHTML = '<option value="">— Select a model —</option>';
+      modelSection.style.display = "none";
+    }
+    validate();
+  });
+
+  modelSelect.addEventListener("change", validate);
+
+  // Save
+  saveBtn.addEventListener("click", async () => {
+    const name = nameInput.value.trim();
+    const provider = providerSelect.value || null;
+    const model = modelSelect.value || null;
+    saveBtn.disabled = true;
+    saveBtn.textContent = "Creating...";
+    try {
+      await apiPost("/profiles", { name, provider, model });
+      (window as any).showToast?.(`Profile '${name}' created`, "success");
+      close();
+      void loadProfiles();
+    } catch (e) {
+      (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+      saveBtn.disabled = false;
+      saveBtn.textContent = "Create";
+    }
   });
 }
 

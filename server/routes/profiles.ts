@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { readdirSync, existsSync, readFileSync, writeFileSync, statSync } from "fs";
+import { readdirSync, existsSync, readFileSync, writeFileSync, statSync, mkdirSync } from "fs";
 import { join } from "path";
 
 const OMNI_DATA_DIR = process.env.OMNI_DATA_DIR || "/opt/data";
@@ -113,6 +113,66 @@ profilesRouter.get("/", (_req, res) => {
   } catch (err) {
     console.error("[profiles] GET error:", err);
     res.status(500).json({ error: "Failed to fetch profiles" });
+  }
+});
+
+// POST /api/profiles — create a new profile
+profilesRouter.post("/", (req, res) => {
+  try {
+    const { name, provider, model } = req.body;
+
+    // Validate name
+    if (!name || typeof name !== "string" || !name.trim()) {
+      res.status(400).json({ error: "Profile name is required" });
+      return;
+    }
+    const trimmedName = name.trim();
+    if (!/^[a-zA-Z0-9_-]+$/.test(trimmedName)) {
+      res.status(400).json({
+        error:
+          "Profile name must only contain letters, numbers, hyphens, and underscores (no spaces or special characters)",
+      });
+      return;
+    }
+
+    // Provider + model validation
+    if (provider && typeof provider === "string" && provider.trim()) {
+      if (!model || typeof model !== "string" || !model.trim()) {
+        res.status(400).json({ error: "Model is required when a provider is specified" });
+        return;
+      }
+    }
+
+    // Check if profile already exists
+    const configDir = join(getProfilesDir(), trimmedName);
+    if (existsSync(configDir)) {
+      res.status(409).json({ error: `Profile '${trimmedName}' already exists` });
+      return;
+    }
+
+    // Create directory and config.json
+    mkdirSync(configDir, { recursive: true });
+    const config = {
+      provider: provider && typeof provider === "string" && provider.trim() ? provider.trim() : null,
+      model: model && typeof model === "string" && model.trim() ? model.trim() : null,
+      allowed_tools: [],
+    };
+    writeFileSync(getConfigPath(trimmedName), JSON.stringify(config, null, 2) + "\n");
+
+    res.status(201).json({
+      success: true,
+      profile: {
+        name: trimmedName,
+        provider: config.provider,
+        model: config.model,
+        allowed_tools: config.allowed_tools,
+        skills: [],
+        all_tools: ALL_TOOLS,
+      },
+    });
+  } catch (err) {
+    console.error("[profiles] POST error:", err);
+    res.status(500).json({ error: "Failed to create profile" });
   }
 });
 
