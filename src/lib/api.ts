@@ -358,6 +358,7 @@ export interface ConfigField {
   min?: number;
   max?: number;
   format?: string;
+  refresh_url?: string;
 }
 
 export interface PluginManifest {

@@ -96,6 +96,7 @@ function renderPluginConfig(p: PluginData): string {
       <div style="display:flex;gap:0.5rem;margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--glass-border);">
         <button type="button" class="plugin-save-btn btn-primary" style="background:var(--accent-purple);border:none;color:white;border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;">Save Config</button>
         <button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);">${p.status === "enabled" ? "Disable" : "Enable"}</button>
+        ${hasRefreshUrl(p) ? '<button type="button" class="plugin-refresh-models-btn" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--accent-blue);" title="Refresh model list from provider">⟳ Refresh Models</button>' : ""}
         ${p.source !== "built-in" ? `<button type="button" class="plugin-remove-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--accent-rose);">🗑 Remove</button>` : ""}
       </div>
     </div>
@@ -193,6 +194,12 @@ function renderConfigField(field: ConfigField, value: any, pluginName: string, e
       ${descHtml}
     </div>
   `;
+}
+
+/** Check if a plugin has any config field with a refresh_url. */
+function hasRefreshUrl(p: PluginData): boolean {
+  const schema = p.manifest?.config_schema || [];
+  return schema.some((f) => f.refresh_url);
 }
 
 function getStatusBadgeClass(status: string): string {
@@ -355,6 +362,32 @@ function wireProviders(): void {
           "Failed to remove: " + (e instanceof Error ? e.message : "Unknown"),
           "error",
         );
+      }
+    });
+  });
+
+  // Refresh models buttons
+  document.querySelectorAll(".plugin-refresh-models-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const card = (btn as HTMLElement).closest(".card") as HTMLElement;
+      const pluginName = card?.getAttribute("data-plugin-name");
+      if (!pluginName) return;
+
+      const originalText = btn.textContent || "";
+      btn.innerHTML = "⟳ Refreshing...";
+      (btn as HTMLButtonElement).disabled = true;
+
+      try {
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/refresh-models`, {});
+        (window as any).showToast?.("Models refreshed", "success");
+        void loadProviders();
+      } catch (e) {
+        (window as any).showToast?.(
+          "Failed to refresh: " + (e instanceof Error ? e.message : "Unknown"),
+          "error",
+        );
+        btn.innerHTML = originalText;
+        (btn as HTMLButtonElement).disabled = false;
       }
     });
   });
