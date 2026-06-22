@@ -518,3 +518,9 @@ async function loadMessages(): Promise<void> {
     listEl.innerHTML = `<div class="error-state">Failed to load messages: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
   }
 }
+
+function escapeHtml(text: string): string {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
