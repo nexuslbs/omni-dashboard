@@ -417,7 +417,7 @@ function wireChannels(): void {
     });
   });
 
-  // Refresh Models button
+  // Refresh Models button — calls server endpoint (same as providers page)
   document.querySelectorAll(".channel-refresh-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const el = btn as HTMLElement;
@@ -427,6 +427,8 @@ function wireChannels(): void {
       el.textContent = "⟳";
       el.style.opacity = "0.5";
       try {
+        await apiPost(`/plugins/${encodeURIComponent(provider)}/refresh-models`, {});
+        // Re-fetch plugin detail to get updated model list
         const detailResp = await apiGet<any>(`/plugins/${provider}`);
         const detail = detailResp.data || detailResp;
         const schema = [
@@ -439,20 +441,6 @@ function wireChannels(): void {
           models = modelField.allowed_values as string[];
         } else if (modelField && modelField.default) {
           models = [modelField.default as string];
-        } else if (modelField && modelField.refresh_url) {
-          // Fetch models directly from the provider's refresh URL
-          try {
-            const refreshResp = await fetch(modelField.refresh_url);
-            const refreshData = await refreshResp.json();
-            // Handle OpenAI-compatible format: { object: "list", data: [{ id: "model-name", ... }] }
-            if (refreshData.data && Array.isArray(refreshData.data)) {
-              models = refreshData.data.map((m: any) => m.id || m).filter(Boolean);
-            } else if (Array.isArray(refreshData)) {
-              models = refreshData.map((m: any) => m.id || m).filter(Boolean);
-            }
-          } catch {
-            // Silently fail — models stays empty
-          }
         }
         _providerModels[provider] = models;
         const modelSelect = document.getElementById(`ch-${channelId}-model`) as HTMLSelectElement | null;
