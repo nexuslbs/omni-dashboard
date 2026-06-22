@@ -23,6 +23,23 @@ export function enhanceSelect(selectId: string): void {
 }
 
 /**
+ * Sync the custom dropdown display for a select element after programmatically
+ * changing its value. Ensures the visible trigger text matches the new value.
+ */
+export function syncSelectDisplay(selectId: string): void {
+  const select = document.getElementById(selectId) as HTMLSelectElement | null;
+  if (!select) return;
+  const wrapper = select.nextElementSibling as HTMLElement | null;
+  if (!wrapper || !wrapper.classList.contains("custom-select")) return;
+  const selected = Array.from(select.options).find((o) => o.selected) || select.options[0];
+  const textEl = wrapper.querySelector(".select-trigger-text") as HTMLElement | null;
+  if (textEl) textEl.textContent = selected ? selected.label : "";
+  wrapper.querySelectorAll(".select-option").forEach((o) => {
+    o.classList.toggle("selected", o.getAttribute("data-value") === select.value);
+  });
+}
+
+/**
  * Remove an existing enhanced dropdown wrapper for a select, so it can be re-enhanced
  * after its options have changed. Returns the native select element.
  */

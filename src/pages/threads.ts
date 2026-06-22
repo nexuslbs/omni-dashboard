@@ -1,5 +1,5 @@
 import { apiGet } from "../lib/api";
-import { enhanceSelect } from "../lib/dropdown";
+import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 
 // ── Types ──
 interface ThreadRow {
@@ -193,13 +193,13 @@ function populateFilterControls(filters: ThreadFilters): void {
     causeSel.innerHTML += `<option value="${escapeHtml(c)}">${escapeHtml(c.charAt(0).toUpperCase() + c.slice(1))}</option>`;
   }
 
+  // Restore filter values from URL-restored state (set BEFORE enhance)
+  statusSel.value = currentStatus;
+  causeSel.value = currentCause;
+
   // Enhance filter selects with custom dropdowns
   enhanceSelect("filter-status");
   enhanceSelect("filter-cause");
-
-  // Restore filter values from URL-restored state
-  statusSel.value = currentStatus;
-  causeSel.value = currentCause;
 
   wireFilterEvents();
 }
@@ -227,9 +227,15 @@ function wireFilterEvents(): void {
     currentCause = "all";
     currentThreadId = "";
     currentOffset = 0;
-    (document.getElementById("filter-status") as HTMLSelectElement).value = "all";
-    (document.getElementById("filter-cause") as HTMLSelectElement).value = "all";
-    (document.getElementById("filter-thread-id") as HTMLInputElement).value = "";
+    const statusSel = document.getElementById("filter-status") as HTMLSelectElement;
+    const causeSel = document.getElementById("filter-cause") as HTMLSelectElement;
+    const threadInput = document.getElementById("filter-thread-id") as HTMLInputElement;
+    statusSel.value = "all";
+    causeSel.value = "all";
+    threadInput.value = "";
+    syncSelectDisplay("filter-status");
+    syncSelectDisplay("filter-cause");
+    history.replaceState(null, "", window.location.pathname);
     void loadThreads();
   });
   document.getElementById("prev-page")!.addEventListener("click", () => {

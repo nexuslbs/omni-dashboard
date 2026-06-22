@@ -1,5 +1,6 @@
 import { apiGet, type MessagesResponse, type MessagesFilters } from "../lib/api";
 import { renderMessageCard, wireMessageCardToggles, typeColor } from "../lib/message-card";
+import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 
 // ── State ──
 interface FilterState {
@@ -396,29 +397,29 @@ function syncFilterStateToControls(): void {
   const seq0Checkbox = document.getElementById("filter-seq0") as HTMLInputElement | null;
   if (seq0Checkbox) seq0Checkbox.checked = currentFilters.seq0;
 
+  // Sync subtype input
+  const subtypeInput = document.getElementById("filter-subtype") as HTMLInputElement | null;
+  if (subtypeInput) subtypeInput.value = currentFilters.subtype;
+
+  // Sync type filter buttons
+  const allTypeBtns = document.querySelectorAll(".type-filter-btn");
+  if (allTypeBtns.length > 0) {
+    allTypeBtns.forEach((b) => b.classList.remove("selected"));
+    if (currentFilters.types.length === 0) {
+      const allBtn = document.querySelector('.type-filter-btn[data-type="all"]');
+      if (allBtn) allBtn.classList.add("selected");
+    } else {
+      for (const t of currentFilters.types) {
+        const btn = document.querySelector(`.type-filter-btn[data-type="${t}"]`);
+        if (btn) btn.classList.add("selected");
+      }
+    }
+  }
+
   syncSelectDisplay("filter-channel");
   syncSelectDisplay("filter-provider");
   syncSelectDisplay("filter-model");
   syncSelectDisplay("filter-role");
-}
-
-// ── Custom dropdown (replaces native <select> for theme control) ──
-import { enhanceSelect } from "../lib/dropdown";
-// enhanceSelect imported from src/lib/dropdown.ts
-
-function syncSelectDisplay(selectId: string): void {
-  const select = document.getElementById(selectId) as HTMLSelectElement;
-  if (!select) return;
-  const wrapper = select.nextElementSibling as HTMLElement;
-  if (!wrapper || !wrapper.classList.contains("custom-select")) return;
-
-  const selected = Array.from(select.options).find((o) => o.selected) || select.options[0];
-  const textEl = wrapper.querySelector(".select-trigger-text") as HTMLElement;
-  if (textEl) textEl.textContent = selected ? selected.label : "";
-
-  wrapper.querySelectorAll(".select-option").forEach((o) => {
-    o.classList.toggle("selected", o.getAttribute("data-value") === select.value);
-  });
 }
 
 // ── Load messages ──
