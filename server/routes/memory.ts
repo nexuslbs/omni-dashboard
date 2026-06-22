@@ -37,6 +37,20 @@ memoryRouter.get("/stats", async (req: Request, res: Response) => {
     const threadsResult = await queryDb(`SELECT COUNT(*) as cnt FROM threads ${threadWhere}`, params);
     const threads = Number(threadsResult[0]?.cnt) || 0;
 
+    // Count completed threads
+    const threadsCompletedResult = await queryDb(
+      `SELECT COUNT(*) as cnt FROM threads ${threadWhere}${threadConds.length > 0 ? " AND" : " WHERE"} status = 'completed'`,
+      params,
+    );
+    const threads_completed = Number(threadsCompletedResult[0]?.cnt) || 0;
+
+    // Count failed threads
+    const threadsFailedResult = await queryDb(
+      `SELECT COUNT(*) as cnt FROM threads ${threadWhere}${threadConds.length > 0 ? " AND" : " WHERE"} status = 'failed'`,
+      params,
+    );
+    const threads_failed = Number(threadsFailedResult[0]?.cnt) || 0;
+
     // Count messages — same filter via thread_id IN subquery
     const messagesResult = await queryDb(
       `SELECT COUNT(*) as cnt FROM messages WHERE thread_id IN (SELECT id FROM threads ${threadWhere})`,
@@ -65,6 +79,8 @@ memoryRouter.get("/stats", async (req: Request, res: Response) => {
 
     res.json({
       threads,
+      threads_completed,
+      threads_failed,
       messages,
       vectors,
       qdrant_wikis: qdrantWikis,
@@ -85,54 +101,47 @@ memoryRouter.get("/search-messages", async (req: Request, res: Response) => {
     }
 
     const profile = (req.query.profile as string) || null;
+    const channel = (req.query.channel as string) || null;
     const limit = Math.min(parseInt((req.query.limit as string) || "10", 10), 500);
     const pattern = `%${q}%`;
 
-    // Build query with optional profile filter
-    let sql: string;
-    let params: any[];
+    // Build conditions
+    const conds: string[] = [`m.content ILIKE $1`];
+    const params: any[] = [pattern];
+    let paramIdx = 2;
 
     if (profile) {
-      sql = `
-        SELECT
-          m.id, m.thread_id, m.role, m.content, m.thread_sequence,
-          m.external_id, m.metadata, m.created_at, m.msg_type, m.msg_subtype,
-          t.channel_id, t.status, t.profile, t.provider, t.model,
-          t.duration_ms as thread_duration_ms,
-          t.input_tokens as thread_input_tokens,
-          t.output_tokens as thread_output_tokens,
-          t.cached_tokens as thread_cached_tokens,
-          m.processing_time_ms, m.token_usage,
-          c.name as channel_name
-        FROM messages m
-        JOIN threads t ON t.id = m.thread_id
-        JOIN channels c ON c.id = t.channel_id
-        WHERE m.content ILIKE $1 AND t.profile = $2
-        ORDER BY m.id DESC
-        LIMIT $3
-      `;
-      params = [pattern, profile, limit];
-    } else {
-      sql = `
-        SELECT
-          m.id, m.thread_id, m.role, m.content, m.thread_sequence,
-          m.external_id, m.metadata, m.created_at, m.msg_type, m.msg_subtype,
-          t.channel_id, t.status, t.profile, t.provider, t.model,
-          t.duration_ms as thread_duration_ms,
-          t.input_tokens as thread_input_tokens,
-          t.output_tokens as thread_output_tokens,
-          t.cached_tokens as thread_cached_tokens,
-          m.processing_time_ms, m.token_usage,
-          c.name as channel_name
-        FROM messages m
-        JOIN threads t ON t.id = m.thread_id
-        JOIN channels c ON c.id = t.channel_id
-        WHERE m.content ILIKE $1
-        ORDER BY m.id DESC
-        LIMIT $2
-      `;
-      params = [pattern, limit];
+      conds.push(`t.profile = $${paramIdx++}`);
+      params.push(profile);
     }
+    if (channel) {
+      const chId = parseInt(channel, 10);
+      if (!isNaN(chId)) {
+        conds.push(`t.channel_id = $${paramIdx++}`);
+        params.push(chId);
+      }
+    }
+
+    const whereClause = conds.join(" AND ");
+    const sql = `
+      SELECT
+        m.id, m.thread_id, m.role, m.content, m.thread_sequence,
+        m.external_id, m.metadata, m.created_at, m.msg_type, m.msg_subtype,
+        t.channel_id, t.status, t.profile, t.provider, t.model,
+        t.duration_ms as thread_duration_ms,
+        t.input_tokens as thread_input_tokens,
+        t.output_tokens as thread_output_tokens,
+        t.cached_tokens as thread_cached_tokens,
+        m.processing_time_ms, m.token_usage,
+        c.name as channel_name
+      FROM messages m
+      JOIN threads t ON t.id = m.thread_id
+      JOIN channels c ON c.id = t.channel_id
+      WHERE ${whereClause}
+      ORDER BY m.id DESC
+      LIMIT $${paramIdx}
+    `;
+    params.push(limit);
 
     const rows = await queryDb(sql, params);
 

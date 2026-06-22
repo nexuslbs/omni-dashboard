@@ -67,37 +67,33 @@ export async function renderMemory(container: HTMLElement): Promise<void> {
         </div>
       </div>
 
-      <!-- Block 5: Channel Context -->
+      <!-- Block 5: Channel Context (stats + message search + context preview) -->
       <div class="card">
         <div class="card-header"><span class="card-title">🔗 Channel Context</span></div>
-        <div class="card-body">
+        <div class="card-body" id="mem-channel-block">
           <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
             <label class="filter-label" style="margin:0;">Channel</label>
             <select id="mem-channel-select" class="filter-select" style="min-width:200px;">
               <option value="">— Select a channel —</option>
             </select>
           </div>
-          <div id="mem-channel-stats" style="display:none;">
-            <div id="mem-channel-stats-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:0.5rem;margin-bottom:0.75rem;"></div>
+          <div id="mem-channel-stats" style="display:none;margin-bottom:0.75rem;">
+            <div id="mem-channel-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;"></div>
+          </div>
+          <div id="mem-channel-msg-search-area" style="display:none;margin-bottom:0.75rem;">
+            <div class="detail-label" style="margin-bottom:0.25rem;">Message Search</div>
+            <input type="text" id="mem-msg-search" class="filter-input" placeholder="Type at least 1 character to search messages in this channel..." style="width:100%;box-sizing:border-box;" />
+            <div id="mem-msg-results" class="events-scroll" style="margin-top:0.5rem;"></div>
+          </div>
+          <div id="mem-channel-context-area" style="display:none;margin-bottom:0.5rem;">
             <div class="detail-label" style="margin-bottom:0.25rem;">Context Preview</div>
             <div id="mem-channel-context" style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;max-height:400px;overflow-y:auto;background:var(--bg-card);border-radius:6px;padding:0.75rem;border:1px solid var(--glass-border);white-space:pre-wrap;"></div>
           </div>
-          <div id="mem-channel-empty" class="empty-state" style="display:block;">Select a channel to see stats and context</div>
+          <div id="mem-channel-empty" class="empty-state" style="display:block;">Select a channel to see stats, search messages, and context</div>
         </div>
       </div>
 
-      <!-- Block 6: Message Search -->
-      <div class="card">
-        <div class="card-header"><span class="card-title">💬 Message Search</span></div>
-        <div class="card-body">
-          <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
-            <input type="text" id="mem-msg-search" class="filter-input" placeholder="Type at least 1 character to search messages..." style="flex:1;" />
-          </div>
-          <div id="mem-msg-results" class="events-scroll"></div>
-        </div>
-      </div>
-
-      <!-- Block 7: Wiki Search -->
+      <!-- Block 6: Wiki Search -->
       <div class="card">
         <div class="card-header"><span class="card-title">📚 Wiki Search</span></div>
         <div class="card-body">
@@ -195,7 +191,11 @@ async function onProfileChange(): Promise<void> {
   _currentProfile = select.value;
   document.getElementById("mem-channel-context")!.textContent = "";
   document.getElementById("mem-channel-stats")!.style.display = "none";
+  document.getElementById("mem-channel-msg-search-area")!.style.display = "none";
+  document.getElementById("mem-channel-context-area")!.style.display = "none";
   document.getElementById("mem-channel-empty")!.style.display = "block";
+  document.getElementById("mem-msg-search")!.value = "";
+  document.getElementById("mem-msg-results")!.innerHTML = "";
   await loadAllBlocks();
 }
 
@@ -227,14 +227,22 @@ async function onChannelChange(): Promise<void> {
   const select = document.getElementById("mem-channel-select") as HTMLSelectElement;
   _currentChannel = select.value;
   if (_currentChannel) {
+    document.getElementById("mem-channel-empty")!.style.display = "none";
+    document.getElementById("mem-channel-stats")!.style.display = "block";
+    document.getElementById("mem-channel-msg-search-area")!.style.display = "block";
+    document.getElementById("mem-channel-context-area")!.style.display = "block";
+    document.getElementById("mem-msg-search")!.value = "";
+    document.getElementById("mem-msg-results")!.innerHTML = "";
     await Promise.all([loadChannelStats(), loadChannelContext()]);
   } else {
     document.getElementById("mem-channel-stats")!.style.display = "none";
+    document.getElementById("mem-channel-msg-search-area")!.style.display = "none";
+    document.getElementById("mem-channel-context-area")!.style.display = "none";
     document.getElementById("mem-channel-empty")!.style.display = "block";
   }
 }
 
-// ── Block 1: Stats ──
+// ── Block 1: Profile Stats ──
 
 async function loadStats(): Promise<void> {
   const el = document.getElementById("mem-stats")!;
@@ -247,6 +255,14 @@ async function loadStats(): Promise<void> {
         <div class="stat-card" style="text-align:center;padding:1rem;background:var(--bg-card);border-radius:8px;border:1px solid var(--glass-border);">
           <div style="font-size:1.5rem;font-weight:700;color:var(--text-primary);">${stats.threads}</div>
           <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Threads</div>
+        </div>
+        <div class="stat-card" style="text-align:center;padding:1rem;background:var(--bg-card);border-radius:8px;border:1px solid var(--glass-border);">
+          <div style="font-size:1.5rem;font-weight:700;color:var(--text-primary);">${stats.threads_completed}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Completed</div>
+        </div>
+        <div class="stat-card" style="text-align:center;padding:1rem;background:var(--bg-card);border-radius:8px;border:1px solid var(--glass-border);">
+          <div style="font-size:1.5rem;font-weight:700;color:var(--text-primary);">${stats.threads_failed}</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Failed</div>
         </div>
         <div class="stat-card" style="text-align:center;padding:1rem;background:var(--bg-card);border-radius:8px;border:1px solid var(--glass-border);">
           <div style="font-size:1.5rem;font-weight:700;color:var(--text-primary);">${stats.messages}</div>
@@ -275,7 +291,6 @@ async function loadSystemPrompt(): Promise<void> {
     const res = await fetch(`${API_BASE}/settings`);
     if (!res.ok) throw new Error("Failed to fetch settings");
     const data = await res.json();
-    // Look for system_prompt in settings
     let prompt = "";
     if (Array.isArray(data)) {
       for (const cat of data) {
@@ -291,12 +306,10 @@ async function loadSystemPrompt(): Promise<void> {
     if (!prompt) prompt = "System prompt not found in settings.";
     el.textContent = prompt;
   } catch {
-    // Try fetching via channel prompt proxy
     try {
       const res = await fetch(`${API_BASE}/prompt-preview/default`);
       if (res.ok) {
         const data = await res.json();
-        // Find system message
         if (data.messages) {
           const sys = data.messages.find((m: any) => m.role === "system");
           el.textContent = sys?.content || "No system prompt found.";
@@ -351,10 +364,8 @@ async function uploadMemoryFile(file: File, type: "memory" | "soul"): Promise<vo
     }
     const data = await res.json();
     statusEl.textContent = `✅ Uploaded (${data.size} chars)`;
-    // Reload the text
     if (type === "memory") await loadMemoryText();
     else await loadSoulText();
-    // Clear status after 3s
     setTimeout(() => {
       statusEl.textContent = "";
     }, 3000);
@@ -363,7 +374,7 @@ async function uploadMemoryFile(file: File, type: "memory" | "soul"): Promise<vo
   }
 }
 
-// ── Block 5: Channel stats & context ──
+// ── Block 5: Channel stats, search, & context ──
 
 async function loadChannelStats(): Promise<void> {
   const grid = document.getElementById("mem-channel-stats-grid")!;
@@ -378,16 +389,16 @@ async function loadChannelStats(): Promise<void> {
         <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.25rem;">Threads</div>
       </div>
       <div class="stat-card" style="text-align:center;padding:0.75rem;background:var(--bg-card);border-radius:8px;border:1px solid var(--glass-border);">
+        <div style="font-size:1.25rem;font-weight:700;color:var(--text-primary);">${stats.threads_completed}</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.25rem;">Completed</div>
+      </div>
+      <div class="stat-card" style="text-align:center;padding:0.75rem;background:var(--bg-card);border-radius:8px;border:1px solid var(--glass-border);">
+        <div style="font-size:1.25rem;font-weight:700;color:var(--text-primary);">${stats.threads_failed}</div>
+        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.25rem;">Failed</div>
+      </div>
+      <div class="stat-card" style="text-align:center;padding:0.75rem;background:var(--bg-card);border-radius:8px;border:1px solid var(--glass-border);">
         <div style="font-size:1.25rem;font-weight:700;color:var(--text-primary);">${stats.messages}</div>
         <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.25rem;">Messages</div>
-      </div>
-      <div class="stat-card" style="text-align:center;padding:0.75rem;background:var(--bg-card);border-radius:8px;border:1px solid var(--glass-border);">
-        <div style="font-size:1.25rem;font-weight:700;color:var(--text-primary);">${stats.vectors}</div>
-        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.25rem;">Vectors (pgvector)</div>
-      </div>
-      <div class="stat-card" style="text-align:center;padding:0.75rem;background:var(--bg-card);border-radius:8px;border:1px solid var(--glass-border);">
-        <div style="font-size:1.25rem;font-weight:700;color:var(--text-primary);">${stats.qdrant_wikis}</div>
-        <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.25rem;">Wiki Vectors (Qdrant)</div>
       </div>
     `;
   } catch {
@@ -401,8 +412,6 @@ async function loadChannelContext(): Promise<void> {
   const channelName =
     channelSelect.options[channelSelect.selectedIndex]?.text.split(" (")[0] || _currentChannel;
 
-  document.getElementById("mem-channel-stats")!.style.display = "block";
-  document.getElementById("mem-channel-empty")!.style.display = "none";
   el.textContent = "Loading context...";
 
   try {
@@ -415,17 +424,47 @@ async function loadChannelContext(): Promise<void> {
     const data = await res.json();
 
     if (data.messages && data.messages.length > 0) {
-      // Show all messages except the last user message (which is our injected prompt)
+      // Filter out our injected prompt
       const contextMessages = data.messages.filter(
         (m: any) => !(m.role === "user" && m.content === "[memory page context preview]"),
       );
+
       if (contextMessages.length === 0) {
         el.textContent = "(system context empty)";
-      } else {
-        el.textContent = contextMessages
-          .map((m: any) => `[${m.role}]\n${m.content || ""}`)
-          .join("\n\n---\n\n");
+        return;
       }
+
+      // Build the preview: show only the "context" part of the system prompt
+      // (stripping identity, MEMORY, and SOUL sections)
+      const parts: string[] = [];
+
+      for (const msg of contextMessages) {
+        if (msg.role === "system") {
+          // Extract the volatile tail: find "RELEVANT WIKI PAGES" or "Host:"
+          // in the content and show everything from there
+          const content: string = msg.content || "";
+          const wikiIdx = content.indexOf("RELEVANT WIKI PAGES");
+          const hostIdx = content.indexOf("\nHost:");
+          const tsIdx = content.indexOf("Conversation started:");
+
+          if (wikiIdx >= 0) {
+            parts.push(content.slice(wikiIdx));
+          } else if (hostIdx >= 0) {
+            parts.push(content.slice(hostIdx + 1));
+          } else if (tsIdx >= 0) {
+            parts.push(content.slice(tsIdx));
+          }
+          // If none found, the system prompt has no context section — skip it
+        } else if (msg.role === "context" || msg.msg_type === "context") {
+          parts.push(msg.content || "");
+        } else {
+          // Include other non-system messages (e.g., recent conversations msg)
+          parts.push(msg.content || "");
+        }
+      }
+
+      const text = parts.filter(Boolean).join("\n\n---\n\n");
+      el.textContent = text || "(no context content)";
     } else {
       el.textContent = "(no context returned)";
     }
@@ -434,9 +473,7 @@ async function loadChannelContext(): Promise<void> {
   }
 }
 
-// ── Block 6: Message Search ──
-
-import { renderMessageCard, wireMessageCardToggles } from "../lib/message-card";
+// ── Block 5b: Message Search (inside Channel Context) ──
 
 async function searchMessages(query: string): Promise<void> {
   const el = document.getElementById("mem-msg-results")!;
@@ -446,11 +483,12 @@ async function searchMessages(query: string): Promise<void> {
     params.set("q", query);
     params.set("limit", "10");
     if (_currentProfile) params.set("profile", _currentProfile);
+    if (_currentChannel) params.set("channel", _currentChannel);
     const data = await apiGet<{ messages: any[]; total: number }>(
       `/memory/search-messages?${params.toString()}`,
     );
     if (data.messages.length === 0) {
-      el.innerHTML = '<div class="empty-state">No matching messages</div>';
+      el.innerHTML = '<div class="empty-state">No matching messages in this channel</div>';
       return;
     }
     el.innerHTML = data.messages.map((msg) => renderMessageCard(msg)).join("");
@@ -460,7 +498,7 @@ async function searchMessages(query: string): Promise<void> {
   }
 }
 
-// ── Block 7: Wiki Search ──
+// ── Block 6: Wiki Search ──
 
 async function searchWiki(query: string): Promise<void> {
   const el = document.getElementById("mem-wiki-results")!;
@@ -489,7 +527,6 @@ async function searchWiki(query: string): Promise<void> {
           .join("")}
       </div>
     `;
-    // Wire click to open file in explorer
     el.querySelectorAll(".search-result-item").forEach((item) => {
       item.addEventListener("click", () => {
         const path = (item as HTMLElement).getAttribute("data-path");
