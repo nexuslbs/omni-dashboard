@@ -326,11 +326,26 @@ async function loadScheduleDetail(cronId: string): Promise<any> {
           : ""
       }
 
-      <div id="schedule-threads-section" style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem;">Recent Activity</div>
-        <div id="schedule-threads" style="font-size:0.85rem;color:var(--text-muted);">Loading activity...</div>
-      </div>
     `;
+
+    // Close the job info card and open a separate Recent Activity card
+    const activityHtml = `
+    </div></div>
+    <div class="card" style="margin-top:1rem;">
+      <div class="card-header">
+        <span class="card-title">Recent Activity</span>
+        <span class="events-nav" id="schedule-threads-nav">
+          <button class="nav-btn" id="threads-prev-page" disabled>← Prev</button>
+          <span id="threads-page-info">Page 1</span>
+          <button class="nav-btn" id="threads-next-page" disabled>Next →</button>
+        </span>
+      </div>
+      <div class="card-body" id="schedule-threads">
+        <div class="loading">Loading activity...</div>
+      </div>
+    </div>
+    `;
+    el.insertAdjacentHTML("afterend", activityHtml);
     // Load threads
     void loadScheduleThreads(job.id);
     return job;
@@ -580,19 +595,29 @@ async function showCronModal(job: any): Promise<void> {
   });
 }
 
+// ── Pagination state for schedule threads ──
+let threadsOffset = 0;
+const threadsLimit = 10;
+
 async function loadScheduleThreads(scheduleId: string): Promise<void> {
   const el = document.getElementById("schedule-threads");
   if (!el) return;
   try {
-    const res = await fetch(`/api/schedule/${encodeURIComponent(scheduleId)}/threads`);
+    const res = await fetch(
+      `/api/schedule/${encodeURIComponent(scheduleId)}/threads?offset=${threadsOffset}&limit=${threadsLimit}`,
+    );
     if (!res.ok) throw new Error("Failed to load thread activity");
     const data = await res.json();
-    if (!data.rows || data.rows.length === 0) {
+    const total = parseInt(data.total) || 0;
+    const rows = data.rows || [];
+
+    if (rows.length === 0) {
       el.innerHTML =
-        '<div style="color:var(--text-muted);font-size:0.8rem;">No activity from this task yet.</div>';
+        '<div style="color:var(--text-muted);font-size:0.8rem;padding:1rem 0;">No activity from this task yet.</div>';
       return;
     }
-    el.innerHTML = data.rows.map((row: any) => renderMessageCard(row)).join("");
+
+    el.innerHTML = `<div class="events-scroll">${rows.map((row: any) => renderMessageCard(row)).join("")}</div>`;
     // Wire up expand/collapse toggles
     wireMessageCardToggles(el);
     // Wire up thread link clicks → SPA navigation to threads page
@@ -610,6 +635,33 @@ async function loadScheduleThreads(scheduleId: string): Promise<void> {
         router.go("threads");
       });
     });
+
+    // Update pagination
+    const currentPage = Math.floor(threadsOffset / threadsLimit) + 1;
+    const pageInfo = document.getElementById("threads-page-info");
+    const prevBtn = document.getElementById("threads-prev-page") as HTMLButtonElement;
+    const nextBtn = document.getElementById("threads-next-page") as HTMLButtonElement;
+    if (pageInfo) pageInfo.textContent = `Page ${currentPage} (${total} total)`;
+    if (prevBtn) prevBtn.disabled = threadsOffset <= 0;
+    if (nextBtn) nextBtn.disabled = threadsOffset + threadsLimit >= total;
+
+    // Wire pagination buttons (remove old listeners first)
+    const prevClone = prevBtn?.cloneNode(true) as HTMLButtonElement;
+    const nextClone = nextBtn?.cloneNode(true) as HTMLButtonElement;
+    if (prevBtn && prevBtn.parentNode) {
+      prevBtn.parentNode.replaceChild(prevClone, prevBtn);
+      prevClone.addEventListener("click", () => {
+        threadsOffset = Math.max(0, threadsOffset - threadsLimit);
+        void loadScheduleThreads(scheduleId);
+      });
+    }
+    if (nextBtn && nextBtn.parentNode) {
+      nextBtn.parentNode.replaceChild(nextClone, nextBtn);
+      nextClone.addEventListener("click", () => {
+        threadsOffset += threadsLimit;
+        void loadScheduleThreads(scheduleId);
+      });
+    }
   } catch {
     el.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;">Failed to load activity.</div>';
   }
