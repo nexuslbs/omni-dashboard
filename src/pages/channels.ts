@@ -502,7 +502,8 @@ function wireChannels(): void {
       if (!input) return;
       const value = input.value;
       const body: Record<string, string> = {};
-      body[`current_${field}`] = value;
+      const key = field === "name" ? "name" : `current_${field}`;
+      body[key] = value;
       try {
         const res = await fetch(`/api/channels/${channelId}`, {
           method: "PATCH",
