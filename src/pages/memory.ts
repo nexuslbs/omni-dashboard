@@ -67,7 +67,7 @@ export async function renderMemory(container: HTMLElement): Promise<void> {
         </div>
       </div>
 
-      <!-- Block 5: Channel Context (stats + message search + context preview) -->
+      <!-- Block 5: Channel Context (stats + context preview + message search) -->
       <div class="card">
         <div class="card-header"><span class="card-title">🔗 Channel Context</span></div>
         <div class="card-body" id="mem-channel-block">
@@ -80,14 +80,16 @@ export async function renderMemory(container: HTMLElement): Promise<void> {
           <div id="mem-channel-stats" style="display:none;margin-bottom:0.75rem;">
             <div id="mem-channel-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:0.5rem;"></div>
           </div>
-          <div id="mem-channel-msg-search-area" style="display:none;margin-bottom:0.75rem;">
-            <div class="detail-label" style="margin-bottom:0.25rem;">Message Search</div>
-            <input type="text" id="mem-msg-search" class="filter-input" placeholder="Type at least 1 character to search messages in this channel..." style="width:100%;box-sizing:border-box;" />
-            <div id="mem-msg-results" class="events-scroll" style="margin-top:0.5rem;"></div>
-          </div>
-          <div id="mem-channel-context-area" style="display:none;margin-bottom:0.5rem;">
+          <div id="mem-channel-context-area" style="display:none;margin-bottom:0.75rem;">
             <div class="detail-label" style="margin-bottom:0.25rem;">Context Preview</div>
             <div id="mem-channel-context" style="font-size:0.8rem;color:var(--text-secondary);line-height:1.5;max-height:400px;overflow-y:auto;background:var(--bg-card);border-radius:6px;padding:0.75rem;border:1px solid var(--glass-border);white-space:pre-wrap;"></div>
+          </div>
+          <div id="mem-channel-msg-search-area" style="display:none;">
+            <div class="setting-card" style="border:1px solid var(--glass-border,rgba(255,255,255,0.08));border-radius:8px;padding:0.75rem;background:var(--bg-card);">
+              <div class="detail-label" style="margin-bottom:0.5rem;">💬 Message Search</div>
+              <input type="text" id="mem-msg-search" class="filter-input" placeholder="Type at least 1 character to search messages in this channel..." style="width:100%;box-sizing:border-box;" />
+              <div id="mem-msg-results" class="events-scroll" style="margin-top:0.5rem;"></div>
+            </div>
           </div>
           <div id="mem-channel-empty" class="empty-state" style="display:block;">Select a channel to see stats, search messages, and context</div>
         </div>
