@@ -1,4 +1,4 @@
-import { escapeHtml } from "./helpers.js";
+import { escapeHtml } from "./helpers";
 
 // ── Shared message card rendering ──
 // Used by both /messages and /schedule/<id> pages

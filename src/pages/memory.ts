@@ -196,7 +196,7 @@ async function onProfileChange(): Promise<void> {
   document.getElementById("mem-channel-msg-search-area")!.style.display = "none";
   document.getElementById("mem-channel-context-area")!.style.display = "none";
   document.getElementById("mem-channel-empty")!.style.display = "block";
-  document.getElementById("mem-msg-search")!.value = "";
+  (document.getElementById("mem-msg-search") as HTMLInputElement).value = "";
   document.getElementById("mem-msg-results")!.innerHTML = "";
   await loadAllBlocks();
 }
@@ -233,7 +233,7 @@ async function onChannelChange(): Promise<void> {
     document.getElementById("mem-channel-stats")!.style.display = "block";
     document.getElementById("mem-channel-msg-search-area")!.style.display = "block";
     document.getElementById("mem-channel-context-area")!.style.display = "block";
-    document.getElementById("mem-msg-search")!.value = "";
+    (document.getElementById("mem-msg-search") as HTMLInputElement).value = "";
     document.getElementById("mem-msg-results")!.innerHTML = "";
     await Promise.all([loadChannelStats(), loadChannelContext()]);
   } else {

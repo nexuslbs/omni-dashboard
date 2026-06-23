@@ -4,14 +4,14 @@ FROM node:22-alpine AS builder
 WORKDIR /build
 
 # Copy package files
-COPY package.json tsconfig.json tsconfig.server.json vite.config.ts ./
+COPY package.json package-lock.json tsconfig.json tsconfig.server.json vite.config.ts ./
 COPY server/ ./server/
 COPY src/ ./src/
 COPY public/ ./public/
 COPY index.html ./
 
-# Copy pre-installed node_modules from host (avoids npm registry issues)
-COPY node_modules/ ./node_modules/
+# Install dependencies from lockfile (deterministic install)
+RUN npm ci
 
 # Build frontend (Vite)
 RUN npm run build:frontend
@@ -22,13 +22,18 @@ RUN npm run build:server
 # Stage 2: Production image — node serves both static + API
 FROM node:22-alpine
 
+WORKDIR /app
+
 # Copy built frontend
 COPY --from=builder /build/dist /app/dist
 
 # Copy compiled backend
 COPY --from=builder /build/server-dist /app/server
+
+# Install only production dependencies for runtime
 COPY --from=builder /build/package.json /app/package.json
-COPY --from=builder /build/node_modules /app/node_modules
+COPY --from=builder /build/package-lock.json /app/package-lock.json
+RUN npm ci --omit=dev
 
 EXPOSE 3001
 

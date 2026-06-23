@@ -102,7 +102,7 @@ function renderPluginConfig(p: PluginData): string {
     pluginName: p.name,
     resolvedEnv: p.resolved_env,
     status: p.status,
-    isBuiltIn: p.source === "built-in",
+    isBuiltIn: false,
   });
 }
 
@@ -173,14 +173,18 @@ function wirePlatforms(): void {
     const pluginName = card?.getAttribute("data-plugin-name");
     if (!pluginName) return;
     // Store the currently-rendered values as the saved baseline
-    savedConfigs.set(pluginName, getCurrentConfig(formEl));
+    savedConfigs.set(pluginName, getCurrentConfig(formEl as HTMLElement));
     // Re-check dirty state on every input change
     formEl.querySelectorAll(".plugin-config-input").forEach((input) => {
-      input.addEventListener("input", () => dirtyCheckSaveButton(formEl, pluginName, savedConfigs));
-      input.addEventListener("change", () => dirtyCheckSaveButton(formEl, pluginName, savedConfigs));
+      input.addEventListener("input", () =>
+        dirtyCheckSaveButton(formEl as HTMLElement, pluginName, savedConfigs),
+      );
+      input.addEventListener("change", () =>
+        dirtyCheckSaveButton(formEl as HTMLElement, pluginName, savedConfigs),
+      );
     });
     // Initial dirty check (should be grayed out)
-    dirtyCheckSaveButton(formEl, pluginName, savedConfigs);
+    dirtyCheckSaveButton(formEl as HTMLElement, pluginName, savedConfigs);
   });
 
   // Enhance native select elements to styled custom dropdowns

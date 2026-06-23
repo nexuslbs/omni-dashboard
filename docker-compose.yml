@@ -19,4 +19,8 @@ services:
 
 networks:
   omniagent_default:
+    # This network must exist before starting the dashboard.
+    # Run `bash make_network.sh` to create it if it doesn't exist,
+    # or the omniagent stack should be started first.
     external: true
+    name: omniagent_default

@@ -199,7 +199,9 @@ function renderBarChart(hourly: HourlyBucket[]): string {
   for (const h of hourly) {
     // bucket may be Date object (pg rowMode:array) or ISO string (JSON aggregate); normalize to ISO string
     const bucketStr =
-      typeof h.bucket === "object" && h.bucket instanceof Date ? h.bucket.toISOString() : String(h.bucket);
+      typeof h.bucket === "object" && (h.bucket as any) instanceof Date
+        ? (h.bucket as Date).toISOString()
+        : String(h.bucket);
     const day = bucketStr.slice(0, 10);
     dayMap.set(day, (dayMap.get(day) || 0) + h.count);
   }
@@ -501,18 +503,9 @@ function formatDate(dateStr: string): string {
 }
 
 function formatTimeAgo(dateStr: string): string {
-  // Handle both Date objects (from pg rowMode:array) and ISO strings (from JSON aggregates)
-  const dateVal =
-    typeof dateStr === "object" && dateStr instanceof Date
-      ? dateStr
-      : new Date(
-          typeof dateStr === "string"
-            ? dateStr.endsWith("Z") || dateStr.includes("+") || dateStr.includes("T")
-              ? dateStr
-              : dateStr + "Z"
-            : dateStr,
-        );
-  const d = dateVal;
+  const d = new Date(
+    dateStr.endsWith("Z") || dateStr.includes("+") || dateStr.includes("T") ? dateStr : dateStr + "Z",
+  );
   const now = new Date();
   const diffMs = now.getTime() - d.getTime();
   const diffMin = Math.floor(diffMs / 60000);

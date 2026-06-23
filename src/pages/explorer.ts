@@ -36,7 +36,7 @@ function renderMarkdown(md: string): string {
   const renderer = new Renderer();
   const origTable = renderer.table.bind(renderer);
   renderer.table = (token) => {
-    const html = origTable(token);
+    const html = (origTable as (token: any) => string)(token);
     return '<div class="table-scroll">' + html + "</div>";
   };
 
@@ -313,10 +313,10 @@ async function reloadAllExpanded(): Promise<void> {
       // not just the target — intermediate dirs may not be in expandedPaths
       if (node.children === null) {
         try {
-          const response = await apiGet<{ entries: FsEntry[]; path: string }>(
+          const response: { entries: FsEntry[]; path: string } = await apiGet(
             `/fs/list?path=${encodeURIComponent(node.entry.path)}`,
           );
-          node.children = response.entries.map((e) => ({
+          node.children = response.entries.map((e: FsEntry) => ({
             entry: e,
             expanded: expandedPaths.has(e.path),
             children: null,

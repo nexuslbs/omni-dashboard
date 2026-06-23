@@ -123,7 +123,7 @@ async function runAction(action: Action, index: number): Promise<void> {
   btn.disabled = true;
   btn.textContent = "Running...";
   try {
-    const result = await apiPost<any>(`/actions/${action.id}/run`);
+    const result = await apiPost<any>(`/actions/${action.id}/run`, {});
     const isError = result.is_error;
     const msg = isError
       ? `Failed: ${result.result || result.error || "Unknown error"}`

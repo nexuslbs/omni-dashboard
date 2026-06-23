@@ -365,7 +365,8 @@ export interface ConfigField {
 export interface PluginManifest {
   name: string;
   version?: string;
-  type: "platform" | "mcp";
+  label?: string;
+  type: "platform" | "mcp" | "provider";
   description?: string;
   entrypoint?: { command: string; transport: string };
   capabilities?: { inbound?: boolean; outbound?: boolean };
@@ -375,12 +376,13 @@ export interface PluginManifest {
 export interface PluginData {
   id?: string;
   name: string;
-  plugin_type: "platform" | "mcp";
+  plugin_type: "platform" | "mcp" | "provider";
   version?: string;
   source: "built-in" | "installed" | "bundled";
   status: "enabled" | "disabled" | "error";
   manifest: PluginManifest;
   config: Record<string, any>;
+  config_schema?: ConfigField[];
   resolved_env?: Record<string, string>;
   created_at?: string;
   updated_at?: string;
