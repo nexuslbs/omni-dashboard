@@ -168,13 +168,15 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
 
   return `
     <div class="setting-row" data-name="${safeName}">
-      <div class="setting-controls">
+      <div class="setting-label">
         <div class="setting-name">${escapeHtml(name)}</div>
+        <div class="setting-description">${escapeHtml(desc)}</div>
+      </div>
+      <div class="setting-controls">
         <div class="setting-input-group">
           ${inputHtml}
         </div>
       </div>
-      <div class="setting-description">${escapeHtml(desc)}</div>
     </div>
   `;
 }
