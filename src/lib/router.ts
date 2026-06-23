@@ -31,6 +31,7 @@ const routes: Route[] = [
   { name: "overview", handler: renderOverview },
   { name: "threads", handler: renderThreads },
   { name: "messages", handler: renderMessages },
+  { name: "memory", handler: renderMemory },
   { name: "kanban", handler: renderKanban },
   { name: "schedule", handler: renderSchedule },
   { name: "settings", handler: renderSettings },
@@ -42,7 +43,6 @@ const routes: Route[] = [
   { name: "tools", handler: renderTools },
   { name: "providers", handler: renderProviders },
   { name: "actions", handler: renderActions },
-  { name: "memory", handler: renderMemory },
 ];
 
 const paramRoutes: ParamRoute[] = [

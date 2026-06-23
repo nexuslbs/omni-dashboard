@@ -382,6 +382,16 @@ async function loadScheduleDetail(cronId: string): Promise<any> {
           : ""
       }
 
+      ${
+        job.instruction_file
+          ? `
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Instruction File</div>
+        <code style="background:var(--bg-card);padding:0.25rem 0.5rem;border-radius:4px;font-size:0.8rem;color:var(--accent-cyan);">${escapeHtml(job.instruction_file)}</code>
+      </div>`
+          : ""
+      }
+
     `;
 
     return job;
@@ -518,6 +528,11 @@ async function showCronModal(job: any): Promise<void> {
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Prompt</label>
           <textarea id="cron-prompt" class="filter-input" style="width:100%;min-height:80px;resize:vertical;font-family:monospace;font-size:0.8rem;">${isEdit && job.prompt ? escapeHtml(job.prompt) : ""}</textarea>
         </div>
+        <div id="cron-instruction-section" style="margin-bottom:1rem;">
+          <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Instruction File</label>
+          <input id="cron-instruction" type="text" class="filter-input" placeholder="e.g. code-improvement" value="${isEdit && job.instruction_file ? escapeHtml(job.instruction_file) : ""}" style="width:100%;" />
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Path to a .md template file in profiles/&lt;name&gt;/templates/</div>
+        </div>
         <div style="margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
           <input id="cron-active" type="checkbox" ${isEdit ? (job.active ? "checked" : "") : "checked"} />
           <label for="cron-active" style="font-size:0.85rem;color:var(--text-primary);">Active</label>
@@ -575,6 +590,8 @@ async function showCronModal(job: any): Promise<void> {
     const prompt = (modal.querySelector("#cron-prompt") as HTMLTextAreaElement).value.trim();
     const active = (modal.querySelector("#cron-active") as HTMLInputElement).checked;
     const silent = (document.getElementById("cron-silent") as HTMLInputElement).checked;
+    const instruction_file =
+      (modal.querySelector("#cron-instruction") as HTMLInputElement).value.trim() || undefined;
     const channel_id = channelVal ? parseInt(channelVal, 10) : null;
 
     if (!display_name) {
@@ -613,6 +630,7 @@ async function showCronModal(job: any): Promise<void> {
         profile,
         mode,
         silent,
+        instruction_file,
       };
       if (mode === "action") body.action_id = action_id || null;
 
