@@ -95,6 +95,8 @@ async function omniagentProxy(req: express.Request, res: express.Response): Prom
 app.get("/api/mcp/tools", omniagentProxy);
 // Proxy ANY method for /api/actions and sub-paths — use middleware pattern for Express 5 compat
 app.all(/^\/api\/actions(?:\/.*)?$/, omniagentProxy);
+// Proxy ANY method for /api/secrets and sub-paths
+app.all(/^\/api\/secrets(?:\/.*)?$/, omniagentProxy);
 
 // GET /api/templates — List available template files across all profiles
 app.get("/api/templates", (_req, res) => {

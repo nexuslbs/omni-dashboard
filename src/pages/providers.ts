@@ -142,8 +142,8 @@ function renderConfigField(field: ConfigField, value: any, pluginName: string, e
       break;
     case "integer":
       inputHtml = `
-        <input type="number" id="${fieldId}" class="filter-input setting-input plugin-config-input"
-          value="${escapeHtml(String(value ?? ""))}" data-key="${escapeHtml(field.key)}"
+        <input type="tel" id="${fieldId}" class="filter-input setting-input plugin-config-input"
+          value="${escapeHtml(String(value ?? ""))}" inputmode="numeric" pattern="[0-9.-]*" data-key="${escapeHtml(field.key)}"
           ${field.min !== undefined ? `min="${field.min}"` : ""}
           ${field.max !== undefined ? `max="${field.max}"` : ""}
           style="max-width:120px;" />
@@ -190,16 +190,16 @@ function renderConfigField(field: ConfigField, value: any, pluginName: string, e
 
   return `
     <div class="setting-row" data-field-key="${escapeHtml(field.key)}">
-      <div class="setting-controls">
+      <div class="setting-label">
         <div class="setting-name">${escapeHtml(field.label)}${requiredMark}${envBadge ?? ""}</div>
+        ${descHtml}
+      </div>
+      <div class="setting-controls">
         <div class="setting-input-group">${inputHtml}</div>
       </div>
-      ${descHtml}
     </div>
   `;
 }
-
-/** Check if a plugin has any config field with a refresh_url. */
 function hasRefreshUrl(p: PluginData): boolean {
   const rootSchema = (p.config_schema || []) as any[];
   const manifestSchema = (p.manifest?.config_schema || []) as any[];

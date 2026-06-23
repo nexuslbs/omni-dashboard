@@ -1,5 +1,5 @@
 import { apiGet, apiPut, type SettingCategory } from "../lib/api";
-import { enhanceSelect } from "../lib/dropdown";
+import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 
 export function renderSettings(container: HTMLElement): void {
   container.innerHTML = `
@@ -233,6 +233,10 @@ function wireSettings(): void {
       if (input) {
         const original = input.getAttribute("data-original") || "";
         input.value = original;
+        // Sync custom select display (enhanced dropdown) back to original
+        if (input.tagName === "SELECT") {
+          syncSelectDisplay(input.id);
+        }
       }
       const actionsEl = document.querySelector(`#actions-${name}`) as HTMLElement | null;
       if (actionsEl) actionsEl.style.display = "none";

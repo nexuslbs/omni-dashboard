@@ -183,8 +183,8 @@ function renderConfigField(field: any, value: any, pluginName: string, envBadge?
       break;
     case "integer":
       inputHtml = `
-        <input type="number" id="${fieldId}" class="filter-input setting-input plugin-config-input"
-          value="${escapeHtml(String(value ?? ""))}" data-key="${escapeHtml(field.key)}"
+        <input type="tel" id="${fieldId}" class="filter-input setting-input plugin-config-input"
+          value="${escapeHtml(String(value ?? ""))}" inputmode="numeric" pattern="[0-9.-]*" data-key="${escapeHtml(field.key)}"
           ${field.min !== undefined ? `min="${field.min}"` : ""}
           ${field.max !== undefined ? `max="${field.max}"` : ""}
           style="max-width:120px;" />
@@ -231,11 +231,13 @@ function renderConfigField(field: any, value: any, pluginName: string, envBadge?
 
   return `
     <div class="setting-row" data-field-key="${escapeHtml(field.key)}">
-      <div class="setting-controls">
+      <div class="setting-label">
         <div class="setting-name">${escapeHtml(field.label)}${requiredMark}${envBadge ?? ""}</div>
+        ${descHtml}
+      </div>
+      <div class="setting-controls">
         <div class="setting-input-group">${inputHtml}</div>
       </div>
-      ${descHtml}
     </div>
   `;
 }

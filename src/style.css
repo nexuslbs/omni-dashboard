@@ -4440,7 +4440,7 @@ a.thread-row {
   border: 1px solid var(--glass-border, rgba(255,255,255,0.08));
   border-radius: var(--radius-sm, 6px);
   cursor: pointer;
-  font-size: 0.8125rem;
+  font-size: 0.82rem;
   color: var(--text-primary, #f1f5f9);
   white-space: nowrap;
   min-width: 0;
@@ -4454,6 +4454,7 @@ a.thread-row {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  line-height: 1.1;
 }
 .select-arrow {
   flex-shrink: 0;
