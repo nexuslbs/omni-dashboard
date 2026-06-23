@@ -382,13 +382,83 @@ async function loadScheduleDetail(cronId: string): Promise<any> {
           : ""
       }
 
+      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem;">Subtasks</div>
+        <div id="schedule-subtasks" style="font-size:0.85rem;color:var(--text-muted);">Loading subtasks...</div>
+      </div>
+
     `;
+    // Load subtasks for this job
+    void loadScheduleSubtasks(job.id);
 
     return job;
   } catch (e) {
     el.innerHTML = `<div class="error-state">Failed to load job details: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
     return null;
   }
+}
+
+// ── Load subtasks for a schedule job ──
+async function loadScheduleSubtasks(scheduleId: string): Promise<void> {
+  const el = document.getElementById("schedule-subtasks");
+  if (!el) return;
+  try {
+    const res = await fetch(`/api/schedule/${encodeURIComponent(scheduleId)}/subtasks`);
+    if (!res.ok) throw new Error("Failed to load subtasks");
+    const data = await res.json();
+    if (!data.subtasks || data.subtasks.length === 0) {
+      el.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;">No subtasks.</div>';
+      return;
+    }
+    el.innerHTML = data.subtasks
+      .map(
+        (st: any) => `
+      <div style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid var(--glass-border,rgba(255,255,255,0.08));font-size:0.8rem;">
+        <span style="flex-shrink:0;font-size:1rem;">${scheduleSubtaskEmoji(st.status)}</span>
+        <div style="flex:1;">
+          <div style="color:var(--text-primary);">${escapeHtml(st.description)}</div>
+          <div style="display:flex;gap:0.5rem;margin-top:0.2rem;">
+            <span class="badge" style="font-size:0.65rem;${scheduleSubtaskBadgeStyle(st.status)}">${escapeHtml(st.status)}</span>
+            <span style="color:var(--text-muted);font-size:0.75rem;">thread #${st.thread_id}</span>
+          </div>
+        </div>
+      </div>
+    `,
+      )
+      .join("");
+  } catch {
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;">Failed to load subtasks.</div>';
+  }
+}
+
+function scheduleSubtaskEmoji(status: string): string {
+  switch (status) {
+    case "completed":
+      return "✅";
+    case "cancelled":
+      return "❌";
+    case "in_progress":
+      return "🔄";
+    case "pending":
+      return "⏳";
+    default:
+      return "⏳";
+  }
+}
+
+function scheduleSubtaskBadgeStyle(status: string): string {
+  const s = status.toLowerCase();
+  const color =
+    s === "completed"
+      ? "#10b981"
+      : s === "cancelled"
+        ? "#64748b"
+        : s === "in_progress"
+          ? "#06b6d4"
+          : s === "pending"
+            ? "#f59e0b"
+            : "#64748b";
+  return `--type-color:${color};background:${color}22;border-color:${color}44;color:${color}`;
 }
 
 // ── Create/Edit Modal ──

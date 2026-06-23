@@ -385,3 +385,24 @@ scheduleRouter.get("/:id/threads", async (req: Request, res: Response) => {
     res.status(500).json({ error: e.message || "Unknown error" });
   }
 });
+
+// ── GET /api/schedule/:id/subtasks — Subtasks for all threads of a schedule job ──
+scheduleRouter.get("/:id/subtasks", async (req: Request, res: Response) => {
+  try {
+    const scheduleTaskId = req.params.id;
+    const rows = await queryDb(
+      `SELECT ts.id, ts.description, ts.status, ts.priority, ts.thread_id,
+              COALESCE(NULLIF(t.cause, ''), t.id::text) AS thread_title,
+              ts.created_at, ts.updated_at
+       FROM thread_subtasks ts
+       JOIN threads t ON t.id = ts.thread_id
+       WHERE t.schedule_task_id = $1
+       ORDER BY t.id, ts.priority DESC, ts.id ASC`,
+      [scheduleTaskId],
+    );
+    res.json({ subtasks: rows });
+  } catch (e: any) {
+    console.error("Schedule subtasks error:", e?.message || e);
+    res.status(500).json({ error: e.message || "Unknown error" });
+  }
+});

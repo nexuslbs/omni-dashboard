@@ -416,3 +416,24 @@ kanbanRouter.get("/tasks/:taskId/threads", async (req: Request, res: Response) =
     res.status(500).json({ error: e.message || "Unknown error" });
   }
 });
+
+// ── GET /api/kanban/tasks/:taskId/subtasks — Subtasks for all threads of a kanban task ──
+kanbanRouter.get("/tasks/:taskId/subtasks", async (req: Request, res: Response) => {
+  try {
+    const taskId = req.params.taskId;
+    const rows = await queryDb(
+      `SELECT ts.id, ts.description, ts.status, ts.priority, ts.thread_id,
+              COALESCE(NULLIF(t.cause, ''), t.id::text) AS thread_title,
+              ts.created_at, ts.updated_at
+       FROM thread_subtasks ts
+       JOIN threads t ON t.id = ts.thread_id
+       WHERE t.task_id = $1
+       ORDER BY t.id, ts.priority DESC, ts.id ASC`,
+      [taskId],
+    );
+    res.json({ subtasks: rows });
+  } catch (e: any) {
+    console.error("Kanban subtasks error:", e?.message || e);
+    res.status(500).json({ error: e.message || "Unknown error" });
+  }
+});
