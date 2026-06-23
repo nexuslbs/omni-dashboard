@@ -1,6 +1,6 @@
 import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
 import { enhanceSelectElement } from "../lib/dropdown";
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, formatDate } from "../lib/helpers";
 
 export function renderSecrets(container: HTMLElement): void {
   container.innerHTML = `

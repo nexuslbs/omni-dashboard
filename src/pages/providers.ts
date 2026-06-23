@@ -1,6 +1,11 @@
-import { apiGet, apiPost, apiDelete, type PluginData, type ConfigField } from "../lib/api";
+import { apiGet, apiPost, apiDelete, type PluginData } from "../lib/api";
 import { enhanceSelectElement } from "../lib/dropdown";
 import { escapeHtml } from "../lib/helpers";
+import {
+  renderPluginConfig as sharedRenderPluginConfig,
+  getCurrentConfig,
+  dirtyCheckSaveButton,
+} from "../lib/plugin-config";
 
 export function renderProviders(container: HTMLElement): void {
   container.innerHTML = `
@@ -75,132 +80,22 @@ function renderPluginConfig(p: PluginData): string {
   // Use root config_schema (has enriched allowed_values from DYNAMIC_ENUM_CACHE)
   // falling back to manifest.config_schema for static field definitions
   const schema = p.config_schema && p.config_schema.length > 0 ? p.config_schema : p.manifest?.config_schema;
-  if (!schema || schema.length === 0) {
-    return `<p class="text-muted" style="font-size:0.85rem;color:var(--text-muted);padding:0.5rem 0;">No config fields declared.</p>`;
-  }
 
-  const config = p.config || {};
-
-  const fieldsHtml = schema
-    .map((field) => {
-      const envVal = p.resolved_env?.[field.key];
-      const currentVal =
-        config[field.key] !== undefined ? config[field.key] : (envVal ?? field.default ?? "");
-      const envBadge =
-        envVal !== undefined && (config[field.key] === undefined || config[field.key] === "")
-          ? '<span class="badge badge-info" style="margin-left:0.375rem;font-size:0.65rem;vertical-align:middle;">env</span>'
-          : "";
-      return renderConfigField(field, currentVal, p.name, envBadge);
-    })
-    .join("");
-
-  return `
-    <div class="plugin-config-form" data-plugin="${escapeHtml(p.name)}">
-      ${fieldsHtml}
-      <div style="display:flex;gap:0.5rem;margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--glass-border);">
-        <button type="button" class="plugin-save-btn btn-primary" style="background:var(--accent-purple);border:none;color:white;border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;">Save Config</button>
-        <button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);">${p.status === "enabled" ? "Disable" : "Enable"}</button>
-        ${hasRefreshUrl(p) ? '<button type="button" class="plugin-refresh-models-btn" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--accent-blue);" title="Refresh model list from provider">⟳ Refresh Models</button>' : ""}
-        ${p.source !== "built-in" ? `<button type="button" class="plugin-remove-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--accent-rose);">🗑 Remove</button>` : ""}
-      </div>
-    </div>
-  `;
-}
-
-function renderConfigField(field: ConfigField, value: any, pluginName: string, envBadge?: string): string {
-  const fieldId = `cfg-${escapeHtml(pluginName)}-${escapeHtml(field.key)}`;
-  const requiredMark = field.required
-    ? '<span style="color:var(--accent-rose);margin-left:0.125rem;">*</span>'
-    : "";
-  const descHtml = field.description
-    ? `<div class="setting-description">${escapeHtml(field.description)}</div>`
+  const extraButtons = hasRefreshUrl(p)
+    ? '<button type="button" class="plugin-refresh-models-btn" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--accent-blue);" title="Refresh model list from provider">⟳ Refresh Models</button>'
     : "";
 
-  let inputHtml: string;
-
-  switch (field.type) {
-    case "secret":
-      inputHtml = `
-        <div class="setting-secret-wrapper">
-          <input type="password" id="${fieldId}" class="filter-input setting-input setting-secret-input plugin-config-input"
-            value="${escapeHtml(String(value ?? ""))}" data-key="${escapeHtml(field.key)}" style="flex:1;" />
-          <button type="button" class="setting-secret-toggle" title="Toggle visibility" data-target="${fieldId}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-          </button>
-        </div>
-      `;
-      break;
-    case "boolean":
-      inputHtml = `
-        <label class="checkbox-label" style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
-          <input type="checkbox" id="${fieldId}" class="plugin-config-input" data-key="${escapeHtml(field.key)}" ${value ? "checked" : ""} />
-          <span>${value ? "Enabled" : "Disabled"}</span>
-        </label>
-      `;
-      break;
-    case "integer":
-      inputHtml = `
-        <input type="tel" id="${fieldId}" class="filter-input setting-input plugin-config-input"
-          value="${escapeHtml(String(value ?? ""))}" inputmode="numeric" pattern="[0-9.-]*" data-key="${escapeHtml(field.key)}"
-          ${field.min !== undefined ? `min="${field.min}"` : ""}
-          ${field.max !== undefined ? `max="${field.max}"` : ""}
-          style="max-width:120px;" />
-      `;
-      break;
-    case "enum":
-      inputHtml = `
-        <select id="${fieldId}" class="filter-select setting-input plugin-config-input" data-key="${escapeHtml(field.key)}" style="max-width:240px;">
-          <option value="">Select...</option>
-          ${(field.allowed_values || [])
-            .map(
-              (opt) =>
-                `<option value="${escapeHtml(opt)}" ${String(value) === opt ? "selected" : ""}>${escapeHtml(opt)}</option>`,
-            )
-            .join("")}
-        </select>
-      `;
-      break;
-    case "multi_select": {
-      const selectedValues: string[] = Array.isArray(value) ? value : value ? String(value).split(",") : [];
-      inputHtml = `
-        <div style="display:flex;flex-wrap:wrap;gap:0.375rem;">
-          ${(field.allowed_values || [])
-            .map(
-              (opt) => `
-            <label class="checkbox-label" style="font-size:0.8rem;">
-              <input type="checkbox" class="plugin-config-input plugin-multi-select" data-key="${escapeHtml(field.key)}" value="${escapeHtml(opt)}" ${selectedValues.includes(opt) ? "checked" : ""} />
-              ${escapeHtml(opt)}
-            </label>
-          `,
-            )
-            .join("")}
-        </div>
-      `;
-      break;
-    }
-    default: // string
-      inputHtml = `
-        <input type="text" id="${fieldId}" class="filter-input setting-input plugin-config-input"
-          value="${escapeHtml(String(value ?? ""))}" data-key="${escapeHtml(field.key)}" style="flex:1;" />
-      `;
-      break;
-  }
-
-  return `
-    <div class="setting-row" data-field-key="${escapeHtml(field.key)}">
-      <div class="setting-label">
-        <div class="setting-name">${escapeHtml(field.label)}${requiredMark}${envBadge ?? ""}</div>
-        ${descHtml}
-      </div>
-      <div class="setting-controls">
-        <div class="setting-input-group">${inputHtml}</div>
-      </div>
-    </div>
-  `;
+  return sharedRenderPluginConfig({
+    schema,
+    values: p.config || {},
+    pluginName: p.name,
+    resolvedEnv: p.resolved_env,
+    status: p.status,
+    isBuiltIn: p.source === "built-in",
+    extraButtons,
+  });
 }
+
 function hasRefreshUrl(p: PluginData): boolean {
   const rootSchema = (p.config_schema || []) as any[];
   const manifestSchema = (p.manifest?.config_schema || []) as any[];
@@ -274,10 +169,10 @@ function wireProviders(): void {
     if (!pluginName) return;
     savedConfigs.set(pluginName, getCurrentConfig(formEl));
     formEl.querySelectorAll(".plugin-config-input").forEach((input) => {
-      input.addEventListener("input", () => dirtyCheckSaveButton(formEl, pluginName));
-      input.addEventListener("change", () => dirtyCheckSaveButton(formEl, pluginName));
+      input.addEventListener("input", () => dirtyCheckSaveButton(formEl, pluginName, savedConfigs));
+      input.addEventListener("change", () => dirtyCheckSaveButton(formEl, pluginName, savedConfigs));
     });
-    dirtyCheckSaveButton(formEl, pluginName);
+    dirtyCheckSaveButton(formEl, pluginName, savedConfigs);
   });
 
   // Enhance native select elements to styled custom dropdowns
@@ -320,7 +215,7 @@ function wireProviders(): void {
       try {
         await apiPost(`/plugins/${encodeURIComponent(pluginName)}/config`, { config });
         savedConfigs.set(pluginName, { ...config });
-        dirtyCheckSaveButton(formEl, pluginName);
+        dirtyCheckSaveButton(formEl, pluginName, savedConfigs);
         (window as any).showToast?.("Configuration saved", "success");
       } catch (e) {
         (window as any).showToast?.(
@@ -396,46 +291,6 @@ function wireProviders(): void {
       }
     });
   });
-}
-
-// ── Helpers ──
-
-/** Collect current form values from a plugin config form, matching save logic. */
-function getCurrentConfig(formEl: HTMLElement): Record<string, any> {
-  const config: Record<string, any> = {};
-  formEl.querySelectorAll(".plugin-config-input:not(.plugin-multi-select)").forEach((input) => {
-    const el = input as HTMLInputElement | HTMLSelectElement;
-    const key = el.getAttribute("data-key");
-    if (!key) return;
-    if (el.type === "checkbox") {
-      config[key] = el.checked;
-    } else if (el.type === "number") {
-      config[key] = el.value ? Number(el.value) : null;
-    } else {
-      config[key] = el.value;
-    }
-  });
-  const multiGroups: Record<string, string[]> = {};
-  formEl.querySelectorAll(".plugin-multi-select").forEach((input) => {
-    const el = input as HTMLInputElement;
-    const key = el.getAttribute("data-key");
-    if (!key) return;
-    if (!multiGroups[key]) multiGroups[key] = [];
-    if (el.checked) multiGroups[key].push(el.value);
-  });
-  Object.assign(config, multiGroups);
-  return config;
-}
-
-/** Gray out save button when config matches saved baseline. */
-function dirtyCheckSaveButton(formEl: HTMLElement, pluginName: string): void {
-  const current = getCurrentConfig(formEl);
-  const saved = savedConfigs.get(pluginName);
-  const saveBtn = formEl.querySelector(".plugin-save-btn") as HTMLButtonElement | null;
-  if (!saveBtn) return;
-  const isDirty = JSON.stringify(current) !== JSON.stringify(saved);
-  saveBtn.style.opacity = isDirty ? "1" : "0.4";
-  saveBtn.style.pointerEvents = isDirty ? "auto" : "none";
 }
 
 // ── Install from URL Modal ──

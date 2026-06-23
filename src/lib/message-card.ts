@@ -1,3 +1,5 @@
+import { escapeHtml } from "./helpers.js";
+
 // ── Shared message card rendering ──
 // Used by both /messages and /schedule/<id> pages
 

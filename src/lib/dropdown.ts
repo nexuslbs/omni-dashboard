@@ -8,6 +8,8 @@
  *   enhanceSelect("my-select-id");
  */
 
+import { escapeHtml } from "./helpers.js";
+
 let _openFloatingDropdown: HTMLElement | null = null;
 
 function closeFloatingDropdown(): void {
@@ -53,12 +55,6 @@ export function unenhanceSelect(selectId: string): HTMLSelectElement | null {
   el.style.display = "";
   delete (el as any).dataset._enhanced;
   return el;
-}
-
-function escapeHtml(text: string): string {
-  const div = document.createElement("div");
-  div.textContent = text;
-  return div.innerHTML;
 }
 
 export function enhanceSelectElement(select: HTMLSelectElement): void {
