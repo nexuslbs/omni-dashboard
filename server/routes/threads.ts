@@ -115,3 +115,23 @@ threadsRouter.get("/filters", (_req: Request, res: Response) => {
     }
   })();
 });
+
+threadsRouter.get("/:id/subtasks", (req: Request, res: Response) => {
+  void (async () => {
+    try {
+      const id = parseInt(req.params.id as string, 10);
+      if (isNaN(id)) {
+        res.status(400).json({ error: "Invalid thread id" });
+        return;
+      }
+      const rows = await queryDb(
+        "SELECT id, description, status, priority, created_at, updated_at FROM thread_subtasks WHERE thread_id = $1 ORDER BY priority DESC, id ASC",
+        [id],
+      );
+      res.json({ subtasks: rows });
+    } catch (err) {
+      console.error("[threads/subtasks] Error:", err);
+      res.status(500).json({ error: "Failed to fetch subtasks" });
+    }
+  })();
+});

@@ -477,7 +477,10 @@ async function loadMessages(): Promise<void> {
     }
 
     // Render messages as cards
+    const subtasksHtml = currentFilters.thread_id ? await renderSubtasks(currentFilters.thread_id) : "";
+
     listEl.innerHTML = `
+      ${subtasksHtml}
       <div class="events-scroll" id="messages-scroll">
         ${data.messages.map((msg) => renderMessageCard(msg)).join("")}
       </div>
@@ -524,4 +527,76 @@ function escapeHtml(text: string): string {
   const div = document.createElement("div");
   div.textContent = text;
   return div.innerHTML;
+}
+
+// ── Subtask display ─────────────────────────────────────────────
+interface SubtaskRow {
+  id: number;
+  description: string;
+  status: string;
+  priority: number | null;
+  created_at: string;
+  updated_at: string | null;
+}
+
+function subtaskStatusEmoji(status: string): string {
+  switch (status) {
+    case "completed":
+      return "✅";
+    case "cancelled":
+      return "❌";
+    case "in_progress":
+      return "🔄";
+    default:
+      return "⏳";
+  }
+}
+
+function subtaskStatusColor(status: string): string {
+  switch (status) {
+    case "completed":
+      return "#10b981";
+    case "cancelled":
+      return "#64748b";
+    case "in_progress":
+      return "#f59e0b";
+    default:
+      return "#3b82f6";
+  }
+}
+
+async function renderSubtasks(threadId: string): Promise<string> {
+  try {
+    const res = await fetch(`/api/threads/${encodeURIComponent(threadId)}/subtasks`);
+    if (!res.ok) return "";
+    const data = await res.json();
+    if (!data.subtasks || data.subtasks.length === 0) return "";
+
+    const rows = data.subtasks
+      .map((st: SubtaskRow) => {
+        const emoji = subtaskStatusEmoji(st.status);
+        const color = subtaskStatusColor(st.status);
+        return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0.5rem;border-radius:4px;background:rgba(255,255,255,0.03);">
+        <span>${emoji}</span>
+        <span style="flex:1;font-size:0.85rem;">${escapeHtml(st.description)}</span>
+        <span class="badge" style="--type-color:${color};background:${color}22;border-color:${color}44;color:${color};font-size:0.7rem;padding:0.125rem 0.375rem;">${st.status}</span>
+      </div>`;
+      })
+      .join("");
+
+    const total = data.subtasks.length;
+    const done = data.subtasks.filter(
+      (st: SubtaskRow) => st.status === "completed" || st.status === "cancelled",
+    ).length;
+
+    return `<div style="margin:0.75rem;padding:0.75rem;border-radius:8px;background:var(--bg-card,rgba(255,255,255,0.04));border:1px solid var(--glass-border,rgba(255,255,255,0.08));">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
+        <span style="font-size:0.85rem;font-weight:600;color:var(--text-primary);">📋 Subtasks</span>
+        <span style="font-size:0.75rem;color:var(--text-muted);">${done}/${total} done</span>
+      </div>
+      ${rows}
+    </div>`;
+  } catch {
+    return "";
+  }
 }
