@@ -23,6 +23,18 @@ function updateKanbanUrl(): void {
   history.replaceState(null, "", newUrl);
 }
 
+function updateArchivedButton(): void {
+  const btn = document.getElementById("toggle-archived-btn");
+  if (!btn) return;
+  if (showArchived) {
+    btn.textContent = "Showing archived";
+    btn.classList.add("showing-archived");
+  } else {
+    btn.textContent = "Show archived";
+    btn.classList.remove("showing-archived");
+  }
+}
+
 function closeCreateModal(): void {
   const modal = document.getElementById("create-task-modal");
   if (modal) modal.style.display = "none";
@@ -261,17 +273,12 @@ export function renderKanban(container: HTMLElement): void {
   document.getElementById("toggle-archived-btn")!.addEventListener("click", () => {
     showArchived = !showArchived;
     updateKanbanUrl();
-    const btn = document.getElementById("toggle-archived-btn")!;
-    if (showArchived) {
-      btn.textContent = "Showing archived";
-      btn.classList.add("showing-archived");
-    } else {
-      btn.textContent = "Show archived";
-      btn.classList.remove("showing-archived");
-    }
+    updateArchivedButton();
     void loadBoard(showArchived);
   });
-  // Apply initial URL state to button
+
+  // Apply initial URL state to button and URL
+  updateArchivedButton();
   updateKanbanUrl();
 
   void loadBoard(showArchived);

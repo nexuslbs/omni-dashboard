@@ -52,15 +52,12 @@ export function renderSchedule(container: HTMLElement): void {
   if (showAllFromUrl) {
     document.getElementById("schedule-title")!.textContent = "All Jobs";
   }
+  updateScheduleUrl(); // sync initial URL (clean stale params, match current state)
 
   // Wire create button
   document.getElementById("create-cron-btn")?.addEventListener("click", async () => {
     const { showCronModal } = await import("../lib/schedule-detail");
-    void showCronModal(null, () =>
-      loadCronJobs(_activeOnly, () => {
-        updateScheduleUrl();
-      }),
-    );
+    void showCronModal(null, () => loadCronJobs(_activeOnly, () => {}));
   });
 
   document.getElementById("toggle-all-filter")?.addEventListener("click", () => {
@@ -68,16 +65,12 @@ export function renderSchedule(container: HTMLElement): void {
     const showingAll = btn.textContent === "Active Only";
     btn.textContent = showingAll ? "Show All" : "Active Only";
     document.getElementById("schedule-title")!.textContent = showingAll ? "Active Jobs" : "All Jobs";
-    void loadCronJobs(showingAll, (active) => {
-      _activeOnly = active;
-      updateScheduleUrl();
-    });
+    _activeOnly = showingAll;
+    updateScheduleUrl();
+    void loadCronJobs(_activeOnly, () => {});
   });
 
-  void loadCronJobs(_activeOnly, (active) => {
-    _activeOnly = active;
-    updateScheduleUrl();
-  });
+  void loadCronJobs(_activeOnly, () => {});
 }
 
 // Re-export for router

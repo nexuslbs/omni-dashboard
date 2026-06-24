@@ -130,6 +130,7 @@ messagesRouter.get("/events", (req: Request, res: Response) => {
           m.created_at,
           m.msg_type,
           m.msg_subtype,
+          m.iteration_number,
           t.channel_id,
           t.status,
           t.profile,
@@ -196,6 +197,7 @@ messagesRouter.get("/events", (req: Request, res: Response) => {
           channel_name: row.channel_name,
           type: row.msg_type || null,
           subtype: row.msg_subtype || null,
+          iteration_number: row.iteration_number != null ? parseInt(row.iteration_number) : 0,
         };
       });
 

@@ -99,6 +99,9 @@ export function renderMessageCard(msg: any): string {
     <div class="event-row" data-msg-id="${msg.id}">
       <div class="event-row-header">
         <span class="ev-id-badge" title="Message ID">#${msg.id}</span>
+        ${msg.thread_id ? `<a href="/?page=threads" class="ev-thread-link" data-thread-id="${escapeHtml(msg.thread_id)}" title="Thread ID">T${escapeHtml(truncateMiddle(msg.thread_id, 12))}</a>` : ""}
+        ${msg.thread_sequence !== null && msg.thread_sequence !== undefined ? `<span class="ev-seq-badge" title="Sequence">#${msg.thread_sequence}</span>` : ""}
+        ${msg.iteration_number !== null && msg.iteration_number !== undefined ? `<span class="ev-iter-badge" title="LLM Iteration">⟳ ${msg.iteration_number}</span>` : ""}
         ${channelStr ? `<span class="badge badge-neutral" title="Channel ID">${channelStr}</span>` : ""}
         <span class="agent-badge" title="Role: ${escapeHtml(role)}" style="--agent-color:${rColor};background:${rColor}22;border-color:${rColor}44;color:${rColor}">
           ${escapeHtml(role)}
@@ -112,8 +115,7 @@ export function renderMessageCard(msg: any): string {
           ${msg.provider ? `<span class="ev-provider" title="Provider">${escapeHtml(msg.provider)}</span>` : ""}
           ${msg.provider && msg.model ? `<span style="color:var(--text-muted);opacity:0.4">·</span>` : ""}
           ${msg.model ? `<span class="ev-model" title="Model">${escapeHtml(msg.model)}</span>` : ""}
-          ${(msg.provider || msg.model) && (msg.thread_id || msg.processing_time_ms !== null || tokens > 0) ? `<span style="color:var(--text-muted);opacity:0.4">·</span>` : ""}
-          ${msg.thread_id ? `<a href="/?page=threads" class="ev-thread-link" data-thread-id="${escapeHtml(msg.thread_id)}" title="Thread ID">${escapeHtml(truncateMiddle(msg.thread_id, 12))}</a>` : ""}
+          ${(msg.provider || msg.model) && (msg.processing_time_ms !== null || tokens > 0) ? `<span style="color:var(--text-muted);opacity:0.4">·</span>` : ""}
           ${msg.processing_time_ms !== null ? `<span title="Processing time">${msg.processing_time_ms.toFixed(0)}ms</span>` : ""}
           ${tokens > 0 ? `<span title="Token count">${tokens.toLocaleString()} tokens</span>` : ""}
         </span>

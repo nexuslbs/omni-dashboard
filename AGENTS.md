@@ -39,7 +39,7 @@ const day = bucketStr.slice(0, 10);
 
 ---
 
-## JSONB Column Handling
+### JSONB Column Handling
 
 `queryDb` returns JSONB as raw strings when using `rowMode: 'array'`. Always parse with:
 
@@ -62,6 +62,18 @@ function parseJsonArray(val: any): any[] {
 **Fields requiring this treatment**: `skills`, `context_from`, `enabled_toolsets`, `allowed_tools`, `token_usage`.
 
 **Usage locations**: The `parseJsonArray` function is defined in `server/routes/schedule.ts` (line 5-17) and used there for cron jobs. The same pattern exists inline in `server/routes/messages.ts` for `token_usage` parsing (lines 157-176).
+
+---
+
+## Logged Messages: Iteration Badge
+
+The `/messages` page displays each message's `thread_sequence` as an iteration badge (`⟳ N`) next to the message ID. The `thread_sequence` field is already returned by the `/api/messages/events` endpoint (from the `messages.thread_sequence` column). Only LLM calls increment this counter; tool messages share the same value as their parent LLM call.
+
+The badge is rendered in `src/lib/message-card.ts` using the `.ev-iter-badge` CSS class (cyan color, monospace font, 70% opacity).
+
+## Schedule Modal: Active Default
+
+The Create Schedule modal defaults the "Active" checkbox to **unchecked**. New schedules are created inactive and must be explicitly activated. The scheduler filters by `active = true` in `cron_jobs` table, so inactive jobs are never picked up. Use `force=true` to run an inactive job via the trigger endpoint.
 
 ---
 

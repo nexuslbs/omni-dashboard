@@ -412,9 +412,9 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Planning Mode</label>
           <select id="cron-planning-mode" class="filter-select" style="width:100%;">
             <option value="">- (Default)</option>
-            <option value="no_plan" ${isEdit && job.planning_mode === "no_plan" ? "selected" : ""}>No Plan</option>
-            <option value="simple_plan" ${isEdit && job.planning_mode === "simple_plan" ? "selected" : ""}>Simple Plan</option>
-            <option value="plan_with_subtasks" ${isEdit && job.planning_mode === "plan_with_subtasks" ? "selected" : ""}>Plan with Subtasks</option>
+            <option value="prompt_only" ${isEdit && job.planning_mode === "prompt_only" ? "selected" : ""}>No Plan</option>
+            <option value="auto_plan" ${isEdit && job.planning_mode === "auto_plan" ? "selected" : ""}>Simple Plan</option>
+            <option value="auto_subtasks" ${isEdit && job.planning_mode === "auto_subtasks" ? "selected" : ""}>Plan with Subtasks</option>
           </select>
         </div>
         <div style="margin-bottom:1rem;">
@@ -451,7 +451,7 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
           <textarea id="cron-prompt" class="filter-input" style="width:100%;min-height:80px;resize:vertical;font-family:monospace;font-size:0.8rem;">${isEdit && job.prompt ? escapeHtml(job.prompt) : ""}</textarea>
         </div>
         <div style="margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
-          <input id="cron-active" type="checkbox" ${isEdit ? (job.active ? "checked" : "") : "checked"} />
+          <input id="cron-active" type="checkbox" ${isEdit ? (job.active ? "checked" : "") : ""} />
           <label for="cron-active" style="font-size:0.85rem;color:var(--text-primary);">Active</label>
         </div>
       </div>

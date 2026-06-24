@@ -58,7 +58,7 @@ Kanban board with drag-and-drop cards across 7 columns:
 Cron job list with mode indicators:
 
 - Shows all cron jobs from the `cron_jobs` table.
-- Each row: name, schedule/cron expression, mode (agentic/direct), enabled/disabled status, prompt preview, skills, last run / next run.
+- Each row: name, schedule/cron expression (5-field Linux format: min hour dom month dow), mode (agentic/direct), enabled/disabled status, prompt preview, skills, last run / next run.
 - **Detail View** (`/schedule/:id`): Full job detail with mode selector toggle, active/inactive switch, channel_id field.
 - JSONB fields (skills, context_from, enabled_toolsets) parsed via `parseJsonArray` helper.
 

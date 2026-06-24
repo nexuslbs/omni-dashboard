@@ -2532,6 +2532,30 @@ a.thread-row {
   justify-content: flex-end;
 }
 
+/* Iteration badge */
+.ev-iter-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-family: var(--font-mono, monospace);
+  color: var(--accent-cyan);
+  opacity: 0.7;
+  white-space: nowrap;
+  gap: 0.25rem;
+}
+
+/* Sequence badge */
+.ev-seq-badge {
+  display: inline-flex;
+  align-items: center;
+  font-size: 0.75rem;
+  font-family: var(--font-mono, monospace);
+  color: var(--text-muted);
+  opacity: 0.55;
+  white-space: nowrap;
+  gap: 0.25rem;
+}
+
 /* Agent badge */
 .agent-badge {
   display: inline-flex;
