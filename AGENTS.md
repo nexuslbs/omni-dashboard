@@ -102,6 +102,25 @@ All cron schedules in the dashboard use the **5-field Linux format**: `min hour 
 
 The default schedule value in the create modal is `0 0 * * *` (daily at midnight). The help box in `src/lib/schedule-detail.ts` (lines 384-395) documents this format.
 
+## Channel Template Field
+
+Channels now support a `template` field (TEXT column `channels.template`). When set:
+
+1. **Template input** appears on the Channels page as an editable text field alongside other channel config fields (profile, provider, model, planning mode).
+2. The template name is saved/loaded via `PATCH /api/channels/:id` with `body: { template: "my-template" }`.
+3. On the backend, the channel template is injected into user message seq-0 metadata and loaded from `profiles/<name>/templates/<name>.md`.
+4. For Cron/Kanban tasks, the channel template acts as a default fallback when the task doesn't have its own template.
+
+**Frontend files:**
+- `src/lib/channel-config.ts` — `renderTemplateInput()` renders the editable text field
+- `src/lib/channel-status.ts` — renders the template row in the channel card
+- `src/lib/api.ts` — `ChannelData` interface includes `template: string | null`
+- `server/routes/channels.ts` — GET list and PATCH handler support the `template` field
+
+**API contract:**
+- `GET /api/channels` returns `template: string | null` for each channel
+- `PATCH /api/channels/:id` accepts `{ template: "template-name" }` to set, or `{ template: "" }` to clear
+
 ---
 
 ## CSS Class Conventions

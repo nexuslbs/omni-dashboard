@@ -87,6 +87,7 @@ Channel management for all connected platforms:
 - **Open/Close toggle**: Close a channel to stop processing; open to resume.
 - **Status badge**: Permanent (readonly) channels shown with neutral badge.
 - **Planning Mode badge**: Shows the channel's planning mode configuration.
+- **Template field**: Optional template name injected into every user message's prompt. Also acts as default template for Cron/Kanban tasks in this channel.
 - Displays current profile, provider, and model for each channel.
 - Filter controls: channel ID, platform, status.
 
