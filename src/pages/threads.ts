@@ -386,13 +386,14 @@ function renderRow(row: ThreadRow): string {
 
   const typeStr = row.cause_msg_type ? escapeHtml(row.cause_msg_type) : "—";
   const subtypeStr = row.cause_msg_subtype ? escapeHtml(row.cause_msg_subtype) : "—";
-  const providerModel = row.provider && row.model
-    ? escapeHtml(`${row.provider}/${row.model}`)
-    : row.provider
-      ? escapeHtml(row.provider)
-      : row.model
-        ? escapeHtml(row.model)
-        : "—";
+  const providerModel =
+    row.provider && row.model
+      ? escapeHtml(`${row.provider}/${row.model}`)
+      : row.provider
+        ? escapeHtml(row.provider)
+        : row.model
+          ? escapeHtml(row.model)
+          : "—";
 
   const url = `/messages?thread_id=${escapeHtml(row.id)}`;
 
