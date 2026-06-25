@@ -280,10 +280,9 @@ async function loadTree(reset: boolean): Promise<void> {
   try {
     const response = await apiGet<{ entries: FsEntry[]; path: string }>("/fs/list?path=/");
     treeData = response.entries
-      .filter((e) => e.type === "directory")
       .map((e) => ({
         entry: e,
-        expanded: expandedPaths.has(e.path),
+        expanded: expandedPaths.has(e.path) || false,
         children: null,
       }));
     renderTree(treeEl);
