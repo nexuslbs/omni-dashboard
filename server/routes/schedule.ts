@@ -47,11 +47,9 @@ scheduleRouter.get("/", async (req: Request, res: Response) => {
       sql = `SELECT DISTINCT ON (cj.name) cj.id, cj.name, cj.display_name, cj.schedule, cj.prompt, cj.skills, cj.enabled, cj.active,
               cj.mode, cj.action_id, cj.channel_id, ch.name as channel_name, cj.profile,
               cj.last_run_at, cj.next_run_at, cj.created_at, cj.silent,
-              cj.instruction_file, cj.planning_mode,
-              a.name AS action_name
+              cj.instruction_file, cj.planning_mode
        FROM cron_jobs cj
        LEFT JOIN channels ch ON ch.id = cj.channel_id
-       LEFT JOIN actions a ON a.id = cj.action_id
        WHERE cj.active = true
        ORDER BY cj.name, cj.created_at DESC`;
       params = [];
@@ -59,11 +57,9 @@ scheduleRouter.get("/", async (req: Request, res: Response) => {
       sql = `SELECT DISTINCT ON (cj.name) cj.id, cj.name, cj.display_name, cj.schedule, cj.prompt, cj.skills, cj.enabled, cj.active,
               cj.mode, cj.action_id, cj.channel_id, ch.name as channel_name, cj.profile,
               cj.last_run_at, cj.next_run_at, cj.created_at, cj.silent,
-              cj.instruction_file, cj.planning_mode,
-              a.name AS action_name
+              cj.instruction_file, cj.planning_mode
        FROM cron_jobs cj
        LEFT JOIN channels ch ON ch.id = cj.channel_id
-       LEFT JOIN actions a ON a.id = cj.action_id
        ORDER BY cj.name, cj.created_at DESC`;
       params = [];
     }
@@ -121,11 +117,9 @@ scheduleRouter.get("/:id", async (req: Request, res: Response) => {
       `SELECT cj.id, cj.name, cj.display_name, cj.schedule, cj.prompt, cj.skills, cj.enabled, cj.active,
               cj.mode, cj.action_id, cj.channel_id, ch.name as channel_name, cj.profile,
               cj.last_run_at, cj.next_run_at, cj.created_at, cj.silent,
-              cj.instruction_file, cj.planning_mode,
-              a.name AS action_name
+              cj.instruction_file, cj.planning_mode
        FROM cron_jobs cj
        LEFT JOIN channels ch ON ch.id = cj.channel_id
-       LEFT JOIN actions a ON a.id = cj.action_id
        WHERE cj.id = $1`,
       [jobId],
     );
