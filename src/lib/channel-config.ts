@@ -10,7 +10,7 @@ import { apiGet, apiPost } from "./api";
 export let _profiles: any[] = [];
 export let _providers: string[] = [];
 export let _providerModels: Record<string, string[]> = {};
-export let _templates: { profile: string; name: string; label: string }[] = [];
+export const _templates: { profile: string; name: string; label: string }[] = [];
 
 export function setChannelData(
   profiles: any[],

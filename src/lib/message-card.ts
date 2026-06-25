@@ -228,7 +228,7 @@ export function wireMessageCardToggles(container: HTMLElement): void {
         contentDiv.innerHTML = `<div class="markdown-content">${wrapper.innerHTML}</div>`;
         contentDiv.setAttribute("data-view", "md");
         if (typeof enhanceCodeBlocks === "function") {
-          enhanceCodeBlocks(card);
+          enhanceCodeBlocks(card as HTMLElement);
         }
       } else {
         // JSON view
