@@ -18,17 +18,20 @@ function parseJsonArray(val: any): any[] {
 
 export const scheduleRouter = Router();
 
-// ── GET /api/schedule/actions — Return available actions for schedule mode ──
+// ── GET /api/schedule/actions — Return available actions for schedule mode.
+// Proxies through omniagent backend which reads from YAML.
 scheduleRouter.get("/actions", async (_req: Request, res: Response) => {
   try {
-    const rows = await queryDb(
-      `SELECT id, name, tool_name, is_builtin, 
-              CASE WHEN id ~ '^[0-9]+$' THEN '[' || id || '] ' || name ELSE name END AS display
-       FROM actions ORDER BY is_builtin DESC, name ASC`,
-    );
-    res.json(rows);
+    const omniagentUrl = process.env.OMNIAGENT_URL || "http://omniagent:8080";
+    const response = await fetch(`${omniagentUrl}/actions`);
+    if (!response.ok) {
+      res.status(response.status).json({ error: `Omniagent error: ${await response.text()}` });
+      return;
+    }
+    const data = await response.json();
+    res.json(data);
   } catch (e: any) {
-    console.error("Schedule actions error:", e?.message || e);
+    console.error("Schedule actions proxy error:", e?.message || e);
     res.status(500).json({ error: e.message || "Unknown error" });
   }
 });
