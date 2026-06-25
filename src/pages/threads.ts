@@ -23,6 +23,8 @@ interface ThreadRow {
   msg_count: number;
   cause_content_preview: string | null;
   planning_mode: string;
+  cause_msg_type: string | null;
+  cause_msg_subtype: string | null;
 }
 
 interface ThreadsResponse {
@@ -331,6 +333,8 @@ async function loadThreads(): Promise<void> {
               <div role="columnheader">ID</div>
               <div role="columnheader">Status</div>
               <div role="columnheader">Cause</div>
+              <div role="columnheader">Type</div>
+              <div role="columnheader">Subtype</div>
               <div role="columnheader">Channel</div>
               <div role="columnheader">Created</div>
               <div role="columnheader">Plan Mode</div>
@@ -338,6 +342,7 @@ async function loadThreads(): Promise<void> {
               <div role="columnheader" class="col-preview">Preview</div>
               <div role="columnheader" style="text-align:right">Time (ms)</div>
               <div role="columnheader" style="text-align:right">Tokens</div>
+              <div role="columnheader">Provider/Model</div>
             </div>
           </div>
           <div role="rowgroup">
@@ -379,6 +384,16 @@ function renderRow(row: ThreadRow): string {
   const causeCol = causeColor(row.cause);
   const pmCol = planningModeColor(row.planning_mode);
 
+  const typeStr = row.cause_msg_type ? escapeHtml(row.cause_msg_type) : "—";
+  const subtypeStr = row.cause_msg_subtype ? escapeHtml(row.cause_msg_subtype) : "—";
+  const providerModel = row.provider && row.model
+    ? escapeHtml(`${row.provider}/${row.model}`)
+    : row.provider
+      ? escapeHtml(row.provider)
+      : row.model
+        ? escapeHtml(row.model)
+        : "—";
+
   const url = `/messages?thread_id=${escapeHtml(row.id)}`;
 
   return `
@@ -386,6 +401,8 @@ function renderRow(row: ThreadRow): string {
       <div role="cell"><code style="font-size:0.8rem;color:var(--text-secondary);">#${escapeHtml(row.id)}</code></div>
       <div role="cell"><span class="badge status-badge-${row.status.toLowerCase()}" style="${statusBadgeStyle(row.status)}">${escapeHtml(row.status)}</span></div>
       <div role="cell"><span class="badge" style="--type-color:${causeCol};background:${causeCol}22;border-color:${causeCol}44;color:${causeCol}">${escapeHtml(row.cause)}</span></div>
+      <div role="cell" style="font-size:0.78rem;color:var(--text-secondary);">${typeStr}</div>
+      <div role="cell" style="font-size:0.78rem;color:var(--text-secondary);">${subtypeStr}</div>
       <div role="cell"><span class="badge" style="${channelStyle(row.channel_closed)}"${row.channel_closed ? ' title="Channel closed"' : ""}>${escapeHtml(row.channel_name)}</span></div>
       <div role="cell" class="cell-timestamp">${ts}</div>
       <div role="cell"><span class="badge" style="--type-color:${pmCol};background:${pmCol}22;border-color:${pmCol}44;color:${pmCol}">${planningModeLabel(row.planning_mode)}</span></div>
@@ -393,6 +410,7 @@ function renderRow(row: ThreadRow): string {
       <div role="cell" class="cell-preview">${preview}</div>
       <div role="cell" class="cell-num">${row.duration_ms !== null ? row.duration_ms.toFixed(0) : "—"}</div>
       <div role="cell" class="cell-num">${tokens > 0 ? tokens.toLocaleString() : "—"}</div>
+      <div role="cell" style="font-size:0.75rem;color:var(--text-secondary);font-family:monospace;">${providerModel}</div>
     </a>
   `;
 }

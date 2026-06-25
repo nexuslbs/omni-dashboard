@@ -55,10 +55,18 @@ threadsRouter.get("/", (req: Request, res: Response) => {
           COALESCE(c.name, 'unknown') as channel_name,
           COALESCE(c.closed, false) as channel_closed,
           (SELECT COUNT(*) FROM messages m WHERE m.thread_id = t.id) as msg_count,
-          LEFT(COALESCE(m_cause.content, ''), 200) as cause_content_preview
+          LEFT(COALESCE(m_cause.content, ''), 200) as cause_content_preview,
+          m0.msg_type AS cause_msg_type,
+          m0.msg_subtype AS cause_msg_subtype
         FROM threads t
         LEFT JOIN channels c ON c.id = t.channel_id
         LEFT JOIN messages m_cause ON m_cause.thread_id = t.id AND m_cause.thread_sequence = 0
+        LEFT JOIN LATERAL (
+          SELECT msg_type, msg_subtype
+          FROM messages m_seq0
+          WHERE m_seq0.thread_id = t.id AND m_seq0.thread_sequence = 0
+          LIMIT 1
+        ) m0 ON true
         ${where}
         ORDER BY t.created_at DESC
         LIMIT $${paramIdx++} OFFSET $${paramIdx++}
@@ -90,6 +98,8 @@ threadsRouter.get("/", (req: Request, res: Response) => {
         channel_closed: !!row.channel_closed,
         msg_count: row.msg_count || 0,
         cause_content_preview: row.cause_content_preview,
+        cause_msg_type: row.cause_msg_type || null,
+        cause_msg_subtype: row.cause_msg_subtype || null,
       }));
 
       res.json({ threads: result, total, offset, limit });
