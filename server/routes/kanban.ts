@@ -397,6 +397,7 @@ kanbanRouter.get("/tasks/:taskId/threads", async (req: Request, res: Response) =
     const taskId = req.params.taskId;
     const offset = parseInt(req.query.offset as string) || 0;
     const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
+    const order = (req.query.order as string) === "asc" ? "ASC" : "DESC";
 
     // Total count
     const countResult = await queryDb(`SELECT COUNT(*) AS total FROM threads WHERE task_id = $1`, [taskId]);
@@ -419,7 +420,7 @@ kanbanRouter.get("/tasks/:taskId/threads", async (req: Request, res: Response) =
          LIMIT 1
        ) last_msg ON true
        WHERE t.task_id = $1
-       ORDER BY last_msg.created_at DESC NULLS LAST
+       ORDER BY last_msg.created_at ${order} NULLS LAST
        OFFSET $2
        LIMIT $3`,
       [taskId, offset, limit],
