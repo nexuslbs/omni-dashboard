@@ -124,6 +124,7 @@ export function renderModelSelect(channelId: number, currentProvider: string, cu
     <div class="channel-field-group">
       <select id="${selectId}" class="filter-select channel-edit-input"
         data-channel-id="${channelId}" data-field="model" data-original="${escapeHtml(currentModel)}">
+        <option value="" ${!currentModel ? "selected" : ""}>- (Default) -</option>
         ${currentModel && !currentInModels ? `<option value="${escapeHtml(currentModel)}" selected>${escapeHtml(currentModel)}</option>` : ""}
         ${
           models.length > 0
@@ -133,9 +134,7 @@ export function renderModelSelect(channelId: number, currentProvider: string, cu
                     `<option value="${escapeHtml(m)}" ${m === currentModel ? "selected" : ""}>${escapeHtml(m)}</option>`,
                 )
                 .join("")
-            : !currentModel
-              ? '<option value="">—</option>'
-              : ""
+            : ""
         }
       </select>
       <button type="button" id="${refreshId}" class="channel-refresh-btn" data-channel-id="${channelId}" data-provider="${escapeHtml(currentProvider)}" title="Refresh Models">⟳</button>

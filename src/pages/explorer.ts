@@ -137,7 +137,7 @@ export function renderExplorer(container: HTMLElement): void {
         <div class="explorer-header">
           <span class="explorer-title">📂 Filesystem</span>
           <div class="explorer-header-actions">
-            <button class="explorer-refresh" id="explorer-refresh" title="Refresh file tree">🔄</button>
+            <button class="explorer-refresh channel-refresh-btn" id="explorer-refresh" title="Refresh file tree">⟳</button>
             <button class="explorer-upload-btn" id="explorer-upload-btn" title="Upload files">⬆</button>
             <button class="explorer-toggle" id="explorer-toggle" title="Collapse explorer">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
