@@ -23,29 +23,29 @@ export async function renderMemory(container: HTMLElement): Promise<void> {
         </select>
       </div>
     </div>
+    <div id="mem-blocks" style="display:grid;gap:1rem;max-width:100%;">
 
-    <div id="mem-blocks" style="display:grid;gap:1rem;">
       <!-- Block 1: Stats -->
-      <div class="card">
+      <div class="card" style="max-width:100%;">
         <div class="card-header"><span class="card-title">📊 Profile Stats</span></div>
-        <div class="card-body" id="mem-stats">
+        <div class="card-body" id="mem-stats" style="max-width:100%;overflow:hidden;">
           <div class="loading">Loading stats...</div>
         </div>
       </div>
 
       <!-- Block 2: Base System Prompt -->
-      <div class="card">
+      <div class="card" style="max-width:100%;">
         <div class="card-header"><span class="card-title">⚙️ Base System Prompt</span></div>
         <div class="card-body">
-          <pre id="mem-system-prompt" class="code-block" style="max-height:400px;overflow-y:auto;font-size:0.8rem;line-height:1.5;margin:0;white-space:pre-wrap;">Loading...</pre>
+          <pre id="mem-system-prompt" class="code-block" style="max-height:400px;max-width:100%;overflow-x:auto;overflow-y:auto;font-size:0.8rem;line-height:1.5;margin:0;white-space:pre-wrap;">Loading...</pre>
         </div>
       </div>
 
       <!-- Block 3: MEMORY text -->
-      <div class="card">
+      <div class="card" style="max-width:100%;">
         <div class="card-header"><span class="card-title">🧠 MEMORY</span></div>
         <div class="card-body">
-          <pre id="mem-memory-text" class="code-block" style="max-height:300px;overflow-y:auto;font-size:0.8rem;line-height:1.5;margin:0 0 0.75rem 0;white-space:pre-wrap;">Loading...</pre>
+          <pre id="mem-memory-text" class="code-block" style="max-height:300px;max-width:100%;overflow-x:auto;overflow-y:auto;font-size:0.8rem;line-height:1.5;margin:0 0 0.75rem 0;white-space:pre-wrap;">Loading...</pre>
           <div style="display:flex;align-items:center;gap:0.5rem;">
             <button id="mem-memory-upload-btn" class="btn btn-secondary" style="font-size:0.8rem;padding:0.375rem 0.75rem;">📁 Upload .md</button>
             <span id="mem-memory-status" style="font-size:0.75rem;color:var(--text-muted);"></span>
@@ -55,10 +55,10 @@ export async function renderMemory(container: HTMLElement): Promise<void> {
       </div>
 
       <!-- Block 4: SOUL text -->
-      <div class="card">
+      <div class="card" style="max-width:100%;">
         <div class="card-header"><span class="card-title">💫 SOUL</span></div>
         <div class="card-body">
-          <pre id="mem-soul-text" class="code-block" style="max-height:300px;overflow-y:auto;font-size:0.8rem;line-height:1.5;margin:0 0 0.75rem 0;white-space:pre-wrap;">Loading...</pre>
+          <pre id="mem-soul-text" class="code-block" style="max-height:300px;max-width:100%;overflow-x:auto;overflow-y:auto;font-size:0.8rem;line-height:1.5;margin:0 0 0.75rem 0;white-space:pre-wrap;">Loading...</pre>
           <div style="display:flex;align-items:center;gap:0.5rem;">
             <button id="mem-soul-upload-btn" class="btn btn-secondary" style="font-size:0.8rem;padding:0.375rem 0.75rem;">📁 Upload .md</button>
             <span id="mem-soul-status" style="font-size:0.75rem;color:var(--text-muted);"></span>
@@ -68,7 +68,7 @@ export async function renderMemory(container: HTMLElement): Promise<void> {
       </div>
 
       <!-- Block 5: Channel Context (stats + context preview + message search) -->
-      <div class="card">
+      <div class="card" style="max-width:100%;">
         <div class="card-header"><span class="card-title">🔗 Channel Context</span></div>
         <div class="card-body" id="mem-channel-block">
           <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
@@ -96,7 +96,7 @@ export async function renderMemory(container: HTMLElement): Promise<void> {
       </div>
 
       <!-- Block 6: Wiki Search -->
-      <div class="card">
+      <div class="card" style="max-width:100%;">
         <div class="card-header"><span class="card-title">📚 Wiki Search</span></div>
         <div class="card-body">
           <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">

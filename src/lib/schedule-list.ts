@@ -73,10 +73,10 @@ export async function loadCronJobs(
                   </span>
                 </td>
                 <td style="text-align:right;white-space:nowrap;">
-                  <button class="cron-run-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;">▶ Run</button>
-                  <button class="cron-edit-btn" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:var(--accent-purple);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;">Edit</button>
-                  <button class="cron-toggle-active" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">${j.active ? "Deactivate" : "Activate"}</button>
-                  <a href="/schedule/${encodeURIComponent(j.id)}" class="cron-details-btn" data-cron-id="${encodeURIComponent(j.id)}" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);color:var(--accent-cyan);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;text-decoration:none;display:inline-block;">Details</a>
+                  <button class="cron-run-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">Run</button>
+                  <button class="cron-edit-btn" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:var(--accent-purple);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">Edit</button>
+                  <button class="cron-toggle-active" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;color:var(--text-secondary);">${j.active ? "Deactivate" : "Activate"}</button>
+                  <a href="/schedule/${encodeURIComponent(j.id)}" class="cron-details-btn" data-cron-id="${encodeURIComponent(j.id)}" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);color:var(--accent-cyan);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;text-decoration:none;display:inline-block;">Details</a>
                 </td>
               </tr>
             `,

@@ -4318,6 +4318,28 @@ a.thread-row {
   background: rgba(255, 255, 255, 0.08);
 }
 
+.setting-secret-copy {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--glass-border);
+  background: rgba(0, 0, 0, 0.3);
+  cursor: pointer;
+  color: var(--text-muted);
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+  padding: 0;
+}
+
+.setting-secret-copy:hover {
+  color: var(--text-primary);
+  border-color: var(--border-accent);
+  background: rgba(255, 255, 255, 0.08);
+}
+
 /* Mobile responsive */
 @media (max-width: 900px) {
   .setting-row {
