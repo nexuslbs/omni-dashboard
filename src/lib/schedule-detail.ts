@@ -12,6 +12,9 @@ import { router } from "./router";
 let threadsOffset = 0;
 const threadsLimit = 10;
 
+// ── Ordering state for schedule threads ──
+let threadsOrder: "desc" | "asc" = "desc";
+
 // ── Date formatting ──
 export function formatDate(dateStr: string | null): string {
   if (!dateStr) return "—";
@@ -224,7 +227,7 @@ export async function loadScheduleThreads(scheduleId: string): Promise<void> {
   if (!el) return;
   try {
     const res = await fetch(
-      `/api/schedule/${encodeURIComponent(scheduleId)}/threads?offset=${threadsOffset}&limit=${threadsLimit}`,
+      `/api/schedule/${encodeURIComponent(scheduleId)}/threads?offset=${threadsOffset}&limit=${threadsLimit}&order=${threadsOrder}`,
     );
     if (!res.ok) throw new Error("Failed to load thread activity");
     const data = await res.json();
@@ -264,6 +267,13 @@ export async function loadScheduleThreads(scheduleId: string): Promise<void> {
     if (pageInfo) pageInfo.textContent = `Page ${currentPage} (${total} total)`;
     if (prevBtn) prevBtn.disabled = threadsOffset <= 0;
     if (nextBtn) nextBtn.disabled = threadsOffset + threadsLimit >= total;
+
+    // Update order button text
+    const orderBtn = document.getElementById("threads-order-btn");
+    const orderBtnBottom = document.getElementById("threads-order-btn-bottom");
+    const orderText = threadsOrder === "desc" ? "↓ Recent" : "↑ Oldest";
+    if (orderBtn) orderBtn.textContent = orderText;
+    if (orderBtnBottom) orderBtnBottom.textContent = orderText;
 
     // Wire pagination buttons (clone to remove old listeners)
     const prevClone = prevBtn?.cloneNode(true) as HTMLButtonElement;
@@ -319,6 +329,17 @@ export async function loadScheduleThreads(scheduleId: string): Promise<void> {
           ?.scrollIntoView({ behavior: "smooth", block: "start" });
       });
     }
+
+    // Wire order toggle buttons
+    const toggleOrder = () => {
+      threadsOrder = threadsOrder === "desc" ? "asc" : "desc";
+      threadsOffset = 0;
+      void loadScheduleThreads(scheduleId);
+    };
+    const orderToggleBtn = document.getElementById("threads-order-btn");
+    const orderToggleBtnBottom = document.getElementById("threads-order-btn-bottom");
+    if (orderToggleBtn) orderToggleBtn.addEventListener("click", toggleOrder);
+    if (orderToggleBtnBottom) orderToggleBtnBottom.addEventListener("click", toggleOrder);
   } catch {
     el.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;">Failed to load activity.</div>';
   }
@@ -593,6 +614,7 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
 // ── Schedule detail page export ──
 export async function renderScheduleDetail(container: HTMLElement, cronId: string): Promise<void> {
   threadsOffset = 0;
+  threadsOrder = "desc";
 
   container.innerHTML = `
     <div class="page-header">
@@ -618,6 +640,7 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
           <button class="nav-btn" id="threads-prev-page" disabled>← Prev</button>
           <span id="threads-page-info">Page 1</span>
           <button class="nav-btn" id="threads-next-page" disabled>Next →</button>
+          <button class="nav-btn order-btn" id="threads-order-btn">↓ Recent</button>
         </span>
       </div>
       <div class="card-body" id="schedule-threads">
@@ -629,6 +652,7 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
           <button class="nav-btn" id="threads-prev-page-bottom" disabled>← Prev</button>
           <span id="threads-page-info-bottom">Page 1</span>
           <button class="nav-btn" id="threads-next-page-bottom" disabled>Next →</button>
+          <button class="nav-btn order-btn" id="threads-order-btn-bottom">↓ Recent</button>
         </span>
       </div>
     </div>

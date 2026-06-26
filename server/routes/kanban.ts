@@ -23,7 +23,7 @@ kanbanRouter.get("/board", async (req: Request, res: Response) => {
     const tasks = await queryDb(
       `SELECT id, title, body, assignee, channel_id, profile, status, priority,
               COALESCE(position, 0) AS position,
-              created_at, updated_at, archived, template
+              created_at, updated_at, archived, template, planning_mode
        FROM kanban_tasks
        WHERE archived = ${showArchived}
        ORDER BY position ASC, created_at DESC`,
@@ -53,7 +53,7 @@ kanbanRouter.get("/tasks/:id", async (req: Request, res: Response) => {
 
     const tasks = await queryDb(
       `SELECT id, title, body, assignee, channel_id, profile, status, priority,
-              created_at, updated_at, archived, template
+              created_at, updated_at, archived, template, planning_mode
        FROM kanban_tasks WHERE id = $1`,
       [taskId],
     );
@@ -73,7 +73,7 @@ kanbanRouter.get("/tasks/:id", async (req: Request, res: Response) => {
 // ── POST /api/kanban/tasks — Create task ──
 kanbanRouter.post("/tasks", async (req: Request, res: Response) => {
   try {
-    const { title, body, channel_id, profile, priority, status, board_id, template } = req.body;
+    const { title, body, channel_id, profile, priority, status, template, planning_mode } = req.body;
     if (!title || typeof title !== "string" || title.trim().length === 0) {
       res.status(400).json({ error: "Title is required" });
       return;
@@ -82,8 +82,6 @@ kanbanRouter.post("/tasks", async (req: Request, res: Response) => {
     const id = "task_" + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
     const taskStatus = status && VALID_STATUSES.has(status) ? status : "backlog";
     const taskPriority = priority != null ? priority : 0;
-    const taskBoardId = board_id || "board_1";
-    const taskChannelId = channel_id != null ? channel_id : null;
     const taskProfile = profile || null;
 
     // Get max position for this status group
@@ -94,7 +92,7 @@ kanbanRouter.post("/tasks", async (req: Request, res: Response) => {
     const nextPos = posResult.length > 0 ? posResult[0].next_pos : 0;
 
     await queryDb(
-      `INSERT INTO kanban_tasks (id, title, body, status, priority, channel_id, profile, board_id, position, template)
+      `INSERT INTO kanban_tasks (id, title, body, status, priority, channel_id, profile, position, template, planning_mode)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
       [
         id,
@@ -102,11 +100,11 @@ kanbanRouter.post("/tasks", async (req: Request, res: Response) => {
         body || "",
         taskStatus,
         taskPriority,
-        taskChannelId,
+        channel_id != null ? channel_id : null,
         taskProfile,
-        taskBoardId,
         nextPos,
         template || null,
+        planning_mode || "",
       ],
     );
 
@@ -301,7 +299,8 @@ kanbanRouter.patch("/tasks/:id", async (req: Request, res: Response) => {
       return;
     }
 
-    const { title, body, channel_id, profile, priority, status, board_id, archived, template } = req.body;
+    const { title, body, channel_id, profile, priority, status, archived, template, planning_mode } =
+      req.body;
     const setClauses: string[] = [];
     const params: any[] = [];
     let paramIdx = 2;
@@ -340,10 +339,6 @@ kanbanRouter.patch("/tasks/:id", async (req: Request, res: Response) => {
       setClauses.push(`status = $${paramIdx++}`);
       params.push(status);
     }
-    if (board_id !== undefined) {
-      setClauses.push(`board_id = $${paramIdx++}`);
-      params.push(board_id);
-    }
     if (archived !== undefined) {
       setClauses.push(`archived = $${paramIdx++}`);
       params.push(archived);
@@ -351,6 +346,10 @@ kanbanRouter.patch("/tasks/:id", async (req: Request, res: Response) => {
     if (template !== undefined) {
       setClauses.push(`template = $${paramIdx++}`);
       params.push(template);
+    }
+    if (planning_mode !== undefined) {
+      setClauses.push(`planning_mode = $${paramIdx++}`);
+      params.push(planning_mode);
     }
 
     if (setClauses.length === 0) {
@@ -403,13 +402,24 @@ kanbanRouter.get("/tasks/:taskId/threads", async (req: Request, res: Response) =
     const countResult = await queryDb(`SELECT COUNT(*) AS total FROM threads WHERE task_id = $1`, [taskId]);
     const total = parseInt(countResult[0]?.total) || 0;
 
-    // Paginated rows with title (id as fallback) and message_count subquery
+    // Paginated rows — last message per thread with all message fields
     const rows = await queryDb(
-      `SELECT id, id::text AS title, status, created_at,
-              (SELECT COUNT(*) FROM messages WHERE thread_id = t.id)::int AS message_count
+      `SELECT last_msg.*, t.status AS thread_status, c.name AS channel_name
        FROM threads t
-       WHERE task_id = $1
-       ORDER BY created_at DESC
+       LEFT JOIN channels c ON c.id = t.channel_id
+       LEFT JOIN LATERAL (
+         SELECT m.id, m.thread_id, m.role, m.content, m.msg_type AS type,
+                m.msg_subtype AS subtype, t.provider, t.model,
+                m.processing_time_ms, m.token_usage,
+                m.iteration_number, m.thread_sequence,
+                m.created_at, m.metadata
+          FROM messages m
+         WHERE m.thread_id = t.id
+         ORDER BY m.id DESC
+         LIMIT 1
+       ) last_msg ON true
+       WHERE t.task_id = $1
+       ORDER BY last_msg.created_at DESC NULLS LAST
        OFFSET $2
        LIMIT $3`,
       [taskId, offset, limit],

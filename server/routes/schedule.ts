@@ -378,6 +378,7 @@ scheduleRouter.get("/:id/threads", async (req: Request, res: Response) => {
     const scheduleTaskId = req.params.id;
     const offset = parseInt(req.query.offset as string) || 0;
     const limit = Math.min(parseInt(req.query.limit as string) || 10, 100);
+    const orderDir = (req.query.order as string) === "asc" ? "ASC" : "DESC";
 
     // Total count
     const countResult = await queryDb(`SELECT COUNT(*) AS total FROM threads WHERE schedule_task_id = $1`, [
@@ -392,7 +393,7 @@ scheduleRouter.get("/:id/threads", async (req: Request, res: Response) => {
        LEFT JOIN channels c ON c.id = t.channel_id
        LEFT JOIN LATERAL (
          SELECT m.id, m.thread_id, m.role, m.content, m.msg_type AS type,
-                m.msg_subtype AS subtype, m.provider, m.model,
+                m.msg_subtype AS subtype, t.provider, t.model,
                 m.processing_time_ms, m.token_usage,
                 m.iteration_number, m.thread_sequence,
                 m.created_at, m.metadata
@@ -402,7 +403,7 @@ scheduleRouter.get("/:id/threads", async (req: Request, res: Response) => {
          LIMIT 1
        ) last_msg ON true
        WHERE t.schedule_task_id = $1
-       ORDER BY last_msg.created_at DESC NULLS LAST
+       ORDER BY last_msg.created_at ${orderDir} NULLS LAST
        OFFSET $2
        LIMIT $3`,
       [scheduleTaskId, offset, limit],

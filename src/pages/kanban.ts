@@ -57,6 +57,11 @@ function closeCreateModal(): void {
     template.value = "";
     syncSelectDisplay("task-create-template");
   }
+  const planning_mode = document.getElementById("task-create-planning-mode") as HTMLSelectElement;
+  if (planning_mode) {
+    planning_mode.value = "";
+    syncSelectDisplay("task-create-planning-mode");
+  }
 }
 
 // ── Channel / Profile population helpers ──
@@ -216,6 +221,15 @@ export function renderKanban(container: HTMLElement): void {
             </select>
             <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">Structured guidance injected into the agent's prompt. Create .md files in profiles/&lt;name&gt;/templates/</div>
           </div>
+          <div>
+            <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Planning Mode</label>
+            <select id="task-create-planning-mode" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.85rem;box-sizing:border-box;">
+              <option value="">- (Default)</option>
+              <option value="prompt_only">No Plan</option>
+              <option value="auto_plan">Simple Plan</option>
+              <option value="auto_subtasks">Plan with Subtasks</option>
+            </select>
+          </div>
         </div>
         <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1rem;">
           <button id="task-create-cancel" style="background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;">Cancel</button>
@@ -233,6 +247,7 @@ export function renderKanban(container: HTMLElement): void {
     await populateProfileSelect("task-create-profile");
     await populateTemplatesSelect("task-create-template");
     modal.style.display = "flex";
+    enhanceSelect("task-create-planning-mode");
   });
 
   document.getElementById("task-create-cancel")?.addEventListener("click", () => {
@@ -256,9 +271,20 @@ export function renderKanban(container: HTMLElement): void {
     const status = (document.getElementById("task-create-status") as HTMLSelectElement)?.value || "backlog";
     const template =
       (document.getElementById("task-create-template") as HTMLSelectElement)?.value || undefined;
+    const planning_mode =
+      (document.getElementById("task-create-planning-mode") as HTMLSelectElement)?.value || undefined;
 
     try {
-      await apiPost<any>("/kanban/tasks", { title, body, priority, channel_id, profile, status, template });
+      await apiPost<any>("/kanban/tasks", {
+        title,
+        body,
+        priority,
+        channel_id,
+        profile,
+        status,
+        template,
+        planning_mode,
+      });
       closeCreateModal();
       void loadBoard(showArchived);
     } catch (e) {

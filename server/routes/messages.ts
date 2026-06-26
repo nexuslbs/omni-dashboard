@@ -66,6 +66,7 @@ messagesRouter.get("/events", (req: Request, res: Response) => {
       const typeParam = req.query.type;
       const subtypeParam = (req.query.subtype as string) || "";
       const seq0 = req.query.seq0 as string | undefined;
+      const order = (req.query.order as string) === "asc" ? "ASC" : "DESC";
       const limit = Math.min(parseInt((req.query.limit as string) || "50", 10), 500);
       const offset = parseInt((req.query.offset as string) || "0", 10);
 
@@ -147,7 +148,7 @@ messagesRouter.get("/events", (req: Request, res: Response) => {
         JOIN threads t ON t.id = m.thread_id
         JOIN channels c ON c.id = t.channel_id
         ${whereClause}
-        ORDER BY m.id DESC
+        ORDER BY m.id ${order}
         LIMIT ${limit} OFFSET ${offset}
       `;
       const rows = await queryDb(dataSql);

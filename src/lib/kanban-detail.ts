@@ -3,75 +3,110 @@
  * Extracted from src/pages/kanban.ts
  */
 import { apiGet } from "./api";
-import { STATUS_LABELS, statusBadge, formatTaskDate, moveTask } from "./kanban-board";
-import { loadKanbanSubtasks } from "./kanban-subtasks";
-
+import { STATUS_LABELS, statusBadge, moveTask } from "./kanban-board";
 // ── Helper imports ──
 import { escapeHtml } from "./helpers";
 import { enhanceSelect, syncSelectDisplay } from "./dropdown";
+import { renderMessageCard, wireMessageCardToggles } from "./message-card";
+import { router } from "./router";
 
-/**
- * Styled status badge for thread status in kanban task detail.
- */
-function taskStatusBadgeStyle(status: string): string {
-  const s = status.toLowerCase();
-  const color =
-    s === "completed"
-      ? "#10b981"
-      : s === "failed"
-        ? "#f43f5e"
-        : s === "processing"
-          ? "#f59e0b"
-          : s === "pending"
-            ? "#3b82f6"
-            : s === "skipped"
-              ? "#64748b"
-              : s === "interrupted"
-                ? "#8b5cf6"
-                : "#64748b";
-  return `--type-color:${color};background:${color}22;border-color:${color}44;color:${color}`;
-}
+// ── Pagination state for kanban activity ──
+let kanbanActivityOffset = 0;
+const kanbanActivityLimit = 10;
 
-// ── Thread loading ──
-async function loadKanbanThreads(taskId: string): Promise<void> {
+// ── Thread / Activity loading ──
+async function loadKanbanActivity(taskId: string): Promise<void> {
   const el = document.getElementById("kanban-threads");
   if (!el) return;
   try {
-    const res = await fetch(`/api/kanban/tasks/${encodeURIComponent(taskId)}/threads`);
-    if (!res.ok) throw new Error("Failed to load threads");
+    const res = await fetch(
+      `/api/kanban/tasks/${encodeURIComponent(taskId)}/threads?offset=${kanbanActivityOffset}&limit=${kanbanActivityLimit}`,
+    );
+    if (!res.ok) throw new Error("Failed to load thread activity");
     const data = await res.json();
-    if (!data.rows || data.rows.length === 0) {
+    const total = parseInt(data.total) || 0;
+    const rows = data.rows || [];
+
+    if (rows.length === 0) {
       el.innerHTML =
-        '<div style="color:var(--text-muted);font-size:0.8rem;">No threads created by this task.</div>';
+        '<div style="color:var(--text-muted);font-size:0.8rem;padding:1rem 0;">No activity from this task yet.</div>';
       return;
     }
-    const threadsHtml = data.rows
-      .map(
-        (t: any) => `
-      <div style="display:flex;align-items:center;gap:0.5rem;padding:0.375rem 0;border-bottom:1px solid var(--glass-border,rgba(255,255,255,0.08));font-size:0.8rem;">
-        <span class="badge" style="${taskStatusBadgeStyle(t.status)}">${escapeHtml(t.status)}</span>
-        <a href="/messages?thread_id=${encodeURIComponent(t.id)}" class="kanban-thread-link" style="color:var(--accent-cyan);text-decoration:none;flex:1;"
-           data-route="messages" data-thread-id="${t.id}">
-          ${escapeHtml(t.title || `Thread #${t.id}`)}
-        </a>
-        <span style="color:var(--text-muted);font-size:0.75rem;">${t.message_count || 0} msgs</span>
-        <span style="color:var(--text-muted);font-size:0.75rem;">${formatTaskDate(t.created_at)}</span>
-      </div>
-    `,
-      )
-      .join("");
-    el.innerHTML = threadsHtml;
+
+    el.innerHTML = `<div class="events-scroll">${rows.map((row: any) => renderMessageCard(row)).join("")}</div>`;
+    wireMessageCardToggles(el);
+
     // Wire thread links
-    el.querySelectorAll(".kanban-thread-link").forEach((a) => {
+    el.querySelectorAll(".ev-thread-link").forEach((a) => {
       a.addEventListener("click", (e) => {
         e.preventDefault();
-        const route = a.getAttribute("data-route") || "messages";
-        history.pushState({}, "", `/messages?thread_id=${a.getAttribute("data-thread-id")}`);
-        void import("../lib/router").then(({ router }) => router.go(route));
+        const threadId = (e.currentTarget as HTMLElement).getAttribute("data-thread-id");
+        if (!threadId) return;
+        const url = `/messages?thread_id=${encodeURIComponent(threadId)}`;
+        history.pushState({}, "", url);
+        router.go("messages");
       });
     });
+
+    // Update pagination
+    const currentPage = Math.floor(kanbanActivityOffset / kanbanActivityLimit) + 1;
+    const pageInfo = document.getElementById("threads-page-info");
+    const prevBtn = document.getElementById("threads-prev-page") as HTMLButtonElement;
+    const nextBtn = document.getElementById("threads-next-page") as HTMLButtonElement;
+    if (pageInfo) pageInfo.textContent = `Page ${currentPage} (${total} total)`;
+    if (prevBtn) prevBtn.disabled = kanbanActivityOffset <= 0;
+    if (nextBtn) nextBtn.disabled = kanbanActivityOffset + kanbanActivityLimit >= total;
+
+    // Wire pagination buttons (clone to remove old listeners)
+    const prevClone = prevBtn?.cloneNode(true) as HTMLButtonElement;
+    const nextClone = nextBtn?.cloneNode(true) as HTMLButtonElement;
+    if (prevBtn && prevBtn.parentNode) {
+      prevBtn.parentNode.replaceChild(prevClone, prevBtn);
+      prevClone.addEventListener("click", () => {
+        kanbanActivityOffset = Math.max(0, kanbanActivityOffset - kanbanActivityLimit);
+        void loadKanbanActivity(taskId);
+      });
+    }
+    if (nextBtn && nextBtn.parentNode) {
+      nextBtn.parentNode.replaceChild(nextClone, nextBtn);
+      nextClone.addEventListener("click", () => {
+        kanbanActivityOffset += kanbanActivityLimit;
+        void loadKanbanActivity(taskId);
+      });
+    }
+
+    // Bottom pagination
+    const prevBottom = document.getElementById("threads-prev-page-bottom") as HTMLButtonElement;
+    const nextBottom = document.getElementById("threads-next-page-bottom") as HTMLButtonElement;
+    const pageInfoBottom = document.getElementById("threads-page-info-bottom");
+    const countEl = document.getElementById("kanban-threads-count");
+    if (countEl) {
+      const start = total > 0 ? kanbanActivityOffset + 1 : 0;
+      const end = Math.min(kanbanActivityOffset + rows.length, total);
+      countEl.textContent = total > 0 ? `Showing ${start}–${end} of ${total}` : "No activity found";
+    }
+    if (pageInfoBottom) pageInfoBottom.textContent = `Page ${currentPage} (${total} total)`;
+    if (prevBottom) prevBottom.disabled = kanbanActivityOffset <= 0;
+    if (nextBottom) nextBottom.disabled = kanbanActivityOffset + kanbanActivityLimit >= total;
+
+    const prevBottomClone = prevBottom?.cloneNode(true) as HTMLButtonElement;
+    const nextBottomClone = nextBottom?.cloneNode(true) as HTMLButtonElement;
+    if (prevBottom && prevBottom.parentNode) {
+      prevBottom.parentNode.replaceChild(prevBottomClone, prevBottom);
+      prevBottomClone.addEventListener("click", () => {
+        kanbanActivityOffset = Math.max(0, kanbanActivityOffset - kanbanActivityLimit);
+        void loadKanbanActivity(taskId);
+      });
+    }
+    if (nextBottom && nextBottom.parentNode) {
+      nextBottom.parentNode.replaceChild(nextBottomClone, nextBottom);
+      nextBottomClone.addEventListener("click", () => {
+        kanbanActivityOffset += kanbanActivityLimit;
+        void loadKanbanActivity(taskId);
+      });
+    }
   } catch {
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;">Failed to load threads.</div>';
+    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;">Failed to load activity.</div>';
   }
 }
 
@@ -232,6 +267,10 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
           <div>${task.profile ? escapeHtml(task.profile) : "<em>None</em>"}</div>
         </div>
         <div>
+          <div class="detail-label">Planning Mode</div>
+          <div>${task.planning_mode ? escapeHtml(task.planning_mode === "prompt_only" ? "No Plan" : task.planning_mode === "auto_plan" ? "Simple Plan" : task.planning_mode === "auto_subtasks" ? "Plan with Subtasks" : task.planning_mode) : "<em>Default</em>"}</div>
+        </div>
+        <div>
           <div class="detail-label">Created</div>
           <div>${new Date(task.created_at).toLocaleString()}</div>
         </div>
@@ -265,14 +304,17 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
         </div>
       </div>
 
-      <div id="kanban-threads-section" style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--glass-border,rgba(255,255,255,0.08));">
-        <div class="detail-label" style="margin-bottom:0.5rem;">Threads</div>
-        <div id="kanban-threads" style="font-size:0.85rem;color:var(--text-muted);">Loading threads...</div>
-      </div>
-
-      <div id="kanban-subtasks-section" style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--glass-border,rgba(255,255,255,0.08));">
-        <div class="detail-label" style="margin-bottom:0.5rem;">Subtasks</div>
-        <div id="kanban-subtasks" style="font-size:0.85rem;color:var(--text-muted);">Loading subtasks...</div>
+      <div id="kanban-activity-section" style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--glass-border,rgba(255,255,255,0.08));">
+        <div class="detail-label" style="margin-bottom:0.5rem;">Recent Activity</div>
+        <div id="kanban-threads" style="font-size:0.85rem;color:var(--text-muted);">Loading activity...</div>
+        <div id="threads-bottom-nav" style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--glass-border,rgba(255,255,255,0.08));display:flex;align-items:center;justify-content:space-between;">
+          <span id="kanban-threads-count"></span>
+          <span>
+            <button class="nav-btn" id="threads-prev-page-bottom" disabled style="background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:4px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;">← Prev</button>
+            <span id="threads-page-info-bottom" style="margin:0 0.5rem;font-size:0.75rem;color:var(--text-muted);">Page 1</span>
+            <button class="nav-btn" id="threads-next-page-bottom" disabled style="background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:4px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;">Next →</button>
+          </span>
+        </div>
       </div>
     `;
 
@@ -300,6 +342,11 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
         await populateEditChannelSelect(task.channel_id || "");
         await populateProfileSelect("task-edit-profile", task.profile || "");
         await populateTemplatesSelect("task-edit-template", task.template || "");
+        const planningModeSelect = document.getElementById("task-edit-planning-mode") as HTMLSelectElement;
+        if (planningModeSelect) {
+          planningModeSelect.value = task.planning_mode || "";
+          syncSelectDisplay("task-edit-planning-mode");
+        }
 
         const modal = document.getElementById("edit-task-modal");
         if (modal) modal.style.display = "flex";
@@ -327,12 +374,23 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
       const profile = (document.getElementById("task-edit-profile") as HTMLSelectElement)?.value || undefined;
       const template =
         (document.getElementById("task-edit-template") as HTMLSelectElement)?.value || undefined;
+      const planning_mode =
+        (document.getElementById("task-edit-planning-mode") as HTMLSelectElement)?.value || undefined;
 
       try {
         const res = await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ title, body, priority, status, channel_id, profile, template }),
+          body: JSON.stringify({
+            title,
+            body,
+            priority,
+            status,
+            channel_id,
+            profile,
+            template,
+            planning_mode,
+          }),
         });
         if (!res.ok) {
           const text = await res.text().catch(() => "Unknown error");
@@ -346,9 +404,8 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
       }
     });
 
-    // Load threads and subtasks
-    void loadKanbanThreads(taskId);
-    void loadKanbanSubtasks(taskId);
+    // Load activity
+    void loadKanbanActivity(taskId);
   } catch (e) {
     el.innerHTML = `<div class="error-state">Failed to load task: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
   }
@@ -429,6 +486,15 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
             </select>
             <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">Structured guidance injected into the agent's prompt when this task runs.</div>
           </div>
+          <div>
+            <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Planning Mode</label>
+            <select id="task-edit-planning-mode" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.85rem;box-sizing:border-box;">
+              <option value="">- (Default)</option>
+              <option value="prompt_only">No Plan</option>
+              <option value="auto_plan">Simple Plan</option>
+              <option value="auto_subtasks">Plan with Subtasks</option>
+            </select>
+          </div>
         </div>
         <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1rem;">
           <button id="task-edit-cancel" style="background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;">Cancel</button>
@@ -450,4 +516,5 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
   void loadTaskDetail(taskId);
   enhanceSelect("task-edit-priority");
   enhanceSelect("task-edit-status");
+  enhanceSelect("task-edit-planning-mode");
 }

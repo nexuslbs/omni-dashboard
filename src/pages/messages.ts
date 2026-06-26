@@ -32,6 +32,9 @@ let allFilters: MessagesFilters | null = null;
 let currentOffset = 0;
 const currentLimit = 50;
 
+// ── Ordering state ──
+let orderBy: "desc" | "asc" = "desc";
+
 // ── URL search param sync ──
 function syncFiltersToUrl(): void {
   const params = new URLSearchParams();
@@ -46,6 +49,7 @@ function syncFiltersToUrl(): void {
   if (currentFilters.subtype) params.set("subtype", currentFilters.subtype);
   if (currentFilters.seq0) params.set("seq0", "true");
   if (currentOffset > 0) params.set("offset", String(currentOffset));
+  if (orderBy !== "desc") params.set("order", orderBy);
   const qs = params.toString();
   const newUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
   history.replaceState(null, "", newUrl);
@@ -71,6 +75,8 @@ function applyFiltersFromUrl(): void {
   if (seq0 === "true") currentFilters.seq0 = true;
   const offset = p.get("offset");
   if (offset) currentOffset = parseInt(offset, 10) || 0;
+  const order = p.get("order");
+  if (order === "asc" || order === "desc") orderBy = order;
 }
 
 // ── Sync filter controls to currentFilters state ──
@@ -139,6 +145,7 @@ export function renderMessages(container: HTMLElement): void {
           <button class="nav-btn" id="prev-page" disabled>← Prev</button>
           <span id="page-info">Page 1</span>
           <button class="nav-btn" id="next-page" disabled>Next →</button>
+          <button class="nav-btn order-btn" id="order-btn">↓ Recent</button>
         </span>
       </div>
       <div class="card-body" id="messages-list">
@@ -150,6 +157,7 @@ export function renderMessages(container: HTMLElement): void {
           <button class="nav-btn" id="prev-page-bottom" disabled>← Prev</button>
           <span id="page-info-bottom">Page 1</span>
           <button class="nav-btn" id="next-page-bottom" disabled>Next →</button>
+          <button class="nav-btn order-btn" id="order-btn-bottom">↓ Recent</button>
         </span>
       </div>
     </div>
@@ -167,6 +175,7 @@ export function renderMessages(container: HTMLElement): void {
     seq0: false,
   };
   currentOffset = 0;
+  orderBy = "desc";
   allFilters = null;
 
   applyFiltersFromUrl();
@@ -377,6 +386,15 @@ function wireFilterEvents(): void {
     currentOffset += currentLimit;
     void loadMessages();
   });
+
+  // Order toggle
+  const toggleOrder = () => {
+    orderBy = orderBy === "desc" ? "asc" : "desc";
+    currentOffset = 0;
+    void loadMessages();
+  };
+  document.getElementById("order-btn")!.addEventListener("click", toggleOrder);
+  document.getElementById("order-btn-bottom")!.addEventListener("click", toggleOrder);
 }
 
 // ── Sync filter controls to currentFilters state ──
@@ -452,6 +470,7 @@ async function loadMessages(): Promise<void> {
     }
     if (currentFilters.subtype) params.set("subtype", currentFilters.subtype);
     if (currentFilters.seq0) params.set("seq0", "true");
+    params.set("order", orderBy);
     const data = await apiGet<MessagesResponse>(`/messages/events?${params.toString()}`);
 
     // Update nav
@@ -472,6 +491,13 @@ async function loadMessages(): Promise<void> {
 
     pageInfo.textContent = data.total > 0 ? `Page ${currentPage} of ${totalPages}` : "";
     pageInfoBottom.textContent = pageInfo.textContent;
+
+    // Update order button text
+    const orderBtn = document.getElementById("order-btn");
+    const orderBtnBottom = document.getElementById("order-btn-bottom");
+    const orderText = orderBy === "desc" ? "↓ Recent" : "↑ Oldest";
+    if (orderBtn) orderBtn.textContent = orderText;
+    if (orderBtnBottom) orderBtnBottom.textContent = orderText;
 
     if (data.messages.length === 0) {
       listEl.innerHTML = `<div class="empty-state">No messages match the current filters</div>`;
