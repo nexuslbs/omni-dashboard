@@ -82,9 +82,7 @@ function renderPluginConfig(p: PluginData): string {
   // falling back to manifest.config_schema for static field definitions
   const schema = p.config_schema && p.config_schema.length > 0 ? p.config_schema : p.manifest?.config_schema;
 
-  const extraButtons = hasRefreshUrl(p)
-    ? '<button type="button" class="plugin-refresh-models-btn" style="background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.2);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--accent-blue);" title="Refresh model list from provider">⟳ Refresh Models</button>'
-    : "";
+  // extraButtons removed — refresh buttons are now injected inline next to model fields
 
   return sharedRenderPluginConfig({
     schema,
@@ -93,14 +91,7 @@ function renderPluginConfig(p: PluginData): string {
     resolvedEnv: p.resolved_env,
     status: p.status,
     isBuiltIn: false,
-    extraButtons,
   });
-}
-
-function hasRefreshUrl(p: PluginData): boolean {
-  const rootSchema = (p.config_schema || []) as any[];
-  const manifestSchema = (p.manifest?.config_schema || []) as any[];
-  return [...rootSchema, ...manifestSchema].some((f: any) => f.refresh_url);
 }
 
 function getStatusBadgeClass(status: string): string {
@@ -161,6 +152,89 @@ function wireProviders(): void {
             <circle cx="12" cy="12" r="3"/>
           </svg>`;
     });
+  });
+
+  // ── Inject inline refresh buttons for model fields that have refresh_url ──
+  document.querySelectorAll(".setting-row[data-field-key]").forEach((row) => {
+    const fieldKey = row.getAttribute("data-field-key");
+    if (!fieldKey) return;
+    const card = row.closest(".card") as HTMLElement;
+    if (!card) return;
+    const pluginName = card.getAttribute("data-plugin-name");
+    if (!pluginName) return;
+    // Check if this field has a refresh_url in the schema
+    const formEl = row.closest(".plugin-config-form") as HTMLElement;
+    if (!formEl) return;
+    const select = row.querySelector("select.plugin-config-input") as HTMLSelectElement | null;
+    if (!select) return;
+    const inputGroup = row.querySelector(".setting-input-group") as HTMLElement;
+    if (!inputGroup) return;
+    // Check if field's refresh_url is set (we need to get it from saved plugin data)
+    // We'll use a data attribute set during render or just add to all model fields
+    // For simplicity, add to any field that has a select with data-key
+    const key = select.getAttribute("data-key");
+    if (!key) return;
+    // Only add refresh to model fields (default_model, model, etc.) - check key name
+    if (!key.includes("model") && !key.includes("Model")) return;
+
+    // Check if refresh button already exists
+    if (inputGroup.querySelector(".inline-refresh-btn")) return;
+
+    const refreshBtn = document.createElement("button");
+    refreshBtn.type = "button";
+    refreshBtn.className = "inline-refresh-btn";
+    refreshBtn.title = "Refresh model list from provider";
+    refreshBtn.style.cssText =
+      "background:none;border:none;color:var(--accent-blue);cursor:pointer;padding:0.375rem;font-size:1rem;line-height:1;flex-shrink:0;";
+    refreshBtn.innerHTML = "⟳";
+
+    refreshBtn.addEventListener("click", async () => {
+      refreshBtn.style.opacity = "0.5";
+      refreshBtn.style.cursor = "wait";
+      try {
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/refresh-models`, {});
+        // Refresh just the model select options by reloading plugin data
+        const response = await apiGet<any>("/plugins");
+        const allPlugins: any[] = response.data || response;
+        const plugin = allPlugins.find((p: any) => p.name === pluginName);
+        if (!plugin) return;
+        // Find the refreshed field schema
+        const rootSchema = (plugin.config_schema || []) as any[];
+        const manifestSchema = (plugin.manifest?.config_schema || []) as any[];
+        const allSchemaFields = [...rootSchema, ...manifestSchema];
+        const fieldSchema = allSchemaFields.find((f: any) => f.key === key);
+        if (fieldSchema && fieldSchema.allowed_values) {
+          const currentVal = select.value;
+          select.innerHTML =
+            `<option value="">Select...</option>` +
+            fieldSchema.allowed_values
+              .map(
+                (opt: string) =>
+                  `<option value="${escapeHtml(opt)}" ${currentVal === opt ? "selected" : ""}>${escapeHtml(opt)}</option>`,
+              )
+              .join("");
+          // Re-enhance the select
+          enhanceSelectElement(select);
+        }
+        (window as any).showToast?.("Models refreshed", "success");
+      } catch (e) {
+        (window as any).showToast?.(
+          "Failed to refresh: " + (e instanceof Error ? e.message : "Unknown"),
+          "error",
+        );
+      } finally {
+        refreshBtn.style.opacity = "1";
+        refreshBtn.style.cursor = "pointer";
+      }
+    });
+
+    inputGroup.appendChild(refreshBtn);
+  });
+
+  // Remove old extraButtons refresh handlers (no longer used)
+  document.querySelectorAll(".plugin-refresh-models-btn").forEach((btn) => {
+    const clone = btn.cloneNode(true);
+    btn.parentNode?.replaceChild(clone, btn);
   });
 
   // ── Config dirty-state tracking ──
@@ -271,34 +345,8 @@ function wireProviders(): void {
     });
   });
 
-  // Refresh models buttons
-  document.querySelectorAll(".plugin-refresh-models-btn").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const card = (btn as HTMLElement).closest(".card") as HTMLElement;
-      const pluginName = card?.getAttribute("data-plugin-name");
-      if (!pluginName) return;
-
-      const originalText = btn.textContent || "";
-      btn.innerHTML = "⟳ Refreshing...";
-      (btn as HTMLButtonElement).disabled = true;
-
-      try {
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/refresh-models`, {});
-        (window as any).showToast?.("Models refreshed", "success");
-        void loadProviders();
-      } catch (e) {
-        (window as any).showToast?.(
-          "Failed to refresh: " + (e instanceof Error ? e.message : "Unknown"),
-          "error",
-        );
-        btn.innerHTML = originalText;
-        (btn as HTMLButtonElement).disabled = false;
-      }
-    });
-  });
+  // ── Config dirty-state tracking ──
 }
-
-// ── Install from URL Modal ──
 
 function showInstallModal(pluginType: "platform" | "mcp" | "provider"): void {
   const backdrop = document.createElement("div");

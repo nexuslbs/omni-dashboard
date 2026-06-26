@@ -162,7 +162,7 @@ export function renderPluginConfig(options: RenderPluginConfigOptions): string {
   return `
     <div class="plugin-config-form" data-plugin="${escapeHtml(pluginName)}">
       ${fieldsHtml}
-      <div style="display:flex;gap:0.5rem;margin-top:1rem;padding-top:0.75rem;border-top:1px solid var(--glass-border);">
+      <div style="display:flex;gap:0.5rem;margin-top:1rem;padding-top:0.75rem;">
         <button type="button" class="plugin-save-btn btn-primary" style="background:var(--accent-purple);border:none;color:white;border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;">Save Config</button>
         <button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);">${status === "enabled" ? "Disable" : "Enable"}</button>
         ${extraButtons}

@@ -8,8 +8,6 @@ interface Action {
   name: string;
   tool_name: string;
   params: Record<string, any>;
-  created_at: string;
-  updated_at: string;
   enabled: boolean;
   is_builtin: boolean;
 }
@@ -81,7 +79,6 @@ function renderActionList(listEl: HTMLElement): void {
             <th>Name</th>
             <th>Tool</th>
             <th>Params</th>
-            <th>Created</th>
             <th style="text-align:right">Actions</th>
           </tr>
         </thead>
@@ -104,19 +101,17 @@ function renderActionList(listEl: HTMLElement): void {
 function renderActionRow(a: Action, i: number): string {
   const paramsStr =
     Object.keys(a.params).length > 0 ? escapeHtml(JSON.stringify(a.params)) : "<em>No params</em>";
-  const created = formatDate(a.created_at);
   const isDisabled = !a.enabled;
 
   return `<tr class="${isDisabled ? "action-disabled" : ""}" style="${isDisabled ? "opacity:0.55" : ""}">
     <td><strong>${escapeHtml(a.name)}</strong>${isDisabled ? ' <span class="badge badge-neutral" style="font-size:0.7rem;background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);padding:0.05rem 0.35rem;border-radius:4px;margin-left:0.35rem;vertical-align:middle">Disabled</span>' : ""}</td>
     <td><code>${escapeHtml(a.tool_name)}</code></td>
     <td style="font-size:0.8rem;color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${paramsStr}</td>
-    <td class="cell-timestamp">${created}</td>
     <td style="text-align:right;white-space:nowrap">
       <button class="btn btn-sm btn-primary" id="action-run-${i}" title="${isDisabled ? "Action is disabled" : "Run this action"}" ${isDisabled ? "disabled" : ""}>▶ Run</button>
       <button class="btn btn-sm btn-secondary" id="action-edit-${i}" title="Edit action">✎ Edit</button>
       <button class="btn btn-sm ${isDisabled ? "btn-primary" : "btn-warning"}" id="action-toggle-${i}" title="${isDisabled ? "Enable action" : "Disable action"}" style="${isDisabled ? "" : "background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#f59e0b"}">${isDisabled ? "▶ Enable" : "⏸ Disable"}</button>
-      ${!a.is_builtin ? `<button class="btn btn-sm btn-danger" id="action-delete-${i}" title="Delete action">🗑 Delete</button>` : ""}
+      <button class="btn btn-sm btn-danger" id="action-delete-${i}" title="Delete action">🗑 Delete</button>
     </td>
   </tr>`;
 }
@@ -442,20 +437,4 @@ function showResultModal(name: string, message: string, isError: boolean): void 
   backdrop.addEventListener("mousedown", (e) => {
     if (e.target === backdrop) close();
   });
-}
-
-// ── Utilities ──
-
-function formatDate(dateStr: string): string {
-  try {
-    const d = new Date(dateStr.endsWith("Z") ? dateStr : dateStr + "Z");
-    return d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  } catch {
-    return dateStr;
-  }
 }

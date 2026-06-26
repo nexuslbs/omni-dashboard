@@ -387,14 +387,16 @@ scheduleRouter.get("/:id/threads", async (req: Request, res: Response) => {
 
     // Paginated rows — last message per thread with all message fields
     const rows = await queryDb(
-      `SELECT last_msg.*, t.status AS thread_status
+      `SELECT last_msg.*, t.status AS thread_status, c.name AS channel_name
        FROM threads t
+       LEFT JOIN channels c ON c.id = t.channel_id
        LEFT JOIN LATERAL (
          SELECT m.id, m.thread_id, m.role, m.content, m.msg_type AS type,
                 m.msg_subtype AS subtype, m.provider, m.model,
                 m.processing_time_ms, m.token_usage,
+                m.iteration_number, m.thread_sequence,
                 m.created_at, m.metadata
-         FROM messages m
+          FROM messages m
          WHERE m.thread_id = t.id
          ORDER BY m.id DESC
          LIMIT 1
