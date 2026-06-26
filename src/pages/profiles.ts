@@ -106,20 +106,18 @@ function renderProfilesPage(profiles: any[]): string {
           </div>
         </div>
         <div class="setting-row">
-          <div class="setting-controls">
+          <div class="setting-controls" style="max-width:none;">
             <div class="setting-name">Allowed Tools</div>
             ${renderToolSelect(p.name, p.allowed_tools || [], p.all_tools || [])}
           </div>
         </div>
         <div class="setting-row">
-          <div class="setting-controls">
+          <div class="setting-controls" style="max-width:none;">
             <div class="setting-name">Skills</div>
-            <div class="setting-readonly-value">
-              ${renderSkillsList(p.skills)}
-              <div class="text-muted" style="font-size:0.75rem;margin-top:0.25rem;">
-                Skills are stored on the filesystem at <code>profiles/${escapeHtml(p.name)}/skills/</code>. Add or remove files there to manage skills.
-              </div>
+            <div class="text-muted" style="font-size:0.75rem;margin-bottom:0.5rem;">
+              Skills are stored on the filesystem at <code>profiles/${escapeHtml(p.name)}/skills/</code>. Add or remove files there to manage skills.
             </div>
+            ${renderSkillsList(p.skills)}
           </div>
         </div>
       </div>
@@ -174,6 +172,7 @@ function renderModelSelect(profileName: string, currentProvider: string, current
         data-profile-name="${escapeHtml(profileName)}" data-field="model" data-original="${escapeHtml(currentModel)}">
         ${options}
       </select>
+      <button type="button" class="channel-refresh-btn" id="prof-model-refresh-${escapeHtml(profileName)}" data-profile-name="${escapeHtml(profileName)}" title="Refresh model list from provider">⟳</button>
       <button type="button" class="profile-edit-confirm" data-profile-name="${escapeHtml(profileName)}" data-field="model" style="display:none;width:24px;height:24px;border-radius:4px;border:1px solid var(--glass-border);background:rgba(0,0,0,0.3);cursor:pointer;color:#10b981;padding:0;" title="Save">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
       </button>
@@ -394,6 +393,57 @@ function wireProfiles(): void {
     createBtn.setAttribute("data-wired", "1");
     createBtn.addEventListener("click", () => showCreateProfileModal());
   }
+
+  // ── Profile model refresh buttons ──
+  document.querySelectorAll(".channel-refresh-btn[id^='prof-model-refresh-']").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const profileName = btn.getAttribute("data-profile-name");
+      if (!profileName) return;
+      const providerSelect = document.querySelector(
+        `.profile-provider-select[data-profile-name="${profileName}"]`,
+      ) as HTMLSelectElement | null;
+      if (!providerSelect) return;
+      const provider = providerSelect.value;
+      if (!provider) return;
+      const modelSelect = document.getElementById(`prof-model-${profileName}`) as HTMLSelectElement | null;
+      if (!modelSelect) return;
+      (btn as HTMLElement).style.opacity = "0.5";
+      try {
+        const detailResp = await apiGet<any>(`/plugins/${encodeURIComponent(provider)}`);
+        const detail = detailResp.data || detailResp;
+        const schema = [
+          ...((detail.config_schema || []) as any[]),
+          ...((detail.manifest?.config_schema || []) as any[]),
+        ];
+        const modelField = schema.find((f: any) => f.key === "default_model");
+        let models: string[] = [];
+        if (modelField && modelField.allowed_values && modelField.allowed_values.length > 0) {
+          models = modelField.allowed_values as string[];
+        } else if (modelField && modelField.default) {
+          models = [modelField.default as string];
+        }
+        _providerModels[provider] = models;
+        const currentVal = modelSelect.getAttribute("data-original") || modelSelect.value;
+        modelSelect.innerHTML =
+          models.length > 0
+            ? models
+                .map(
+                  (m) =>
+                    `<option value="${escapeHtml(m)}" ${m === currentVal ? "selected" : ""}>${escapeHtml(m)}</option>`,
+                )
+                .join("")
+            : `<option value="">—</option>`;
+        (window as any).showToast?.(`Models refreshed`, "success");
+      } catch (e) {
+        (window as any).showToast?.(
+          "Failed to refresh: " + (e instanceof Error ? e.message : "Unknown"),
+          "error",
+        );
+      } finally {
+        (btn as HTMLElement).style.opacity = "1";
+      }
+    });
+  });
 }
 
 // ── Create Profile Modal ──

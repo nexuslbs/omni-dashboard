@@ -27,6 +27,12 @@ export function renderConfigField(
         <div class="setting-secret-wrapper">
           <input type="password" id="${fieldId}" class="filter-input setting-input setting-secret-input plugin-config-input"
             value="${escapeHtml(String(value ?? ""))}" data-key="${escapeHtml(field.key)}" style="flex:1;" />
+          <button type="button" class="setting-secret-copy" title="Copy to clipboard" data-target="${fieldId}">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+            </svg>
+          </button>
           <button type="button" class="setting-secret-toggle" title="Toggle visibility" data-target="${fieldId}">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>

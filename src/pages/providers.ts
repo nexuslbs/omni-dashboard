@@ -131,6 +131,30 @@ function wireProviders(): void {
     });
   });
 
+  // Secret copy button
+  document.querySelectorAll(".setting-secret-copy").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const targetId = btn.getAttribute("data-target");
+      if (!targetId) return;
+      const input = document.getElementById(targetId) as HTMLInputElement | null;
+      if (!input) return;
+      navigator.clipboard
+        .writeText(input.value)
+        .then(() => {
+          const original = btn.innerHTML;
+          btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+          setTimeout(() => {
+            btn.innerHTML = original;
+          }, 1500);
+        })
+        .catch(() => {
+          // Fallback: select and copy
+          input.select();
+          document.execCommand("copy");
+        });
+    });
+  });
+
   // Secret toggle (eye icon)
   document.querySelectorAll(".setting-secret-toggle").forEach((btn) => {
     btn.addEventListener("click", () => {
@@ -184,8 +208,7 @@ function wireProviders(): void {
     refreshBtn.type = "button";
     refreshBtn.className = "inline-refresh-btn";
     refreshBtn.title = "Refresh model list from provider";
-    refreshBtn.style.cssText =
-      "background:none;border:none;color:var(--accent-blue);cursor:pointer;padding:0.375rem;font-size:1rem;line-height:1;flex-shrink:0;";
+    refreshBtn.style.cssText = refreshBtn.className = "channel-refresh-btn";
     refreshBtn.innerHTML = "⟳";
 
     refreshBtn.addEventListener("click", async () => {
