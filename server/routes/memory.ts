@@ -341,7 +341,7 @@ memoryRouter.get("/context/:channelName", async (req: Request, res: Response) =>
       return;
     }
     const data: any = await response.json();
-    res.json({ context: data.context || "(empty context)" });
+    res.json({ context: data.context || "(empty context)", timings: data.timings || {} });
   } catch (err) {
     console.error("[memory] GET /context/:channelName error:", err);
     res
