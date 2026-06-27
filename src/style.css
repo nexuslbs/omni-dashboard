@@ -5027,3 +5027,16 @@ a.thread-row {
   width: 100%;
   overflow: hidden;
 }
+
+/* ── Kanban History: task ID link hover colors ── */
+.task-id-link:hover {
+  border-color: var(--glass-border) !important;
+  background: var(--bg-card-hover);
+}
+.task-id-link.badge-neutral-link:hover { border-color: #64748b !important; }
+.task-id-link.badge-purple-link:hover { border-color: #8b5cf6 !important; }
+.task-id-link.badge-warning-link:hover { border-color: #f59e0b !important; }
+.task-id-link.badge-cyan-link:hover { border-color: #06b6d4 !important; }
+.task-id-link.badge-blue-link:hover { border-color: #3b82f6 !important; }
+.task-id-link.badge-success-link:hover { border-color: #10b981 !important; }
+.task-id-link.badge-error-link:hover { border-color: #f43f5e !important; }

@@ -443,7 +443,7 @@ kanbanRouter.get("/history", async (req: Request, res: Response) => {
 
     const rows = await queryDb(
       `SELECT id, kanban_task_id, action, initial_board, final_board,
-              created_at::text AS created_at
+              previous_values, created_at::text AS created_at
        FROM kanban_history
        WHERE ($1 = '' OR kanban_task_id = $1)
          AND ($2 = '' OR action = $2)
