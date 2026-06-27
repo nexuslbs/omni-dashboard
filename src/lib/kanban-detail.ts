@@ -442,6 +442,7 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
         <button id="task-edit-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.625rem;cursor:pointer;font-size:0.75rem;font-weight:500;">Edit</button>
         <button id="task-archive-btn" style="background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:6px;padding:0.375rem 0.625rem;cursor:pointer;font-size:0.75rem;font-weight:500;">Archive</button>
         <button id="task-delete-btn" style="background:rgba(244,63,94,0.15);border:1px solid rgba(244,63,94,0.3);color:var(--accent-rose);border-radius:6px;padding:0.375rem 0.625rem;cursor:pointer;font-size:0.75rem;font-weight:500;">Delete</button>
+        <button id="task-history-btn" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:var(--accent-blue);border-radius:6px;padding:0.375rem 0.625rem;cursor:pointer;font-size:0.75rem;font-weight:500;">History</button>
         <a href="/kanban" class="back-link" id="back-to-kanban">← Back to Board</a>
       </div>
     </div>
@@ -550,6 +551,15 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
       e.preventDefault();
       history.pushState({}, "", "/kanban");
       void import("../lib/router").then(({ router }) => router.go("kanban"));
+    });
+  }
+
+  const historyBtn = document.getElementById("task-history-btn");
+  if (historyBtn) {
+    historyBtn.addEventListener("click", () => {
+      const url = `/kanban-history?task_id=${encodeURIComponent(taskId)}`;
+      history.pushState({}, "", url);
+      void import("../lib/router").then(({ router }) => router.go("kanban-history"));
     });
   }
 

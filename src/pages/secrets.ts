@@ -343,8 +343,12 @@ async function showVersionsModal(name: string): Promise<void> {
   document.body.appendChild(backdrop);
 
   backdrop.querySelector(".modal-close-btn")?.addEventListener("click", () => backdrop.remove());
-  backdrop.addEventListener("click", (e) => {
-    if (e.target === backdrop) backdrop.remove();
+  backdrop.addEventListener("mousedown", (e) => {
+    if (e.target === backdrop) backdrop.dataset.closing = "true";
+    else backdrop.dataset.closing = "false";
+  });
+  backdrop.addEventListener("mouseup", (e) => {
+    if (e.target === backdrop && backdrop.dataset.closing === "true") backdrop.remove();
   });
 
   try {

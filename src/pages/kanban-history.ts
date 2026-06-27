@@ -102,8 +102,18 @@ function openJsonModal(title: string, jsonObj: any): void {
   const overlay = document.createElement("div");
   overlay.style.cssText =
     "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding-top:8vh;";
-  overlay.addEventListener("click", (e) => {
-    if (e.target === overlay) overlay.remove();
+  // Track mousedown origin — only close if both mousedown AND mouseup are on the overlay
+  overlay.addEventListener("mousedown", (e) => {
+    if (e.target === overlay) {
+      overlay.dataset.closing = "true";
+    } else {
+      overlay.dataset.closing = "false";
+    }
+  });
+  overlay.addEventListener("mouseup", (e) => {
+    if (e.target === overlay && overlay.dataset.closing === "true") {
+      overlay.remove();
+    }
   });
 
   const panel = document.createElement("div");
@@ -277,21 +287,19 @@ async function loadHistory(): Promise<void> {
           </thead>
           <tbody>
             ${rows
-              .map(
-                (r) => {
-                  const taskStatus = r.final_board || r.initial_board || "backlog";
-                  return `<tr style="border-bottom:1px solid var(--glass-border,rgba(255,255,255,0.03));">
+              .map((r) => {
+                const taskStatus = r.final_board || r.initial_board || "backlog";
+                return `<tr style="border-bottom:1px solid var(--glass-border,rgba(255,255,255,0.03));">
                 <td style="padding:0.5rem 0.75rem;font-size:0.82rem;color:var(--text-secondary);white-space:nowrap;vertical-align:middle;">${escapeHtml(formatTimestamp(r.created_at))}</td>
                 <td style="padding:0.5rem 0.75rem;font-size:0.82rem;color:var(--text-primary);vertical-align:middle;">
                   <div style="display:flex;align-items:center;flex-wrap:wrap;gap:0.4rem;">
                     ${taskIdLink(r.kanban_task_id, taskStatus)}
                     <span style="color:var(--text-secondary);font-size:0.82rem;">${formatEvent(r.action, r.initial_board, r.final_board)}</span>
-                    ${(r.action === "edited" || r.action === "deleted") && r.previous_values ? `<button class="kh-json-btn" style="background:none;border:none;cursor:pointer;color:var(--accent-cyan);font-size:0.9rem;padding:0 0.25rem;line-height:1;" title="Show previous values as JSON">📋</button>` : ""}
+                    ${r.previous_values ? `<button class="kh-json-btn" style="background:none;border:none;cursor:pointer;color:var(--accent-cyan);font-size:0.9rem;padding:0 0.25rem;line-height:1;" title="Show previous values as JSON">📋</button>` : ""}
                   </div>
                 </td>
               </tr>`;
-                },
-              )
+              })
               .join("")}
           </tbody>
         </table>
@@ -316,7 +324,7 @@ async function loadHistory(): Promise<void> {
         if (!href) return;
         const taskId = href.replace("/kanban/", "");
         history.pushState({}, "", href);
-        import("../lib/router").then((mod) => mod.router.go(`kanban/${taskId}`));
+        void import("../lib/router").then((mod: any) => mod.router.go(`kanban/${taskId}`));
       });
     });
   } catch (e) {

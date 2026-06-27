@@ -457,6 +457,9 @@ kanbanRouter.delete("/tasks/:id", async (req: Request, res: Response) => {
       [taskId, "deleted", JSON.stringify(previousValues)],
     );
 
+    // Clear FK references in related tables before deleting
+    await queryDb(`UPDATE threads SET task_id = NULL WHERE task_id = $1`, [taskId]);
+
     const result = await queryDb(`DELETE FROM kanban_tasks WHERE id = $1 RETURNING id`, [taskId]);
 
     if (result.length === 0) {

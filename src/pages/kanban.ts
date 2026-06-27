@@ -162,6 +162,7 @@ export function renderKanban(container: HTMLElement): void {
       <div class="kanban-summary" id="kanban-summary" style="display:flex;align-items:center;gap:0.75rem;">
         <span id="kanban-count" style="font-size:0.85rem;color:var(--text-muted);margin-right:auto;"></span>
         <button id="toggle-archived-btn">Show archived</button>
+        <button id="kanban-history-btn" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:var(--accent-blue);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">History</button>
         <button id="create-task-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ Create Task</button>
       </div>
     </div>
@@ -301,6 +302,12 @@ export function renderKanban(container: HTMLElement): void {
     updateKanbanUrl();
     updateArchivedButton();
     void loadBoard(showArchived);
+  });
+
+  // History button
+  document.getElementById("kanban-history-btn")?.addEventListener("click", () => {
+    history.pushState({}, "", "/kanban-history");
+    void import("../lib/router").then(({ router }) => router.go("kanban-history"));
   });
 
   // Apply initial URL state to button and URL
