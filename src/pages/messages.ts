@@ -145,7 +145,7 @@ export function renderMessages(container: HTMLElement): void {
           <button class="nav-btn" id="prev-page" disabled>← Prev</button>
           <span id="page-info">Page 1</span>
           <button class="nav-btn" id="next-page" disabled>Next →</button>
-          <button class="nav-btn order-btn" id="order-btn">↓ Recent</button>
+          <button class="nav-btn order-btn" id="order-btn"><span class="arrow">↓</span> Recent</button>
         </span>
       </div>
       <div class="card-body" id="messages-list">
@@ -157,7 +157,7 @@ export function renderMessages(container: HTMLElement): void {
           <button class="nav-btn" id="prev-page-bottom" disabled>← Prev</button>
           <span id="page-info-bottom">Page 1</span>
           <button class="nav-btn" id="next-page-bottom" disabled>Next →</button>
-          <button class="nav-btn order-btn" id="order-btn-bottom">↓ Recent</button>
+          <button class="nav-btn order-btn" id="order-btn-bottom"><span class="arrow">↓</span> Recent</button>
         </span>
       </div>
     </div>
@@ -495,9 +495,9 @@ async function loadMessages(): Promise<void> {
     // Update order button text
     const orderBtn = document.getElementById("order-btn");
     const orderBtnBottom = document.getElementById("order-btn-bottom");
-    const orderText = orderBy === "desc" ? "↓ Recent" : "↑ Oldest";
-    if (orderBtn) orderBtn.textContent = orderText;
-    if (orderBtnBottom) orderBtnBottom.textContent = orderText;
+    const arrowChar = orderBy === "desc" ? "↓" : "↑";
+    if (orderBtn) orderBtn.querySelector(".arrow")!.textContent = arrowChar;
+    if (orderBtnBottom) orderBtnBottom.querySelector(".arrow")!.textContent = arrowChar;
 
     if (data.messages.length === 0) {
       listEl.innerHTML = `<div class="empty-state">No messages match the current filters</div>`;

@@ -4,7 +4,7 @@
  */
 import { apiGet, type ChannelData, type PluginData } from "../lib/api";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, fixMissingSelectOptions } from "../lib/helpers";
 import {
   _profiles,
   _providers,
@@ -89,11 +89,11 @@ async function loadChannels(): Promise<void> {
       const modelMap: Record<string, string[]> = {};
       for (const p of providers) {
         try {
-          const detailResp = await apiGet<any>(`/plugins/${p.name}`);
-          const detail = detailResp.data || detailResp;
+          // Use data already returned in the plugin list response instead of
+          // fetching /api/plugins/:name individually (which may 404)
           const schema = [
-            ...((detail.config_schema || []) as any[]),
-            ...((detail.manifest?.config_schema || []) as any[]),
+            ...((p.config_schema || []) as any[]),
+            ...((p.manifest?.config_schema || []) as any[]),
           ];
           const modelField = schema.find((f: any) => f.key === "default_model");
           if (modelField && modelField.allowed_values && modelField.allowed_values.length > 0) {
@@ -156,6 +156,7 @@ async function loadChannels(): Promise<void> {
     document.querySelectorAll(".channel-field-group select").forEach((el) => {
       enhanceSelect(el.id);
     });
+    fixMissingSelectOptions();
     wireChannelFilterControls(() => loadChannels());
     // Sync current filters to URL
     syncFiltersToUrl();

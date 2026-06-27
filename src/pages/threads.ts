@@ -338,11 +338,11 @@ async function loadThreads(): Promise<void> {
               <div role="columnheader">Channel</div>
               <div role="columnheader">Created</div>
               <div role="columnheader">Plan Mode</div>
+              <div role="columnheader">Provider/Model</div>
               <div role="columnheader" style="text-align:right">Msgs</div>
               <div role="columnheader" class="col-preview">Preview</div>
               <div role="columnheader" style="text-align:right">Time (ms)</div>
               <div role="columnheader" style="text-align:right">Tokens</div>
-              <div role="columnheader">Provider/Model</div>
             </div>
           </div>
           <div role="rowgroup">
@@ -353,6 +353,37 @@ async function loadThreads(): Promise<void> {
     `;
     // Sync current filters to URL search params
     syncFiltersToUrl();
+
+    // Wire thread stop buttons
+    document.querySelectorAll(".thread-stop-btn").forEach((btn) => {
+      btn.addEventListener("click", async (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const threadId = btn.getAttribute("data-thread-id");
+        if (!threadId) return;
+        if (!confirm("Stop this thread?")) return;
+        const btnEl = btn as HTMLButtonElement;
+        const originalText = btnEl.textContent;
+        btnEl.disabled = true;
+        btnEl.textContent = "Stopping...";
+        try {
+          const res = await fetch(`/api/threads/${encodeURIComponent(threadId)}/stop`, {
+            method: "POST",
+          });
+          if (!res.ok) {
+            const err = await res.text();
+            throw new Error(err);
+          }
+          (window as any).showToast?.("Thread stopped", "success");
+          void loadThreads();
+        } catch (err) {
+          (window as any).showToast?.("Failed: " + (err instanceof Error ? err.message : "Unknown"), "error");
+        } finally {
+          btnEl.disabled = false;
+          btnEl.textContent = originalText;
+        }
+      });
+    });
   } catch (e) {
     listEl.innerHTML = `<div class="error-state">Failed to load threads: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
   }
@@ -389,20 +420,21 @@ function renderRow(row: ThreadRow): string {
 
   const url = `/messages?thread_id=${escapeHtml(row.id)}`;
 
+  const showStop = row.status === "pending" || row.status === "processing";
+  const stopBtn = showStop
+    ? `<br><button class="thread-stop-btn btn btn-sm" data-thread-id="${escapeHtml(row.id)}" style="margin-top:0.25rem;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:4px;padding:0.1rem 0.4rem;cursor:pointer;font-size:0.7rem;line-height:1.3;" title="Stop this thread">Stop</button>`
+    : "";
+
   return `
     <a href="${url}" class="thread-row" role="row">
       <div role="cell"><code style="font-size:0.8rem;color:var(--text-secondary);">#${escapeHtml(row.id)}</code></div>
-      <div role="cell"><span class="badge status-badge-${row.status.toLowerCase()}" style="${statusBadgeStyle(row.status)}">${escapeHtml(row.status)}</span></div>
+      <div role="cell"><span class="badge status-badge-${row.status.toLowerCase()}" style="${statusBadgeStyle(row.status)}">${escapeHtml(row.status)}</span>${stopBtn}</div>
       <div role="cell"><span class="badge" style="--type-color:${causeCol};background:${causeCol}22;border-color:${causeCol}44;color:${causeCol}">${escapeHtml(row.cause)}</span></div>
       <div role="cell">${typeStr === "—" ? typeStr : `<span class="event-type-badge" title="Type: ${typeStr}" style="--type-color:${seq0TypeColor(row.cause_msg_type || "")};background:${seq0TypeColor(row.cause_msg_type || "")}22;border-color:${seq0TypeColor(row.cause_msg_type || "")}44;color:${seq0TypeColor(row.cause_msg_type || "")}">${typeStr}</span>`}</div>
       <div role="cell" style="font-size:0.8rem;color:var(--text-muted);font-style:italic;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${subtypeStr}</div>
       <div role="cell"><span class="badge" style="${channelStyle(row.channel_closed)}"${row.channel_closed ? ' title="Channel closed"' : ""}>${escapeHtml(row.channel_name)}</span></div>
       <div role="cell" class="cell-timestamp">${ts}</div>
       <div role="cell"><span class="badge" style="--type-color:${pmCol};background:${pmCol}22;border-color:${pmCol}44;color:${pmCol}">${planningModeLabel(row.planning_mode)}</span></div>
-      <div role="cell" class="cell-num">${row.msg_count}</div>
-      <div role="cell" class="cell-preview">${preview}</div>
-      <div role="cell" class="cell-num">${row.duration_ms !== null ? row.duration_ms.toFixed(0) : "—"}</div>
-      <div role="cell" class="cell-num">${tokens > 0 ? tokens.toLocaleString() : "—"}</div>
       <div role="cell" style="font-size:0.8rem;color:var(--text-muted)">
         <span style="display:inline-flex;align-items:center;gap:0.25rem;">
           ${row.provider ? `<span class="ev-provider" title="Provider">${escapeHtml(row.provider)}</span>` : ""}
@@ -411,6 +443,10 @@ function renderRow(row: ThreadRow): string {
           ${!row.provider && !row.model ? "—" : ""}
         </span>
       </div>
+      <div role="cell" class="cell-num">${row.msg_count}</div>
+      <div role="cell" class="cell-preview">${preview}</div>
+      <div role="cell" class="cell-num">${row.duration_ms !== null ? row.duration_ms.toFixed(0) : "—"}</div>
+      <div role="cell" class="cell-num">${tokens > 0 ? tokens.toLocaleString() : "—"}</div>
     </a>
   `;
 }

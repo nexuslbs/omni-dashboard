@@ -60,9 +60,9 @@ async function loadKanbanActivity(taskId: string): Promise<void> {
     // Update order button text
     const orderBtn = document.getElementById("kanban-threads-order-btn");
     const orderBtnBottom = document.getElementById("kanban-threads-order-btn-bottom");
-    const orderText = kanbanActivityOrder === "desc" ? "↓ Recent" : "↑ Oldest";
-    if (orderBtn) orderBtn.textContent = orderText;
-    if (orderBtnBottom) orderBtnBottom.textContent = orderText;
+    const arrowChar = kanbanActivityOrder === "desc" ? "↓" : "↑";
+    if (orderBtn) orderBtn.querySelector(".arrow")!.textContent = arrowChar;
+    if (orderBtnBottom) orderBtnBottom.querySelector(".arrow")!.textContent = arrowChar;
 
     // Wire pagination buttons (clone to remove old listeners)
     const prevClone = prevBtn?.cloneNode(true) as HTMLButtonElement;
@@ -457,7 +457,7 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
           <button class="nav-btn" id="kanban-threads-prev-page" disabled>← Prev</button>
           <span id="kanban-threads-page-info">Page 1</span>
           <button class="nav-btn" id="kanban-threads-next-page" disabled>Next →</button>
-          <button class="nav-btn order-btn" id="kanban-threads-order-btn">↓ Recent</button>
+          <button class="nav-btn order-btn" id="kanban-threads-order-btn"><span class="arrow">↓</span> Recent</button>
         </span>
       </div>
       <div class="card-body" id="kanban-threads">
@@ -469,7 +469,7 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
           <button class="nav-btn" id="kanban-threads-prev-page-bottom" disabled>← Prev</button>
           <span id="kanban-threads-page-info-bottom">Page 1</span>
           <button class="nav-btn" id="kanban-threads-next-page-bottom" disabled>Next →</button>
-          <button class="nav-btn order-btn" id="kanban-threads-order-btn-bottom">↓ Recent</button>
+          <button class="nav-btn order-btn" id="kanban-threads-order-btn-bottom"><span class="arrow">↓</span> Recent</button>
         </span>
       </div>
     </div>

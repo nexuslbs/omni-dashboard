@@ -72,12 +72,13 @@ function renderPlatformsPage(platforms: PluginData[]): string {
     <div class="card settings-card${p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}">
       <div class="card-header" style="cursor:pointer;">
         <span class="card-title">
-          <span class="plugin-name" style="font-weight:600;">${escapeHtml(p.manifest?.label || p.name)}</span>
-          <span class="badge ${getStatusBadgeClass(p.status)}" style="margin-left:0.5rem;">${p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : "● Error"}</span>
-          ${p.version ? `<span class="badge badge-info" style="margin-left:0.375rem;">v${escapeHtml(p.version)}</span>` : ""}
-          <span class="badge badge-neutral" style="margin-left:0.375rem;">source: ${escapeHtml(p.source)}</span>
+          <span class="plugin-name" style="font-weight:600;">${escapeHtml(p.name)}</span>
+          ${p.manifest?.label && p.manifest.label !== p.name ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.125rem;">${escapeHtml(p.manifest.label)}</div>` : ""}
         </span>
-        <span style="display:flex;gap:0.25rem;align-items:center;">
+        <span class="tool-actions" style="display:flex;gap:0.25rem;align-items:center;">
+          <span class="badge ${getStatusBadgeClass(p.status)}">${p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : "● Error"}</span>
+          ${p.version ? `<span class="badge badge-info" style="margin-left:0.125rem;">v${escapeHtml(p.version)}</span>` : ""}
+          <span class="badge badge-neutral" style="margin-left:0.125rem;">source: ${escapeHtml(p.source)}</span>
           ${p.source !== "built-in" ? `<button type="button" class="plugin-toggle-btn" style="background:${p.status === "enabled" ? "rgba(148,163,184,0.1)" : "rgba(16,185,129,0.1)"};border:1px solid ${p.status === "enabled" ? "var(--glass-border)" : "rgba(16,185,129,0.2)"};border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:${p.status === "enabled" ? "var(--text-secondary)" : "#34d399"};">${p.status === "enabled" ? "Disable" : "Enable"}</button>` : ""}
           <button type="button" class="plugin-expand-btn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0.25rem;font-size:1rem;" title="Toggle config">▶</button>
         </span>

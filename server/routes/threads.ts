@@ -3,6 +3,33 @@ import { queryDb } from "../db.js";
 
 export const threadsRouter = Router();
 
+// POST /api/threads/:threadId/stop — stop a specific thread
+threadsRouter.post("/:threadId/stop", async (req, res) => {
+  try {
+    const { threadId } = req.params;
+    const omniagentUrl = `${
+      process.env.OMNIAGENT_URL || "http://omniagent:8080"
+    }/stop-thread/${encodeURIComponent(threadId)}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    const response = await fetch(omniagentUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    const data = response.headers.get("content-type")?.includes("application/json")
+      ? await response.json()
+      : await response.text().catch(() => "");
+    res.status(response.status).json({ success: response.ok, data });
+  } catch (err) {
+    console.error("[threads] Stop proxy error:", err);
+    res
+      .status(502)
+      .json({ error: "Failed to reach OmniAgent: " + (err instanceof Error ? err.message : String(err)) });
+  }
+});
+
 threadsRouter.get("/", (req: Request, res: Response) => {
   void (async () => {
     try {

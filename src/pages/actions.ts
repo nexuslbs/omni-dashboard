@@ -1,6 +1,6 @@
 import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
 import { enhanceSelectElement } from "../lib/dropdown";
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, fixMissingSelectOptions } from "../lib/helpers";
 
 // ── Types ──
 interface Action {
@@ -16,6 +16,7 @@ interface McpToolInfo {
   name: string;
   description: string;
   input_schema: Record<string, any>;
+  server_name?: string;
 }
 
 // ── State ──
@@ -103,9 +104,17 @@ function renderActionRow(a: Action, i: number): string {
     Object.keys(a.params).length > 0 ? escapeHtml(JSON.stringify(a.params)) : "<em>No params</em>";
   const isDisabled = !a.enabled;
 
+  // Build display name: for builtins use "actions:" prefix; for others look up server_name
+  const toolDisplay = ((): string => {
+    if (a.is_builtin) return "actions:" + escapeHtml(a.tool_name);
+    const tool = availableTools.find((t) => t.name === a.tool_name);
+    if (tool?.server_name) return escapeHtml(tool.server_name) + ":" + escapeHtml(a.tool_name);
+    return escapeHtml(a.tool_name);
+  })();
+
   return `<tr class="${isDisabled ? "action-disabled" : ""}" style="${isDisabled ? "opacity:0.55" : ""}">
     <td><strong>${escapeHtml(a.name)}</strong>${isDisabled ? ' <span class="badge badge-neutral" style="font-size:0.7rem;background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);padding:0.05rem 0.35rem;border-radius:4px;margin-left:0.35rem;vertical-align:middle">Disabled</span>' : ""}</td>
-    <td><code>${escapeHtml(a.tool_name)}</code></td>
+    <td><code>${toolDisplay}</code></td>
     <td style="font-size:0.8rem;color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${paramsStr}</td>
     <td style="text-align:right;white-space:nowrap">
       <button class="btn btn-sm btn-primary" id="action-run-${i}" title="${isDisabled ? "Action is disabled" : "Run this action"}" ${isDisabled ? "disabled" : ""}>▶ Run</button>
@@ -169,9 +178,15 @@ async function showActionModal(existing: Action | null): Promise<void> {
               <select class="filter-select" id="action-tool">
                 <option value="">— Select a tool —</option>
                 ${availableTools
+                  .slice()
+                  .sort((a, b) => {
+                    const fa = a.server_name ? `${a.server_name}:${a.name}` : a.name;
+                    const fb = b.server_name ? `${b.server_name}:${b.name}` : b.name;
+                    return fa.localeCompare(fb);
+                  })
                   .map(
                     (t) =>
-                      `<option value="${escapeHtml(t.name)}"${isEdit && existing!.tool_name === t.name ? " selected" : ""}>${escapeHtml(t.name)}</option>`,
+                      `<option value="${escapeHtml(t.name)}"${isEdit && existing!.tool_name === t.name ? " selected" : ""}>${escapeHtml(t.server_name ? t.server_name + ":" + t.name : t.name)}</option>`,
                   )
                   .join("")}
               </select>
@@ -206,6 +221,7 @@ async function showActionModal(existing: Action | null): Promise<void> {
   const paramsForm = backdrop.querySelector("#action-params-form") as HTMLElement;
 
   enhanceSelectElement(toolSelect);
+  fixMissingSelectOptions(backdrop);
 
   // When tool is selected, show its parameters
   let currentParamValues: Record<string, string> = {};

@@ -35,11 +35,11 @@ async function loadProfiles(): Promise<void> {
       const modelMap: Record<string, string[]> = {};
       for (const p of providers) {
         try {
-          const detailResp = await apiGet<any>(`/plugins/${p.name}`);
-          const detail = detailResp.data || detailResp;
+          // Use data already returned in the plugin list response instead of
+          // fetching /api/plugins/:name individually (which may 404)
           const schema = [
-            ...((detail.config_schema || []) as any[]),
-            ...((detail.manifest?.config_schema || []) as any[]),
+            ...((p.config_schema || []) as any[]),
+            ...((p.manifest?.config_schema || []) as any[]),
           ];
           const modelField = schema.find((f: any) => f.key === "default_model");
           if (modelField && modelField.allowed_values && modelField.allowed_values.length > 0) {
@@ -103,6 +103,12 @@ function renderProfilesPage(profiles: any[]): string {
           <div class="setting-controls">
             <div class="setting-name">Model</div>
             ${renderModelSelect(p.name, p.provider || "", p.model || "")}
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-controls" style="max-width:none;">
+            <div class="setting-name">Allowed Toolsets</div>
+            ${renderToolsetSelect(p.name, p.allowed_tools || [], p.all_tools || [])}
           </div>
         </div>
         <div class="setting-row">
@@ -200,6 +206,55 @@ function renderSkillsList(skills: string[]): string {
     .join("")}</div>`;
 }
 
+/**
+ * Extract the toolset name from a display tool name.
+ * e.g. "actions:kanban_dispatcher" → "actions", "filesystem:read" → "filesystem"
+ * Tools without a colon prefix get their own toolset name.
+ */
+function toolsetOf(tool: string): string {
+  const idx = tool.indexOf(":");
+  return idx > 0 ? tool.substring(0, idx) : "_other";
+}
+
+/**
+ * Given allowed tools and all tools, compute each toolset's state:
+ *   "full"  → all tools in that toolset are allowed (purple)
+ *   "partial" → some, but not all (yellow)
+ *   "none"  → none allowed (gray)
+ */
+function computeToolsetStates(
+  selected: string[],
+  allTools: string[],
+): Record<string, "full" | "partial" | "none"> {
+  const sets: Record<string, { total: number; allowed: number }> = {};
+  for (const t of allTools) {
+    const s = toolsetOf(t);
+    if (!sets[s]) sets[s] = { total: 0, allowed: 0 };
+    sets[s].total++;
+    if (selected.includes(t)) sets[s].allowed++;
+  }
+  const result: Record<string, "full" | "partial" | "none"> = {};
+  for (const [s, v] of Object.entries(sets)) {
+    if (v.allowed === 0) result[s] = "none";
+    else if (v.allowed === v.total) result[s] = "full";
+    else result[s] = "partial";
+  }
+  return result;
+}
+
+function renderToolsetSelect(profileName: string, selected: string[], allTools: string[]): string {
+  const states = computeToolsetStates(selected, allTools);
+  const toolsetNames = Object.keys(states).sort();
+  const chips = toolsetNames
+    .map(
+      (ts) =>
+        `<span class="toolset-chip" data-toolset="${escapeHtml(ts)}" data-profile-name="${escapeHtml(profileName)}" data-state="${states[ts]}" style="${toolsetChipStyle(states[ts])}">${escapeHtml(ts)}</span>`,
+    )
+    .join("");
+
+  return `<div class="toolset-chip-group" id="prof-toolsets-${escapeHtml(profileName)}" data-profile-name="${escapeHtml(profileName)}">${chips}</div>`;
+}
+
 function renderToolSelect(profileName: string, selected: string[], allTools: string[]): string {
   const id = `prof-tools-${escapeHtml(profileName)}`;
   const chips = [...allTools]
@@ -221,8 +276,7 @@ function renderToolSelect(profileName: string, selected: string[], allTools: str
         ${chips}
       </div>
       <div style="display:flex;gap:0.375rem;">
-        <button type="button" class="profile-tools-save btn btn-sm" data-profile-name="${escapeHtml(profileName)}" style="display:none;background:var(--accent);color:white;border:none;border-radius:4px;padding:0.25rem 0.75rem;cursor:pointer;font-size:0.8rem;">Save Tools</button>
-        <button type="button" class="profile-tools-reset btn btn-sm" data-profile-name="${escapeHtml(profileName)}" style="display:none;background:rgba(255,255,255,0.1);color:var(--text-secondary);border:1px solid var(--glass-border);border-radius:4px;padding:0.25rem 0.75rem;cursor:pointer;font-size:0.8rem;">Reset to Defaults</button>
+        <button type="button" class="profile-tools-reset btn btn-sm" data-profile-name="${escapeHtml(profileName)}" style="background:rgba(255,255,255,0.1);color:var(--text-secondary);border:1px solid var(--glass-border);border-radius:4px;padding:0.25rem 0.75rem;cursor:pointer;font-size:0.8rem;">Reset to Defaults</button>
       </div>
     </div>
   `;
@@ -339,36 +393,44 @@ function wireProfiles(): void {
     });
   });
 
-  // ── Tool chips ──
+  // ── Tool chips (auto-save on change) ──
   document.querySelectorAll(".tool-chip-cb").forEach((cb) => {
     cb.addEventListener("change", () => {
       const profileName = cb.getAttribute("data-profile-name");
-      toggleToolChip(profileName);
+      if (!profileName) return;
+      updateToolChipClasses(profileName);
+      refreshToolsetChips(profileName);
+      void saveTools(profileName);
     });
   });
 
-  // Tool save button
-  document.querySelectorAll(".profile-tools-save").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const profileName = btn.getAttribute("data-profile-name");
-      if (!profileName) return;
-      const selected = getSelectedTools(profileName);
-      try {
-        const res = await fetch(`/api/profiles/${encodeURIComponent(profileName)}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ allowed_tools: selected }),
-        });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text);
+  // ── Toolset chips (click to toggle all tools in a toolset, auto-save) ──
+  document.querySelectorAll(".toolset-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const profileName = chip.getAttribute("data-profile-name");
+      const toolset = chip.getAttribute("data-toolset");
+      const currentState = chip.getAttribute("data-state") as "full" | "partial" | "none" | null;
+      if (!profileName || !toolset) return;
+      const allCbs = document.querySelectorAll(
+        `.tool-chip-cb[data-profile-name="${profileName}"]`,
+      ) as NodeListOf<HTMLInputElement>;
+      const allTools: string[] = [];
+      allCbs.forEach((cb) => allTools.push(cb.value));
+      // Find tools in this toolset
+      const prefix = toolset + ":";
+      const toolsInSet = allTools.filter((t) => t.startsWith(prefix));
+      if (toolsInSet.length === 0) return;
+      // Toggle: if none allowed → allow all; otherwise → disallow all
+      const shouldEnable = currentState === "none";
+      allCbs.forEach((cb) => {
+        if (cb.value.startsWith(prefix)) {
+          cb.checked = shouldEnable;
         }
-        updateToolOrigins(profileName, selected);
-        hideToolButtons(profileName);
-        (window as any).showToast?.("Tools updated", "success");
-      } catch (e) {
-        (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
-      }
+      });
+      // Update chip styling
+      updateToolChipClasses(profileName);
+      refreshToolsetChips(profileName);
+      void saveTools(profileName);
     });
   });
 
@@ -419,12 +481,16 @@ function wireProfiles(): void {
       try {
         // Trigger server-side model refresh first (same as channels handler)
         await apiPost(`/plugins/${encodeURIComponent(provider)}/refresh-models`, {});
-        // Then fetch the updated model list
-        const detailResp = await apiGet<any>(`/plugins/${encodeURIComponent(provider)}`);
-        const detail = detailResp.data || detailResp;
+        // Re-fetch the plugin list to get updated config_schema
+        const freshResp = await apiGet<any>("/plugins");
+        const freshPlugins: any[] = freshResp.data || freshResp;
+        const providerPlugin = freshPlugins.find(
+          (fp: any) => fp.plugin_type === "provider" && fp.name === provider,
+        );
+        if (!providerPlugin) throw new Error(`Provider "${provider}" not found`);
         const schema = [
-          ...((detail.config_schema || []) as any[]),
-          ...((detail.manifest?.config_schema || []) as any[]),
+          ...((providerPlugin.config_schema || []) as any[]),
+          ...((providerPlugin.manifest?.config_schema || []) as any[]),
         ];
         const modelField = schema.find((f: any) => f.key === "default_model");
         let models: string[] = [];
@@ -567,23 +633,31 @@ function showCreateProfileModal(): void {
 
 // ── Tool helpers ──
 
-function toggleToolChip(profileName: string | null): void {
-  if (!profileName) return;
+function updateToolChipClasses(profileName: string): void {
   const group = document.querySelector(`.tool-chip-group[data-profile-name="${profileName}"]`);
   if (!group) return;
   group.querySelectorAll(".tool-chip").forEach((chip) => {
     const cb = chip.querySelector(".tool-chip-cb") as HTMLInputElement;
     chip.classList.toggle("tool-chip-active", cb.checked);
   });
-  const changed = hasToolChanges(profileName);
-  const saveBtn = document.querySelector(
-    `.profile-tools-save[data-profile-name="${profileName}"]`,
-  ) as HTMLElement | null;
-  const resetBtn = document.querySelector(
-    `.profile-tools-reset[data-profile-name="${profileName}"]`,
-  ) as HTMLElement | null;
-  if (saveBtn) saveBtn.style.display = changed ? "inline-block" : "none";
-  if (resetBtn) resetBtn.style.display = changed ? "inline-block" : "none";
+}
+
+async function saveTools(profileName: string): Promise<void> {
+  const selected = getSelectedTools(profileName);
+  try {
+    const res = await fetch(`/api/profiles/${encodeURIComponent(profileName)}`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ allowed_tools: selected }),
+    });
+    if (!res.ok) {
+      const text = await res.text();
+      throw new Error(text);
+    }
+    (window as any).showToast?.("Tools updated", "success");
+  } catch (e) {
+    (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+  }
 }
 
 function getSelectedTools(profileName: string): string[] {
@@ -596,38 +670,73 @@ function getSelectedTools(profileName: string): string[] {
   return result;
 }
 
-function hasToolChanges(profileName: string): boolean {
+/** Refresh toolset chips to reflect the current selection state of individual tools. */
+function refreshToolsetChips(profileName: string): void {
   const group = document.querySelector(`.tool-chip-group[data-profile-name="${profileName}"]`);
-  if (!group) return false;
-  let changed = false;
+  const toolsetContainer = document.querySelector(`.toolset-chip-group[data-profile-name="${profileName}"]`);
+  if (!group || !toolsetContainer) return;
+  // Gather current selection
+  const selected: string[] = [];
+  const allTools: string[] = [];
   group.querySelectorAll(".tool-chip-cb").forEach((cb) => {
-    const chip = cb.closest(".tool-chip") as HTMLElement;
-    const wasActive = chip.classList.contains("tool-chip-active");
-    const isChecked = (cb as HTMLInputElement).checked;
-    if (wasActive !== isChecked) changed = true;
+    const input = cb as HTMLInputElement;
+    allTools.push(input.value);
+    if (input.checked) selected.push(input.value);
   });
-  return changed;
+  // Compute states
+  const sets: Record<string, { total: number; allowed: number }> = {};
+  for (const t of allTools) {
+    const s = toolsetOf(t);
+    if (!sets[s]) sets[s] = { total: 0, allowed: 0 };
+    sets[s].total++;
+    if (selected.includes(t)) sets[s].allowed++;
+  }
+  // Update chips
+  const chips = toolsetContainer.querySelectorAll(".toolset-chip");
+  chips.forEach((chip) => {
+    const ts = chip.getAttribute("data-toolset");
+    if (!ts || !sets[ts]) return;
+    const v = sets[ts];
+    let state: "full" | "partial" | "none";
+    if (v.allowed === 0) state = "none";
+    else if (v.allowed === v.total) state = "full";
+    else state = "partial";
+    chip.setAttribute("data-state", state);
+    const colors = toolsetChipColors(state);
+    (chip as HTMLElement).style.background = colors.background;
+    (chip as HTMLElement).style.border = colors.border;
+    (chip as HTMLElement).style.color = colors.color;
+  });
 }
 
-function updateToolOrigins(profileName: string, selected: string[]): void {
-  const group = document.querySelector(`.tool-chip-group[data-profile-name="${profileName}"]`);
-  if (!group) return;
-  group.querySelectorAll(".tool-chip").forEach((chip) => {
-    const tool = chip.getAttribute("data-tool");
-    const active = selected.includes(tool || "");
-    chip.classList.toggle("tool-chip-active", active);
-    const cb = chip.querySelector(".tool-chip-cb") as HTMLInputElement;
-    if (cb) cb.checked = active;
-  });
+function toolsetChipColors(state: "full" | "partial" | "none"): {
+  background: string;
+  border: string;
+  color: string;
+} {
+  switch (state) {
+    case "full":
+      return {
+        background: "rgba(139,92,246,0.15)",
+        border: "1px solid rgba(139,92,246,0.35)",
+        color: "var(--accent-purple)",
+      };
+    case "partial":
+      return {
+        background: "rgba(234,179,8,0.12)",
+        border: "1px solid rgba(234,179,8,0.35)",
+        color: "#eab308",
+      };
+    case "none":
+      return {
+        background: "rgba(148,163,184,0.08)",
+        border: "1px solid rgba(148,163,184,0.2)",
+        color: "var(--text-muted)",
+      };
+  }
 }
 
-function hideToolButtons(profileName: string): void {
-  const saveBtn = document.querySelector(
-    `.profile-tools-save[data-profile-name="${profileName}"]`,
-  ) as HTMLElement | null;
-  const resetBtn = document.querySelector(
-    `.profile-tools-reset[data-profile-name="${profileName}"]`,
-  ) as HTMLElement | null;
-  if (saveBtn) saveBtn.style.display = "none";
-  if (resetBtn) resetBtn.style.display = "none";
+function toolsetChipStyle(state: "full" | "partial" | "none"): string {
+  const c = toolsetChipColors(state);
+  return "background:" + c.background + ";border:" + c.border + ";color:" + c.color + ";";
 }

@@ -3,6 +3,7 @@ import { renderActions } from "../pages/actions";
 import { renderThreads } from "../pages/threads";
 import { renderMessages } from "../pages/messages";
 import { renderKanban, renderKanbanDetail } from "../pages/kanban";
+import { renderKanbanHistory } from "../pages/kanban-history";
 import { renderSchedule, renderScheduleDetail } from "../pages/schedule";
 import { renderSecrets } from "../pages/secrets";
 import { renderExplorer } from "../pages/explorer";
@@ -34,6 +35,7 @@ const routes: Route[] = [
   { name: "messages", handler: renderMessages },
   { name: "memory", handler: renderMemory },
   { name: "kanban", handler: renderKanban },
+  { name: "kanban-history", handler: renderKanbanHistory },
   { name: "schedule", handler: renderSchedule },
   { name: "secrets", handler: renderSecrets },
   { name: "settings", handler: renderSettings },

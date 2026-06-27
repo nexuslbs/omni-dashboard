@@ -7,6 +7,7 @@ import { escapeHtml } from "./helpers";
 import { enhanceSelectElement } from "./dropdown";
 import { renderMessageCard, wireMessageCardToggles } from "./message-card";
 import { router } from "./router";
+import { fixMissingSelectOptions } from "./helpers";
 
 // ── Pagination state for schedule threads ──
 let threadsOffset = 0;
@@ -271,9 +272,9 @@ export async function loadScheduleThreads(scheduleId: string): Promise<void> {
     // Update order button text
     const orderBtn = document.getElementById("threads-order-btn");
     const orderBtnBottom = document.getElementById("threads-order-btn-bottom");
-    const orderText = threadsOrder === "desc" ? "↓ Recent" : "↑ Oldest";
-    if (orderBtn) orderBtn.textContent = orderText;
-    if (orderBtnBottom) orderBtnBottom.textContent = orderText;
+    const arrowChar = threadsOrder === "desc" ? "↓" : "↑";
+    if (orderBtn) orderBtn.querySelector(".arrow")!.textContent = arrowChar;
+    if (orderBtnBottom) orderBtnBottom.querySelector(".arrow")!.textContent = arrowChar;
 
     // Wire pagination buttons (clone to remove old listeners)
     const prevClone = prevBtn?.cloneNode(true) as HTMLButtonElement;
@@ -466,7 +467,15 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Action</label>
           <select id="cron-action" class="filter-select" style="width:100%;">
             <option value="">Select action...</option>
-            ${actions.map((a: any) => `<option value="${escapeHtml(a.id)}" ${isEdit && job.action_id === a.id ? "selected" : ""}>${escapeHtml(a.display || "[" + a.id + "] " + a.name)}${a.is_builtin ? " (built-in)" : ""}</option>`).join("")}
+            ${actions
+              .map((a: any) => {
+                const displayName =
+                  a.is_builtin && a.name.startsWith("builtin_")
+                    ? `actions:${a.name.replace(/^builtin_/, "")}`
+                    : a.name;
+                return `<option value="${escapeHtml(a.id)}" ${isEdit && job.action_id === a.id ? "selected" : ""}>${escapeHtml(displayName)}</option>`;
+              })
+              .join("")}
           </select>
           <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Action mode runs this action without an agent.</div>
         </div>
@@ -511,6 +520,7 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
   enhanceSelectElement(document.getElementById("cron-instruction-file") as HTMLSelectElement);
   enhanceSelectElement(document.getElementById("cron-mode") as HTMLSelectElement);
   enhanceSelectElement(document.getElementById("cron-action") as HTMLSelectElement);
+  fixMissingSelectOptions(modal);
 
   // Wire mode selector
   const modeSelect = modal.querySelector("#cron-mode") as HTMLSelectElement;
@@ -646,7 +656,7 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
           <button class="nav-btn" id="threads-prev-page" disabled>← Prev</button>
           <span id="threads-page-info">Page 1</span>
           <button class="nav-btn" id="threads-next-page" disabled>Next →</button>
-          <button class="nav-btn order-btn" id="threads-order-btn">↓ Recent</button>
+          <button class="nav-btn order-btn" id="threads-order-btn"><span class="arrow">↓</span> Recent</button>
         </span>
       </div>
       <div class="card-body" id="schedule-threads">
@@ -658,7 +668,7 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
           <button class="nav-btn" id="threads-prev-page-bottom" disabled>← Prev</button>
           <span id="threads-page-info-bottom">Page 1</span>
           <button class="nav-btn" id="threads-next-page-bottom" disabled>Next →</button>
-          <button class="nav-btn order-btn" id="threads-order-btn-bottom">↓ Recent</button>
+          <button class="nav-btn order-btn" id="threads-order-btn-bottom"><span class="arrow">↓</span> Recent</button>
         </span>
       </div>
     </div>

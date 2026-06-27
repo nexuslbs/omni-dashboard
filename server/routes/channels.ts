@@ -3,6 +3,33 @@ import { queryDb } from "../db.js";
 
 export const channelsRouter = Router();
 
+// POST /api/channels/:channelId/stop — stop all pending/processing threads in a channel
+channelsRouter.post("/:channelId/stop", async (req, res) => {
+  try {
+    const { channelId } = req.params;
+    const omniagentUrl = `${
+      process.env.OMNIAGENT_URL || "http://omniagent:8080"
+    }/stop/${encodeURIComponent(channelId)}`;
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 30000);
+    const response = await fetch(omniagentUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
+    });
+    clearTimeout(timeout);
+    const data = response.headers.get("content-type")?.includes("application/json")
+      ? await response.json()
+      : await response.text().catch(() => "");
+    res.status(response.status).json({ success: response.ok, data });
+  } catch (err) {
+    console.error("[channels] Stop proxy error:", err);
+    res
+      .status(502)
+      .json({ error: "Failed to reach OmniAgent: " + (err instanceof Error ? err.message : String(err)) });
+  }
+});
+
 // GET /api/channels — list all channels with full details
 channelsRouter.get("/", async (_req, res) => {
   try {

@@ -279,11 +279,16 @@ export function wireChannelConfigEditing(): void {
       el.style.opacity = "0.5";
       try {
         await apiPost(`/plugins/${encodeURIComponent(provider)}/refresh-models`, {});
-        const detailResp = await apiGet<any>(`/plugins/${provider}`);
-        const detail = detailResp.data || detailResp;
+        // Re-fetch the plugin list to get updated config_schema
+        const freshResp = await apiGet<any>("/plugins");
+        const freshPlugins: any[] = freshResp.data || freshResp;
+        const providerPlugin = freshPlugins.find(
+          (fp: any) => fp.plugin_type === "provider" && fp.name === provider,
+        );
+        if (!providerPlugin) throw new Error(`Provider "${provider}" not found`);
         const schema = [
-          ...((detail.config_schema || []) as any[]),
-          ...((detail.manifest?.config_schema || []) as any[]),
+          ...((providerPlugin.config_schema || []) as any[]),
+          ...((providerPlugin.manifest?.config_schema || []) as any[]),
         ];
         const modelField = schema.find((f: any) => f.key === "default_model");
         let models: string[] = [];

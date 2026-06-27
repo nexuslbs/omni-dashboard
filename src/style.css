@@ -2976,8 +2976,15 @@ a.thread-row {
 }
 
 .order-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15em;
+}
+
+.order-btn .arrow {
+  display: inline-block;
   line-height: 1;
-  vertical-align: middle;
+  transform: translateY(-2px);
 }
 
 /* ── Kanban Board ── */
@@ -3788,6 +3795,23 @@ a.thread-row {
   grid-template-columns: repeat(4, 1fr);
   gap: 1rem;
   margin-bottom: 1.5rem;
+}
+
+@media (max-width: 900px) {
+  .settings-card .card-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .settings-card .card-header .card-title {
+    margin-bottom: 0.375rem;
+  }
+  .settings-card .card-header .tool-actions {
+    flex-wrap: wrap;
+    width: 100%;
+  }
+  .settings-card .card-header .plugin-expand-btn {
+    margin-left: auto;
+  }
 }
 
 @media (max-width: 900px) {
@@ -4763,6 +4787,14 @@ a.thread-row {
   color: var(--accent-purple);
 }
 
+/* Danger (Close / Stop) buttons get red-hued hover */
+.channel-toggle-btn:hover,
+.channel-stop-btn:hover {
+  background: rgba(244, 63, 94, 0.12);
+  border-color: rgba(244, 63, 94, 0.35);
+  color: #f43f5e;
+}
+
 /* Subscription filter bar */
 .subscription-filter-bar {
   display: flex;
@@ -4778,6 +4810,26 @@ a.thread-row {
 
 .subscription-filter-bar .ri-arrow {
   margin-bottom: 0.5rem;
+}
+
+/* ── Toolset Chip Multi-Select ── */
+
+.toolset-chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.375rem;
+}
+
+.toolset-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  user-select: none;
+  transition: all 0.15s ease;
 }
 
 /* ── Tool Chip Multi-Select ── */

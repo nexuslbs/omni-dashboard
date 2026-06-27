@@ -433,6 +433,32 @@ kanbanRouter.get("/tasks/:taskId/threads", async (req: Request, res: Response) =
   }
 });
 
+// ── GET /api/kanban/history — History log ──
+kanbanRouter.get("/history", async (req: Request, res: Response) => {
+  try {
+    const taskId = (req.query.task_id as string) || "";
+    const action = (req.query.action as string) || "";
+    const limit = Math.min(parseInt(req.query.limit as string) || 200, 500);
+    const offset = parseInt(req.query.offset as string) || 0;
+
+    const rows = await queryDb(
+      `SELECT id, kanban_task_id, action, initial_board, final_board,
+              created_at::text AS created_at
+       FROM kanban_history
+       WHERE ($1 = '' OR kanban_task_id = $1)
+         AND ($2 = '' OR action = $2)
+       ORDER BY id DESC
+       LIMIT $3 OFFSET $4`,
+      [taskId, action, limit, offset],
+    );
+
+    res.json({ success: true, data: rows });
+  } catch (e: any) {
+    console.error("Kanban history error:", e?.message || e);
+    res.status(500).json({ success: false, error: e.message || "Unknown error" });
+  }
+});
+
 // ── GET /api/kanban/tasks/:taskId/subtasks — Subtasks for all threads of a kanban task ──
 kanbanRouter.get("/tasks/:taskId/subtasks", async (req: Request, res: Response) => {
   try {

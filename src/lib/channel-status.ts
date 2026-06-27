@@ -62,6 +62,9 @@ export function renderStatusControl(ch: ChannelData): string {
       <button type="button" class="channel-action-btn channel-toggle-btn" data-channel-id="${ch.id}" data-closed="${nextClosed}">
         ${actionLabel}
       </button>
+      <button type="button" class="channel-action-btn channel-stop-btn" data-channel-id="${ch.id}" title="Stop all pending/processing threads">
+        Stop
+      </button>
     </div>
   `;
 }
@@ -241,6 +244,35 @@ export function wireChannelToggleButtons(onReload: () => void): void {
         onReload();
       } catch (e) {
         (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+      }
+    });
+  });
+
+  // Wire stop buttons
+  document.querySelectorAll(".channel-stop-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const channelId = btn.getAttribute("data-channel-id");
+      if (!channelId) return;
+      if (!confirm("Stop all pending/processing threads in this channel?")) return;
+      const btnEl = btn as HTMLButtonElement;
+      const originalText = btnEl.textContent;
+      btnEl.disabled = true;
+      btnEl.textContent = "Stopping...";
+      try {
+        const res = await fetch(`/api/channels/${channelId}/stop`, {
+          method: "POST",
+        });
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(err);
+        }
+        (window as any).showToast?.("Channel threads stopped", "success");
+        onReload();
+      } catch (e) {
+        (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+      } finally {
+        btnEl.disabled = false;
+        btnEl.textContent = originalText;
       }
     });
   });
