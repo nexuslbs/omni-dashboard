@@ -422,7 +422,7 @@ function renderRow(row: ThreadRow): string {
 
   const showStop = row.status === "pending" || row.status === "processing";
   const stopBtn = showStop
-    ? `<br><button class="thread-stop-btn btn btn-sm" data-thread-id="${escapeHtml(row.id)}" style="margin-top:0.25rem;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:4px;padding:0.1rem 0.4rem;cursor:pointer;font-size:0.7rem;line-height:1.3;" title="Stop this thread">Stop</button>`
+    ? `<br><button class="thread-stop-btn" data-thread-id="${escapeHtml(row.id)}" style="display:block;margin:0.35rem auto 0;background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:6px;padding:0.3rem 0.85rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;" title="Stop this thread">Stop</button>`
     : "";
 
   return `
