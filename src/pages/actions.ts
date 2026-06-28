@@ -117,10 +117,10 @@ function renderActionRow(a: Action, i: number): string {
     <td><code>${toolDisplay}</code></td>
     <td style="font-size:0.8rem;color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${paramsStr}</td>
     <td style="text-align:right;white-space:nowrap">
-      <button class="btn btn-sm btn-primary" id="action-run-${i}" title="${isDisabled ? "Action is disabled" : "Run this action"}" ${isDisabled ? "disabled" : ""}>▶ Run</button>
-      <button class="btn btn-sm btn-secondary" id="action-edit-${i}" title="Edit action">✎ Edit</button>
-      <button class="btn btn-sm ${isDisabled ? "btn-primary" : "btn-warning"}" id="action-toggle-${i}" title="${isDisabled ? "Enable action" : "Disable action"}" style="${isDisabled ? "" : "background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#f59e0b"}">${isDisabled ? "▶ Enable" : "⏸ Disable"}</button>
-      <button class="btn btn-sm btn-danger" id="action-delete-${i}" title="Delete action">🗑 Delete</button>
+      <button class="btn btn-sm" id="action-run-${i}" title="${isDisabled ? "Action is disabled" : "Run this action"}" ${isDisabled ? "disabled" : ""} style="border-radius:4px;padding:0.2rem 0.5rem;font-size:0.75rem;line-height:1.4;${isDisabled ? "background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.2);color:var(--text-secondary,#94a3b8);cursor:not-allowed;" : "background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:var(--accent-green,#10b981);cursor:pointer;"}">${isDisabled ? "Run" : "▶ Run"}</button>
+      <button class="btn btn-sm" id="action-edit-${i}" title="Edit action" style="border-radius:4px;padding:0.2rem 0.5rem;font-size:0.75rem;line-height:1.4;${isDisabled ? "background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.2);color:var(--text-secondary,#94a3b8);cursor:pointer;" : "background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);cursor:pointer;"}">✎ Edit</button>
+      <button class="btn btn-sm" id="action-toggle-${i}" title="${isDisabled ? "Enable action" : "Disable action"}" style="border-radius:4px;padding:0.2rem 0.5rem;font-size:0.75rem;line-height:1.4;${isDisabled ? "background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:var(--accent-green,#10b981);cursor:pointer;" : "background:rgba(245,158,11,0.15);border:1px solid rgba(245,158,11,0.3);color:#f59e0b;cursor:pointer;"}">${isDisabled ? "▶ Enable" : "⏸ Disable"}</button>
+      <button class="btn btn-sm btn-danger" id="action-delete-${i}" title="Delete action" style="border-radius:4px;padding:0.2rem 0.5rem;font-size:0.75rem;line-height:1.4;">✕ Delete</button>
     </td>
   </tr>`;
 }
