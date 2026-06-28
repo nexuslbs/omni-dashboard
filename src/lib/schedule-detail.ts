@@ -654,7 +654,7 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
         <p class="page-subtitle" id="detail-subtitle">Job: ${escapeHtml(cronId)}</p>
       </div>
       <div id="detail-action-buttons" style="display:flex;gap:0.5rem;">
-        <button id="detail-run-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;">Run</button>
+        <button id="detail-run-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;">▶ Run</button>
         <button id="detail-toggle-active" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;color:var(--text-secondary);">—</button>
         <button id="detail-edit-btn" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:var(--accent-purple);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;">Edit</button>
         <a href="/schedule" class="back-link" id="back-to-schedule" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);color:var(--accent-cyan);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.85rem;text-decoration:none;">← Back to Schedules</a>
