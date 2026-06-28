@@ -21,7 +21,7 @@ interface ThreadRow {
   channel_name: string;
   channel_closed?: boolean;
   msg_count: number;
-  llm_calls: number;
+  iterations: number;
   cause_content_preview: string | null;
   planning_mode: string;
   cause_msg_type: string | null;
@@ -465,7 +465,7 @@ function renderRow(row: ThreadRow): string {
         </div>
       </div>
       <div role="cell" class="cell-num">${row.msg_count}</div>
-      <div role="cell" class="cell-num">${row.llm_calls}</div>
+      <div role="cell" class="cell-num">${row.iterations}</div>
       <div role="cell" class="cell-preview">${preview}</div>
       <div role="cell" class="cell-num">${row.duration_ms !== null ? row.duration_ms.toFixed(0) : "—"}</div>
       <div role="cell" class="cell-num">${tokens > 0 ? tokens.toLocaleString() : "—"}</div>

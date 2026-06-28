@@ -92,7 +92,7 @@ threadsRouter.get("/", (req: Request, res: Response) => {
           COALESCE(c.name, 'unknown') as channel_name,
           COALESCE(c.closed, false) as channel_closed,
           (SELECT COUNT(*) FROM messages m WHERE m.thread_id = t.id) as msg_count,
-          COALESCE((SELECT MAX(iteration_number) FROM messages m_llm WHERE m_llm.thread_id = t.id), 0) as llm_calls,
+          t.iterations as iterations,
           LEFT(COALESCE(m_cause.content, ''), 200) as cause_content_preview,
           m0.msg_type AS cause_msg_type,
           m0.msg_subtype AS cause_msg_subtype
@@ -136,7 +136,7 @@ threadsRouter.get("/", (req: Request, res: Response) => {
         channel_name: row.channel_name,
         channel_closed: !!row.channel_closed,
         msg_count: row.msg_count || 0,
-        llm_calls: row.llm_calls || 0,
+        iterations: row.iterations || 0,
         cause_content_preview: row.cause_content_preview,
         cause_msg_type: row.cause_msg_type || null,
         cause_msg_subtype: row.cause_msg_subtype || null,
