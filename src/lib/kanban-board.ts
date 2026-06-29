@@ -183,7 +183,8 @@ export async function loadBoard(showArchived: boolean): Promise<void> {
         "touchstart",
         (e) => {
           if ((e.target as HTMLElement).closest("button, select, input, textarea")) return;
-          const touch = e.touches[0];
+          const te = e as TouchEvent;
+          const touch = te.touches[0];
           touchStartX = touch.clientX;
           touchStartY = touch.clientY;
           touchDragTaskId = card.getAttribute("data-task-id");
@@ -196,7 +197,8 @@ export async function loadBoard(showArchived: boolean): Promise<void> {
         "touchmove",
         (e) => {
           if (!touchDragTaskId) return;
-          const touch = e.touches[0];
+          const te = e as TouchEvent;
+          const touch = te.touches[0];
           const dist = Math.hypot(touch.clientX - touchStartX, touch.clientY - touchStartY);
           if (dist > 15 && !isTouchDragging) {
             isTouchDragging = true;
@@ -226,7 +228,8 @@ export async function loadBoard(showArchived: boolean): Promise<void> {
         "touchend",
         (e) => {
           if (!touchDragTaskId) return;
-          const touch = e.changedTouches[0];
+          const te = e as TouchEvent;
+          const touch = te.changedTouches[0];
           if (isTouchDragging) {
             // Find column under the release point
             const dropEl = document.elementFromPoint(touch.clientX, touch.clientY);

@@ -29,7 +29,7 @@ export function renderConfigField(
       const isSecretRef = strVal.startsWith("$secret:");
       const isEnvRef = strVal.startsWith("$env:");
       const isRef = isSecretRef || isEnvRef;
-      const refType = isSecretRef ? "secret" : "env";
+      const refType = isEnvRef ? "env" : "secret";
       const refName = isRef ? strVal.substring(strVal.indexOf(":") + 1) : "";
       const literalVal = isRef ? "" : strVal;
       inputHtml = `
@@ -127,7 +127,7 @@ export function renderConfigField(
       const isSecretRef = strVal.startsWith("$secret:");
       const isEnvRef = strVal.startsWith("$env:");
       const isRef = isSecretRef || isEnvRef;
-      const refType = isSecretRef ? "secret" : "env";
+      const refType = isEnvRef ? "env" : "secret";
       const refName = isRef ? strVal.substring(strVal.indexOf(":") + 1) : "";
       const literalVal = isRef ? "" : strVal;
       inputHtml = `
