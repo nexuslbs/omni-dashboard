@@ -123,12 +123,12 @@ function renderToolsPage(tools: PluginData[], toolMap: Record<string, string[]>)
           ${p.manifest?.label && p.manifest.label !== p.name ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.125rem;">${escapeHtml(p.manifest.label)}</div>` : ""}
         </span>
         <span class="tool-actions" style="display:flex;gap:0.25rem;align-items:center;">
-          <span class="badge ${getStatusBadgeClass(p.status)}">${p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : "● Error"}</span>
+          <span class="badge ${getStatusBadgeClass(p.status, p.needs_build)}">${p.needs_build ? "○ Not Installed" : p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : "● Error"}</span>
           ${p.version ? `<span class="badge badge-info" style="margin-left:0.125rem;">v${escapeHtml(p.version)}</span>` : ""}
           <span class="badge badge-neutral" style="margin-left:0.125rem;">${p.source === "built-in" ? "built-in tool" : `source: ${escapeHtml(p.source)}`}</span>
           ${pluginTools.length > 0 ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">${pluginTools.length} tool${pluginTools.length > 1 ? "s" : ""}</span>` : ""}
           ${p.source !== "built-in" ? `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>` : ""}
-          ${p.status === "enabled" ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>`}
+          ${p.status === "enabled" ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : p.needs_build ? `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>` : `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>`}
           <button type="button" class="plugin-expand-btn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0.25rem;font-size:1rem;" title="Toggle config">▶</button>
         </span>
       </div>
@@ -188,7 +188,8 @@ function renderPluginConfig(p: PluginData): string {
   });
 }
 
-function getStatusBadgeClass(status: string): string {
+function getStatusBadgeClass(status: string, needs_build?: boolean): string {
+  if (needs_build) return "badge-neutral";
   switch (status) {
     case "enabled":
       return "badge-success";
@@ -404,6 +405,32 @@ function wireTools(): void {
       } catch (e) {
         (window as any).showToast?.(
           "Failed to reinstall: " + (e instanceof Error ? e.message : "Unknown"),
+          "error",
+        );
+        btn.textContent = originalText;
+        (btn as HTMLButtonElement).disabled = false;
+      }
+    });
+  });
+
+  // Install buttons (compile + register)
+  document.querySelectorAll(".plugin-install-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const card = (btn as HTMLElement).closest(".card") as HTMLElement;
+      const pluginName = card?.getAttribute("data-plugin-name");
+      if (!pluginName) return;
+
+      const originalText = btn.textContent || "Install";
+      btn.textContent = "Compiling...";
+      (btn as HTMLButtonElement).disabled = true;
+
+      try {
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/install`, {});
+        (window as any).showToast?.("Plugin installed", "success");
+        void loadTools();
+      } catch (e) {
+        (window as any).showToast?.(
+          "Failed to install: " + (e instanceof Error ? e.message : "Unknown"),
           "error",
         );
         btn.textContent = originalText;

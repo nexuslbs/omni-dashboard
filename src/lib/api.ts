@@ -387,6 +387,7 @@ export interface PluginData {
   resolved_env?: Record<string, string>;
   created_at?: string;
   updated_at?: string;
+  needs_build?: boolean;
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
