@@ -77,7 +77,7 @@ function renderActionList(listEl: HTMLElement): void {
       <table class="data-table">
         <thead>
           <tr>
-            <th>Name</th>
+            <th style="min-width:300px">Name</th>
             <th>Tool</th>
             <th>Params</th>
             <th style="text-align:right">Actions</th>
