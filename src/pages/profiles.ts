@@ -287,9 +287,6 @@ function renderToolSelect(profileName: string, selected: string[], allTools: str
       <div class="tool-chip-group" id="${id}" data-profile-name="${escapeHtml(profileName)}">
         ${chips}
       </div>
-      <div style="display:flex;gap:0.375rem;">
-        <button type="button" class="profile-tools-reset btn btn-sm" data-profile-name="${escapeHtml(profileName)}" style="background:rgba(255,255,255,0.1);color:var(--text-secondary);border:1px solid var(--glass-border);border-radius:4px;padding:0.25rem 0.75rem;cursor:pointer;font-size:0.8rem;">Reset to Defaults</button>
-      </div>
     </div>
   `;
 }
@@ -474,30 +471,7 @@ function wireProfiles(): void {
     });
   });
 
-  // Tool reset button
-  document.querySelectorAll(".profile-tools-reset").forEach((btn) => {
-    btn.addEventListener("click", async () => {
-      const profileName = btn.getAttribute("data-profile-name");
-      if (!profileName) return;
-      try {
-        const res = await fetch(`/api/profiles/${encodeURIComponent(profileName)}`, {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ allowed_tools: [] }),
-        });
-        if (!res.ok) {
-          const text = await res.text();
-          throw new Error(text);
-        }
-        await loadProfiles();
-        (window as any).showToast?.("Tools reset to defaults", "success");
-      } catch (e) {
-        (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
-      }
-    });
-  });
-
-  // ── Create Profile button ──
+  // ── Focus / Blur save on inline edits ──
   const createBtn = document.getElementById("create-profile-btn");
   if (createBtn && !createBtn.getAttribute("data-wired")) {
     createBtn.setAttribute("data-wired", "1");
