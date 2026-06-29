@@ -7,8 +7,8 @@ const KANBAN_COLUMNS = [
   { id: "ready", title: "Ready" },
   { id: "running", title: "In Progress" },
   { id: "review", title: "Review" },
-  { id: "done", title: "Done" },
   { id: "blocked", title: "Blocked" },
+  { id: "done", title: "Done" },
 ];
 
 const VALID_STATUSES = new Set(KANBAN_COLUMNS.map((c) => c.id));

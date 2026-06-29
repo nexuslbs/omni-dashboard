@@ -3032,7 +3032,7 @@ a.thread-row {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .kanban-columns {
     grid-template-columns: 1fr;
   }
@@ -3566,7 +3566,7 @@ a.thread-row {
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 900px) {
   .kanban-columns {
     grid-template-columns: 1fr;
   }
