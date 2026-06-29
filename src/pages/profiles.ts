@@ -220,11 +220,11 @@ function renderSkillsList(profileName: string, skills: string[]): string {
 
 /**
  * Extract the toolset name from a display tool name.
- * e.g. "actions:kanban_dispatcher" → "actions", "filesystem:read" → "filesystem"
- * Tools without a colon prefix get their own toolset name.
+ * e.g. "actions_kanban-dispatcher" → "actions", "filesystem_read" → "filesystem"
+ * Tools without an underscore prefix get their own toolset name.
  */
 function toolsetOf(tool: string): string {
-  const idx = tool.indexOf(":");
+  const idx = tool.indexOf("_");
   return idx > 0 ? tool.substring(0, idx) : "_other";
 }
 
@@ -454,7 +454,7 @@ function wireProfiles(): void {
       const allTools: string[] = [];
       allCbs.forEach((cb) => allTools.push(cb.value));
       // Find tools in this toolset
-      const prefix = toolset + ":";
+      const prefix = toolset + "_";
       const toolsInSet = allTools.filter((t) => t.startsWith(prefix));
       if (toolsInSet.length === 0) return;
       // Toggle: if none allowed → allow all; otherwise → disallow all
