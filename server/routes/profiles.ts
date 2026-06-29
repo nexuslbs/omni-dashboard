@@ -93,7 +93,7 @@ async function refreshToolMappings(): Promise<void> {
     const newDisplayToRaw: Record<string, string> = {};
     for (const t of toolsList) {
       const rawName = t.name || t.tool || "";
-      const server = t.server_name || t.source || "";
+      const server = t.server_name || t.source || "builtin";
       const displayName = server ? `${server}:${rawName}` : rawName;
       newDisplayToRaw[displayName] = rawName;
     }
