@@ -4980,7 +4980,14 @@ a.thread-row {
   cursor: not-allowed;
 }
 
-/* ── Actions table buttons hover (hue shift matching btn-danger pattern) ── */
+/* ── Actions table: disabled row mutes text (not buttons) + button hover ── */
+.data-table tr.action-disabled td:not(.actions-cell) {
+  color: #475569 !important;
+}
+.data-table tr.action-disabled td:not(.actions-cell) code,
+.data-table tr.action-disabled td:not(.actions-cell) strong {
+  color: #475569 !important;
+}
 .data-table .actions-cell .action-btn-table:hover:not(:disabled) {
   filter: brightness(1.15);
   transition: filter 0.15s ease;
