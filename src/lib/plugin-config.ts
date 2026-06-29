@@ -253,7 +253,7 @@ export function renderPluginConfig(options: RenderPluginConfigOptions): string {
         <button type="button" class="plugin-save-btn btn-primary" style="background:var(--accent-purple);border:none;color:white;border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;">Save Config</button>
         <button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);">${status === "enabled" ? "Disable" : "Enable"}</button>
         ${extraButtons}
-        ${!isBuiltIn ? `<button type="button" class="plugin-remove-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--accent-rose);">🗑 Remove</button>` : ""}
+        ${!isBuiltIn ? `<button type="button" class="plugin-remove-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--accent-rose);">✕ Remove</button>` : ""}
       </div>
     </div>
   `;

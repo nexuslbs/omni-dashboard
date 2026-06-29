@@ -155,7 +155,7 @@ function showUploadModal(files: File[], existingSet: Set<string>): void {
       <span class="upload-file-name">${f.name}</span>
       <span style="color:var(--text-muted);font-size:0.8rem;flex-shrink:0">${sizeStr}</span>
       ${warnIcon}
-      <button class="upload-file-remove" data-index="${i}" title="Remove file">🗑️</button>
+      <button class="upload-file-remove" data-index="${i}" title="Remove file">✕</button>
     </div>`;
     })
     .join("");
