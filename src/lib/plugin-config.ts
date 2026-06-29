@@ -1,4 +1,5 @@
 import { escapeHtml } from "./helpers";
+import { apiGet } from "./api";
 import type { ConfigField } from "./api";
 
 /**
@@ -54,7 +55,10 @@ export function renderConfigField(
               <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
               <option value="env" ${refType === "env" ? "selected" : ""}>Env Var</option>
             </select>
-            <input type="text" class="ref-name-input filter-input" data-key="${escapeHtml(field.key)}" placeholder="Name..." value="${escapeHtml(refName)}" style="flex:1;" />
+            <input type="text" class="ref-name-input ref-name-text filter-input" data-key="${escapeHtml(field.key)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:1;display:${isRef && refType === "env" ? "block" : "none"};" />
+            <select class="ref-name-input ref-name-select filter-select" data-key="${escapeHtml(field.key)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
+              <option value="">Select secret...</option>
+            </select>
           </div>
           <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.875rem;padding:0.25rem 0.375rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
         </div>
@@ -136,7 +140,10 @@ export function renderConfigField(
               <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
               <option value="env" ${refType === "env" ? "selected" : ""}>Env Var</option>
             </select>
-            <input type="text" class="ref-name-input filter-input" data-key="${escapeHtml(field.key)}" placeholder="Name..." value="${escapeHtml(refName)}" style="flex:1;" />
+            <input type="text" class="ref-name-input ref-name-text filter-input" data-key="${escapeHtml(field.key)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:1;display:${isRef && refType === "env" ? "block" : "none"};" />
+            <select class="ref-name-input ref-name-select filter-select" data-key="${escapeHtml(field.key)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
+              <option value="">Select secret...</option>
+            </select>
           </div>
           <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.875rem;padding:0.25rem 0.375rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
         </div>
@@ -360,9 +367,21 @@ export function wireRefToggles(): void {
         }
         refControls.style.display = "flex";
         const select = refControls.querySelector(".ref-type-select") as HTMLSelectElement;
-        const nameInput = refControls.querySelector(".ref-name-input") as HTMLInputElement;
+        const nameText = refControls.querySelector(".ref-name-text") as HTMLInputElement;
+        const nameSelect = refControls.querySelector(".ref-name-select") as HTMLSelectElement;
         const prefix = select.value === "secret" ? "$secret:" : "$env:";
-        hiddenInput.value = prefix + (nameInput ? nameInput.value : "");
+        // Show the appropriate input based on ref type
+        const isSecretMode = select.value === "secret";
+        if (nameText) {
+          nameText.style.display = isSecretMode ? "none" : "block";
+          nameText.value = "";
+        }
+        if (nameSelect) {
+          nameSelect.style.display = isSecretMode ? "block" : "none";
+          nameSelect.value = "";
+        }
+        const activeInput = isSecretMode ? nameSelect : nameText;
+        hiddenInput.value = prefix + (activeInput ? activeInput.value : "");
         btn.textContent = "\u270F\uFE0F";
         btn.setAttribute("title", "Use literal value");
       }
@@ -373,15 +392,54 @@ export function wireRefToggles(): void {
     });
   });
 
-  // Update hidden input when ref type changes
+  // Update hidden input when ref type changes — also toggle input/select visibility
   document.querySelectorAll(".ref-type-select").forEach((el) => {
+    el.addEventListener("change", (e) => {
+      updateHiddenFromRef(e);
+      // Toggle visibility between text input and secret select
+      const container = (el as HTMLElement).closest(".ref-mode-controls") as HTMLElement;
+      if (!container) return;
+      const isSecret = (el as HTMLSelectElement).value === "secret";
+      const nameText = container.querySelector(".ref-name-text") as HTMLElement;
+      const nameSelect = container.querySelector(".ref-name-select") as HTMLElement;
+      if (nameText) nameText.style.display = isSecret ? "none" : "block";
+      if (nameSelect) nameSelect.style.display = isSecret ? "block" : "none";
+    });
+  });
+
+  // Update hidden input when env var name changes
+  document.querySelectorAll(".ref-name-text").forEach((el) => {
+    el.addEventListener("input", (e) => updateHiddenFromRef(e));
+  });
+
+  // Update hidden input when secret name is selected
+  document.querySelectorAll(".ref-name-select").forEach((el) => {
     el.addEventListener("change", (e) => updateHiddenFromRef(e));
   });
 
-  // Update hidden input when ref name changes
-  document.querySelectorAll(".ref-name-input").forEach((el) => {
-    el.addEventListener("input", (e) => updateHiddenFromRef(e));
-  });
+  // Fetch secrets and populate all secret selects
+  void (async () => {
+    try {
+      const response = await apiGet<any>("/secrets");
+      const secrets: any[] = response.data || [];
+      const secretNames = secrets.map((s: any) => s.name);
+      document.querySelectorAll(".ref-name-select").forEach((sel) => {
+        const select = sel as HTMLSelectElement;
+        const currentVal = select.value;
+        // Keep the first option (empty placeholder)
+        select.innerHTML = '<option value="">Select secret...</option>';
+        for (const name of secretNames) {
+          const opt = document.createElement("option");
+          opt.value = name;
+          opt.textContent = name;
+          if (name === currentVal) opt.selected = true;
+          select.appendChild(opt);
+        }
+      });
+    } catch {
+      // Secrets not available — leave selects with placeholder only
+    }
+  })();
 
   // Sync literal input to hidden input
   document.querySelectorAll(".ref-literal-input").forEach((el) => {
@@ -406,7 +464,10 @@ function updateHiddenFromRef(e: Event): void {
   if (!container) return;
   const hiddenInput = container.querySelector(".plugin-config-input") as HTMLInputElement;
   const select = container.querySelector(".ref-type-select") as HTMLSelectElement;
-  const nameInput = container.querySelector(".ref-name-input") as HTMLInputElement;
+  const isSecret = select ? select.value === "secret" : false;
+  const nameInput = isSecret
+    ? (container.querySelector(".ref-name-select") as HTMLSelectElement)
+    : (container.querySelector(".ref-name-text") as HTMLInputElement);
   const prefix = select ? (select.value === "secret" ? "$secret:" : "$env:") : "";
   if (hiddenInput) {
     hiddenInput.value = prefix + (nameInput ? nameInput.value : "");
