@@ -107,7 +107,7 @@ export function renderTaskCard(task: KanbanTask): string {
     <div class="kanban-card" data-task-id="${task.id}">
       <div class="kanban-card-top">
         <span class="kanban-priority ${priorityClass}">${priorityLabel}</span>
-        <span class="kanban-task-id" style="font-size:0.7rem;color:var(--text-muted);font-family:monospace;">#${task.display_id || task.id}</span>
+        <span class="kanban-task-id" style="font-size:0.7rem;color:var(--text-muted);font-family:monospace;">${task.display_id || task.id}</span>
       </div>
       <div class="kanban-card-title">${escapeHtml(task.title)}</div>
       ${task.body ? `<div class="kanban-card-body">${escapeHtml(task.body).slice(0, 120)}${task.body.length > 120 ? "..." : ""}</div>` : ""}
