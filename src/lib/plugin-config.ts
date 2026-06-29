@@ -56,7 +56,7 @@ export function renderConfigField(
               <option value="env" ${refType === "env" ? "selected" : ""}>Env Var</option>
             </select>
             <input type="text" class="ref-name-input ref-name-text filter-input" data-key="${escapeHtml(field.key)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:1;display:${isRef && refType === "env" ? "block" : "none"};" />
-            <select class="ref-name-input ref-name-select filter-select" data-key="${escapeHtml(field.key)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
+            <select class="ref-name-input ref-name-select filter-select setting-input" data-key="${escapeHtml(field.key)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
               <option value="">Select secret...</option>
             </select>
           </div>
@@ -141,7 +141,7 @@ export function renderConfigField(
               <option value="env" ${refType === "env" ? "selected" : ""}>Env Var</option>
             </select>
             <input type="text" class="ref-name-input ref-name-text filter-input" data-key="${escapeHtml(field.key)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:1;display:${isRef && refType === "env" ? "block" : "none"};" />
-            <select class="ref-name-input ref-name-select filter-select" data-key="${escapeHtml(field.key)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
+            <select class="ref-name-input ref-name-select filter-select setting-input" data-key="${escapeHtml(field.key)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
               <option value="">Select secret...</option>
             </select>
           </div>
