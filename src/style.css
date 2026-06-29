@@ -4980,6 +4980,12 @@ a.thread-row {
   cursor: not-allowed;
 }
 
+/* ── Actions table buttons hover (hue shift matching btn-danger pattern) ── */
+.data-table .actions-cell .action-btn-table:hover:not(:disabled) {
+  filter: brightness(1.15);
+  transition: filter 0.15s ease;
+}
+
 /* ── Custom Enhanced Select (replaces native <select>) ── */
 .custom-select {
   display: inline-flex;
