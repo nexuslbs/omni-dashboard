@@ -71,6 +71,7 @@ Vault secrets manager for API keys and credentials:
 - **Add Secret** modal: key-value form with custom enhanced `<select>` for secret type.
 - **Delete** action with confirmation.
 - Secrets are fetched and stored via the OmniAgent Secrets API (`/api/secrets`).
+- **Plugin config references**: Secrets can be referenced from plugin config forms (Platforms, Tools, Providers) using the prefix `$secret:name`. The secret value is resolved at runtime — the YAML file stores only the reference, never the actual value. See [Plugin Config References](#-secretconfig-field-reference-toggle) below.
 
 ### Profiles (`/profiles`)
 Agent profile management:
@@ -384,3 +385,37 @@ All endpoints are under `/api/`:
 | `/api/fs/list` | GET | List directory contents |
 | `/api/fs/read` | GET | Read file content |
 | `/api/fs/download` | GET | Download file |
+
+---
+
+## Plugin Config References (`$secret:` / `$env:`)
+
+Plugin config forms (Platforms, Tools, Providers) support referencing values from external sources instead of storing them directly. This keeps secrets out of version-controlled YAML and provides a single source of truth for shared values.
+
+### Prefix syntax
+
+| Prefix | Source | Example | Resolution |
+|--------|--------|---------|------------|
+| `$secret:name` | Secrets DB (`/secrets` page) | `$secret:my_telegram_token` | Async DB lookup at API handler level |
+| `$env:VAR_NAME` | Process environment variable | `$env:OPENCODE_GO_API_KEY` | Sync env var read in `build_plugin_detail()` |
+
+### UI toggle
+
+Every string and secret config field has a **🔗** button next to it:
+
+- **Default mode** (🔗) — literal value is entered directly. Works exactly as before.
+- **Reference mode** (✏️) — the field shows a **Secret** / **Env Var** type selector and a **name input**. The value is stored as `$secret:name` or `$env:VAR_NAME`.
+
+Click 🔗 to switch to reference mode. Click ✏️ to switch back to literal mode.
+
+### YAML storage
+
+The YAML file stores the reference string, never the resolved value:
+
+```yaml
+telegram:
+  enabled: true
+  config:
+    bot_token: "$secret:my_telegram_token"
+    polling_interval: 30
+```

@@ -577,6 +577,12 @@ kanbanRouter.post("/tasks/:taskId/dependencies", async (req: Request, res: Respo
       return;
     }
 
+    // A task cannot depend on itself
+    if (taskId === depends_on_id) {
+      res.status(400).json({ error: "A task cannot depend on itself" });
+      return;
+    }
+
     // Check that the dependency task exists
     const depTasks = await queryDb(`SELECT id FROM kanban_tasks WHERE id = $1`, [depends_on_id]);
     if (depTasks.length === 0) {
@@ -586,7 +592,7 @@ kanbanRouter.post("/tasks/:taskId/dependencies", async (req: Request, res: Respo
 
     // Check for circular dependency: if the dependee already depends on taskId
     const circular = await queryDb(
-      `SELECT id FROM kanban_task_dependencies WHERE task_id = $1 AND depends_on_id = $2`,
+      `SELECT task_id FROM kanban_task_dependencies WHERE task_id = $1 AND depends_on_id = $2`,
       [depends_on_id, taskId],
     );
     if (circular.length > 0) {
@@ -594,10 +600,21 @@ kanbanRouter.post("/tasks/:taskId/dependencies", async (req: Request, res: Respo
       return;
     }
 
+    // Check for duplicate dependency
+    const existing = await queryDb(
+      `SELECT task_id FROM kanban_task_dependencies WHERE task_id = $1 AND depends_on_id = $2`,
+      [taskId, depends_on_id],
+    );
+    if (existing.length > 0) {
+      res
+        .status(400)
+        .json({ error: `Duplicate dependency: task '${taskId}' already depends on '${depends_on_id}'` });
+      return;
+    }
+
     await queryDb(
       `INSERT INTO kanban_task_dependencies (task_id, depends_on_id)
-       VALUES ($1, $2)
-       ON CONFLICT (task_id, depends_on_id) DO NOTHING`,
+       VALUES ($1, $2)`,
       [taskId, depends_on_id],
     );
 

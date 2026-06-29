@@ -202,7 +202,7 @@ async function showActionModal(existing: Action | null): Promise<void> {
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" id="modal-cancel">Cancel</button>
-        <button class="btn btn-primary" id="modal-save" disabled>${isEdit ? "Update" : "Create"}</button>
+        <button class="btn btn-primary" id="modal-save" disabled style="background:var(--accent-purple,#8b5cf6);border:none;">${isEdit ? "Update" : "Create"}</button>
       </div>
     </div>
   `;

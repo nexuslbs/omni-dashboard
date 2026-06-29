@@ -5,6 +5,7 @@ import {
   renderPluginConfig as sharedRenderPluginConfig,
   getCurrentConfig,
   dirtyCheckSaveButton,
+  wireRefToggles,
 } from "../lib/plugin-config";
 
 export function renderTools(container: HTMLElement): void {
@@ -197,6 +198,9 @@ function getStatusBadgeClass(status: string): string {
 }
 
 function wireTools(): void {
+  // ── Ref toggles for $secret:/$env: references ──
+  wireRefToggles();
+
   // Expand/collapse cards
   document.querySelectorAll(".plugin-expand-btn").forEach((btn) => {
     btn.addEventListener("click", (e) => {

@@ -41,9 +41,9 @@ const STATUS_COLORS: Record<string, string> = {
   completed: COLORS.emerald,
   failed: COLORS.rose,
   skipped: COLORS.muted,
-  interrupted: COLORS.amber,
+  interrupted: COLORS.purple,
   pending: COLORS.blue,
-  processing: COLORS.cyan,
+  processing: COLORS.amber,
 };
 
 function overviewStatusBadgeStyle(status: string): string {
@@ -60,7 +60,7 @@ function overviewStatusBadgeStyle(status: string): string {
             : s === "skipped"
               ? "#64748b"
               : s === "interrupted"
-                ? "#f59e0b"
+                ? "#8b5cf6"
                 : "#64748b";
   return `--type-color:${color};background:${color}22;border-color:${color}44;color:${color}`;
 }

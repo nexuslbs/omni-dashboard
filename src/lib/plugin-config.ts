@@ -22,26 +22,45 @@ export function renderConfigField(
   let inputHtml: string;
 
   switch (field.type) {
-    case "secret":
+    case "secret": {
+      const strVal = String(value ?? "");
+      const isSecretRef = strVal.startsWith("$secret:");
+      const isEnvRef = strVal.startsWith("$env:");
+      const isRef = isSecretRef || isEnvRef;
+      const refType = isSecretRef ? "secret" : "env";
+      const refName = isRef ? strVal.substring(strVal.indexOf(":") + 1) : "";
+      const literalVal = isRef ? "" : strVal;
       inputHtml = `
-        <div class="setting-secret-wrapper">
-          <input type="password" id="${fieldId}" class="filter-input setting-input setting-secret-input plugin-config-input"
-            value="${escapeHtml(String(value ?? ""))}" data-key="${escapeHtml(field.key)}" style="flex:1;" />
-          <button type="button" class="setting-secret-copy" title="Copy to clipboard" data-target="${fieldId}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-            </svg>
-          </button>
-          <button type="button" class="setting-secret-toggle" title="Toggle visibility" data-target="${fieldId}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-              <circle cx="12" cy="12" r="3"/>
-            </svg>
-          </button>
+        <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;">
+          <input type="hidden" class="plugin-config-input" data-key="${escapeHtml(field.key)}" value="${escapeHtml(strVal)}" />
+          <div class="ref-literal-mode" style="display:${isRef ? "none" : "flex"};flex:1;gap:0.25rem;align-items:center;">
+            <input type="password" id="${fieldId}" class="filter-input setting-input setting-secret-input ref-literal-input"
+              value="${escapeHtml(literalVal)}" data-key="${escapeHtml(field.key)}" style="flex:1;" />
+            <button type="button" class="setting-secret-copy" title="Copy to clipboard" data-target="${fieldId}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
+                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
+              </svg>
+            </button>
+            <button type="button" class="setting-secret-toggle" title="Toggle visibility" data-target="${fieldId}">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
+            <select class="ref-type-select" data-key="${escapeHtml(field.key)}" style="width:auto;padding:0.375rem 0.5rem;border-radius:4px;background:var(--bg-primary,#1e1e2e);color:var(--text-primary);border:1px solid var(--glass-border,rgba(255,255,255,0.1));">
+              <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
+              <option value="env" ${refType === "env" ? "selected" : ""}>Env Var</option>
+            </select>
+            <input type="text" class="ref-name-input filter-input" data-key="${escapeHtml(field.key)}" placeholder="Name..." value="${escapeHtml(refName)}" style="flex:1;" />
+          </div>
+          <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.875rem;padding:0.25rem 0.375rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
         </div>
       `;
       break;
+    }
     case "boolean":
       inputHtml = `
         <label class="checkbox-label" style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
@@ -97,12 +116,33 @@ export function renderConfigField(
       `;
       break;
     }
-    default: // string
+    default: {
+      // string
+      const strVal = String(value ?? "");
+      const isSecretRef = strVal.startsWith("$secret:");
+      const isEnvRef = strVal.startsWith("$env:");
+      const isRef = isSecretRef || isEnvRef;
+      const refType = isSecretRef ? "secret" : "env";
+      const refName = isRef ? strVal.substring(strVal.indexOf(":") + 1) : "";
+      const literalVal = isRef ? "" : strVal;
       inputHtml = `
-        <input type="text" id="${fieldId}" class="filter-input setting-input plugin-config-input"
-          value="${escapeHtml(String(value ?? ""))}" data-key="${escapeHtml(field.key)}" style="flex:1;" />
+        <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;">
+          <input type="hidden" class="plugin-config-input" data-key="${escapeHtml(field.key)}" value="${escapeHtml(strVal)}" />
+          <input type="text" id="${fieldId}" class="filter-input setting-input ref-literal-input"
+            value="${escapeHtml(literalVal)}" data-key="${escapeHtml(field.key)}" placeholder="Literal value..."
+            style="flex:1;display:${isRef ? "none" : "block"};" />
+          <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
+            <select class="ref-type-select" data-key="${escapeHtml(field.key)}" style="width:auto;padding:0.375rem 0.5rem;border-radius:4px;background:var(--bg-primary,#1e1e2e);color:var(--text-primary);border:1px solid var(--glass-border,rgba(255,255,255,0.1));">
+              <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
+              <option value="env" ${refType === "env" ? "selected" : ""}>Env Var</option>
+            </select>
+            <input type="text" class="ref-name-input filter-input" data-key="${escapeHtml(field.key)}" placeholder="Name..." value="${escapeHtml(refName)}" style="flex:1;" />
+          </div>
+          <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.875rem;padding:0.25rem 0.375rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
+        </div>
       `;
       break;
+    }
   }
 
   return `
@@ -162,12 +202,38 @@ export function renderPluginConfig(options: RenderPluginConfigOptions): string {
   const fieldsHtml = schema
     .map((field) => {
       const envVal = resolvedEnv[field.key];
-      const currentVal =
-        values[field.key] !== undefined ? values[field.key] : (envVal ?? field.default ?? "");
-      const envBadge =
-        envVal !== undefined && (values[field.key] === undefined || values[field.key] === "")
-          ? '<span class="badge badge-info" style="margin-left:0.375rem;font-size:0.65rem;vertical-align:middle;">env</span>'
+      const isFromEnv = envVal !== undefined && (values[field.key] === undefined || values[field.key] === "");
+      const currentVal = isFromEnv
+        ? envVal
+        : values[field.key] !== undefined
+          ? values[field.key]
+          : (field.default ?? "");
+      const envBadge = isFromEnv
+        ? '<span class="badge badge-info" style="margin-left:0.375rem;font-size:0.65rem;vertical-align:middle;">env</span>'
+        : "";
+
+      // When the field value comes from an environment variable (not user-configured),
+      // render it as read-only — no ref-toggle, no edit controls.
+      if (isFromEnv) {
+        const requiredMark = field.required
+          ? '<span style="color:var(--accent-rose);margin-left:0.125rem;">*</span>'
           : "";
+        const descHtml = field.description
+          ? `<div class="setting-description">${escapeHtml(field.description)}</div>`
+          : "";
+        return `<div class="setting-row" data-field-key="${escapeHtml(field.key)}">
+          <div class="setting-label">
+            <div class="setting-name">${escapeHtml(field.label)}${requiredMark}${envBadge}</div>
+            ${descHtml}
+          </div>
+          <div class="setting-controls">
+            <div class="setting-input-group" style="font-size:0.85rem;padding:0.5rem 0;color:var(--text-muted);">
+              Set via environment variable
+            </div>
+          </div>
+        </div>`;
+      }
+
       return renderConfigField(field, currentVal, pluginName, envBadge);
     })
     .join("");
@@ -252,4 +318,99 @@ export function dirtyCheckSaveButton(
   const isDirty = JSON.stringify(current) !== JSON.stringify(saved);
   saveBtn.style.opacity = isDirty ? "1" : "0.4";
   saveBtn.style.pointerEvents = isDirty ? "auto" : "none";
+}
+
+/**
+ * Wire up ref toggle buttons and inputs for $secret:/$env: reference mode.
+ * Call this after rendering config forms (e.g. in wirePlatforms, wireTools, wireProviders).
+ */
+export function wireRefToggles(): void {
+  // Toggle between literal mode and ref mode
+  document.querySelectorAll(".ref-toggle-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const container = (btn as HTMLElement).closest(".ref-toggle-container") as HTMLElement;
+      if (!container) return;
+
+      const hiddenInput = container.querySelector(".plugin-config-input") as HTMLInputElement;
+      const literalInput = container.querySelector(".ref-literal-input") as HTMLInputElement;
+      const literalMode = container.querySelector(".ref-literal-mode") as HTMLElement;
+      const refControls = container.querySelector(".ref-mode-controls") as HTMLElement;
+
+      const isRefMode = refControls.style.display !== "none";
+
+      if (isRefMode) {
+        // Switch to literal mode
+        if (literalMode) {
+          literalMode.style.display = "flex";
+        }
+        if (literalInput) {
+          literalInput.style.display = "block";
+        }
+        refControls.style.display = "none";
+        hiddenInput.value = literalInput ? literalInput.value : "";
+        btn.textContent = "\uD83D\uDD17";
+        btn.setAttribute("title", "Use secret/env ref");
+      } else {
+        // Switch to ref mode
+        if (literalMode) {
+          literalMode.style.display = "none";
+        }
+        if (literalInput) {
+          literalInput.style.display = "none";
+        }
+        refControls.style.display = "flex";
+        const select = refControls.querySelector(".ref-type-select") as HTMLSelectElement;
+        const nameInput = refControls.querySelector(".ref-name-input") as HTMLInputElement;
+        const prefix = select.value === "secret" ? "$secret:" : "$env:";
+        hiddenInput.value = prefix + (nameInput ? nameInput.value : "");
+        btn.textContent = "\u270F\uFE0F";
+        btn.setAttribute("title", "Use literal value");
+      }
+
+      // Notify for dirty checking
+      hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
+      hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  });
+
+  // Update hidden input when ref type changes
+  document.querySelectorAll(".ref-type-select").forEach((el) => {
+    el.addEventListener("change", (e) => updateHiddenFromRef(e));
+  });
+
+  // Update hidden input when ref name changes
+  document.querySelectorAll(".ref-name-input").forEach((el) => {
+    el.addEventListener("input", (e) => updateHiddenFromRef(e));
+  });
+
+  // Sync literal input to hidden input
+  document.querySelectorAll(".ref-literal-input").forEach((el) => {
+    el.addEventListener("input", () => {
+      const input = el as HTMLInputElement;
+      const container = input.closest(".ref-toggle-container") as HTMLElement;
+      if (!container) return;
+      const hiddenInput = container.querySelector(".plugin-config-input") as HTMLInputElement;
+      if (hiddenInput) {
+        hiddenInput.value = input.value;
+        // Notify for dirty checking
+        hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
+        hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    });
+  });
+}
+
+function updateHiddenFromRef(e: Event): void {
+  const el = e.target as HTMLElement;
+  const container = el.closest(".ref-toggle-container") as HTMLElement;
+  if (!container) return;
+  const hiddenInput = container.querySelector(".plugin-config-input") as HTMLInputElement;
+  const select = container.querySelector(".ref-type-select") as HTMLSelectElement;
+  const nameInput = container.querySelector(".ref-name-input") as HTMLInputElement;
+  const prefix = select ? (select.value === "secret" ? "$secret:" : "$env:") : "";
+  if (hiddenInput) {
+    hiddenInput.value = prefix + (nameInput ? nameInput.value : "");
+    hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
+    hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+  }
 }

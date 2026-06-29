@@ -477,8 +477,8 @@ function renderDepsTable(task: any): void {
   tbody.innerHTML = deps
     .map(
       (dep: any) =>
-        `<tr data-dep-id="${escapeHtml(dep.id)}" style="border-bottom:1px solid var(--glass-border,rgba(255,255,255,0.06));">
-          <td style="padding:0.4rem 0.5rem;"><code style="font-size:0.75rem;color:var(--accent-cyan);">${escapeHtml(dep.id)}</code></td>
+        `<tr data-dep-id="${escapeHtml(dep.depends_on_id || dep.id)}" style="border-bottom:1px solid var(--glass-border,rgba(255,255,255,0.06));">
+          <td style="padding:0.4rem 0.5rem;"><code style="font-size:0.75rem;color:var(--accent-cyan);">${escapeHtml(dep.depends_on_id || dep.id)}</code></td>
           <td style="padding:0.4rem 0.5rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary);">${escapeHtml(dep.title || "")}</td>
           <td style="padding:0.4rem 0.5rem;">${
             (dep as any).archived
@@ -499,12 +499,19 @@ function wireDepsAdd(taskId: string): void {
   const btn = document.getElementById("dep-add-btn");
   if (!input || !btn) return;
 
+  // Replace button to clear any stale listeners accumulated from reloads
+  const newBtn = btn.cloneNode(true) as HTMLElement;
+  btn.parentNode?.replaceChild(newBtn, btn);
+  // Reset to initial state — the button may have been cloned mid-"Adding..."
+  (newBtn as HTMLButtonElement).textContent = "+ Add";
+  newBtn.removeAttribute("disabled");
+
   const handler = async () => {
     const depId = input.value.trim();
     if (!depId) return;
-    btn.setAttribute("disabled", "true");
-    const original = (btn as HTMLButtonElement).textContent;
-    (btn as HTMLButtonElement).textContent = "Adding...";
+    newBtn.setAttribute("disabled", "true");
+    const original = (newBtn as HTMLButtonElement).textContent;
+    (newBtn as HTMLButtonElement).textContent = "Adding...";
     try {
       const res = await fetch(`/api/kanban/tasks/${encodeURIComponent(taskId)}/dependencies`, {
         method: "POST",
@@ -521,12 +528,12 @@ function wireDepsAdd(taskId: string): void {
     } catch (e: any) {
       (window as any).showToast?.("Failed: " + (e.message || "Unknown"), "error");
     } finally {
-      (btn as HTMLButtonElement).textContent = original;
-      btn.removeAttribute("disabled");
+      (newBtn as HTMLButtonElement).textContent = original;
+      newBtn.removeAttribute("disabled");
     }
   };
 
-  btn.addEventListener("click", handler);
+  newBtn.addEventListener("click", handler);
   input.addEventListener("keydown", (e) => {
     if (e.key === "Enter") void handler();
   });
@@ -582,6 +589,9 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
         <span id="deps-count" style="font-size:0.8rem;color:var(--text-muted);"></span>
       </div>
       <div class="card-body">
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.75rem;line-height:1.4;">
+          A dependency blocks this task from being dispatched until the dependee task is completed. Add the dependee task's ID below.
+        </div>
         <div style="display:flex;gap:0.5rem;margin-bottom:1rem;">
           <input type="text" id="dep-add-input" placeholder="Task ID..." style="flex:1;padding:0.375rem 0.625rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.8rem;font-family:monospace;" />
           <button id="dep-add-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;white-space:nowrap;">+ Add</button>
