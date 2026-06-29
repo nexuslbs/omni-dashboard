@@ -102,6 +102,23 @@ All cron schedules in the dashboard use the **5-field Linux format**: `min hour 
 
 The default schedule value in the create modal is `0 0 * * *` (daily at midnight). The help box in `src/lib/schedule-detail.ts` (lines 384-395) documents this format.
 
+## Plugin Config References
+
+Plugin config values (in `platforms.yml`, `tools.yml`, `providers.yml`) support prefix-based references:
+
+- `$secret:name` — load from the secrets DB (`/secrets` page). The YAML stores only the reference, never the actual value.
+- `$env:VAR_NAME` — load from the process environment variable.
+
+These work in any string or secret config field. The dashboard shows a 🔗 toggle on each field to switch between literal mode and reference mode.
+
+Example `platforms.yml`:
+```yaml
+telegram:
+  enabled: true
+  config:
+    bot_token: "$secret:my_telegram_token"
+```
+
 ## Channel Template Field
 
 Channels now support a `template` field (TEXT column `channels.template`). When set:
