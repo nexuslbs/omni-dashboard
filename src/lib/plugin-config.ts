@@ -1,5 +1,6 @@
 import { escapeHtml } from "./helpers";
 import { apiGet } from "./api";
+import { enhanceSelectElement } from "./dropdown";
 import type { ConfigField } from "./api";
 
 /**
@@ -51,7 +52,7 @@ export function renderConfigField(
             </button>
           </div>
           <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
-            <select class="ref-type-select" data-key="${escapeHtml(field.key)}" style="width:auto;padding:0.375rem 0.5rem;border-radius:4px;background:var(--bg-primary,#1e1e2e);color:var(--text-primary);border:1px solid var(--glass-border,rgba(255,255,255,0.1));">
+            <select class="ref-type-select filter-select setting-input" data-key="${escapeHtml(field.key)}">
               <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
               <option value="env" ${refType === "env" ? "selected" : ""}>Env Var</option>
             </select>
@@ -136,7 +137,7 @@ export function renderConfigField(
             value="${escapeHtml(literalVal)}" data-key="${escapeHtml(field.key)}" placeholder="Literal value..."
             style="flex:1;display:${isRef ? "none" : "block"};" />
           <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
-            <select class="ref-type-select" data-key="${escapeHtml(field.key)}" style="width:auto;padding:0.375rem 0.5rem;border-radius:4px;background:var(--bg-primary,#1e1e2e);color:var(--text-primary);border:1px solid var(--glass-border,rgba(255,255,255,0.1));">
+            <select class="ref-type-select filter-select setting-input" data-key="${escapeHtml(field.key)}">
               <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
               <option value="env" ${refType === "env" ? "selected" : ""}>Env Var</option>
             </select>
@@ -403,7 +404,14 @@ export function wireRefToggles(): void {
       const nameText = container.querySelector(".ref-name-text") as HTMLElement;
       const nameSelect = container.querySelector(".ref-name-select") as HTMLElement;
       if (nameText) nameText.style.display = isSecret ? "none" : "block";
-      if (nameSelect) nameSelect.style.display = isSecret ? "block" : "none";
+      if (nameSelect) {
+        nameSelect.style.display = isSecret ? "block" : "none";
+        // Also toggle the enhanced dropdown wrapper if present
+        const wrapper = nameSelect.nextElementSibling as HTMLElement | null;
+        if (wrapper && wrapper.classList.contains("custom-select")) {
+          wrapper.style.display = isSecret ? "block" : "none";
+        }
+      }
     });
   });
 
@@ -455,6 +463,13 @@ export function wireRefToggles(): void {
         hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
       }
     });
+  });
+
+  // Enhance native selects in ref-mode-controls to custom dropdowns
+  document.querySelectorAll(".ref-type-select, .ref-name-select").forEach((el) => {
+    if (el.tagName === "SELECT") {
+      enhanceSelectElement(el as HTMLSelectElement);
+    }
   });
 }
 
