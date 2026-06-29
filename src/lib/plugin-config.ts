@@ -378,7 +378,15 @@ export function wireRefToggles(): void {
           nameText.value = "";
         }
         if (nameSelect) {
-          nameSelect.style.display = isSecretMode ? "block" : "none";
+          // Don't toggle native select — enhanceSelectElement hides it permanently.
+          // Toggle the enhanced wrapper instead.
+          const wrapper = nameSelect.nextElementSibling as HTMLElement | null;
+          const isEnhanced = wrapper && wrapper.classList.contains("custom-select");
+          if (isEnhanced) {
+            wrapper.style.display = isSecretMode ? "block" : "none";
+          } else {
+            nameSelect.style.display = isSecretMode ? "block" : "none";
+          }
           nameSelect.value = "";
         }
         const activeInput = isSecretMode ? nameSelect : nameText;
@@ -405,11 +413,14 @@ export function wireRefToggles(): void {
       const nameSelect = container.querySelector(".ref-name-select") as HTMLElement;
       if (nameText) nameText.style.display = isSecret ? "none" : "block";
       if (nameSelect) {
-        nameSelect.style.display = isSecret ? "block" : "none";
-        // Also toggle the enhanced dropdown wrapper if present
+        // Don't toggle native select — enhanceSelectElement hides it permanently.
+        // Toggle the enhanced wrapper instead.
         const wrapper = nameSelect.nextElementSibling as HTMLElement | null;
-        if (wrapper && wrapper.classList.contains("custom-select")) {
+        const isEnhanced = wrapper && wrapper.classList.contains("custom-select");
+        if (isEnhanced) {
           wrapper.style.display = isSecret ? "block" : "none";
+        } else {
+          nameSelect.style.display = isSecret ? "block" : "none";
         }
       }
     });
@@ -468,7 +479,15 @@ export function wireRefToggles(): void {
   // Enhance native selects in ref-mode-controls to custom dropdowns
   document.querySelectorAll(".ref-type-select, .ref-name-select").forEach((el) => {
     if (el.tagName === "SELECT") {
-      enhanceSelectElement(el as HTMLSelectElement);
+      const select = el as HTMLSelectElement;
+      // Save intended visibility before enhance hides the native select
+      const wasVisible = select.style.display !== "none";
+      enhanceSelectElement(select);
+      // Sync wrapper visibility to match the intended state
+      const wrapper = select.nextElementSibling as HTMLElement | null;
+      if (wrapper && wrapper.classList.contains("custom-select")) {
+        wrapper.style.display = wasVisible ? "block" : "none";
+      }
     }
   });
 }
