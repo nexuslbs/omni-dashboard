@@ -55,7 +55,7 @@ async function loadTools(): Promise<void> {
     for (const t of toolsList) {
       const server = t.server_name || t.source || "unknown";
       if (!toolMap[server]) toolMap[server] = [];
-      toolMap[server].push(t.name || t.tool || "?");
+      toolMap[server].push(t.full_name || t.name || t.tool || "?");
     }
 
     // Build final list: built-in + plugin tools
@@ -142,7 +142,7 @@ function renderToolsPage(tools: PluginData[], toolMap: Record<string, string[]>)
 }
 
 function renderPluginTools(pluginName: string, tools: string[]): string {
-  // Strip the server/plugin prefix (e.g. "test-python-tool.echo" → "echo")
+  // Strip the server/plugin prefix (e.g. "test-python-tool-echo" → "echo")
   // Some servers use "." separator, others use ":" — handle both.
   // Also try alternate separator variant (hyphens ↔ underscores) in case
   // the plugin name differs from the MCP server name registered in the tool.
@@ -154,6 +154,8 @@ function renderPluginTools(pluginName: string, tools: string[]): string {
       if (tool.startsWith(dotPrefix)) return tool.slice(dotPrefix.length);
       const colonPrefix = name + ":";
       if (tool.startsWith(colonPrefix)) return tool.slice(colonPrefix.length);
+      const underscorePrefix = name + "_";
+      if (tool.startsWith(underscorePrefix)) return tool.slice(underscorePrefix.length);
     }
     return tool;
   };
