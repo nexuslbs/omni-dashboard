@@ -294,7 +294,7 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
     }
 
     el.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="detail-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
         <div>
           <div class="detail-label">ID</div>
           <div><code>#${task.display_id || task.id}</code></div>

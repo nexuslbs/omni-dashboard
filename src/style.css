@@ -3038,6 +3038,13 @@ a.thread-row {
   }
 }
 
+/* ── Detail grids: 2 columns → 1 column below 900px ── */
+@media (max-width: 899px) {
+  .detail-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
 .kanban-column {
   background: var(--glass-bg);
   border: 1px solid var(--glass-border);
@@ -3569,6 +3576,13 @@ a.thread-row {
 @media (max-width: 900px) {
   .kanban-columns {
     grid-template-columns: 1fr;
+  }
+}
+
+/* ── Detail grids: 2 columns → 1 column below 900px ── */
+@media (max-width: 899px) {
+  .detail-grid {
+    grid-template-columns: 1fr !important;
   }
 }
 

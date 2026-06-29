@@ -108,7 +108,7 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
     if (detailEl) detailEl.textContent = `Job: ${escapeHtml(job.name || job.id)}`;
 
     el.innerHTML = `
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
+      <div class="detail-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
         <div>
           <div style="margin-bottom:0.75rem;">
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Name</div>
