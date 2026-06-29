@@ -72,72 +72,41 @@ function readProfileConfig(name: string): {
 
 /**
  * Map from display name (with `:`) to the raw config key (underscore).
- * e.g. "filesystem:read" → "filesystem_read" so the config stores the
- * actual MCP tool name that the backend's allowed() filter uses.
+ * Built dynamically from the MCP tools API so it always matches actual server names.
+ * e.g. "skills:create_skill" → "create_skill" stores the actual MCP tool name.
  */
-const DISPLAY_TO_RAW: Record<string, string> = {
-  // Filesystem
-  "filesystem:read": "filesystem_read",
-  "filesystem:write": "filesystem_write",
-  "filesystem:list": "filesystem_list",
-  "filesystem:search": "filesystem_search",
-  "filesystem:info": "filesystem_info",
-  // Web / Fetch
-  "web:fetch": "fetch",
-  // Search
-  "agent:search_messages": "search_messages",
-  "agent:search_wiki": "search_wiki",
-  // Skills
-  "tools:create_skill": "create_skill",
-  // Memory
-  "memory:promote_to_memory": "promote_to_memory",
-  "memory:list_memories": "list_memories",
-  "memory:review_memories": "review_memories",
-  "memory:manage_memory": "manage_memory",
-  // Cron
-  "cron:create_cron_job": "create_cron_job",
-  "cron:list_cron_jobs": "list_cron_jobs",
-  "cron:delete_cron_job": "delete_cron_job",
-  "cron:update_cron_job": "update_cron_job",
-  // Kanban
-  "kanban:create_kanban_task": "create_kanban_task",
-  "kanban:list_kanban_tasks": "list_kanban_tasks",
-  "kanban:update_kanban_task": "update_kanban_task",
-  "kanban:delete_kanban_task": "delete_kanban_task",
-  "kanban:add_kanban_dependency": "add_kanban_dependency",
-  "kanban:remove_kanban_dependency": "remove_kanban_dependency",
-  // Git
-  "git:create_github_repo": "create_github_repo",
-  "git:clone_repo": "clone_repo",
-  "git:commit_and_push": "commit_and_push",
-  "git:status": "status",
-  // Docker
-  "docker:compose": "docker_compose",
-  // Query / Metrics / Plugin manager
-  "data:query_database": "query_database",
-  "system:get_metrics": "get_metrics",
-  "system:plugin_manager": "plugin_manager",
-  // Subtasks
-  "subtasks:add_subtask": "add_subtask",
-  "subtasks:list_subtasks": "list_subtasks",
-  "subtasks:update_subtask": "update_subtask",
-  "subtasks:delete_subtask": "delete_subtask",
-  "subtasks:get_subtask_counts": "get_subtask_counts",
-  // Hindsight
-  "hindsight:recall": "hindsight_recall",
-  "hindsight:retain": "hindsight_retain",
-  "hindsight:reflect": "hindsight_reflect",
-  // Built-in actions
-  "actions:kanban_dispatcher": "kanban_dispatcher",
-  "actions:relevance_indexer": "relevance_indexer",
-  "actions:hindsight_populator": "hindsight_populator",
-  "actions:setup_knowledge_pipeline": "setup_knowledge_pipeline",
-};
+let DISPLAY_TO_RAW: Record<string, string> = {};
+let RAW_TO_DISPLAY: Record<string, string> = {};
+let toolMapLastFetch = 0;
+const TOOL_MAP_TTL = 300_000; // 5 min cache
 
-/** Reverse map: raw name → display name */
-const RAW_TO_DISPLAY: Record<string, string> = {};
-for (const [display, raw] of Object.entries(DISPLAY_TO_RAW)) {
-  RAW_TO_DISPLAY[raw] = display;
+/** Fetch MCP tools from omniagent and rebuild display↔raw mappings. */
+async function refreshToolMappings(): Promise<void> {
+  const now = Date.now();
+  if (now - toolMapLastFetch < TOOL_MAP_TTL && Object.keys(DISPLAY_TO_RAW).length > 0) return;
+  try {
+    const omniagentUrl = process.env.OMNIAGENT_URL || "http://omniagent:8080";
+    const response = await fetch(`${omniagentUrl}/mcp/tools`);
+    if (!response.ok) return;
+    const data: any = await response.json();
+    const toolsList: any[] = Array.isArray(data) ? data : data?.tools || data?.data || [];
+    const newDisplayToRaw: Record<string, string> = {};
+    for (const t of toolsList) {
+      const rawName = t.name || t.tool || "";
+      const server = t.server_name || t.source || "";
+      const displayName = server ? `${server}:${rawName}` : rawName;
+      newDisplayToRaw[displayName] = rawName;
+    }
+    DISPLAY_TO_RAW = newDisplayToRaw;
+    const newRawToDisplay: Record<string, string> = {};
+    for (const [display, raw] of Object.entries(DISPLAY_TO_RAW)) {
+      newRawToDisplay[raw] = display;
+    }
+    RAW_TO_DISPLAY = newRawToDisplay;
+    toolMapLastFetch = now;
+  } catch {
+    // keep existing mappings on error
+  }
 }
 
 /** Normalize an array of tool names: convert display names to raw names for storage. */
@@ -151,15 +120,19 @@ function toDisplayNames(tools: string[] | null): string[] {
   return tools.map((t) => RAW_TO_DISPLAY[t] || t);
 }
 
-/** All known tools in display format (with server:name prefix) */
-const ALL_TOOLS = Object.keys(DISPLAY_TO_RAW).sort();
+/** All known tools in display format (with server:name prefix), built from MCP tools API. */
+async function getAllTools(): Promise<string[]> {
+  await refreshToolMappings();
+  return Object.keys(DISPLAY_TO_RAW).sort();
+}
 
 // ── Routes ──
 
 // GET /api/profiles
-profilesRouter.get("/", (_req, res) => {
+profilesRouter.get("/", async (_req, res) => {
   try {
     const names = listFsProfiles();
+    const allTools = await getAllTools();
     const result = names.map((name) => {
       const config = readProfileConfig(name);
       return {
@@ -168,7 +141,7 @@ profilesRouter.get("/", (_req, res) => {
         model: config.model,
         allowed_tools: toDisplayNames(config.allowed_tools as any),
         skills: readProfileSkills(name),
-        all_tools: ALL_TOOLS, // for multi-select display
+        all_tools: allTools, // for multi-select display
       };
     });
     res.json(result);
@@ -179,7 +152,7 @@ profilesRouter.get("/", (_req, res) => {
 });
 
 // POST /api/profiles — create a new profile
-profilesRouter.post("/", (req, res) => {
+profilesRouter.post("/", async (req, res) => {
   try {
     const { name, provider, model } = req.body as any;
 
@@ -229,7 +202,7 @@ profilesRouter.post("/", (req, res) => {
         model: config.model,
         allowed_tools: [],
         skills: [],
-        all_tools: ALL_TOOLS,
+        all_tools: await getAllTools(),
       },
     });
   } catch (err) {
