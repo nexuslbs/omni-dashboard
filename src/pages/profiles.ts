@@ -61,6 +61,13 @@ async function loadProfiles(): Promise<void> {
     }
 
     content.innerHTML = renderProfilesPage(profiles);
+    // Build tool→server_name lookup from first profile's all_tool_details
+    if (profiles && profiles.length > 0 && profiles[0].all_tool_details) {
+      _toolServerMap = {};
+      for (const td of profiles[0].all_tool_details) {
+        _toolServerMap[td.name] = td.server_name || "builtin";
+      }
+    }
     wireProfiles();
     // Enhance provider and model selects
     document.querySelectorAll("#profiles-content select").forEach((el) => {
@@ -219,14 +226,21 @@ function renderSkillsList(profileName: string, skills: string[]): string {
 }
 
 /**
- * Extract the toolset name from a display tool name.
- * e.g. "actions_kanban-dispatcher" → "actions", "filesystem_read" → "filesystem"
- * Tools without an underscore prefix get their own toolset name.
+ * Extract the toolset name from a tool's server_name.
+ * Uses the all_tool_details lookup map which maps each tool name
+ * to its server_name from the MCP API (e.g. "test-rust-tool-2_hello" → "test-rust-tool-2").
+ * Tools with no server (builtin) → "builtin".
  */
 function toolsetOf(tool: string): string {
+  const server = _toolServerMap[tool];
+  if (server) return server;
+  // Fallback: extract prefix before first underscore (for backward compat)
   const idx = tool.indexOf("_");
-  return idx > 0 ? tool.substring(0, idx) : "_other";
+  return idx > 0 ? tool.substring(0, idx) : "builtin";
 }
+
+// Lookup: full tool name → server_name (populated from profile data)
+let _toolServerMap: Record<string, string> = {};
 
 /**
  * Given allowed tools and all tools, compute each toolset's state:
@@ -453,14 +467,25 @@ function wireProfiles(): void {
       ) as NodeListOf<HTMLInputElement>;
       const allTools: string[] = [];
       allCbs.forEach((cb) => allTools.push(cb.value));
-      // Find tools in this toolset
-      const prefix = toolset + "_";
-      const toolsInSet = allTools.filter((t) => t.startsWith(prefix));
+      // Find tools in this toolset: match by server_name in _toolServerMap,
+      // with underscore-prefix fallback for backward compatibility
+      const toolsInSet = allTools.filter((t) => {
+        const mapped = _toolServerMap[t];
+        if (mapped) return mapped === toolset;
+        // Fallback: check underscore prefix (e.g. "filesystem_read" → "filesystem")
+        const idx = t.indexOf("_");
+        return idx > 0 ? t.substring(0, idx) === toolset : toolset === "builtin";
+      });
       if (toolsInSet.length === 0) return;
       // Toggle: if none allowed → allow all; otherwise → disallow all
       const shouldEnable = currentState === "none";
       allCbs.forEach((cb) => {
-        if (cb.value.startsWith(prefix)) {
+        const t = cb.value;
+        const mapped = _toolServerMap[t];
+        const matches = mapped
+          ? mapped === toolset
+          : t.startsWith(toolset + "_") || (toolset === "builtin" && t.indexOf("_") <= 0);
+        if (matches) {
           cb.checked = shouldEnable;
         }
       });

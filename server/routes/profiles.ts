@@ -71,16 +71,32 @@ function readProfileConfig(name: string): {
 }
 
 /**
- * Map from display name (with `:`) to the raw config key (underscore).
- * Built dynamically from the MCP tools API so it always matches actual server names.
- * e.g. "skills:create_skill" → "create_skill" stores the actual MCP tool name.
+ * Map from display name to the raw config key.
+ * Both display and raw are the tool's full_name from the MCP API
+ * (e.g. "actions_hindsight-populator"), which already includes the
+ * server name with underscore separator. No : prefix is needed.
  */
 let DISPLAY_TO_RAW: Record<string, string> = {};
 let RAW_TO_DISPLAY: Record<string, string> = {};
 let toolMapLastFetch = 0;
 const TOOL_MAP_TTL = 300_000; // 5 min cache
 
-/** Fetch MCP tools from omniagent and rebuild display↔raw mappings. */
+// Separate cache for tool details (incl. server_name), used by the frontend for toolset grouping
+let TOOL_DETAILS_CACHE: Record<string, { name: string; server_name: string | null }> = {};
+
+/** All known tools in display format, built from MCP tools API. */
+async function getAllTools(): Promise<string[]> {
+  await refreshToolMappings();
+  return Object.keys(DISPLAY_TO_RAW).sort();
+}
+
+/** All tool details (name + server_name) for toolset grouping in the frontend. */
+async function getAllToolDetails(): Promise<{ name: string; server_name: string | null }[]> {
+  await refreshToolMappings();
+  return Object.values(TOOL_DETAILS_CACHE).sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Fetch MCP tools from omniagent and rebuild both display↔raw mappings and tool details. */
 async function refreshToolMappings(): Promise<void> {
   const now = Date.now();
   if (now - toolMapLastFetch < TOOL_MAP_TTL && Object.keys(DISPLAY_TO_RAW).length > 0) return;
@@ -91,11 +107,14 @@ async function refreshToolMappings(): Promise<void> {
     const data: any = await response.json();
     const toolsList: any[] = Array.isArray(data) ? data : data?.tools || data?.data || [];
     const newDisplayToRaw: Record<string, string> = {};
+    const newToolDetails: Record<string, { name: string; server_name: string | null }> = {};
     for (const t of toolsList) {
       const rawName = t.name || t.tool || "";
-      const server = t.server_name || t.source || "builtin";
-      const displayName = server ? `${server}:${rawName}` : rawName;
-      newDisplayToRaw[displayName] = rawName;
+      newDisplayToRaw[rawName] = rawName;
+      newToolDetails[rawName] = {
+        name: rawName,
+        server_name: t.server_name || t.source || null,
+      };
     }
     DISPLAY_TO_RAW = newDisplayToRaw;
     const newRawToDisplay: Record<string, string> = {};
@@ -103,6 +122,7 @@ async function refreshToolMappings(): Promise<void> {
       newRawToDisplay[raw] = display;
     }
     RAW_TO_DISPLAY = newRawToDisplay;
+    TOOL_DETAILS_CACHE = newToolDetails;
     toolMapLastFetch = now;
   } catch {
     // keep existing mappings on error
@@ -120,12 +140,6 @@ function toDisplayNames(tools: string[] | null): string[] {
   return tools.map((t) => RAW_TO_DISPLAY[t] || t);
 }
 
-/** All known tools in display format (with server:name prefix), built from MCP tools API. */
-async function getAllTools(): Promise<string[]> {
-  await refreshToolMappings();
-  return Object.keys(DISPLAY_TO_RAW).sort();
-}
-
 // ── Routes ──
 
 // GET /api/profiles
@@ -133,6 +147,7 @@ profilesRouter.get("/", async (_req, res) => {
   try {
     const names = listFsProfiles();
     const allTools = await getAllTools();
+    const allToolDetails = await getAllToolDetails();
     const result = names.map((name) => {
       const config = readProfileConfig(name);
       return {
@@ -141,7 +156,8 @@ profilesRouter.get("/", async (_req, res) => {
         model: config.model,
         allowed_tools: toDisplayNames(config.allowed_tools as any),
         skills: readProfileSkills(name),
-        all_tools: allTools, // for multi-select display
+        all_tools: allTools,
+        all_tool_details: allToolDetails, // for toolset grouping in frontend
       };
     });
     res.json(result);
