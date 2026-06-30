@@ -14,6 +14,7 @@ interface Action {
 
 interface McpToolInfo {
   name: string;
+  full_name?: string;
   description: string;
   input_schema: Record<string, any>;
   server_name?: string;
@@ -104,10 +105,11 @@ function renderActionRow(a: Action, i: number): string {
     Object.keys(a.params).length > 0 ? escapeHtml(JSON.stringify(a.params)) : "<em>No params</em>";
   const isDisabled = !a.enabled;
 
-  // Build display name: for builtins use "actions:" prefix; for others look up server_name
+  // Build display name: use full_name when available
   const toolDisplay = ((): string => {
-    if (a.is_builtin) return "actions:" + escapeHtml(a.tool_name);
     const tool = availableTools.find((t) => t.name === a.tool_name);
+    if (tool?.full_name) return escapeHtml(tool.full_name);
+    if (a.is_builtin) return "actions:" + escapeHtml(a.tool_name);
     if (tool?.server_name) return escapeHtml(tool.server_name) + ":" + escapeHtml(a.tool_name);
     return escapeHtml(a.tool_name);
   })();
@@ -180,13 +182,13 @@ async function showActionModal(existing: Action | null): Promise<void> {
                 ${availableTools
                   .slice()
                   .sort((a, b) => {
-                    const fa = a.server_name ? `${a.server_name}:${a.name}` : a.name;
-                    const fb = b.server_name ? `${b.server_name}:${b.name}` : b.name;
+                    const fa = a.full_name || a.name;
+                    const fb = b.full_name || b.name;
                     return fa.localeCompare(fb);
                   })
                   .map(
                     (t) =>
-                      `<option value="${escapeHtml(t.name)}"${isEdit && existing!.tool_name === t.name ? " selected" : ""}>${escapeHtml(t.server_name ? t.server_name + ":" + t.name : t.name)}</option>`,
+                      `<option value="${escapeHtml(t.name)}"${isEdit && existing!.tool_name === t.name ? " selected" : ""}>${escapeHtml(t.full_name || t.name)}</option>`,
                   )
                   .join("")}
               </select>

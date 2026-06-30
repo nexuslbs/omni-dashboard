@@ -71,9 +71,9 @@ function readProfileConfig(name: string): {
 }
 
 /**
- * Map from display name (with `:`) to the raw config key (underscore).
+ * Map from display name (full_name) to the raw config key.
  * Built dynamically from the MCP tools API so it always matches actual server names.
- * e.g. "skills:create_skill" → "create_skill" stores the actual MCP tool name.
+ * e.g. "builtin_list_tool_details" → "list_tool_details" stores the actual MCP tool name.
  */
 let DISPLAY_TO_RAW: Record<string, string> = {};
 let RAW_TO_DISPLAY: Record<string, string> = {};
@@ -93,8 +93,7 @@ async function refreshToolMappings(): Promise<void> {
     const newDisplayToRaw: Record<string, string> = {};
     for (const t of toolsList) {
       const rawName = t.name || t.tool || "";
-      const server = t.server_name || t.source || "builtin";
-      const displayName = server ? `${server}:${rawName}` : rawName;
+      const displayName = t.full_name || rawName;
       newDisplayToRaw[displayName] = rawName;
     }
     DISPLAY_TO_RAW = newDisplayToRaw;
@@ -120,7 +119,7 @@ function toDisplayNames(tools: string[] | null): string[] {
   return tools.map((t) => RAW_TO_DISPLAY[t] || t);
 }
 
-/** All known tools in display format (with server:name prefix), built from MCP tools API. */
+/** All known tools in display format (full_name), built from MCP tools API. */
 async function getAllTools(): Promise<string[]> {
   await refreshToolMappings();
   return Object.keys(DISPLAY_TO_RAW).sort();

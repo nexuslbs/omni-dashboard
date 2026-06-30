@@ -363,6 +363,29 @@ function wireTools(): void {
     });
   });
 
+  // Reinstall buttons
+  document.querySelectorAll(".plugin-reinstall-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const card = (btn as HTMLElement).closest(".card") as HTMLElement;
+      const pluginName = card?.getAttribute("data-plugin-name");
+      if (!pluginName) return;
+      btn.textContent = "Reinstalling...";
+      btn.setAttribute("disabled", "true");
+      try {
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/reinstall`, {});
+        (window as any).showToast?.("Plugin reinstalled", "success");
+        void loadTools();
+      } catch (e) {
+        (window as any).showToast?.(
+          "Failed to reinstall: " + (e instanceof Error ? e.message : "Unknown"),
+          "error",
+        );
+        btn.textContent = "⟳ Reinstall";
+        btn.removeAttribute("disabled");
+      }
+    });
+  });
+
   // Remove buttons
   document.querySelectorAll(".plugin-remove-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
