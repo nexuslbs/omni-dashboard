@@ -52,17 +52,19 @@ function renderProvidersPage(providers: PluginData[]): string {
   return providers
     .map(
       (p) => `
-    <div class="card settings-card${p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}">
+    <div class="card settings-card${p.source !== "built-in" && p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}">
       <div class="card-header" style="cursor:pointer;">
         <span class="card-title">
           <span class="plugin-name" style="font-weight:600;">${escapeHtml(p.name)}</span>
           ${p.manifest?.label && p.manifest.label !== p.name ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.125rem;">${escapeHtml(p.manifest.label)}</div>` : ""}
         </span>
         <span class="tool-actions" style="display:flex;gap:0.25rem;align-items:center;">
-          <span class="badge ${getStatusBadgeClass(p.status)}">${p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : "● Error"}</span>
+          <span class="badge ${getStatusBadgeClass(p.status, p.needs_build)}">${p.needs_build ? "○ Not Installed" : p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : "● Error"}</span>
           ${p.version ? `<span class="badge badge-info" style="margin-left:0.125rem;">v${escapeHtml(p.version)}</span>` : ""}
           <span class="badge badge-neutral" style="margin-left:0.125rem;">source: ${escapeHtml(p.source)}</span>
-          <button type="button" class="plugin-toggle-btn" style="background:${p.status === "enabled" ? "rgba(148,163,184,0.1)" : "rgba(16,185,129,0.1)"};border:1px solid ${p.status === "enabled" ? "var(--glass-border)" : "rgba(16,185,129,0.2)"};border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:${p.status === "enabled" ? "var(--text-secondary)" : "#34d399"};">${p.status === "enabled" ? "Disable" : "Enable"}</button>
+          ${p.source !== "built-in" && !p.needs_build ? `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>` : ""}
+          ${p.source !== "built-in" && !p.needs_build ? `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>` : ""}
+          ${p.needs_build ? `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>` : p.source !== "built-in" && p.status === "enabled" ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : p.source !== "built-in" ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>` : ""}
           <button type="button" class="plugin-expand-btn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0.25rem;font-size:1rem;" title="Toggle config">▶</button>
         </span>
       </div>
@@ -96,7 +98,8 @@ function renderPluginConfig(p: PluginData): string {
   });
 }
 
-function getStatusBadgeClass(status: string): string {
+function getStatusBadgeClass(status: string, needs_build?: boolean): string {
+  if (needs_build) return "badge-warning";
   switch (status) {
     case "enabled":
       return "badge-success";
@@ -352,21 +355,73 @@ function wireProviders(): void {
     });
   });
 
-  // Remove buttons
+  // Reinstall buttons
+  document.querySelectorAll(".plugin-reinstall-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const card = (btn as HTMLElement).closest(".card") as HTMLElement;
+      const pluginName = card?.getAttribute("data-plugin-name");
+      if (!pluginName) return;
+
+      const originalText = btn.textContent || "Reinstall";
+      btn.textContent = "Reinstalling...";
+      (btn as HTMLButtonElement).disabled = true;
+
+      try {
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/reinstall`, {});
+        (window as any).showToast?.("Plugin reinstalled", "success");
+        void loadProviders();
+      } catch (e) {
+        (window as any).showToast?.(
+          "Failed to reinstall: " + (e instanceof Error ? e.message : "Unknown"),
+          "error",
+        );
+        btn.textContent = originalText;
+        (btn as HTMLButtonElement).disabled = false;
+      }
+    });
+  });
+
+  // Install buttons (compile + register)
+  document.querySelectorAll(".plugin-install-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const card = (btn as HTMLElement).closest(".card") as HTMLElement;
+      const pluginName = card?.getAttribute("data-plugin-name");
+      if (!pluginName) return;
+
+      const originalText = btn.textContent || "Install";
+      btn.textContent = "Compiling...";
+      (btn as HTMLButtonElement).disabled = true;
+
+      try {
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/install`, {});
+        (window as any).showToast?.("Plugin installed", "success");
+        void loadProviders();
+      } catch (e) {
+        (window as any).showToast?.(
+          "Failed to install: " + (e instanceof Error ? e.message : "Unknown"),
+          "error",
+        );
+        btn.textContent = originalText;
+        (btn as HTMLButtonElement).disabled = false;
+      }
+    });
+  });
+
+  // Uninstall buttons
   document.querySelectorAll(".plugin-remove-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
       if (!pluginName) return;
-      if (!confirm(`Remove plugin "${pluginName}"?`)) return;
+      if (!confirm(`Uninstall plugin "${pluginName}"?`)) return;
 
       try {
         await apiDelete(`/plugins/${encodeURIComponent(pluginName)}`);
-        (window as any).showToast?.("Plugin removed", "success");
+        (window as any).showToast?.("Plugin uninstalled", "success");
         void loadProviders();
       } catch (e) {
         (window as any).showToast?.(
-          "Failed to remove: " + (e instanceof Error ? e.message : "Unknown"),
+          "Failed to uninstall: " + (e instanceof Error ? e.message : "Unknown"),
           "error",
         );
       }

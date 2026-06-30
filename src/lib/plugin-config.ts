@@ -193,15 +193,7 @@ export interface RenderPluginConfigOptions {
  * message before calling this function.
  */
 export function renderPluginConfig(options: RenderPluginConfigOptions): string {
-  const {
-    schema,
-    values,
-    pluginName,
-    resolvedEnv = {},
-    status = "enabled",
-    isBuiltIn = false,
-    extraButtons = "",
-  } = options;
+  const { schema, values, pluginName, resolvedEnv = {}, status = "enabled", extraButtons = "" } = options;
 
   if (!schema || schema.length === 0) {
     return `<p class="text-muted" style="font-size:0.85rem;color:var(--text-muted);padding:0.5rem 0;">No config fields declared.</p>`;
@@ -253,7 +245,6 @@ export function renderPluginConfig(options: RenderPluginConfigOptions): string {
         <button type="button" class="plugin-save-btn btn-primary" style="background:var(--accent-purple);border:none;color:white;border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;">Save Config</button>
         <button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);">${status === "enabled" ? "Disable" : "Enable"}</button>
         ${extraButtons}
-        ${!isBuiltIn ? `<button type="button" class="plugin-remove-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--accent-rose);">✕ Remove</button>` : ""}
       </div>
     </div>
   `;

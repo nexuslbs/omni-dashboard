@@ -60,14 +60,16 @@ async function loadProfiles(): Promise<void> {
       _providerModels = {};
     }
 
-    content.innerHTML = renderProfilesPage(profiles);
-    // Build tool→server_name lookup from first profile's all_tool_details
+    // Build tool→server_name lookup BEFORE rendering so toolsetOf()
+    // uses the map instead of the fallback (which would produce "list"
+    // from the underscore prefix of "list_tool_details").
     if (profiles && profiles.length > 0 && profiles[0].all_tool_details) {
       _toolServerMap = {};
       for (const td of profiles[0].all_tool_details) {
         _toolServerMap[td.name] = td.server_name || "builtin";
       }
     }
+    content.innerHTML = renderProfilesPage(profiles);
     wireProfiles();
     // Enhance provider and model selects
     document.querySelectorAll("#profiles-content select").forEach((el) => {
@@ -230,13 +232,15 @@ function renderSkillsList(profileName: string, skills: string[]): string {
  * Uses the all_tool_details lookup map which maps each tool name
  * to its server_name from the MCP API (e.g. "test-rust-tool-2_hello" → "test-rust-tool-2").
  * Tools with no server (builtin) → "builtin".
+ *
+ * The map is populated from the API BEFORE rendering (see loadProfiles()),
+ * so every tool with a server_name IS in the map when this runs.
+ * If a tool is NOT in the map (defensive edge case), safe-default to
+ * "builtin" — external tools always have server_name and will be present.
  */
 function toolsetOf(tool: string): string {
   const server = _toolServerMap[tool];
-  if (server) return server;
-  // Fallback: extract prefix before first underscore (for backward compat)
-  const idx = tool.indexOf("_");
-  return idx > 0 ? tool.substring(0, idx) : "builtin";
+  return server || "builtin";
 }
 
 // Lookup: full tool name → server_name (populated from profile data)
@@ -467,14 +471,12 @@ function wireProfiles(): void {
       ) as NodeListOf<HTMLInputElement>;
       const allTools: string[] = [];
       allCbs.forEach((cb) => allTools.push(cb.value));
-      // Find tools in this toolset: match by server_name in _toolServerMap,
-      // with underscore-prefix fallback for backward compatibility
+      // Find tools in this toolset: match by server_name in _toolServerMap.
+      // The map is populated before rendering, so every tool with a
+      // server_name is present. If not in map (defensive), treat as builtin.
       const toolsInSet = allTools.filter((t) => {
         const mapped = _toolServerMap[t];
-        if (mapped) return mapped === toolset;
-        // Fallback: check underscore prefix (e.g. "filesystem_read" → "filesystem")
-        const idx = t.indexOf("_");
-        return idx > 0 ? t.substring(0, idx) === toolset : toolset === "builtin";
+        return mapped ? mapped === toolset : toolset === "builtin";
       });
       if (toolsInSet.length === 0) return;
       // Toggle: if none allowed → allow all; otherwise → disallow all
@@ -482,9 +484,7 @@ function wireProfiles(): void {
       allCbs.forEach((cb) => {
         const t = cb.value;
         const mapped = _toolServerMap[t];
-        const matches = mapped
-          ? mapped === toolset
-          : t.startsWith(toolset + "_") || (toolset === "builtin" && t.indexOf("_") <= 0);
+        const matches = mapped ? mapped === toolset : toolset === "builtin";
         if (matches) {
           cb.checked = shouldEnable;
         }

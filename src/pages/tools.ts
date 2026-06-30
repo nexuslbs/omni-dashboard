@@ -128,6 +128,7 @@ function renderToolsPage(tools: PluginData[], toolMap: Record<string, string[]>)
           <span class="badge badge-neutral" style="margin-left:0.125rem;">${p.source === "built-in" ? "built-in tool" : `source: ${escapeHtml(p.source)}`}</span>
           ${pluginTools.length > 0 ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">${pluginTools.length} tool${pluginTools.length > 1 ? "s" : ""}</span>` : ""}
           ${p.source !== "built-in" && !p.needs_build ? `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>` : ""}
+          ${p.source !== "built-in" && !p.needs_build ? `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>` : ""}
           ${p.needs_build ? `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>` : p.status === "enabled" ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>`}
           <button type="button" class="plugin-expand-btn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0.25rem;font-size:1rem;" title="Toggle config">▶</button>
         </span>
@@ -135,7 +136,6 @@ function renderToolsPage(tools: PluginData[], toolMap: Record<string, string[]>)
       <div class="card-body plugin-body" style="display:none;">
         ${renderPluginConfig(p)}
         ${pluginTools.length > 0 ? renderPluginTools(p.name, pluginTools) : ""}
-        ${p.source !== "built-in" ? `<div style="margin-top:0.75rem;padding-top:0.75rem;border-top:1px solid var(--glass-border,rgba(255,255,255,0.06));display:flex;gap:0.5rem;">${p.needs_build ? `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.35rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--accent-purple);">Install</button>` : `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.35rem 0.75rem;cursor:pointer;font-size:0.8rem;color:#22d3ee;">Reinstall</button>`}</div>` : ""}
       </div>
     </div>
   `;
@@ -366,21 +366,21 @@ function wireTools(): void {
     });
   });
 
-  // Remove buttons
+  // Uninstall buttons
   document.querySelectorAll(".plugin-remove-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
       if (!pluginName) return;
-      if (!confirm(`Remove plugin "${pluginName}"?`)) return;
+      if (!confirm(`Uninstall plugin "${pluginName}"?`)) return;
 
       try {
         await apiDelete(`/plugins/${encodeURIComponent(pluginName)}`);
-        (window as any).showToast?.("Plugin removed", "success");
+        (window as any).showToast?.("Plugin uninstalled", "success");
         void loadTools();
       } catch (e) {
         (window as any).showToast?.(
-          "Failed to remove: " + (e instanceof Error ? e.message : "Unknown"),
+          "Failed to uninstall: " + (e instanceof Error ? e.message : "Unknown"),
           "error",
         );
       }
