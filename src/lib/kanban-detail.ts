@@ -37,16 +37,7 @@ async function loadKanbanActivity(taskId: string): Promise<void> {
     wireMessageCardToggles(el);
 
     // Wire thread links
-    el.querySelectorAll(".ev-thread-link").forEach((a) => {
-      a.addEventListener("click", (e) => {
-        e.preventDefault();
-        const threadId = (e.currentTarget as HTMLElement).getAttribute("data-thread-id");
-        if (!threadId) return;
-        const url = `/messages?thread_id=${encodeURIComponent(threadId)}`;
-        history.pushState({}, "", url);
-        router.go("messages");
-      });
-    });
+  // ── Thread link wrapping removed — native href in message-card.ts handles navigation ──
 
     // Update pagination
     const currentPage = Math.floor(kanbanActivityOffset / kanbanActivityLimit) + 1;

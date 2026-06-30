@@ -253,20 +253,7 @@ export async function loadScheduleThreads(scheduleId: string): Promise<void> {
     wireMessageCardToggles(el);
 
     // Wire thread links
-    el.querySelectorAll(".ev-thread-link").forEach((a) => {
-      a.addEventListener("click", (e) => {
-        e.preventDefault();
-        const threadId = (e.currentTarget as HTMLElement).getAttribute("data-thread-id");
-        if (!threadId) return;
-        const url = `/threads?thread_id=${encodeURIComponent(threadId)}`;
-        document.querySelectorAll(".nav-item, .mobile-nav-item").forEach((n) => {
-          const navRoute = n.getAttribute("data-route") || "";
-          n.classList.toggle("active", navRoute === "threads");
-        });
-        history.pushState({}, "", url);
-        router.go("threads");
-      });
-    });
+  // ── Thread link wrapping removed — native href in message-card.ts handles navigation ──
 
     // Update pagination
     const currentPage = Math.floor(threadsOffset / threadsLimit) + 1;
