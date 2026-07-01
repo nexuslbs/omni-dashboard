@@ -56,7 +56,7 @@ export function renderConfigField(
               <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
               <option value="env" ${refType === "env" ? "selected" : ""}>Env Var</option>
             </select>
-            <input type="text" class="ref-name-input ref-name-text filter-input" data-key="${escapeHtml(field.key)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:1;display:${isRef && refType === "env" ? "block" : "none"};" />
+            <input type="text" class="ref-name-input ref-name-text filter-input" data-key="${escapeHtml(field.key)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:2;min-width:200px;display:${isRef && refType === "env" ? "block" : "none"};" />
             <select class="ref-name-input ref-name-select filter-select setting-input" data-key="${escapeHtml(field.key)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
               <option value="">Select secret...</option>
             </select>
@@ -141,7 +141,7 @@ export function renderConfigField(
               <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
               <option value="env" ${refType === "env" ? "selected" : ""}>Env Var</option>
             </select>
-            <input type="text" class="ref-name-input ref-name-text filter-input" data-key="${escapeHtml(field.key)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:1;display:${isRef && refType === "env" ? "block" : "none"};" />
+            <input type="text" class="ref-name-input ref-name-text filter-input" data-key="${escapeHtml(field.key)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:2;min-width:200px;display:${isRef && refType === "env" ? "block" : "none"};" />
             <select class="ref-name-input ref-name-select filter-select setting-input" data-key="${escapeHtml(field.key)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
               <option value="">Select secret...</option>
             </select>
@@ -213,25 +213,9 @@ export function renderPluginConfig(options: RenderPluginConfigOptions): string {
         : "";
 
       // When the field value comes from an environment variable (not user-configured),
-      // render it as read-only — no ref-toggle, no edit controls.
+      // render ref-mode controls so the user can see and edit the env var name.
       if (isFromEnv) {
-        const requiredMark = field.required
-          ? '<span style="color:var(--accent-rose);margin-left:0.125rem;">*</span>'
-          : "";
-        const descHtml = field.description
-          ? `<div class="setting-description">${escapeHtml(field.description)}</div>`
-          : "";
-        return `<div class="setting-row" data-field-key="${escapeHtml(field.key)}">
-          <div class="setting-label">
-            <div class="setting-name">${escapeHtml(field.label)}${requiredMark}${envBadge}</div>
-            ${descHtml}
-          </div>
-          <div class="setting-controls">
-            <div class="setting-input-group" style="font-size:0.85rem;padding:0.5rem 0;color:var(--text-muted);">
-              Set via environment variable
-            </div>
-          </div>
-        </div>`;
+        return renderConfigField(field, `$env:${escapeHtml(field.key)}`, pluginName, envBadge);
       }
 
       return renderConfigField(field, currentVal, pluginName, envBadge);
