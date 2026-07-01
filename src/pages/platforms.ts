@@ -81,6 +81,7 @@ function renderPlatformsPage(platforms: PluginData[]): string {
           ${p.version ? `<span class="badge badge-info" style="margin-left:0.125rem;">v${escapeHtml(p.version)}</span>` : ""}
           <span class="badge badge-neutral" style="margin-left:0.125rem;">source: ${escapeHtml(p.source)}</span>
           ${p.source !== "built-in" && !p.needs_build ? `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>` : ""}
+          ${p.source !== "built-in" && !p.needs_build && p.manifest?.capabilities?.setup ? `<button type="button" class="plugin-setup-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Setup</button>` : ""}
           ${p.source !== "built-in" && !p.needs_build ? `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>` : ""}
           ${p.needs_build ? `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>` : p.source !== "built-in" && p.status === "enabled" ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : p.source !== "built-in" ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>` : ""}
           <button type="button" class="plugin-expand-btn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0.25rem;font-size:1rem;" title="Toggle config">▶</button>
@@ -287,6 +288,32 @@ function wirePlatforms(): void {
       } catch (e) {
         (window as any).showToast?.(
           "Failed to reinstall: " + (e instanceof Error ? e.message : "Unknown"),
+          "error",
+        );
+        btn.textContent = originalText;
+        (btn as HTMLButtonElement).disabled = false;
+      }
+    });
+  });
+
+  // Setup buttons
+  document.querySelectorAll(".plugin-setup-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const card = (btn as HTMLElement).closest(".card") as HTMLElement;
+      const pluginName = card?.getAttribute("data-plugin-name");
+      if (!pluginName) return;
+
+      const originalText = btn.textContent || "Setup";
+      btn.textContent = "Setting up...";
+      (btn as HTMLButtonElement).disabled = true;
+
+      try {
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/setup`, {});
+        (window as any).showToast?.("Setup completed successfully", "success");
+        void loadPlatforms();
+      } catch (e) {
+        (window as any).showToast?.(
+          "Setup failed: " + (e instanceof Error ? e.message : "Unknown error"),
           "error",
         );
         btn.textContent = originalText;
