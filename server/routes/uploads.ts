@@ -5,7 +5,7 @@ import multer from "multer";
 
 export const uploadsRouter = Router();
 
-const UPLOADS_DIR = "/opt/data/user/uploads";
+const UPLOADS_DIR = "/opt/omni/user/uploads";
 
 // Ensure uploads directory exists
 function ensureUploadsDir(): void {

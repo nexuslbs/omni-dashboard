@@ -2,7 +2,7 @@ import { Router } from "express";
 import { readdirSync, existsSync, readFileSync, writeFileSync, statSync, mkdirSync } from "fs";
 import { join } from "path";
 
-const OMNI_DIR = process.env.OMNI_DIR || "/opt/data";
+const OMNI_DIR = process.env.OMNI_DIR || "/opt/omni";
 
 export const profilesRouter = Router();
 

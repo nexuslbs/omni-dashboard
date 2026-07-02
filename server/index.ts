@@ -137,7 +137,7 @@ app.all(/^\/api\/secrets(?:\/.*)?$/, omniagentProxy);
 // GET /api/templates — List available template files across all profiles
 app.get("/api/templates", (_req, res) => {
   try {
-    const dataDir = process.env.OMNI_DIR || "/opt/data";
+    const dataDir = process.env.OMNI_DIR || "/opt/omni";
     const profilesDir = join(dataDir, "profiles");
     const templates: { profile: string; name: string; label: string }[] = [];
 

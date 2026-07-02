@@ -6,7 +6,7 @@ import { join } from "path";
 
 export const memoryRouter = Router();
 
-const OMNI_DIR = process.env.OMNI_DIR || "/opt/data";
+const OMNI_DIR = process.env.OMNI_DIR || "/opt/omni";
 
 // Multer config for file uploads
 const upload = multer({ dest: "/tmp/uploads/" });

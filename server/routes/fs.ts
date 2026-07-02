@@ -4,7 +4,7 @@ import { join, resolve } from "path";
 
 export const fsRouter = Router();
 
-const ROOT = "/opt/data";
+const ROOT = "/opt/omni";
 
 function sanitizePath(userPath: string): string {
   // Strip any prefix that matches ROOT to prevent double-prefixing
