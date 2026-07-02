@@ -253,7 +253,7 @@ export async function loadScheduleThreads(scheduleId: string): Promise<void> {
     wireMessageCardToggles(el);
 
     // Wire thread links
-  // ── Thread link wrapping removed — native href in message-card.ts handles navigation ──
+    // ── Thread link wrapping removed — native href in message-card.ts handles navigation ──
 
     // Update pagination
     const currentPage = Math.floor(threadsOffset / threadsLimit) + 1;

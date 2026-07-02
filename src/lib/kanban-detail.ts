@@ -37,7 +37,7 @@ async function loadKanbanActivity(taskId: string): Promise<void> {
     wireMessageCardToggles(el);
 
     // Wire thread links
-  // ── Thread link wrapping removed — native href in message-card.ts handles navigation ──
+    // ── Thread link wrapping removed — native href in message-card.ts handles navigation ──
 
     // Update pagination
     const currentPage = Math.floor(kanbanActivityOffset / kanbanActivityLimit) + 1;

@@ -6,7 +6,7 @@ import { join } from "path";
 
 export const memoryRouter = Router();
 
-const OMNI_DATA_DIR = process.env.OMNI_DATA_DIR || "/opt/data";
+const OMNI_DIR = process.env.OMNI_DIR || "/opt/data";
 
 // Multer config for file uploads
 const upload = multer({ dest: "/tmp/uploads/" });
@@ -210,9 +210,9 @@ memoryRouter.get("/text/:profile/:type", async (req: Request, res: Response) => 
 
     const fileName = type === "soul" ? "USER.md" : "MEMORY.md";
     // Check profile-specific memories first, then fall back to global memories
-    let filePath = join(OMNI_DATA_DIR, "profiles", profile, "memories", fileName);
+    let filePath = join(OMNI_DIR, "profiles", profile, "memories", fileName);
     if (!existsSync(filePath)) {
-      filePath = join(OMNI_DATA_DIR, "memories", fileName);
+      filePath = join(OMNI_DIR, "memories", fileName);
     }
 
     if (!existsSync(filePath)) {
@@ -288,7 +288,7 @@ memoryRouter.post("/upload/:profile/:type", upload.single("file"), async (req: R
 
     // Determine destination path
     const fileName = type === "soul" ? "USER.md" : "MEMORY.md";
-    const destDir = join(OMNI_DATA_DIR, "profiles", profile, "memories");
+    const destDir = join(OMNI_DIR, "profiles", profile, "memories");
 
     // Ensure directory exists
     const { mkdirSync } = await import("fs");

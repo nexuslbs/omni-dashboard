@@ -2,14 +2,14 @@ import { Router } from "express";
 import { readdirSync, existsSync, readFileSync, writeFileSync, statSync, mkdirSync } from "fs";
 import { join } from "path";
 
-const OMNI_DATA_DIR = process.env.OMNI_DATA_DIR || "/opt/data";
+const OMNI_DIR = process.env.OMNI_DIR || "/opt/data";
 
 export const profilesRouter = Router();
 
 // ── Helpers ──
 
 function getProfilesDir(): string {
-  return join(OMNI_DATA_DIR, "profiles");
+  return join(OMNI_DIR, "profiles");
 }
 
 function getConfigPath(name: string): string {
