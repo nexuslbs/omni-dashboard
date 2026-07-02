@@ -12,7 +12,7 @@ export const profilesRouter = Router();
 // ── Helpers ──
 
 function getProfilesDir(): string {
-  return join(OMNI_DIR, "profiles");
+  return join(OMNI_DIR!, "profiles");
 }
 
 function getConfigPath(name: string): string {
