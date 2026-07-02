@@ -6,7 +6,10 @@ import { join } from "path";
 
 export const memoryRouter = Router();
 
-const OMNI_DIR = process.env.OMNI_DIR || "/opt/omni";
+const OMNI_DIR = process.env.OMNI_DIR;
+if (!OMNI_DIR) {
+  throw new Error("OMNI_DIR environment variable must be set");
+}
 
 // Multer config for file uploads
 const upload = multer({ dest: "/tmp/uploads/" });

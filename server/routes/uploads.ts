@@ -5,7 +5,11 @@ import multer from "multer";
 
 export const uploadsRouter = Router();
 
-const UPLOADS_DIR = "/opt/omni/user/uploads";
+const UPLOADS_DIR = (() => {
+  const dir = process.env.OMNI_DIR;
+  if (!dir) throw new Error("OMNI_DIR environment variable must be set");
+  return dir + "/user/uploads";
+})();
 
 // Ensure uploads directory exists
 function ensureUploadsDir(): void {

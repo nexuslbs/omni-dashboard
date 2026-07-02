@@ -4,7 +4,11 @@ import { join, resolve } from "path";
 
 export const fsRouter = Router();
 
-const ROOT = "/opt/omni";
+const ROOT = (() => {
+  const dir = process.env.OMNI_DIR;
+  if (!dir) throw new Error("OMNI_DIR environment variable must be set");
+  return dir;
+})();
 
 function sanitizePath(userPath: string): string {
   // Strip any prefix that matches ROOT to prevent double-prefixing
