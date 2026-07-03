@@ -440,9 +440,10 @@ function wireTools(): void {
   });
 }
 
-// ── Install from URL Modal ──
+// ── Install from Git Modal ──
 
 function showInstallModal(pluginType: "platform" | "mcp"): void {
+  const typeLabel = pluginType === "platform" ? "Platform" : "Tool";
   const backdrop = document.createElement("div");
   backdrop.style.cssText =
     "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding-top:15vh;";
@@ -450,18 +451,27 @@ function showInstallModal(pluginType: "platform" | "mcp"): void {
   backdrop.innerHTML = `
     <div style="background:var(--bg-secondary);border:1px solid var(--glass-border);border-radius:12px;width:480px;max-width:90vw;box-shadow:0 12px 48px rgba(0,0,0,0.5);">
       <div style="padding:1.25rem;border-bottom:1px solid var(--border-primary);display:flex;align-items:center;justify-content:space-between;">
-        <h2 style="font-size:1.1rem;margin:0;color:var(--text-primary);">Install ${pluginType === "platform" ? "Platform" : "Tool"} Plugin</h2>
+        <h2 style="font-size:1.1rem;margin:0;color:var(--text-primary);">Install ${typeLabel} Plugin</h2>
         <button class="modal-close-btn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:1.2rem;padding:0.25rem;">✕</button>
       </div>
       <div style="padding:1.25rem;">
         <div style="margin-bottom:1rem;">
-          <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Plugin URL <span style="color:var(--accent-rose);">*</span></label>
-          <input id="install-url-input" type="url" class="filter-input" placeholder="https://example.com/plugin.tar.gz" style="width:100%;" />
-          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">URL to a plugin archive (.tar.gz) or a git repository URL</div>
+          <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Git Repository URL <span style="color:var(--accent-rose);">*</span></label>
+          <input id="install-git-url" type="url" class="filter-input" placeholder="https://github.com/user/plugin-repo.git" style="width:100%;" />
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">URL to a git repository containing a plugin.json manifest.</div>
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Git Ref <span style="font-size:0.75rem;color:var(--text-muted);">(optional)</span></label>
+          <input id="install-git-ref" type="text" class="filter-input" placeholder="main, v1.0.0, or leave empty for default branch" style="width:100%;" />
+        </div>
+        <div style="margin-bottom:1rem;">
+          <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Path <span style="font-size:0.75rem;color:var(--text-muted);">(optional)</span></label>
+          <input id="install-git-path" type="text" class="filter-input" placeholder="Subdirectory within repo (e.g. plugins/my-plugin)" style="width:100%;" />
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Leave empty if plugin.json is at the repo root.</div>
         </div>
         <div style="margin-bottom:1rem;">
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Name Override <span style="font-size:0.75rem;color:var(--text-muted);">(optional)</span></label>
-          <input id="install-name-input" type="text" class="filter-input" placeholder="Leave empty to extract from manifest" style="width:100%;" />
+          <input id="install-name-input" type="text" class="filter-input" placeholder="Leave empty to use name from plugin.json" style="width:100%;" />
         </div>
         <div id="install-status" style="display:none;padding:0.5rem;margin-bottom:0.75rem;border-radius:6px;font-size:0.85rem;"></div>
       </div>
@@ -478,27 +488,33 @@ function showInstallModal(pluginType: "platform" | "mcp"): void {
   backdrop.querySelector(".modal-cancel-btn")?.addEventListener("click", () => backdrop.remove());
 
   const installBtn = backdrop.querySelector("#install-confirm-btn") as HTMLButtonElement;
-  const urlInput = backdrop.querySelector("#install-url-input") as HTMLInputElement;
+  const gitUrlInput = backdrop.querySelector("#install-git-url") as HTMLInputElement;
+  const gitRefInput = backdrop.querySelector("#install-git-ref") as HTMLInputElement;
+  const gitPathInput = backdrop.querySelector("#install-git-path") as HTMLInputElement;
   const nameInput = backdrop.querySelector("#install-name-input") as HTMLInputElement;
   const statusEl = backdrop.querySelector("#install-status") as HTMLElement;
 
   installBtn.addEventListener("click", async () => {
-    const url = urlInput.value.trim();
+    const url = gitUrlInput.value.trim();
     if (!url) {
-      showStatus(statusEl, "Please enter a plugin URL", "error");
+      showStatus(statusEl, "Please enter a git repository URL", "error");
       return;
     }
 
-    const body: Record<string, string> = { url };
+    const body: Record<string, any> = { url, type: pluginType };
+    const gitRef = gitRefInput.value.trim();
+    if (gitRef) body.git_ref = gitRef;
+    const gitPath = gitPathInput.value.trim();
+    if (gitPath) body.path = gitPath;
     const nameOverride = nameInput.value.trim();
     if (nameOverride) body.name = nameOverride;
 
     installBtn.disabled = true;
-    installBtn.textContent = "Installing...";
-    showStatus(statusEl, "Installing plugin...", "info");
+    installBtn.textContent = "Cloning...";
+    showStatus(statusEl, "Cloning repository and installing...", "info");
 
     try {
-      const res = await fetch("/api/plugins/install-url", {
+      const res = await fetch("/api/plugins/install-git", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
