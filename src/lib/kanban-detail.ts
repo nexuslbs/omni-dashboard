@@ -8,7 +8,6 @@ import { STATUS_LABELS, statusBadge, moveTask } from "./kanban-board";
 import { escapeHtml } from "./helpers";
 import { enhanceSelect, syncSelectDisplay } from "./dropdown";
 import { renderMessageCard, wireMessageCardToggles } from "./message-card";
-import { router } from "./router";
 
 // ── Pagination state for kanban activity ──
 let kanbanActivityOffset = 0;
