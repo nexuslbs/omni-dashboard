@@ -141,8 +141,6 @@ messagesRouter.get("/events", (req: Request, res: Response) => {
           t.input_tokens as thread_input_tokens,
           t.output_tokens as thread_output_tokens,
           t.cached_tokens as thread_cached_tokens,
-          m.processing_time_ms as processing_time_ms,
-          m.token_usage as token_usage,
           c.name as channel_name
         FROM messages m
         JOIN threads t ON t.id = m.thread_id
@@ -154,30 +152,10 @@ messagesRouter.get("/events", (req: Request, res: Response) => {
       const rows = await queryDb(dataSql);
 
       const messages = rows.map((row: any) => {
-        let tokenUsage = null;
-        // Parse per-message token_usage (JSONB) — different schema than thread-level fields
-        if (row.token_usage && row.token_usage !== "null" && row.token_usage !== "") {
-          try {
-            const parsed =
-              typeof row.token_usage === "string" ? JSON.parse(row.token_usage) : row.token_usage;
-            const pt = parseInt(parsed.prompt_tokens) || 0;
-            const ot = parseInt(parsed.completion_tokens) || 0;
-            const ct = parseInt(parsed.cached_tokens) || 0;
-            const rt = parseInt(parsed.reasoning_tokens) || 0;
-            if (pt > 0 || ot > 0 || ct > 0 || rt > 0) {
-              tokenUsage = {
-                prompt_tokens: pt,
-                completion_tokens: ot,
-                cached_tokens: ct,
-                reasoning_tokens: rt,
-              };
-            }
-          } catch {
-            // Ignore parse errors
-          }
-        }
-        // No thread-level fallback — only per-message token_usage is shown.
-        // Messages without their own token_usage (tool, tool-result, etc.) show null.
+        // token_usage and processing_time_ms are not per-message columns
+        // in the messages table — they remain null for now
+        const tokenUsage = null;
+        const processingTimeMs = null;
 
         return {
           id: row.id,
@@ -193,7 +171,7 @@ messagesRouter.get("/events", (req: Request, res: Response) => {
           profile: row.profile,
           provider: row.provider,
           model: row.model,
-          processing_time_ms: row.processing_time_ms ? parseInt(row.processing_time_ms) : null,
+          processing_time_ms: processingTimeMs,
           token_usage: tokenUsage,
           channel_name: row.channel_name,
           type: row.msg_type || null,
