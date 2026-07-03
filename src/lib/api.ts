@@ -370,7 +370,7 @@ export interface PluginManifest {
   type: "platform" | "mcp" | "provider";
   description?: string;
   entrypoint?: { command: string; transport: string };
-  capabilities?: { inbound?: boolean; outbound?: boolean };
+  capabilities?: { inbound?: boolean; outbound?: boolean; setup?: boolean };
   config_schema?: ConfigField[];
 }
 
