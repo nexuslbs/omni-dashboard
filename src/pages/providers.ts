@@ -1,6 +1,6 @@
 import { apiGet, apiPost, apiDelete, type PluginData } from "../lib/api";
 import { enhanceSelectElement } from "../lib/dropdown";
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, formatApiError } from "../lib/helpers";
 import {
   renderPluginConfig as sharedRenderPluginConfig,
   getCurrentConfig,
@@ -40,7 +40,7 @@ async function loadProviders(): Promise<void> {
     content.innerHTML = renderProvidersPage(providers);
     wireProviders();
   } catch (e) {
-    content.innerHTML = `<div class="error-state" style="padding:3rem;text-align:center;">Failed to load providers: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    content.innerHTML = `<div class="error-state" style="padding:3rem;text-align:center;">Failed to load providers: ${formatApiError(e)}</div>`;
   }
 }
 
@@ -249,10 +249,7 @@ function wireProviders(): void {
         }
         (window as any).showToast?.("Models refreshed", "success");
       } catch (e) {
-        (window as any).showToast?.(
-          "Failed to refresh: " + (e instanceof Error ? e.message : "Unknown"),
-          "error",
-        );
+        (window as any).showToast?.("Failed to refresh: " + formatApiError(e), "error");
       } finally {
         refreshBtn.style.opacity = "1";
         refreshBtn.style.cursor = "pointer";
@@ -328,10 +325,7 @@ function wireProviders(): void {
         dirtyCheckSaveButton(formEl, pluginName, savedConfigs);
         (window as any).showToast?.("Configuration saved", "success");
       } catch (e) {
-        (window as any).showToast?.(
-          "Failed to save: " + (e instanceof Error ? e.message : "Unknown"),
-          "error",
-        );
+        (window as any).showToast?.("Failed to save: " + formatApiError(e), "error");
       }
     });
   });
@@ -350,7 +344,7 @@ function wireProviders(): void {
         (window as any).showToast?.(isCurrentlyEnabled ? "Disabled" : "Enabled", "success");
         void loadProviders();
       } catch (e) {
-        (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
       }
     });
   });
@@ -371,10 +365,7 @@ function wireProviders(): void {
         (window as any).showToast?.("Plugin reinstalled", "success");
         void loadProviders();
       } catch (e) {
-        (window as any).showToast?.(
-          "Failed to reinstall: " + (e instanceof Error ? e.message : "Unknown"),
-          "error",
-        );
+        (window as any).showToast?.("Failed to reinstall: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
       }
@@ -397,10 +388,7 @@ function wireProviders(): void {
         (window as any).showToast?.("Plugin installed", "success");
         void loadProviders();
       } catch (e) {
-        (window as any).showToast?.(
-          "Failed to install: " + (e instanceof Error ? e.message : "Unknown"),
-          "error",
-        );
+        (window as any).showToast?.("Failed to install: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
       }
@@ -420,10 +408,7 @@ function wireProviders(): void {
         (window as any).showToast?.("Plugin uninstalled", "success");
         void loadProviders();
       } catch (e) {
-        (window as any).showToast?.(
-          "Failed to uninstall: " + (e instanceof Error ? e.message : "Unknown"),
-          "error",
-        );
+        (window as any).showToast?.("Failed to uninstall: " + formatApiError(e), "error");
       }
     });
   });
@@ -532,7 +517,7 @@ function showInstallModal(pluginType: "platform" | "mcp" | "provider"): void {
         void loadProviders();
       }, 1500);
     } catch (e) {
-      showStatus(statusEl, "Install failed: " + (e instanceof Error ? e.message : "Unknown error"), "error");
+      showStatus(statusEl, "Install failed: " + formatApiError(e), "error");
       installBtn.disabled = false;
       installBtn.textContent = "Install";
     }

@@ -1,6 +1,6 @@
 import { apiGet, apiPost } from "../lib/api";
 import { enhanceSelect, unenhanceSelect } from "../lib/dropdown";
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, formatApiError } from "../lib/helpers";
 
 // ── Cached provider/model data ──
 let _providers: string[] = [];
@@ -75,7 +75,7 @@ async function loadProfiles(): Promise<void> {
       enhanceSelect(el.id);
     });
   } catch (e) {
-    content.innerHTML = `<div class="error-state" style="padding:3rem;text-align:center;">Failed to load profiles: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    content.innerHTML = `<div class="error-state" style="padding:3rem;text-align:center;">Failed to load profiles: ${formatApiError(e)}</div>`;
   }
 }
 
@@ -422,7 +422,7 @@ function wireProfiles(): void {
         if (cancelBtn) cancelBtn.style.display = "none";
         (window as any).showToast?.("Profile updated", "success");
       } catch (e) {
-        (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
       }
     });
   });
@@ -552,10 +552,7 @@ function wireProfiles(): void {
         modelSelect.value = currentVal && models.includes(currentVal) ? currentVal : "";
         (window as any).showToast?.(`Models refreshed for ${provider} (${models.length} models)`, "success");
       } catch (e) {
-        (window as any).showToast?.(
-          "Failed to refresh: " + (e instanceof Error ? e.message : "Unknown"),
-          "error",
-        );
+        (window as any).showToast?.("Failed to refresh: " + formatApiError(e), "error");
       } finally {
         (btn as HTMLElement).style.opacity = "1";
       }
@@ -662,7 +659,7 @@ function showCreateProfileModal(): void {
       close();
       void loadProfiles();
     } catch (e) {
-      (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+      (window as any).showToast?.("Failed: " + formatApiError(e), "error");
       saveBtn.disabled = false;
       saveBtn.textContent = "Create";
     }
@@ -694,7 +691,7 @@ async function saveTools(profileName: string): Promise<void> {
     }
     (window as any).showToast?.("Tools updated", "success");
   } catch (e) {
-    (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+    (window as any).showToast?.("Failed: " + formatApiError(e), "error");
   }
 }
 

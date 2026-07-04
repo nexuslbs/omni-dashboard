@@ -1,6 +1,6 @@
 import { apiGet, apiPost, apiDelete, type PluginData } from "../lib/api";
 import { enhanceSelectElement } from "../lib/dropdown";
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, formatApiError } from "../lib/helpers";
 import {
   renderPluginConfig as sharedRenderPluginConfig,
   getCurrentConfig,
@@ -91,7 +91,7 @@ async function loadTools(): Promise<void> {
     content.innerHTML = renderToolsPage(allTools, toolMap);
     wireTools();
   } catch (e) {
-    content.innerHTML = `<div class="error-state" style="padding:3rem;text-align:center;">Failed to load tools: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    content.innerHTML = `<div class="error-state" style="padding:3rem;text-align:center;">Failed to load tools: ${formatApiError(e)}</div>`;
   }
 }
 
@@ -350,10 +350,7 @@ function wireTools(): void {
         dirtyCheckSaveButton(formEl, pluginName, savedConfigs);
         (window as any).showToast?.("Configuration saved", "success");
       } catch (e) {
-        (window as any).showToast?.(
-          "Failed to save: " + (e instanceof Error ? e.message : "Unknown"),
-          "error",
-        );
+        (window as any).showToast?.("Failed to save: " + formatApiError(e), "error");
       }
     });
   });
@@ -372,7 +369,7 @@ function wireTools(): void {
         (window as any).showToast?.(isCurrentlyEnabled ? "Disabled" : "Enabled", "success");
         void loadTools();
       } catch (e) {
-        (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
       }
     });
   });
@@ -390,10 +387,7 @@ function wireTools(): void {
         (window as any).showToast?.("Plugin uninstalled", "success");
         void loadTools();
       } catch (e) {
-        (window as any).showToast?.(
-          "Failed to uninstall: " + (e instanceof Error ? e.message : "Unknown"),
-          "error",
-        );
+        (window as any).showToast?.("Failed to uninstall: " + formatApiError(e), "error");
       }
     });
   });
@@ -414,10 +408,7 @@ function wireTools(): void {
         (window as any).showToast?.("Plugin reinstalled", "success");
         void loadTools();
       } catch (e) {
-        (window as any).showToast?.(
-          "Failed to reinstall: " + (e instanceof Error ? e.message : "Unknown"),
-          "error",
-        );
+        (window as any).showToast?.("Failed to reinstall: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
       }
@@ -440,10 +431,7 @@ function wireTools(): void {
         (window as any).showToast?.("Plugin installed", "success");
         void loadTools();
       } catch (e) {
-        (window as any).showToast?.(
-          "Failed to install: " + (e instanceof Error ? e.message : "Unknown"),
-          "error",
-        );
+        (window as any).showToast?.("Failed to install: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
       }
@@ -543,7 +531,7 @@ function showInstallModal(pluginType: "platform" | "mcp"): void {
         void loadTools();
       }, 1000);
     } catch (e) {
-      showStatus(statusEl, "Error: " + (e instanceof Error ? e.message : "Unknown error"), "error");
+      showStatus(statusEl, "Error: " + formatApiError(e), "error");
       installBtn.disabled = false;
       installBtn.textContent = "Install";
     }

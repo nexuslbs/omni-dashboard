@@ -5,6 +5,7 @@
 import { apiGet, apiPost } from "../lib/api";
 import { loadBoard } from "../lib/kanban-board";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
+import { formatApiError } from "../lib/helpers";
 
 // ── State ──
 let showArchived = false;
@@ -289,7 +290,7 @@ export function renderKanban(container: HTMLElement): void {
       closeCreateModal();
       void loadBoard(showArchived);
     } catch (e) {
-      alert("Failed to create task: " + (e instanceof Error ? e.message : "Unknown error"));
+      alert("Failed to create task: " + formatApiError(e));
     }
   });
 

@@ -1,4 +1,4 @@
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, formatApiError } from "../lib/helpers";
 import { enhanceSelect } from "../lib/dropdown";
 import { STATUS_LABELS, statusBadge } from "../lib/kanban-board";
 
@@ -329,6 +329,6 @@ async function loadHistory(): Promise<void> {
       });
     });
   } catch (e) {
-    listEl.innerHTML = `<div class="error-state">Failed to load history: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    listEl.innerHTML = `<div class="error-state">Failed to load history: ${formatApiError(e)}</div>`;
   }
 }

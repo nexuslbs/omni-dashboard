@@ -2,7 +2,7 @@ import { apiGet, apiPost, type SearchResult, type FsEntry, type FsReadResponse }
 import { marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, formatApiError } from "../lib/helpers";
 
 // Functions exposed by the global upload feature (defined in index.ts — same bundle)
 declare function checkExistingFiles(files: File[]): Promise<Set<string>>;
@@ -286,7 +286,7 @@ async function loadTree(reset: boolean): Promise<void> {
     }));
     renderTree(treeEl);
   } catch (e) {
-    treeEl.innerHTML = `<div class="error-state">Failed to load: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    treeEl.innerHTML = `<div class="error-state">Failed to load: ${formatApiError(e)}</div>`;
   }
 }
 
@@ -595,7 +595,7 @@ async function openFile(path: string): Promise<void> {
     highlightTreeItem(path);
     attachFilePathClick(contentView, path);
   } catch (e) {
-    contentView.innerHTML = `<div class="error-state">Failed to load: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    contentView.innerHTML = `<div class="error-state">Failed to load: ${formatApiError(e)}</div>`;
     contentView.scrollTop = 0;
   }
 }
@@ -658,7 +658,7 @@ async function doSearch(query: string): Promise<void> {
       });
     });
   } catch (e) {
-    contentView.innerHTML = `<div class="error-state">Search failed: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    contentView.innerHTML = `<div class="error-state">Search failed: ${formatApiError(e)}</div>`;
     contentView.scrollTop = 0;
   }
 }

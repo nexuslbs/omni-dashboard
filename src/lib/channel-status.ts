@@ -2,7 +2,7 @@
  * Channel status controls — open/close toggles, filter controls.
  * Extracted from src/pages/channels.ts
  */
-import { escapeHtml } from "./helpers";
+import { escapeHtml, formatApiError } from "./helpers";
 // syncSelectDisplay used indirectly via channel-config calls
 
 import type { ChannelData } from "./api";
@@ -243,7 +243,7 @@ export function wireChannelToggleButtons(onReload: () => void): void {
         (window as any).showToast?.(closed ? "Channel closed" : "Channel opened", "success");
         onReload();
       } catch (e) {
-        (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
       }
     });
   });
@@ -269,7 +269,7 @@ export function wireChannelToggleButtons(onReload: () => void): void {
         (window as any).showToast?.("Channel threads stopped", "success");
         onReload();
       } catch (e) {
-        (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
       } finally {
         btnEl.disabled = false;
         btnEl.textContent = originalText;

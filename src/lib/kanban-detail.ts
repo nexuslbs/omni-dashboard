@@ -5,7 +5,7 @@
 import { apiGet } from "./api";
 import { STATUS_LABELS, statusBadge, moveTask } from "./kanban-board";
 // ── Helper imports ──
-import { escapeHtml } from "./helpers";
+import { escapeHtml, formatApiError } from "./helpers";
 import { enhanceSelect, syncSelectDisplay } from "./dropdown";
 import { renderMessageCard, wireMessageCardToggles } from "./message-card";
 
@@ -236,7 +236,7 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
           const { router } = await import("../lib/router");
           router.go("kanban");
         } catch (e) {
-          alert("Failed to delete task: " + (e instanceof Error ? e.message : "Unknown error"));
+          alert("Failed to delete task: " + formatApiError(e));
         }
       }
     });
@@ -256,7 +256,7 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
         if (!res.ok) throw new Error((await res.text()) || "Failed");
         void loadTaskDetail(taskId);
       } catch (e) {
-        alert("Failed to archive/unarchive: " + (e instanceof Error ? e.message : "Unknown error"));
+        alert("Failed to archive/unarchive: " + formatApiError(e));
       }
     });
   }
@@ -437,7 +437,7 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
         if (modal) modal.style.display = "none";
         void loadTaskDetail(taskId);
       } catch (e) {
-        alert("Failed to update task: " + (e instanceof Error ? e.message : "Unknown error"));
+        alert("Failed to update task: " + formatApiError(e));
       }
     });
 
@@ -449,7 +449,7 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
     // Load activity
     void loadKanbanActivity(taskId);
   } catch (e) {
-    el.innerHTML = `<div class="error-state">Failed to load task: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    el.innerHTML = `<div class="error-state">Failed to load task: ${formatApiError(e)}</div>`;
   }
 }
 

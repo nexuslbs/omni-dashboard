@@ -1,6 +1,6 @@
 import { apiGet, apiPut, type SettingCategory } from "../lib/api";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, formatApiError } from "../lib/helpers";
 
 export function renderSettings(container: HTMLElement): void {
   container.innerHTML = `
@@ -40,7 +40,7 @@ async function loadSettings(): Promise<void> {
       }
     });
   } catch (e) {
-    content.innerHTML = `<div class="error-state" style="padding:3rem;text-align:center;">Failed to load settings: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    content.innerHTML = `<div class="error-state" style="padding:3rem;text-align:center;">Failed to load settings: ${formatApiError(e)}</div>`;
   }
 }
 
@@ -289,10 +289,7 @@ async function saveSetting(name: string, value: string): Promise<void> {
     if (actionsEl) actionsEl.style.display = "none";
     (window as any).showToast?.("Setting saved", "success");
   } catch (e) {
-    (window as any).showToast?.(
-      "Failed to save: " + (e instanceof Error ? e.message : "Unknown error"),
-      "error",
-    );
+    (window as any).showToast?.("Failed to save: " + formatApiError(e), "error");
   }
 }
 

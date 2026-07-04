@@ -1,5 +1,5 @@
 // ── Prompt Preview Page ──
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, formatApiError } from "../lib/helpers";
 import { API_BASE } from "../lib/api";
 
 export async function renderPrompt(container: HTMLElement): Promise<void> {
@@ -143,7 +143,7 @@ async function submitPreview(): Promise<void> {
   } catch (e) {
     loadingEl.style.display = "none";
     errorEl.style.display = "block";
-    errorEl.textContent = "Request failed: " + (e instanceof Error ? e.message : String(e));
+    errorEl.textContent = "Request failed: " + formatApiError(e);
   } finally {
     loadingEl.style.display = "none";
   }

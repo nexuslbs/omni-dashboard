@@ -9,7 +9,7 @@ import {
   type ToolUsage,
   type KanbanBoardResponse,
 } from "../lib/api";
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, formatApiError } from "../lib/helpers";
 
 export function renderOverview(container: HTMLElement): void {
   container.innerHTML = `
@@ -88,7 +88,7 @@ async function loadDashboard(): Promise<void> {
     content.innerHTML = renderDashboard(data, kanbanSnapshot);
     wireDashboard(data, kanbanSnapshot);
   } catch (e) {
-    content.innerHTML = `<div class="error-state" style="padding:3rem;text-align:center;">Failed to load: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    content.innerHTML = `<div class="error-state" style="padding:3rem;text-align:center;">Failed to load: ${formatApiError(e)}</div>`;
   }
 }
 

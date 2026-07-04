@@ -1,6 +1,6 @@
 import { apiGet } from "../lib/api";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, formatApiError } from "../lib/helpers";
 
 // ── Types ──
 interface ThreadRow {
@@ -212,7 +212,7 @@ async function loadFilters(): Promise<void> {
     void loadThreads();
   } catch (e) {
     document.getElementById("threads-list")!.innerHTML =
-      `<div class="error-state">Failed to load filters: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+      `<div class="error-state">Failed to load filters: ${formatApiError(e)}</div>`;
   }
 }
 
@@ -409,7 +409,7 @@ async function loadThreads(): Promise<void> {
       });
     });
   } catch (e) {
-    listEl.innerHTML = `<div class="error-state">Failed to load threads: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    listEl.innerHTML = `<div class="error-state">Failed to load threads: ${formatApiError(e)}</div>`;
   }
 }
 

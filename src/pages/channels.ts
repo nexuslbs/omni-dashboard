@@ -4,7 +4,7 @@
  */
 import { apiGet, type ChannelData, type PluginData } from "../lib/api";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
-import { escapeHtml, fixMissingSelectOptions } from "../lib/helpers";
+import { escapeHtml, fixMissingSelectOptions, formatApiError } from "../lib/helpers";
 import {
   _profiles,
   _providers,
@@ -163,7 +163,7 @@ async function loadChannels(): Promise<void> {
   } catch (e) {
     content.innerHTML =
       '<div class="error-state" style="padding:3rem;text-align:center;">Failed to load channels: ' +
-      (e instanceof Error ? e.message : "Unknown error") +
+      formatApiError(e) +
       "</div>";
   }
 }

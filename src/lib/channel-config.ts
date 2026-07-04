@@ -2,7 +2,7 @@
  * Channel config editing — name, profile, provider, model, planning mode controls.
  * Extracted from src/pages/channels.ts
  */
-import { escapeHtml } from "./helpers";
+import { escapeHtml, formatApiError } from "./helpers";
 import { enhanceSelect, unenhanceSelect } from "./dropdown";
 import { apiGet, apiPost } from "./api";
 
@@ -318,10 +318,7 @@ export function wireChannelConfigEditing(): void {
         }
         (window as any).showToast?.(`Models refreshed for ${provider} (${models.length} models)`, "success");
       } catch (e) {
-        (window as any).showToast?.(
-          "Failed to refresh models: " + (e instanceof Error ? e.message : "Unknown"),
-          "error",
-        );
+        (window as any).showToast?.("Failed to refresh models: " + formatApiError(e), "error");
       }
       el.style.opacity = "1";
     });
@@ -360,7 +357,7 @@ export function wireChannelConfigEditing(): void {
         if (cancelBtn) cancelBtn.style.display = "none";
         (window as any).showToast?.("Channel updated", "success");
       } catch (e) {
-        (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
       }
     });
   });

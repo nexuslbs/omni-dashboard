@@ -1,7 +1,7 @@
 import { apiGet, type MessagesResponse, type MessagesFilters } from "../lib/api";
 import { renderMessageCard, wireMessageCardToggles, typeColor } from "../lib/message-card";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, formatApiError } from "../lib/helpers";
 
 // ── State ──
 interface FilterState {
@@ -192,7 +192,7 @@ async function loadFilters(): Promise<void> {
   } catch (e) {
     console.error("Failed to load filters:", e);
     document.getElementById("messages-list")!.innerHTML =
-      `<div class="error-state">Failed to load filters: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+      `<div class="error-state">Failed to load filters: ${formatApiError(e)}</div>`;
   }
 }
 
@@ -554,7 +554,7 @@ async function loadMessages(): Promise<void> {
     // Sync current filters to URL search params
     syncFiltersToUrl();
   } catch (e) {
-    listEl.innerHTML = `<div class="error-state">Failed to load messages: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    listEl.innerHTML = `<div class="error-state">Failed to load messages: ${formatApiError(e)}</div>`;
   }
 }
 

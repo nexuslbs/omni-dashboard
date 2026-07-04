@@ -3,6 +3,7 @@
  * Extracted from src/pages/kanban.ts
  */
 import { apiGet, type KanbanBoardResponse, type KanbanTask } from "./api";
+import { formatApiError } from "../lib/helpers";
 
 // ── Status labels used across kanban modules ──
 export const STATUS_LABELS: Record<string, string> = {
@@ -326,6 +327,6 @@ export async function loadBoard(showArchived: boolean): Promise<void> {
       });
     });
   } catch (e) {
-    boardEl.innerHTML = `<div class="error-state">Failed to load board: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    boardEl.innerHTML = `<div class="error-state">Failed to load board: ${formatApiError(e)}</div>`;
   }
 }

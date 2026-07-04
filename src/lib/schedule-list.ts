@@ -3,7 +3,7 @@
  * Extracted from src/pages/schedule.ts
  */
 import { apiGet } from "./api";
-import { escapeHtml } from "./helpers";
+import { escapeHtml, formatApiError } from "./helpers";
 import { formatDate } from "./schedule-detail";
 import { router } from "./router";
 
@@ -88,7 +88,7 @@ export async function loadCronJobs(
     `;
     wireCronButtons(activeOnly, onStateChange);
   } catch (e) {
-    el.innerHTML = `<div class="error-state">Failed to load schedules: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    el.innerHTML = `<div class="error-state">Failed to load schedules: ${formatApiError(e)}</div>`;
   }
 }
 
@@ -163,7 +163,7 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
           "success",
         );
       } catch (e) {
-        (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
       } finally {
         runBtn.disabled = false;
         runBtn.textContent = originalText;
@@ -189,7 +189,7 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
         (window as any).showToast?.(isActive ? "Activated" : "Deactivated", "success");
         void loadCronJobs(activeOnly, onStateChange);
       } catch (e) {
-        (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
       }
     });
   });
@@ -210,7 +210,7 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
         if (!res.ok) throw new Error(await res.text());
         void loadCronJobs(activeOnly, onStateChange);
       } catch (e) {
-        (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
       }
     });
   });

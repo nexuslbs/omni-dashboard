@@ -3,7 +3,7 @@
  * Extracted from src/pages/schedule.ts
  */
 import { apiGet } from "./api";
-import { escapeHtml } from "./helpers";
+import { escapeHtml, formatApiError } from "./helpers";
 import { enhanceSelectElement } from "./dropdown";
 import { renderMessageCard, wireMessageCardToggles } from "./message-card";
 import { router } from "./router";
@@ -225,7 +225,7 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
     void loadScheduleSubtasks(job.id);
     return job;
   } catch (e) {
-    el.innerHTML = `<div class="error-state">Failed to load job details: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    el.innerHTML = `<div class="error-state">Failed to load job details: ${formatApiError(e)}</div>`;
     return null;
   }
 }
@@ -624,7 +624,7 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
       modal.remove();
       onReload();
     } catch (e) {
-      (window as any).showToast?.("Failed: " + (e instanceof Error ? e.message : "Unknown"), "error");
+      (window as any).showToast?.("Failed: " + formatApiError(e), "error");
     }
   });
 }

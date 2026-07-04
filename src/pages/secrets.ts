@@ -1,6 +1,6 @@
 import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
 import { enhanceSelectElement } from "../lib/dropdown";
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, formatApiError } from "../lib/helpers";
 
 export function renderSecrets(container: HTMLElement): void {
   container.innerHTML = `
@@ -61,7 +61,7 @@ async function loadSecrets(): Promise<void> {
         : renderSecretsPage(secrets);
     wireSecrets();
   } catch (e) {
-    content.innerHTML = `<div class="error-state" style="padding:3rem;text-align:center;">Failed to load secrets: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    content.innerHTML = `<div class="error-state" style="padding:3rem;text-align:center;">Failed to load secrets: ${formatApiError(e)}</div>`;
   }
 }
 
@@ -304,10 +304,7 @@ async function saveSecret(name: string, value: string): Promise<void> {
     if (actionsEl) actionsEl.style.display = "none";
     (window as any).showToast?.("Secret updated", "success");
   } catch (e) {
-    (window as any).showToast?.(
-      "Failed to save: " + (e instanceof Error ? e.message : "Unknown error"),
-      "error",
-    );
+    (window as any).showToast?.("Failed to save: " + formatApiError(e), "error");
   }
 }
 
@@ -317,7 +314,7 @@ async function deleteSecret(name: string): Promise<void> {
     (window as any).showToast?.("Secret deleted", "success");
     void loadSecrets();
   } catch (e) {
-    (window as any).showToast?.("Failed to delete: " + (e instanceof Error ? e.message : "Unknown"), "error");
+    (window as any).showToast?.("Failed to delete: " + formatApiError(e), "error");
   }
 }
 
@@ -398,7 +395,7 @@ async function showVersionsModal(name: string): Promise<void> {
     });
   } catch (e) {
     const listEl = backdrop.querySelector("#versions-list")!;
-    listEl.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--accent-rose);">Failed to load versions: ${e instanceof Error ? e.message : "Unknown error"}</div>`;
+    listEl.innerHTML = `<div style="text-align:center;padding:2rem;color:var(--accent-rose);">Failed to load versions: ${formatApiError(e)}</div>`;
   }
 }
 
@@ -506,7 +503,7 @@ function showCreateModal(): void {
       (window as any).showToast?.("Secret created", "success");
       void loadSecrets();
     } catch (e) {
-      showStatus(statusEl, "Error: " + (e instanceof Error ? e.message : "Unknown error"), "error");
+      showStatus(statusEl, "Error: " + formatApiError(e), "error");
       createBtn.disabled = false;
       createBtn.textContent = "Create";
     }

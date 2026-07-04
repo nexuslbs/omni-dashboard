@@ -2,7 +2,7 @@ import { apiGet, apiPost, type SearchResult } from "../lib/api";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 import { renderMessageCard, wireMessageCardToggles } from "../lib/message-card";
 import { router } from "../lib/router";
-import { escapeHtml } from "../lib/helpers";
+import { escapeHtml, formatApiError } from "../lib/helpers";
 import { API_BASE } from "../lib/api";
 
 // ── Block state ──
@@ -352,7 +352,7 @@ async function uploadMemoryFile(file: File, type: "memory" | "soul"): Promise<vo
       statusEl.textContent = "";
     }, 3000);
   } catch (e) {
-    statusEl.textContent = `❌ Error: ${e instanceof Error ? e.message : "Unknown"}`;
+    statusEl.textContent = `❌ Error: ${formatApiError(e)}`;
   }
 }
 
@@ -419,7 +419,7 @@ async function loadChannelContext(): Promise<void> {
       </div>`;
     }
   } catch (e) {
-    el.textContent = `Failed to load context: ${e instanceof Error ? e.message : "Unknown error"}`;
+    el.textContent = `Failed to load context: ${formatApiError(e)}`;
   }
 }
 
