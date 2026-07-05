@@ -35,7 +35,7 @@ def api(path, method="GET", data=None):
     try:
         with urllib.request.urlopen(req, timeout=60) as resp:
             raw = resp.read().decode("utf-8")
-            if resp.status != 200:
+            if resp.status not in (200, 201):
                 return {"error": f"HTTP {resp.status}", "raw": raw}
             try:
                 return json.loads(raw)
@@ -182,6 +182,173 @@ def test_secrets_crud():
         return False
 
     print(f"\n  ✅ Secrets CRUD lifecycle: all steps passed")
+    return True
+
+def test_actions_crud():
+    """
+    Test full CRUD lifecycle for saved actions:
+    - Create an action with a specific name
+    - Verify it shows in the actions list with the correct name
+    - Update the action name
+    - Verify the new name shows in the actions list
+    - Update the action tool_name and params
+    - Verify changes are reflected
+    - Delete the action
+    - Verify it no longer shows in the actions list
+    """
+    print(f"\n🎯 Actions CRUD lifecycle:")
+
+    action_name = "TestReadAttach"
+    updated_name = "RenamedAction"
+    tool_name = "builtin_read-attached-file"
+    updated_tool = "builtin_list-tool-details"
+    params = {"path": "/tmp/test.txt"}
+    updated_params = {"pattern": "*.txt"}
+
+    # ---- Step 1: Create ----
+    print(f"\n  1. Creating action '{action_name}'...")
+    create_result = api("/actions", method="POST", data={
+        "name": action_name,
+        "tool_name": tool_name,
+        "params": params,
+    })
+
+    if "error" in create_result:
+        check(f"Create returned success", False, create_result.get("error"))
+        return False
+
+    # The API returns the full list as a JSON array
+    if isinstance(create_result, dict) and "error" in create_result:
+        check(f"Create returned success", False, create_result["error"])
+        return False
+
+    # Find our created action in the returned list
+    created_list = create_result if isinstance(create_result, list) else []
+    created = None
+    for a in created_list:
+        if a.get("name") == action_name:
+            created = a
+            break
+
+    if created is None:
+        # Maybe the response wrapped differently
+        print(f"     Response: {json.dumps(create_result)[:200]}")
+        # Try to find by tool_name
+        for a in created_list:
+            if a.get("tool_name") == tool_name:
+                created = a
+                break
+
+    check(f"Created action found in list with name '{action_name}'",
+          created is not None)
+    if created:
+        action_id = created.get("id", "")
+        print(f"     Created: id={action_id}, name={created.get('name')}, tool={created.get('tool_name')}")
+        check(f"Tool name matches", created.get("tool_name") == tool_name,
+              f"Expected '{tool_name}', got '{created.get('tool_name')}'")
+    else:
+        print(f"     Could not find created action in response")
+        return False
+
+    # ---- Step 2: Verify in list ----
+    print(f"\n  2. Verifying action shows in list...")
+    list_result = api("/actions")
+    if "error" in list_result:
+        check("List actions endpoint OK", False, list_result.get("error"))
+        return False
+
+    actions_list = list_result if isinstance(list_result, list) else []
+    found = None
+    for a in actions_list:
+        if a.get("id") == action_id:
+            found = a
+            break
+
+    check(f"Action '{action_name}' found in list by id", found is not None)
+    if found:
+        check(f"Name matches created name", found.get("name") == action_name,
+              f"Expected '{action_name}', got '{found.get('name')}'")
+
+    # ---- Step 3: Update name ----
+    print(f"\n  3. Updating action name to '{updated_name}'...")
+    update_result = api(f"/actions/{action_id}", method="PUT", data={
+        "name": updated_name,
+    })
+
+    if "error" in update_result:
+        check(f"Update returned success", False, update_result.get("error"))
+        return False
+
+    # ---- Step 4: Verify updated name ----
+    print(f"\n  4. Verifying updated name appears...")
+    list_result2 = api("/actions")
+    actions_list2 = list_result2 if isinstance(list_result2, list) else []
+    found2 = None
+    for a in actions_list2:
+        if a.get("id") == action_id:
+            found2 = a
+            break
+
+    check(f"Action found in list after update", found2 is not None)
+    if found2:
+        check(f"Name is now '{updated_name}'", found2.get("name") == updated_name,
+              f"Expected '{updated_name}', got '{found2.get('name')}'")
+
+    # ---- Step 5: Update tool_name and params ----
+    print(f"\n  5. Updating action tool and params...")
+    update_result2 = api(f"/actions/{action_id}", method="PUT", data={
+        "tool_name": updated_tool,
+        "params": updated_params,
+    })
+
+    if "error" in update_result2:
+        check(f"Update returned success", False, update_result2.get("error"))
+        return False
+
+    # ---- Step 6: Verify updated tool and params ----
+    print(f"\n  6. Verifying tool and params updated...")
+    list_result3 = api("/actions")
+    actions_list3 = list_result3 if isinstance(list_result3, list) else []
+    found3 = None
+    for a in actions_list3:
+        if a.get("id") == action_id:
+            found3 = a
+            break
+
+    check(f"Action found after tool update", found3 is not None)
+    if found3:
+        check(f"Name preserved as '{updated_name}'", found3.get("name") == updated_name,
+              f"Expected '{updated_name}', got '{found3.get('name')}'")
+        check(f"Tool updated to '{updated_tool}'", found3.get("tool_name") == updated_tool,
+              f"Expected '{updated_tool}', got '{found3.get("tool_name")}'")
+        saved_params = found3.get("params", {})
+        check(f"Params updated to {updated_params}", saved_params == updated_params,
+              f"Expected {updated_params}, got {saved_params}")
+
+    # ---- Step 7: Delete ----
+    print(f"\n  7. Deleting action...")
+    delete_result = api(f"/actions/{action_id}", method="DELETE")
+
+    if "error" in delete_result:
+        check(f"Delete returned success", False, delete_result.get("error"))
+        return False
+
+    # ---- Step 8: Verify deletion ----
+    print(f"\n  8. Verifying action no longer shows...")
+    list_result4 = api("/actions")
+    actions_list4 = list_result4 if isinstance(list_result4, list) else []
+    found4 = None
+    for a in actions_list4:
+        if a.get("id") == action_id:
+            found4 = a
+            break
+
+    check(f"Action absent from list after deletion", found4 is None)
+    if found4:
+        print(f"     Action still present: {found4.get('name')}")
+        return False
+
+    print(f"\n  ✅ Actions CRUD lifecycle: all steps passed")
     return True
 
 
@@ -376,7 +543,13 @@ def run():
         failed += 1
     else:
         passed += 1
-
+    
+    # 10. Actions CRUD lifecycle test
+    if not test_actions_crud():
+        failed += 1
+    else:
+        passed += 1
+    
     # ===== SUMMARY =====
     total = passed + failed
     print(f"\n{'=' * 40}")
