@@ -6,7 +6,7 @@ import { escapeHtml, formatApiError } from "../lib/helpers";
 import { API_BASE } from "../lib/api";
 
 // ── Block state ──
-let _currentProfile = "default";
+let _currentProfile = "omni";
 let _currentChannel = "";
 
 export async function renderMemory(container: HTMLElement): Promise<void> {
@@ -276,7 +276,7 @@ async function loadStats(): Promise<void> {
           <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Vectors (pgvector)</div>
         </div>
         <div class="stat-card" style="text-align:center;padding:1rem;background:var(--bg-card);border-radius:8px;border:1px solid var(--glass-border);">
-          <div style="font-size:1.5rem;font-weight:700;color:var(--text-primary);">${stats.qdrant_wikis}</div>
+          <div style="font-size:1.5rem;font-weight:700;color:var(--text-primary);">${stats.qdrant_wikis ?? 0}</div>
           <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Wiki Vectors (Qdrant)</div>
         </div>
       </div>
@@ -295,8 +295,16 @@ async function loadSystemPrompt(): Promise<void> {
     // without MEMORY/SOUL content filled in (those have their own cards)
     const res = await fetch(`${API_BASE}/prompt/default`);
     if (res.ok) {
-      const data = await res.json();
-      el.textContent = data.content || "No system prompt template found.";
+      const contentType = res.headers.get("content-type") || "";
+      const text = await res.text();
+      let content: string;
+      if (contentType.includes("application/json")) {
+        const data = JSON.parse(text);
+        content = data.data?.content || data.content || text;
+      } else {
+        content = text;
+      }
+      el.textContent = content || "No system prompt template found.";
       return;
     }
     throw new Error("Failed to load prompt template");
@@ -435,7 +443,7 @@ async function searchMessages(query: string): Promise<void> {
     if (_currentProfile) params.set("profile", _currentProfile);
     if (_currentChannel) params.set("channel", _currentChannel);
     const data = await apiGet<{ messages: any[]; total: number }>(
-      `/memory/search-messages?${params.toString()}`,
+      `/memory/search?${params.toString()}`,
     );
     if (data.messages.length === 0) {
       el.innerHTML = '<div class="empty-state">No matching messages in this channel</div>';
