@@ -181,7 +181,7 @@ function renderToolsPage(tools: PluginData[], toolMap: Record<string, string[]>)
       }
 
       return `
-    <div class="card settings-card${!isDuplicated && p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}" data-source="${escapeHtml(p.source)}">
+    <div class="card settings-card${!isDuplicated && p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}" data-source="${escapeHtml(p.source)}" data-remote='${hasRemote ? escapeHtml(JSON.stringify(p.remote)) : ""}'>
       <div class="card-header" style="cursor:pointer;">
         <span class="card-title">
           <span class="plugin-name" style="font-weight:600;">${escapeHtml(p.name)}</span>
@@ -423,7 +423,14 @@ function wireTools(): void {
       const action = isCurrentlyEnabled ? "disable" : "enable";
 
       try {
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/${action}`, { source: pluginSource });
+        const payload: any = { source: pluginSource };
+        if (action === "enable" && pluginSource === "remote") {
+          const remoteAttr = card?.getAttribute("data-remote");
+          if (remoteAttr) {
+            try { payload.remote = JSON.parse(remoteAttr); } catch {}
+          }
+        }
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/${action}`, payload);
         (window as any).showToast?.(isCurrentlyEnabled ? "Disabled" : "Enabled", "success");
         void loadTools();
       } catch (e) {
