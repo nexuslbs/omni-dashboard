@@ -89,10 +89,11 @@ function statusBadgeStyle(status: string | null): string {
 
 // ── Utilities ──
 
-function truncateMiddle(str: string, maxLen: number): string {
-  if (str.length <= maxLen) return str;
+function truncateMiddle(str: unknown, maxLen: number): string {
+  const s = str == null ? "" : String(str);
+  if (s.length <= maxLen) return s;
   const half = Math.floor((maxLen - 3) / 2);
-  return str.slice(0, half) + "…" + str.slice(str.length - half);
+  return s.slice(0, half) + "…" + s.slice(s.length - half);
 }
 
 function formatRelativeTime(date: Date): string {

@@ -141,9 +141,22 @@ export async function loadBoard(showArchived: boolean): Promise<void> {
   const summaryEl = document.getElementById("kanban-summary")!;
   const countEl = document.getElementById("kanban-count")!;
   try {
-    const board = await apiGet<KanbanBoardResponse>(
-      "/kanban/board" + (showArchived ? "?show_archived=true" : ""),
-    );
+    const tasks = await apiGet<KanbanTask[]>("/kanban/tasks");
+    const KANBAN_COLUMNS: { id: string; title: string }[] = [
+      { id: "backlog", title: "Backlog" },
+      { id: "todo", title: "Todo" },
+      { id: "ready", title: "Ready" },
+      { id: "running", title: "In Progress" },
+      { id: "review", title: "Review" },
+      { id: "blocked", title: "Blocked" },
+      { id: "done", title: "Done" },
+    ];
+    const columns = KANBAN_COLUMNS.map((col) => ({
+      id: col.id,
+      title: col.title,
+      tasks: tasks.filter((t: KanbanTask) => t.status === col.id),
+    }));
+    const board: KanbanBoardResponse = { columns, total: tasks.length };
     if (board.columns.length === 0 || board.total === 0) {
       boardEl.innerHTML = `<div class="empty-state">No tasks yet</div>`;
       countEl.textContent = "";

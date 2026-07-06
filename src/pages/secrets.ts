@@ -53,7 +53,7 @@ async function loadSecrets(): Promise<void> {
   const content = document.getElementById("secrets-content")!;
   try {
     const response = await apiGet<any>("/secrets");
-    const secrets: SecretEntry[] = response.data || [];
+    const secrets: SecretEntry[] = response || [];
     changedSecrets.clear();
     content.innerHTML =
       secrets.length === 0
@@ -350,7 +350,7 @@ async function showVersionsModal(name: string): Promise<void> {
 
   try {
     const response = await apiGet<any>(`/secrets/${encodeURIComponent(name)}/versions`);
-    const versions: SecretVersion[] = response.data || [];
+    const versions: SecretVersion[] = response || [];
     const listEl = backdrop.querySelector("#versions-list")!;
 
     if (versions.length === 0) {

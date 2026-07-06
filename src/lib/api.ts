@@ -379,7 +379,7 @@ export interface PluginData {
   name: string;
   plugin_type: "platform" | "mcp" | "provider";
   version?: string;
-  source: "built-in" | "installed" | "bundled";
+  source: "built-in" | "installed" | "bundled" | "remote" | "mcp_config";
   status: "enabled" | "disabled" | "error";
   manifest: PluginManifest;
   config: Record<string, any>;
@@ -388,6 +388,12 @@ export interface PluginData {
   created_at?: string;
   updated_at?: string;
   needs_build?: boolean;
+  /** True when this source is NOT the primary (YAML-configured) one */
+  is_duplicated?: boolean;
+  /** True if the plugin has source code (Cargo.toml or entrypoint command) */
+  has_source_code?: boolean;
+  /** True if this is a script-language MCP (no Cargo.toml, just entrypoint command) */
+  is_script?: boolean;
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
@@ -396,7 +402,12 @@ export async function apiGet<T>(path: string): Promise<T> {
     const text = await res.text().catch(() => "Unknown error");
     throw new Error(`${res.status}: ${text}`);
   }
-  return res.json();
+  const json = await res.json();
+  // Unwrap {"success": true, "data": ...} → just the data
+  if (json && typeof json === "object" && "success" in json && "data" in json) {
+    return json.data as T;
+  }
+  return json as T;
 }
 
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {
@@ -409,7 +420,11 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
     const text = await res.text().catch(() => "Unknown error");
     throw new Error(`${res.status}: ${text}`);
   }
-  return res.json();
+  const json = await res.json();
+  if (json && typeof json === "object" && "success" in json && "data" in json) {
+    return json.data as T;
+  }
+  return json as T;
 }
 
 export async function apiPut<T>(path: string, body: unknown): Promise<T> {
@@ -422,7 +437,11 @@ export async function apiPut<T>(path: string, body: unknown): Promise<T> {
     const text = await res.text().catch(() => "Unknown error");
     throw new Error(`${res.status}: ${text}`);
   }
-  return res.json();
+  const json = await res.json();
+  if (json && typeof json === "object" && "success" in json && "data" in json) {
+    return json.data as T;
+  }
+  return json as T;
 }
 
 export async function apiDelete<T>(path: string): Promise<T> {
@@ -431,6 +450,9 @@ export async function apiDelete<T>(path: string): Promise<T> {
     const text = await res.text().catch(() => "Unknown error");
     throw new Error(`${res.status}: ${text}`);
   }
-  const text = await res.text();
-  return text ? JSON.parse(text) : (undefined as T);
+  const json = await res.json();
+  if (json && typeof json === "object" && "success" in json && "data" in json) {
+    return json.data as T;
+  }
+  return json as T;
 }

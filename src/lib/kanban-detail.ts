@@ -18,12 +18,10 @@ async function loadKanbanActivity(taskId: string): Promise<void> {
   const el = document.getElementById("kanban-threads");
   if (!el) return;
   try {
-    const res = await fetch(
-      `/api/kanban/tasks/${encodeURIComponent(taskId)}/threads?offset=${kanbanActivityOffset}&limit=${kanbanActivityLimit}&order=${kanbanActivityOrder}`,
+    const data = await apiGet<{ rows: any[]; total: number }>(
+      `/kanban/tasks/${encodeURIComponent(taskId)}/threads?offset=${kanbanActivityOffset}&limit=${kanbanActivityLimit}&order=${kanbanActivityOrder}`,
     );
-    if (!res.ok) throw new Error("Failed to load thread activity");
-    const data = await res.json();
-    const total = parseInt(data.total) || 0;
+    const total = parseInt(String(data.total)) || 0;
     const rows = data.rows || [];
 
     if (rows.length === 0) {

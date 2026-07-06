@@ -442,9 +442,7 @@ async function searchMessages(query: string): Promise<void> {
     params.set("limit", "10");
     if (_currentProfile) params.set("profile", _currentProfile);
     if (_currentChannel) params.set("channel", _currentChannel);
-    const data = await apiGet<{ messages: any[]; total: number }>(
-      `/memory/search?${params.toString()}`,
-    );
+    const data = await apiGet<{ messages: any[]; total: number }>(`/memory/search?${params.toString()}`);
     if (data.messages.length === 0) {
       el.innerHTML = '<div class="empty-state">No matching messages in this channel</div>';
       return;

@@ -380,7 +380,7 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
     /* ok */
   }
   try {
-    actions = await apiGet<any[]>("/schedule/actions");
+    actions = await apiGet<any[]>("/actions");
   } catch {
     /* ok */
   }

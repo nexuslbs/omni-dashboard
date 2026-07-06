@@ -1,6 +1,6 @@
 // ── Prompt Preview Page ──
 import { escapeHtml, formatApiError } from "../lib/helpers";
-import { API_BASE } from "../lib/api";
+import { API_BASE, apiGet } from "../lib/api";
 
 export async function renderPrompt(container: HTMLElement): Promise<void> {
   container.innerHTML = `
@@ -67,8 +67,7 @@ export async function renderPrompt(container: HTMLElement): Promise<void> {
 async function loadChannels(): Promise<void> {
   const select = document.getElementById("channel-select") as HTMLSelectElement;
   try {
-    const res = await fetch(`${API_BASE}/channels`);
-    const channels = await res.json();
+    const channels = await apiGet<any[]>("/channels");
     select.innerHTML = '<option value="">— Select a channel —</option>';
     for (const ch of channels) {
       const opt = document.createElement("option");

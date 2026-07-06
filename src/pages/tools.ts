@@ -116,21 +116,87 @@ function renderToolsPage(tools: PluginData[], toolMap: Record<string, string[]>)
     .map((p) => {
       const pluginTools = getPluginTools(p, toolMap);
       const hasTools = pluginTools.length > 0;
+      const isDuplicated = p.is_duplicated === true;
+      const hasRemote = p.remote !== undefined;
+      const hasRustSource = !p.is_script && p.has_source_code;
+
+      // Determine action buttons based on type rules:
+      function renderActionButtons(
+        p: PluginData,
+        isDuplicated: boolean,
+        hasRemote: boolean,
+        hasRustSource: boolean,
+      ): string {
+        if (isDuplicated) return "";
+        const nb = p.needs_build;
+        const buttons: string[] = [];
+
+        if (hasRemote) {
+          // ── Remote plugins ──
+          if (!hasRustSource) {
+            // Script or no-source remote: always Remove + Update
+            buttons.push(
+              `<button type="button" class="plugin-delete-btn" title="Remove from YAML" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`,
+            );
+            buttons.push(
+              `<button type="button" class="plugin-update-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Update</button>`,
+            );
+          } else if (nb) {
+            // Rust remote, not installed (needs_build): Remove + Update
+            buttons.push(
+              `<button type="button" class="plugin-delete-btn" title="Remove from YAML" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`,
+            );
+            buttons.push(
+              `<button type="button" class="plugin-update-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Update</button>`,
+            );
+          } else {
+            // Rust remote, installed: Uninstall + Reinstall
+            buttons.push(
+              `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>`,
+            );
+            buttons.push(
+              `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>`,
+            );
+          }
+        } else {
+          // ── Non-remote plugins ──
+          if (!hasRustSource) {
+            // Script or no-source: no build buttons (run directly)
+          } else if (nb) {
+            // Rust needs build: Install
+            buttons.push(
+              `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>`,
+            );
+          } else {
+            // Rust built: Reinstall + Uninstall
+            buttons.push(
+              `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>`,
+            );
+            buttons.push(
+              `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>`,
+            );
+          }
+        }
+        return buttons.join("");
+      }
+
       return `
-    <div class="card settings-card${p.source !== "built-in" && p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}">
+    <div class="card settings-card${!isDuplicated && p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}">
       <div class="card-header" style="cursor:pointer;">
         <span class="card-title">
           <span class="plugin-name" style="font-weight:600;">${escapeHtml(p.name)}</span>
           ${p.manifest?.label && p.manifest.label !== p.name ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.125rem;">${escapeHtml(p.manifest.label)}</div>` : ""}
         </span>
         <span class="tool-actions" style="display:flex;gap:0.25rem;align-items:center;">
-          <span class="badge ${getStatusBadgeClass(p.status, p.needs_build)}">${p.needs_build ? "○ Not Installed" : p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : "● Error"}</span>
+          <span class="badge ${getStatusBadgeClass(p.status, p.needs_build)}">${p.needs_build ? "○ Not Installed" : p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : p.status === "error" ? "● Error" : "○ Unknown"}</span>
+          ${isDuplicated ? `<span class="badge badge-warning" style="margin-left:0.125rem;" title="Another source is already active for this plugin name">Duplicated</span>` : ""}
+          ${!p.has_source_code ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">No source</span>` : ""}
+          ${p.is_script && !isDuplicated ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">Script</span>` : ""}
           ${p.version ? `<span class="badge badge-info" style="margin-left:0.125rem;">v${escapeHtml(p.version)}</span>` : ""}
           <span class="badge badge-neutral" style="margin-left:0.125rem;">${p.source === "built-in" ? "built-in tool" : `source: ${escapeHtml(p.source)}`}</span>
           ${hasTools ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">${pluginTools.length} tool${pluginTools.length > 1 ? "s" : ""}</span>` : ""}
-          ${p.source !== "built-in" && !p.needs_build ? `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>` : ""}
-          ${p.needs_build ? `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>` : p.source !== "built-in" ? `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>` : ""}
-          ${p.source !== "built-in" && !p.needs_build && p.status === "enabled" ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : p.source !== "built-in" && !p.needs_build && (p.status === "disabled" || p.status === "error") ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>` : ""}
+          ${renderActionButtons(p, isDuplicated, hasRemote, hasRustSource)}
+          ${!p.needs_build && p.status === "enabled" ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : !p.needs_build && (p.status === "disabled" || p.status === "error") ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>` : ""}
           <button type="button" class="plugin-expand-btn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0.25rem;font-size:1rem;" title="Toggle config">▶</button>
         </span>
       </div>
@@ -373,7 +439,7 @@ function wireTools(): void {
       if (!confirm(`Uninstall plugin "${pluginName}"?`)) return;
 
       try {
-        await apiDelete(`/plugins/${encodeURIComponent(pluginName)}`);
+        await apiDelete(`/plugins/${encodeURIComponent(pluginName)}?mode=uninstall`);
         (window as any).showToast?.("Plugin uninstalled", "success");
         void loadTools();
       } catch (e) {

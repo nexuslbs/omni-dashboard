@@ -4,20 +4,10 @@ import { join, dirname, basename } from "path";
 import { fileURLToPath } from "url";
 
 import { healthRouter } from "./routes/health.js";
-import { overviewRouter } from "./routes/overview.js";
-import { messagesRouter } from "./routes/messages.js";
-import { kanbanRouter } from "./routes/kanban.js";
-import { scheduleRouter } from "./routes/schedule.js";
 import { wikiSearchRouter } from "./routes/wiki-search.js";
 import { uploadsRouter } from "./routes/uploads.js";
 import { fsRouter } from "./routes/fs.js";
-import { threadsRouter } from "./routes/threads.js";
-import { channelsRouter } from "./routes/channels.js";
-import { settingsRouter } from "./routes/settings.js";
 import { profilesRouter } from "./routes/profiles.js";
-import { platformsRouter } from "./routes/platforms.js";
-import { pluginsRouter } from "./routes/plugins.js";
-import { memoryRouter } from "./routes/memory.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,87 +18,39 @@ const PORT = parseInt(process.env.PORT || "3001", 10);
 // JSON body parser
 app.use(express.json());
 
-// API routes
+// ────────────────────────────────────────────────────────────────────────────
+// Local (non-proxied) API routes — these don't hit the omniagent backend
+// ────────────────────────────────────────────────────────────────────────────
 app.use("/api/health", healthRouter);
-app.use("/api/overview", overviewRouter);
-app.use("/api/messages", messagesRouter);
-app.use("/api/kanban", kanbanRouter);
-app.use("/api/schedule", scheduleRouter);
 app.use("/api/wiki-search", wikiSearchRouter);
 app.use("/api/uploads", uploadsRouter);
 app.use("/api/fs", fsRouter);
-app.use("/api/threads", threadsRouter);
-app.use("/api/channels", channelsRouter);
-app.use("/api/settings", settingsRouter);
 app.use("/api/profiles", profilesRouter);
-app.use("/api/platforms", platformsRouter);
-app.use("/api/plugins", pluginsRouter);
-app.use("/api/memory", memoryRouter);
 
-// Proxy for prompt-preview — forward to OmniAgent HTTP API
-app.post("/api/prompt-preview/:channelName", async (req, res) => {
+// ────────────────────────────────────────────────────────────────────────────
+// Proxy to OmniAgent (Rust backend) — endpoints with irregular path mapping
+// ────────────────────────────────────────────────────────────────────────────
+const OMNIAGENT = process.env.OMNIAGENT_URL || "http://omniagent:8080";
+const PROXY_TIMEOUT = 15000;
+
+async function fetchAndForward(
+  req: express.Request,
+  res: express.Response,
+  targetUrl: string,
+): Promise<void> {
   try {
-    const { channelName } = req.params;
-    const { prompt, plan } = req.body;
-    const omniagentUrl = `http://omniagent:8080/prompt-preview/${encodeURIComponent(channelName)}`;
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    const response = await fetch(omniagentUrl, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ prompt, plan }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeout);
-    const data = await response.json();
-    res.status(response.status).json(data);
-  } catch (err) {
-    console.error("[prompt-preview] Proxy error:", err);
-    res
-      .status(502)
-      .json({ error: "Failed to reach OmniAgent: " + (err instanceof Error ? err.message : String(err)) });
-  }
-});
-
-// Proxy for raw prompt template — returns the template without resolved variables
-app.get("/api/prompt/:channelName", async (req, res) => {
-  try {
-    const { channelName } = req.params;
-    const omniagentUrl = `http://omniagent:8080/prompt/${encodeURIComponent(channelName)}`;
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 15000);
-    const response = await fetch(omniagentUrl, { signal: controller.signal });
-    clearTimeout(timeout);
-    if (!response.ok) {
-      res.status(response.status).json({ error: `OmniAgent returned ${response.status}` });
-      return;
-    }
-    const text = await response.text();
-    res.json({ content: text });
-  } catch (err) {
-    console.error("[prompt] Proxy error:", err);
-    res
-      .status(502)
-      .json({ error: "Failed to reach OmniAgent: " + (err instanceof Error ? err.message : String(err)) });
-  }
-});
-
-// Proxy for OmniAgent HTTP API — forward /api/actions*, /api/mcp/tools
-const OMNIAGENT_API = "http://omniagent:8080";
-
-async function omniagentProxy(req: express.Request, res: express.Response): Promise<void> {
-  try {
-    // Strip the /api prefix: /api/actions/5/run → /actions/5/run
-    const targetPath = req.path.replace(/^\/api/, "");
-    const targetUrl = new URL(targetPath, OMNIAGENT_API);
+    const timeout = setTimeout(() => controller.abort(), PROXY_TIMEOUT);
     const fetchOpts: RequestInit = {
       method: req.method,
       headers: { "Content-Type": "application/json" },
+      signal: controller.signal,
     };
     if (req.method !== "GET" && req.method !== "HEAD") {
       fetchOpts.body = JSON.stringify(req.body);
     }
-    const response = await fetch(targetUrl.toString(), fetchOpts);
+    const response = await fetch(targetUrl, fetchOpts);
+    clearTimeout(timeout);
     const text = await response.text();
     if (text) {
       try {
@@ -128,11 +70,85 @@ async function omniagentProxy(req: express.Request, res: express.Response): Prom
   }
 }
 
-app.get("/api/mcp/tools", omniagentProxy);
-// Proxy ANY method for /api/actions and sub-paths — use middleware pattern for Express 5 compat
-app.all(/^\/api\/actions(?:\/.*)?$/, omniagentProxy);
-// Proxy ANY method for /api/secrets and sub-paths
-app.all(/^\/api\/secrets(?:\/.*)?$/, omniagentProxy);
+// Stop channel
+app.post("/api/channels/:channelId/stop", (req, res) => {
+  const { channelId } = req.params;
+  fetchAndForward(req, res, `${OMNIAGENT}/stop/${encodeURIComponent(channelId)}`);
+});
+
+// Stop thread
+app.post("/api/threads/:threadId/stop", (req, res) => {
+  const { threadId } = req.params;
+  fetchAndForward(req, res, `${OMNIAGENT}/stop-thread/${encodeURIComponent(threadId)}`);
+});
+
+// Memory context preview
+app.get("/api/memory/context/:channelName", (req, res) => {
+  const { channelName } = req.params;
+  fetchAndForward(req, res, `${OMNIAGENT}/api/context/${encodeURIComponent(channelName)}`);
+});
+
+// Schedule run (manual cron trigger)
+app.post("/api/schedule/:id/run", (req, res) => {
+  const { id } = req.params;
+  fetchAndForward(req, res, `${OMNIAGENT}/run-cron/${encodeURIComponent(id)}`);
+});
+
+// Prompt preview
+app.post("/api/prompt-preview/:channelName", (req, res) => {
+  const { channelName } = req.params;
+  fetchAndForward(req, res, `${OMNIAGENT}/prompt-preview/${encodeURIComponent(channelName)}`);
+});
+
+// Raw prompt template
+app.get("/api/prompt/:channelName", (req, res) => {
+  const { channelName } = req.params;
+  fetchAndForward(req, res, `${OMNIAGENT}/prompt/${encodeURIComponent(channelName)}`);
+});
+
+// Close channel
+app.post("/api/channels/:channelId/close", (req, res) => {
+  const { channelId } = req.params;
+  fetchAndForward(req, res, `${OMNIAGENT}/close/${encodeURIComponent(channelId)}`);
+});
+
+// Open channel
+app.post("/api/channels/:channelId/open", (req, res) => {
+  const { channelId } = req.params;
+  fetchAndForward(req, res, `${OMNIAGENT}/open/${encodeURIComponent(channelId)}`);
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// Plugin routes — preserve /api prefix (Rust backend serves plugins at /api/plugins/*)
+app.all(/^\/api\/plugins(?:\/.*)?$/, async (req, res) => {
+  // Keep the /api prefix: /api/plugins → /api/plugins
+  const queryStr = req.url.includes("?") ? req.url.substring(req.url.indexOf("?")) : "";
+  const targetUrl = `${OMNIAGENT}${req.path}${queryStr}`;
+  await fetchAndForward(req, res, targetUrl);
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// Generic proxy — all other /api/* routes go to OmniAgent with /api prefix stripped
+// ────────────────────────────────────────────────────────────────────────────
+app.all(/^\/api\/(?!health|wiki-search|uploads|fs|profiles|plugins|templates)(?:.*)$/, async (req, res) => {
+  try {
+    // Strip the /api prefix: /api/messages/filters → /messages/filters
+    const targetPath = req.path.replace(/^\/api/, "");
+    // Preserve query string
+    const queryStr = req.url.includes("?") ? req.url.substring(req.url.indexOf("?")) : "";
+    const targetUrl = `${OMNIAGENT}${targetPath}${queryStr}`;
+    await fetchAndForward(req, res, targetUrl);
+  } catch (err) {
+    console.error(`[generic-proxy] Error ${req.method} ${req.path}:`, err);
+    res
+      .status(502)
+      .json({ error: "Failed to reach OmniAgent: " + (err instanceof Error ? err.message : String(err)) });
+  }
+});
+
+// ────────────────────────────────────────────────────────────────────────────
+// File-system based API routes
+// ────────────────────────────────────────────────────────────────────────────
 
 // GET /api/templates — List available template files across all profiles
 app.get("/api/templates", (_req, res) => {
@@ -175,10 +191,11 @@ app.get("/api/templates", (_req, res) => {
   }
 });
 
-// Serve static files from ../dist (built frontend)
+// ────────────────────────────────────────────────────────────────────────────
+// Static files
+// ────────────────────────────────────────────────────────────────────────────
 const distPath = join(__dirname, "..", "dist");
 if (existsSync(distPath)) {
-  // Hashed assets (in /assets/) — cache forever, immutable
   app.use(
     "/assets",
     express.static(join(distPath, "assets"), {
@@ -186,7 +203,6 @@ if (existsSync(distPath)) {
       immutable: true,
     }),
   );
-  // Other static files (favicon, .well-known, etc.) — moderate cache
   app.use(
     express.static(distPath, {
       maxAge: "1h",
@@ -201,7 +217,7 @@ if (existsSync(distPath)) {
   );
 }
 
-// SPA fallback — serve index.html for any non-API, non-file route
+// SPA fallback
 app.use((_req, res) => {
   const indexPath = join(distPath, "index.html");
   if (existsSync(indexPath)) {
@@ -214,7 +230,6 @@ app.use((_req, res) => {
   }
 });
 
-// Start server
 app.listen(PORT, "0.0.0.0", () => {
   console.log(`[server] Omni-dashboard server running on http://0.0.0.0:${PORT}`);
 });

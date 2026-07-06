@@ -596,12 +596,10 @@ function subtaskStatusColor(status: string): string {
 
 async function renderSubtasks(threadId: string): Promise<string> {
   try {
-    const res = await fetch(`/api/threads/${encodeURIComponent(threadId)}/subtasks`);
-    if (!res.ok) return "";
-    const data = await res.json();
-    if (!data.subtasks || data.subtasks.length === 0) return "";
+    const subtasks = await apiGet<any[]>(`/threads/${encodeURIComponent(threadId)}/subtasks`);
+    if (!subtasks || subtasks.length === 0) return "";
 
-    const rows = data.subtasks
+    const rows = subtasks
       .map((st: SubtaskRow) => {
         const emoji = subtaskStatusEmoji(st.status);
         const color = subtaskStatusColor(st.status);
@@ -613,8 +611,8 @@ async function renderSubtasks(threadId: string): Promise<string> {
       })
       .join("");
 
-    const total = data.subtasks.length;
-    const done = data.subtasks.filter(
+    const total = subtasks.length;
+    const done = subtasks.filter(
       (st: SubtaskRow) => st.status === "completed" || st.status === "cancelled",
     ).length;
 
