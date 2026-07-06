@@ -190,7 +190,7 @@ function renderToolsPage(tools: PluginData[], toolMap: Record<string, string[]>)
         <span class="tool-actions" style="display:flex;gap:0.25rem;align-items:center;">
           <span class="badge ${getStatusBadgeClass(p.status, p.needs_build)}">${p.needs_build ? "○ Not Installed" : p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : p.status === "error" ? "● Error" : "○ Unknown"}</span>
           ${isDuplicated ? `<span class="badge badge-warning" style="margin-left:0.125rem;" title="Another source is already active for this plugin name">Duplicated</span>` : ""}
-          ${!p.has_source_code ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">No source</span>` : ""}
+          ${!p.has_source_code ? `<span class="badge badge-warning" style="margin-left:0.125rem;" title="This plugin has no source code directory on disk (Cargo.toml or plugin.json). It exists only as a YAML config entry. Install it to fetch the source, or remove this entry if the plugin was removed.">No source</span>` : ""}
           ${p.is_script && !isDuplicated ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">Script</span>` : ""}
           ${p.version ? `<span class="badge badge-info" style="margin-left:0.125rem;">v${escapeHtml(p.version)}</span>` : ""}
           <span class="badge badge-neutral" style="margin-left:0.125rem;">${p.source === "built-in" ? "built-in tool" : `source: ${escapeHtml(p.source)}`}</span>
