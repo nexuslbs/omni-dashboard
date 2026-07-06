@@ -70,7 +70,7 @@ function renderPlatformsPage(platforms: PluginData[]): string {
   return platforms
     .map(
       (p) => `
-    <div class="card settings-card${p.source !== "built-in" && p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}">
+    <div class="card settings-card${p.source !== "built-in" && p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}" data-source="${escapeHtml(p.source)}">
       <div class="card-header" style="cursor:pointer;">
         <span class="card-title">
           <span class="plugin-name" style="font-weight:600;">${escapeHtml(p.name)}</span>
@@ -253,12 +253,13 @@ function wirePlatforms(): void {
     btn.addEventListener("click", async () => {
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
-      if (!pluginName) return;
+      const pluginSource = card?.getAttribute("data-source");
+      if (!pluginName || !pluginSource) return;
       const isCurrentlyEnabled = btn.textContent === "Disable";
       const action = isCurrentlyEnabled ? "disable" : "enable";
 
       try {
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/${action}`, {});
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/${action}`, { source: pluginSource });
         (window as any).showToast?.(isCurrentlyEnabled ? "Disabled" : "Enabled", "success");
         void loadPlatforms();
       } catch (e) {

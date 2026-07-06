@@ -181,7 +181,7 @@ function renderToolsPage(tools: PluginData[], toolMap: Record<string, string[]>)
       }
 
       return `
-    <div class="card settings-card${!isDuplicated && p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}">
+    <div class="card settings-card${!isDuplicated && p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}" data-source="${escapeHtml(p.source)}">
       <div class="card-header" style="cursor:pointer;">
         <span class="card-title">
           <span class="plugin-name" style="font-weight:600;">${escapeHtml(p.name)}</span>
@@ -416,12 +416,14 @@ function wireTools(): void {
     btn.addEventListener("click", async () => {
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
+      const pluginSource = card?.getAttribute("data-source");
       if (!pluginName) return;
+      if (!pluginSource) return;
       const isCurrentlyEnabled = btn.textContent === "Disable";
       const action = isCurrentlyEnabled ? "disable" : "enable";
 
       try {
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/${action}`, {});
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/${action}`, { source: pluginSource });
         (window as any).showToast?.(isCurrentlyEnabled ? "Disabled" : "Enabled", "success");
         void loadTools();
       } catch (e) {
