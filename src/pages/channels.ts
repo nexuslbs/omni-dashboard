@@ -2,7 +2,7 @@
  * Main channels page — rendering, data loading, filter state management.
  * Delegates to lib/channel-config.ts and lib/channel-status.ts.
  */
-import { apiGet, type ChannelData, type PluginData } from "../lib/api";
+import { apiGet, toCamelCase, type ChannelData, type PluginData } from "../lib/api";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 import { escapeHtml, fixMissingSelectOptions, formatApiError } from "../lib/helpers";
 import {
@@ -82,8 +82,10 @@ async function loadChannels(): Promise<void> {
     // Load provider names and their model lists
     try {
       const pluginResp = await apiGet<any>("/plugins");
-      const allPlugins: PluginData[] = pluginResp.data || pluginResp;
-      const providers = allPlugins.filter((p: PluginData) => p.plugin_type === "provider");
+      const allPlugins: PluginData[] = (pluginResp.data || pluginResp).map((p: Record<string, any>) =>
+        toCamelCase<PluginData>(p),
+      );
+      const providers = allPlugins.filter((p: PluginData) => p.pluginType === "provider");
       _providers.length = 0;
       _providers.push(...providers.map((p: PluginData) => p.name).sort());
       const modelMap: Record<string, string[]> = {};
@@ -92,7 +94,7 @@ async function loadChannels(): Promise<void> {
           // Use data already returned in the plugin list response instead of
           // fetching /api/plugins/:name individually (which may 404)
           const schema = [
-            ...((p.config_schema || []) as any[]),
+            ...((p.configSchema || []) as any[]),
             ...((p.manifest?.config_schema || []) as any[]),
           ];
           const modelField = schema.find((f: any) => f.key === "default_model");

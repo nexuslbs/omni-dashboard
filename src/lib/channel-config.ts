@@ -281,9 +281,15 @@ export function wireChannelConfigEditing(): void {
         await apiPost(`/plugins/${encodeURIComponent(provider)}/refresh-models`, {});
         // Re-fetch the plugin list to get updated config_schema
         const freshResp = await apiGet<any>("/plugins");
-        const freshPlugins: any[] = freshResp.data || freshResp;
+        const freshPlugins: any[] = (freshResp.data || freshResp).map((p: any) => {
+          const r: any = {};
+          for (const k of Object.keys(p)) {
+            r[k.replace(/_([a-z])/g, (_, c) => c.toUpperCase())] = p[k];
+          }
+          return r;
+        });
         const providerPlugin = freshPlugins.find(
-          (fp: any) => fp.plugin_type === "provider" && fp.name === provider,
+          (fp: any) => fp.pluginType === "provider" && fp.name === provider,
         );
         if (!providerPlugin) throw new Error(`Provider "${provider}" not found`);
         const schema = [

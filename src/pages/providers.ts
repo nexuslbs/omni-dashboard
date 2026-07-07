@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiDelete, type PluginData } from "../lib/api";
+import { apiGet, apiPost, apiDelete, toCamelCase, type PluginData } from "../lib/api";
 import { enhanceSelectElement } from "../lib/dropdown";
 import { escapeHtml, formatApiError } from "../lib/helpers";
 import {
@@ -35,8 +35,10 @@ async function loadProviders(): Promise<void> {
   const content = document.getElementById("providers-content")!;
   try {
     const response = await apiGet<any>("/plugins");
-    const allPlugins: PluginData[] = response.data || response;
-    const providers = allPlugins.filter((p: PluginData) => p.plugin_type === "provider");
+    const allPlugins: PluginData[] = (response.data || response).map((p: Record<string, any>) =>
+      toCamelCase<PluginData>(p),
+    );
+    const providers = allPlugins.filter((p: PluginData) => p.pluginType === "provider");
     content.innerHTML = renderProvidersPage(providers);
     wireProviders();
   } catch (e) {
@@ -49,7 +51,20 @@ function renderProvidersPage(providers: PluginData[]): string {
     return '<div class="empty-state">No providers found</div>';
   }
 
-  return providers
+  // Sort: same-name plugins ordered built-in → bundled → remote
+  const sourcePriority: Record<string, number> = {
+    "built-in": 0,
+    bundled: 1,
+    remote: 2,
+  };
+  const sorted = [...providers].sort((a, b) => {
+    if (a.name === b.name) {
+      return (sourcePriority[a.source] ?? 99) - (sourcePriority[b.source] ?? 99);
+    }
+    return a.name.localeCompare(b.name);
+  });
+
+  return sorted
     .map(
       (p) => `
     <div class="card settings-card" data-plugin-name="${escapeHtml(p.name)}" data-source="${escapeHtml(p.source)}">
@@ -59,12 +74,12 @@ function renderProvidersPage(providers: PluginData[]): string {
           ${p.manifest?.label && p.manifest.label !== p.name ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.125rem;">${escapeHtml(p.manifest.label)}</div>` : ""}
         </span>
         <span class="tool-actions" style="display:flex;gap:0.25rem;align-items:center;">
-          <span class="badge ${getStatusBadgeClass(p.status, p.needs_build)}">${p.needs_build ? "○ Not Installed" : p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : "● Error"}</span>
+          <span class="badge ${getStatusBadgeClass(p.status, p.needsBuild)}">${p.needsBuild ? "○ Not Installed" : p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : "● Error"}</span>
           ${p.version ? `<span class="badge badge-info" style="margin-left:0.125rem;">v${escapeHtml(p.version)}</span>` : ""}
           <span class="badge badge-neutral" style="margin-left:0.125rem;">source: ${escapeHtml(p.source)}</span>
-          ${p.source !== "built-in" && !p.needs_build ? `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>` : ""}
-          ${p.source !== "built-in" && !p.needs_build ? `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>` : ""}
-          ${p.needs_build ? `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>` : p.source !== "built-in" && (p.status === "enabled" || p.status === "error") ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : p.source !== "built-in" ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>` : ""}
+          ${p.source !== "built-in" && !p.needsBuild ? `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>` : ""}
+          ${p.source !== "built-in" && !p.needsBuild ? `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>` : ""}
+          ${p.needsBuild ? `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>` : p.source !== "built-in" && (p.status === "enabled" || p.status === "error") ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : p.source !== "built-in" ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>` : ""}
           <button type="button" class="plugin-expand-btn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0.25rem;font-size:1rem;" title="Toggle config">▶</button>
         </span>
       </div>
@@ -84,7 +99,7 @@ function renderPluginConfig(p: PluginData): string {
 
   // Use root config_schema (has enriched allowed_values from DYNAMIC_ENUM_CACHE)
   // falling back to manifest.config_schema for static field definitions
-  const schema = p.config_schema && p.config_schema.length > 0 ? p.config_schema : p.manifest?.config_schema;
+  const schema = p.configSchema && p.configSchema.length > 0 ? p.configSchema : p.manifest?.config_schema;
 
   // extraButtons removed — refresh buttons are now injected inline next to model fields
 
@@ -92,7 +107,7 @@ function renderPluginConfig(p: PluginData): string {
     schema,
     values: p.config || {},
     pluginName: p.name,
-    resolvedEnv: p.resolved_env,
+    resolvedEnv: p.resolvedEnv,
     status: p.status,
     isBuiltIn: false,
   });

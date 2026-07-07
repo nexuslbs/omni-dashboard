@@ -92,6 +92,37 @@ const sorted = [...items].sort((a, b) => {
 
 Across different names, plugins are sorted alphabetically by name.
 
+## Plugin Action Buttons (tools.ts)
+
+Action buttons are rendered by `renderActionButtons()` in `tools.ts`. The `is_duplicated` flag does NOT suppress buttons — duplicated sources with source code remain actionable.
+
+**Remove button rule:** Remove (`plugin-delete-btn`) shows for non-builtin plugins when NOT installed (`needs_build=true`) OR script plugins. For installed Rust plugins, use Uninstall instead.
+
+| Scenario | `hasRemote` | `hasCompilableSource` | `needsBuild` | Buttons |
+|----------|-------------|-----------------|---------------|---------|
+| Remote script/no-source | ✅ | ❌ | — | **Remove + Update** |
+| Remote Rust, not yet built | ✅ | ✅ | ✅ | **Remove + Install + Update** |
+| Remote Rust, already built | ✅ | ✅ | ❌ | **Uninstall + Reinstall + Update** |
+| Bundled script/no-source | ❌ | ❌ | — | **Remove** |
+| Bundled Rust, not yet built | ❌ | ✅ | ✅ | **Install + Remove** |
+| Bundled Rust, already built | ❌ | ✅ | ❌ | **Reinstall + Uninstall** |
+| Built-in script/no-source | ❌ | ❌ | — | *(no buttons)* |
+| Built-in Rust, not yet built | ❌ | ✅ | ✅ | *(no buttons)* |
+| Built-in Rust, already built | ❌ | ✅ | ❌ | *(no buttons)* |
+
+**Button actions:**
+- **Remove** (`plugin-delete-btn`): `DELETE /api/plugins/{name}` — removes YAML entry
+- **Install** (`plugin-install-btn`): `POST /api/plugins/{name}/install` — compiles + registers
+- **Uninstall** (`plugin-remove-btn`): `DELETE /api/plugins/{name}?mode=uninstall` — removes binary + disables
+- **Reinstall** (`plugin-reinstall-btn`): `POST /api/plugins/{name}/reinstall` — recompiles binary
+- **Update** (`plugin-update-btn`, remote only): `POST /api/plugins/{name}/download` — re-clones from git + recompiles
+- **Enable/Disable** (`plugin-toggle-btn`): `POST /api/plugins/{name}/enable` or `/disable`
+
+**Update vs Reinstall vs Install:**
+- **Update** (remote only): re-clones from git (removes existing clone, fresh shallow clone), then recompiles if Rust
+- **Reinstall**: recompiles existing source on disk (no git pull)
+- **Install**: compiles from existing source and registers in YAML
+
 ## Disabled Plugin Card Styling
 
 All disabled plugins (regardless of `is_duplicated` status) get the `.plugin-disabled-card` amber/yellow background styling:

@@ -1,4 +1,4 @@
-import { apiGet, apiPost, apiDelete, type PluginData } from "../lib/api";
+import { apiGet, apiPost, apiDelete, toCamelCase, type PluginData } from "../lib/api";
 import { enhanceSelectElement } from "../lib/dropdown";
 import { escapeHtml, formatApiError } from "../lib/helpers";
 import {
@@ -37,14 +37,16 @@ async function loadPlatforms(): Promise<void> {
   try {
     const response = await apiGet<any>("/plugins");
     // Backend wraps in { success, data } — extract data array
-    const allPlugins: PluginData[] = response.data || response;
+    const allPlugins: PluginData[] = (response.data || response).map((p: Record<string, any>) =>
+      toCamelCase<PluginData>(p),
+    );
     // Filter to platforms only, plus always include cli as built-in
-    const platforms = allPlugins.filter((p: PluginData) => p.plugin_type === "platform");
+    const platforms = allPlugins.filter((p: PluginData) => p.pluginType === "platform");
     // Ensure cli is always shown even if not returned by API
     if (!platforms.find((p) => p.name === "cli")) {
       platforms.unshift({
         name: "cli",
-        plugin_type: "platform",
+        pluginType: "platform",
         source: "built-in",
         status: "enabled",
         manifest: {
@@ -67,7 +69,20 @@ function renderPlatformsPage(platforms: PluginData[]): string {
     return '<div class="empty-state">No platforms found</div>';
   }
 
-  return platforms
+  // Sort: same-name plugins ordered built-in → bundled → remote
+  const sourcePriority: Record<string, number> = {
+    "built-in": 0,
+    bundled: 1,
+    remote: 2,
+  };
+  const sorted = [...platforms].sort((a, b) => {
+    if (a.name === b.name) {
+      return (sourcePriority[a.source] ?? 99) - (sourcePriority[b.source] ?? 99);
+    }
+    return a.name.localeCompare(b.name);
+  });
+
+  return sorted
     .map(
       (p) => `
     <div class="card settings-card${p.source !== "built-in" && p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}" data-source="${escapeHtml(p.source)}">
@@ -77,13 +92,13 @@ function renderPlatformsPage(platforms: PluginData[]): string {
           ${p.manifest?.label && p.manifest.label !== p.name ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.125rem;">${escapeHtml(p.manifest.label)}</div>` : ""}
         </span>
         <span class="tool-actions" style="display:flex;gap:0.25rem;align-items:center;">
-          <span class="badge ${getStatusBadgeClass(p.status, p.needs_build)}">${p.needs_build ? "○ Not Installed" : p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : "● Error"}</span>
+          <span class="badge ${getStatusBadgeClass(p.status, p.needsBuild)}">${p.needsBuild ? "○ Not Installed" : p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : "● Error"}</span>
           ${p.version ? `<span class="badge badge-info" style="margin-left:0.125rem;">v${escapeHtml(p.version)}</span>` : ""}
           <span class="badge badge-neutral" style="margin-left:0.125rem;">source: ${escapeHtml(p.source)}</span>
-          ${p.source !== "built-in" && !p.needs_build ? `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>` : ""}
-          ${p.source !== "built-in" && !p.needs_build ? `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>` : ""}
-          ${p.source !== "built-in" && !p.needs_build && p.manifest?.capabilities?.setup ? `<button type="button" class="plugin-setup-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Setup</button>` : ""}
-          ${p.needs_build ? `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>` : p.source !== "built-in" && p.status === "enabled" ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : p.source !== "built-in" && (p.status === "disabled" || p.status === "error") ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>` : ""}
+          ${p.source !== "built-in" && !p.needsBuild ? `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>` : ""}
+          ${p.source !== "built-in" && !p.needsBuild ? `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>` : ""}
+          ${p.source !== "built-in" && !p.needsBuild && p.manifest?.capabilities?.setup ? `<button type="button" class="plugin-setup-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Setup</button>` : ""}
+          ${p.needsBuild ? `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>` : p.source !== "built-in" && p.status === "enabled" ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : p.source !== "built-in" && (p.status === "disabled" || p.status === "error") ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>` : ""}
           <button type="button" class="plugin-expand-btn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0.25rem;font-size:1rem;" title="Toggle config">▶</button>
         </span>
       </div>
@@ -106,7 +121,7 @@ function renderPluginConfig(p: PluginData): string {
     schema: p.manifest?.config_schema,
     values: p.config || {},
     pluginName: p.name,
-    resolvedEnv: p.resolved_env,
+    resolvedEnv: p.resolvedEnv,
     status: p.status,
     isBuiltIn: false,
   });

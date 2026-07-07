@@ -377,23 +377,25 @@ export interface PluginManifest {
 export interface PluginData {
   id?: string;
   name: string;
-  plugin_type: "platform" | "tool" | "provider";
+  pluginType: "platform" | "tool" | "provider";
   version?: string;
   source: "built-in" | "installed" | "bundled" | "remote" | "mcp_config";
   status: "enabled" | "disabled" | "error";
   manifest: PluginManifest;
   config: Record<string, any>;
-  config_schema?: ConfigField[];
-  resolved_env?: Record<string, string>;
-  created_at?: string;
-  updated_at?: string;
-  needs_build?: boolean;
+  configSchema?: ConfigField[];
+  resolvedEnv?: Record<string, string>;
+  createdAt?: string;
+  updatedAt?: string;
+  needsBuild?: boolean;
   /** True when this source is NOT the primary (YAML-configured) one */
-  is_duplicated?: boolean;
+  isDuplicated?: boolean;
   /** True if the plugin has source code (Cargo.toml or entrypoint command) */
-  has_source_code?: boolean;
+  hasSourceCode?: boolean;
   /** True if this is a script-language MCP (no Cargo.toml, just entrypoint command) */
-  is_script?: boolean;
+  isScript?: boolean;
+  /** Remote plugin metadata (url, path, ref) */
+  remote?: Record<string, any>;
 }
 
 export async function apiGet<T>(path: string): Promise<T> {
@@ -408,6 +410,16 @@ export async function apiGet<T>(path: string): Promise<T> {
     return json.data as T;
   }
   return json as T;
+}
+
+/** Convert all snake_case keys in an object to camelCase (shallow). */
+export function toCamelCase<T = Record<string, any>>(obj: Record<string, any>): T {
+  const result: Record<string, any> = {};
+  for (const key of Object.keys(obj)) {
+    const camelKey = key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
+    result[camelKey] = obj[key];
+  }
+  return result as T;
 }
 
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {
@@ -427,6 +439,8 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   return json as T;
 }
 
+/** Convert all snake_case keys in an object to camelCase (shallow). */
+
 export async function apiPut<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
     method: "PUT",
@@ -444,6 +458,8 @@ export async function apiPut<T>(path: string, body: unknown): Promise<T> {
   return json as T;
 }
 
+/** Convert all snake_case keys in an object to camelCase (shallow). */
+
 export async function apiDelete<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, { method: "DELETE" });
   if (!res.ok) {
@@ -456,3 +472,5 @@ export async function apiDelete<T>(path: string): Promise<T> {
   }
   return json as T;
 }
+
+/** Convert all snake_case keys in an object to camelCase (shallow). */

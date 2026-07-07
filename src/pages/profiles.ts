@@ -29,8 +29,14 @@ async function loadProfiles(): Promise<void> {
     // Load provider names and their model lists (same pattern as channels)
     try {
       const pluginResp = await apiGet<any>("/plugins");
-      const allPlugins: any[] = pluginResp.data || pluginResp;
-      const providers = allPlugins.filter((p: any) => p.plugin_type === "provider");
+      const allPlugins: any[] = (pluginResp.data || pluginResp).map((p: any) => {
+        const r: any = {};
+        for (const k of Object.keys(p)) {
+          r[k.replace(/_([a-z])/g, (_, c) => c.toUpperCase())] = p[k];
+        }
+        return r;
+      });
+      const providers = allPlugins.filter((p: any) => p.pluginType === "provider");
       _providers = providers.map((p: any) => p.name).sort();
       const modelMap: Record<string, string[]> = {};
       for (const p of providers) {
@@ -38,7 +44,7 @@ async function loadProfiles(): Promise<void> {
           // Use data already returned in the plugin list response instead of
           // fetching /api/plugins/:name individually (which may 404)
           const schema = [
-            ...((p.config_schema || []) as any[]),
+            ...((p.configSchema || []) as any[]),
             ...((p.manifest?.config_schema || []) as any[]),
           ];
           const modelField = schema.find((f: any) => f.key === "default_model");
@@ -521,9 +527,15 @@ function wireProfiles(): void {
         await apiPost(`/plugins/${encodeURIComponent(provider)}/refresh-models`, {});
         // Re-fetch the plugin list to get updated config_schema
         const freshResp = await apiGet<any>("/plugins");
-        const freshPlugins: any[] = freshResp.data || freshResp;
+        const freshPlugins: any[] = (freshResp.data || freshResp).map((p: any) => {
+          const r: any = {};
+          for (const k of Object.keys(p)) {
+            r[k.replace(/_([a-z])/g, (_, c) => c.toUpperCase())] = p[k];
+          }
+          return r;
+        });
         const providerPlugin = freshPlugins.find(
-          (fp: any) => fp.plugin_type === "provider" && fp.name === provider,
+          (fp: any) => fp.pluginType === "provider" && fp.name === provider,
         );
         if (!providerPlugin) throw new Error(`Provider "${provider}" not found`);
         const schema = [
