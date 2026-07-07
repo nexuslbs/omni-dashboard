@@ -377,7 +377,7 @@ export interface PluginManifest {
 export interface PluginData {
   id?: string;
   name: string;
-  plugin_type: "platform" | "mcp" | "provider";
+  plugin_type: "platform" | "tool" | "provider";
   version?: string;
   source: "built-in" | "installed" | "bundled" | "remote" | "mcp_config";
   status: "enabled" | "disabled" | "error";

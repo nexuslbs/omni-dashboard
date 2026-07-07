@@ -358,7 +358,7 @@ function wirePlatforms(): void {
 
 // ── Install from Git Modal ──
 
-function showInstallModal(pluginType: "platform" | "mcp"): void {
+function showInstallModal(pluginType: "platform" | "tool"): void {
   const typeLabel = pluginType === "platform" ? "Platform" : "Tool";
   const backdrop = document.createElement("div");
   backdrop.style.cssText =

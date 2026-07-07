@@ -417,7 +417,7 @@ function wireProviders(): void {
   // ── Config dirty-state tracking ──
 }
 
-function showInstallModal(pluginType: "platform" | "mcp" | "provider"): void {
+function showInstallModal(pluginType: "platform" | "tool" | "provider"): void {
   const typeLabel = pluginType === "platform" ? "Platform" : pluginType === "provider" ? "Provider" : "Tool";
   const backdrop = document.createElement("div");
   backdrop.style.cssText =

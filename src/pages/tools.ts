@@ -45,7 +45,7 @@ async function loadTools(): Promise<void> {
     // Backend wraps in { success, data } — extract data array
     const allPlugins: PluginData[] = pluginsResponse.data || pluginsResponse;
     // Filter to MCP type plugins
-    const mcpPlugins = allPlugins.filter((p: PluginData) => p.plugin_type === "mcp");
+    const toolPlugins = allPlugins.filter((p: PluginData) => p.plugin_type === "tool");
 
     // Build tool map: server_name -> tool names
     const toolMap: Record<string, string[]> = {};
@@ -64,10 +64,10 @@ async function loadTools(): Promise<void> {
     // Add built-in tools
     for (const name of BUILT_IN_TOOLS) {
       // Don't add if a plugin with same name already exists
-      if (!mcpPlugins.find((p) => p.name === name)) {
+      if (!toolPlugins.find((p) => p.name === name)) {
         allTools.push({
           name,
-          plugin_type: "mcp",
+          plugin_type: "tool",
           source: "built-in",
           status: "enabled",
           manifest: {
@@ -86,7 +86,7 @@ async function loadTools(): Promise<void> {
     }
 
     // Add plugin-based tools
-    allTools.push(...mcpPlugins);
+    allTools.push(...toolPlugins);
 
     content.innerHTML = renderToolsPage(allTools, toolMap);
     wireTools();
@@ -427,7 +427,9 @@ function wireTools(): void {
         if (action === "enable" && pluginSource === "remote") {
           const remoteAttr = card?.getAttribute("data-remote");
           if (remoteAttr) {
-            try { payload.remote = JSON.parse(remoteAttr); } catch {}
+            try {
+              payload.remote = JSON.parse(remoteAttr);
+            } catch {}
           }
         }
         await apiPost(`/plugins/${encodeURIComponent(pluginName)}/${action}`, payload);
@@ -506,7 +508,7 @@ function wireTools(): void {
 
 // ── Install from Git Modal ──
 
-function showInstallModal(pluginType: "platform" | "mcp"): void {
+function showInstallModal(pluginType: "platform" | "tool"): void {
   const typeLabel = pluginType === "platform" ? "Platform" : "Tool";
   const backdrop = document.createElement("div");
   backdrop.style.cssText =
