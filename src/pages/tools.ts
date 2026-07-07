@@ -142,12 +142,12 @@ function renderToolsPage(tools: PluginData[], toolMap: Record<string, string[]>)
               `<button type="button" class="plugin-update-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Update</button>`,
             );
           } else if (nb) {
-            // Rust remote, not installed (needs_build): Remove + Update
+            // Rust remote, not installed (needs_build): Remove + Install
             buttons.push(
               `<button type="button" class="plugin-delete-btn" title="Remove from YAML" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`,
             );
             buttons.push(
-              `<button type="button" class="plugin-update-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Update</button>`,
+              `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>`,
             );
           } else {
             // Rust remote, installed: Uninstall + Reinstall
