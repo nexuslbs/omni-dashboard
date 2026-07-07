@@ -73,49 +73,49 @@ async function fetchAndForward(
 // Stop channel
 app.post("/api/channels/:channelId/stop", (req, res) => {
   const { channelId } = req.params;
-  fetchAndForward(req, res, `${OMNIAGENT}/stop/${encodeURIComponent(channelId)}`);
+  void fetchAndForward(req, res, `${OMNIAGENT}/stop/${encodeURIComponent(channelId)}`);
 });
 
 // Stop thread
 app.post("/api/threads/:threadId/stop", (req, res) => {
   const { threadId } = req.params;
-  fetchAndForward(req, res, `${OMNIAGENT}/stop-thread/${encodeURIComponent(threadId)}`);
+  void fetchAndForward(req, res, `${OMNIAGENT}/stop-thread/${encodeURIComponent(threadId)}`);
 });
 
 // Memory context preview
 app.get("/api/memory/context/:channelName", (req, res) => {
   const { channelName } = req.params;
-  fetchAndForward(req, res, `${OMNIAGENT}/api/context/${encodeURIComponent(channelName)}`);
+  void fetchAndForward(req, res, `${OMNIAGENT}/api/context/${encodeURIComponent(channelName)}`);
 });
 
 // Schedule run (manual cron trigger)
 app.post("/api/schedule/:id/run", (req, res) => {
   const { id } = req.params;
-  fetchAndForward(req, res, `${OMNIAGENT}/run-cron/${encodeURIComponent(id)}`);
+  void fetchAndForward(req, res, `${OMNIAGENT}/run-cron/${encodeURIComponent(id)}`);
 });
 
 // Prompt preview
 app.post("/api/prompt-preview/:channelName", (req, res) => {
   const { channelName } = req.params;
-  fetchAndForward(req, res, `${OMNIAGENT}/prompt-preview/${encodeURIComponent(channelName)}`);
+  void fetchAndForward(req, res, `${OMNIAGENT}/prompt-preview/${encodeURIComponent(channelName)}`);
 });
 
 // Raw prompt template
 app.get("/api/prompt/:channelName", (req, res) => {
   const { channelName } = req.params;
-  fetchAndForward(req, res, `${OMNIAGENT}/prompt/${encodeURIComponent(channelName)}`);
+  void fetchAndForward(req, res, `${OMNIAGENT}/prompt/${encodeURIComponent(channelName)}`);
 });
 
 // Close channel
 app.post("/api/channels/:channelId/close", (req, res) => {
   const { channelId } = req.params;
-  fetchAndForward(req, res, `${OMNIAGENT}/close/${encodeURIComponent(channelId)}`);
+  void fetchAndForward(req, res, `${OMNIAGENT}/close/${encodeURIComponent(channelId)}`);
 });
 
 // Open channel
 app.post("/api/channels/:channelId/open", (req, res) => {
   const { channelId } = req.params;
-  fetchAndForward(req, res, `${OMNIAGENT}/open/${encodeURIComponent(channelId)}`);
+  void fetchAndForward(req, res, `${OMNIAGENT}/open/${encodeURIComponent(channelId)}`);
 });
 
 // ────────────────────────────────────────────────────────────────────────────

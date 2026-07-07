@@ -197,7 +197,7 @@ function renderToolsPage(tools: PluginData[], toolMap: Record<string, string[]>)
       }
 
       return `
-    <div class="card settings-card${!isDuplicated && p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}" data-source="${escapeHtml(p.source)}" data-remote='${hasRemote ? escapeHtml(JSON.stringify(p.remote)) : ""}'>
+    <div class="card settings-card${p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}" data-source="${escapeHtml(p.source)}" data-remote='${hasRemote ? escapeHtml(JSON.stringify(p.remote)) : ""}'>
       <div class="card-header" style="cursor:pointer;">
         <span class="card-title">
           <span class="plugin-name" style="font-weight:600;">${escapeHtml(p.name)}</span>
@@ -445,7 +445,9 @@ function wireTools(): void {
           if (remoteAttr) {
             try {
               payload.remote = JSON.parse(remoteAttr);
-            } catch {}
+            } catch {
+              /* ignore JSON parse errors on remote attribute */
+            }
           }
         }
         await apiPost(`/plugins/${encodeURIComponent(pluginName)}/${action}`, payload);

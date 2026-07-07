@@ -1,6 +1,6 @@
 import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
 import { enhanceSelectElement } from "../lib/dropdown";
-import { escapeHtml, fixMissingSelectOptions, formatApiError } from "../lib/helpers";
+import { escapeHtml, fixMissingSelectOptions } from "../lib/helpers";
 
 // ── Types ──
 interface Action {
