@@ -71,6 +71,43 @@ The `/messages` page displays each message's `thread_sequence` as an iteration b
 
 The badge is rendered in `src/lib/message-card.ts` using the `.ev-iter-badge` CSS class (cyan color, monospace font, 70% opacity).
 
+## Plugin List Sorting (Tools / Platforms / Providers)
+
+Plugins with the same name are sorted by **source priority**: built-in → bundled → remote.
+This applies to all three listing pages (`tools.ts`, `platforms.ts`, `providers.ts`):
+
+```typescript
+const sourcePriority: Record<string, number> = {
+  "built-in": 0,
+  bundled: 1,
+  remote: 2,
+};
+const sorted = [...items].sort((a, b) => {
+  if (a.name === b.name) {
+    return (sourcePriority[a.source] ?? 99) - (sourcePriority[b.source] ?? 99);
+  }
+  return a.name.localeCompare(b.name);
+});
+```
+
+Across different names, plugins are sorted alphabetically by name.
+
+## Disabled Plugin Card Styling
+
+All disabled plugins (regardless of `is_duplicated` status) get the `.plugin-disabled-card` amber/yellow background styling:
+
+```typescript
+// tools.ts line 200 — NO !isDuplicated guard
+<div class="card settings-card${p.status === "disabled" ? " plugin-disabled-card" : ""}">
+```
+
+The platforms page uses a slightly different condition — built-in plugins are excluded from the amber card:
+
+```typescript
+// platforms.ts — built-in disabled don't get amber card
+p.source !== "built-in" && p.status === "disabled" ? " plugin-disabled-card" : ""
+```
+
 ## Schedule Modal: Active Default
 
 The Create Schedule modal defaults the "Active" checkbox to **unchecked**. New schedules are created inactive and must be explicitly activated. The scheduler filters by `active = true` in `cron_jobs` table, so inactive jobs are never picked up. Use `force=true` to run an inactive job via the trigger endpoint.
