@@ -159,22 +159,38 @@ function renderToolsPage(tools: PluginData[], toolMap: Record<string, string[]>)
             );
           }
         } else {
-          // ── Non-remote plugins ──
+          // ── Non-remote plugins (built-in or bundled) ──
           if (!hasRustSource) {
             // Script or no-source: no build buttons (run directly)
+            // Bundled non-Rust still gets Remove
+            if (p.source === "bundled") {
+              buttons.push(
+                `<button type="button" class="plugin-delete-btn" title="Remove from YAML" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`,
+              );
+            }
           } else if (nb) {
-            // Rust needs build: Install
+            // Rust needs build: Install + Remove (for bundled)
             buttons.push(
               `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>`,
             );
+            if (p.source === "bundled") {
+              buttons.push(
+                `<button type="button" class="plugin-delete-btn" title="Remove from YAML" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`,
+              );
+            }
           } else {
-            // Rust built: Reinstall + Uninstall
+            // Rust built: Reinstall + Uninstall + Remove (for bundled)
             buttons.push(
               `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>`,
             );
             buttons.push(
               `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>`,
             );
+            if (p.source === "bundled") {
+              buttons.push(
+                `<button type="button" class="plugin-delete-btn" title="Remove from YAML" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`,
+              );
+            }
           }
         }
         return buttons.join("");
