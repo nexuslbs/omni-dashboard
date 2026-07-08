@@ -75,99 +75,51 @@ export function renderActionButtons(
 ): string {
   const isBuiltin = p.source === "built-in";
   const isRemote = p.source === "remote";
-  const isBundled = p.source === "bundled";
   const isInstalled = !p.needsBuild;
-  const isScript = p.isScript;
   const rs = hasCompilableSource;
 
   if (isBuiltin) {
     return "";
   }
 
+  // Determine which buttons to show
+  const showInstall = isRemote && rs && !isInstalled;
+  const showReinstall = rs && isInstalled;
+  const showUninstall = rs && isInstalled;
+  const showUpdate = isRemote;
+  const showRemove = !showUninstall;
+
+  // Render in fixed order: Install - Reinstall - Uninstall - Update - Remove
   const buttons: string[] = [];
 
-  // Note: duplicated plugins flow through the same logic as non-duplicated.
-  // The "Duplicated" label badge is already rendered in the card header.
-  // They get the same Install/Reinstall/Update/Remove buttons as any plugin.
+  if (showInstall) {
+    buttons.push(
+      `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>`,
+    );
+  }
 
-  // Update button for all remote plugins (re-clone from git)
-  if (isRemote) {
+  if (showReinstall) {
+    buttons.push(
+      `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>`,
+    );
+  }
+
+  if (showUninstall) {
+    buttons.push(
+      `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>`,
+    );
+  }
+
+  if (showUpdate) {
     buttons.push(
       `<button type="button" class="plugin-update-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Update</button>`,
     );
   }
 
-  // For remote with hasSourceCode=false (binary-only): Install + ...?
-  // For remote with hasSourceCode=true: handled below
-  // For bundled: handled below
-
-  if (isRemote && rs) {
-    // Rust remote, not installed → Install + Remove + Update (update already added)
-    // Rust remote, installed → Uninstall + Reinstall + Update (update already added)
-    if (!isInstalled) {
-      buttons.push(
-        `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>`,
-      );
-      buttons.push(
-        `<button type="button" class="plugin-remove-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`,
-      );
-    } else {
-      buttons.push(
-        `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>`,
-      );
-      buttons.push(
-        `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>`,
-      );
-    }
-  } else if (isBundled && rs) {
-    // Rust bundled, not installed → Install + Remove
-    // Rust bundled, installed → Reinstall + Uninstall (no Remove — it's installed)
-    if (!isInstalled) {
-      buttons.push(
-        `<button type="button" class="plugin-install-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);">Install</button>`,
-      );
-      buttons.push(
-        `<button type="button" class="plugin-remove-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`,
-      );
-    } else {
-      buttons.push(
-        `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>`,
-      );
-      buttons.push(
-        `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>`,
-      );
-    }
-  } else if (isRemote && !p.hasSourceCode) {
-    // Remote binary-only (no compilable source) — no Install/Reinstall/Uninstall.
-    // Show Remove only (cleans up .remote dir + YAML entry).
-    if (!isInstalled) {
-      buttons.push(
-        `<button type="button" class="plugin-remove-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`,
-      );
-    }
-  } else if (!p.hasSourceCode && !isScript) {
-    // Bundled binary-only (no source), not installed → Remove only
-    if (!isInstalled) {
-      buttons.push(
-        `<button type="button" class="plugin-remove-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`,
-      );
-    }
-  }
-
-  // Catch-all: every non-builtin plugin must show Remove or Uninstall.
-  // Plugins with compilable source + installed get Uninstall (from specific
-  // branches above). All other non-builtins get Remove.
-  const hasRemoveOrUninstall = buttons.some((b) => b.includes("Remove") || b.includes("Uninstall"));
-  if (!hasRemoveOrUninstall) {
-    if (isInstalled && rs) {
-      buttons.push(
-        `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>`,
-      );
-    } else {
-      buttons.push(
-        `<button type="button" class="plugin-remove-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`,
-      );
-    }
+  if (showRemove) {
+    buttons.push(
+      `<button type="button" class="plugin-remove-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`,
+    );
   }
 
   return buttons.join("");
