@@ -154,11 +154,12 @@ export function renderActionButtons(
     }
   }
 
-  // Catch-all: plugins with compilable source that fell through specific
-  // branches still need Remove (not installed) or Uninstall (installed).
+  // Catch-all: every non-builtin plugin must show Remove or Uninstall.
+  // Plugins with compilable source + installed get Uninstall (from specific
+  // branches above). All other non-builtins get Remove.
   const hasRemoveOrUninstall = buttons.some((b) => b.includes("Remove") || b.includes("Uninstall"));
-  if (!hasRemoveOrUninstall && rs) {
-    if (isInstalled) {
+  if (!hasRemoveOrUninstall) {
+    if (isInstalled && rs) {
       buttons.push(
         `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>`,
       );
