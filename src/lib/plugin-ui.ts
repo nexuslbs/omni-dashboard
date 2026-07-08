@@ -189,6 +189,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
           "Failed to " + (isUninstall ? "uninstall" : "remove") + ": " + formatApiError(e),
           "error",
         );
+        loadFn();
       }
     });
   });
@@ -212,6 +213,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
         (window as any).showToast?.("Failed to reinstall: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
+        loadFn();
       }
     });
   });
@@ -235,6 +237,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
         (window as any).showToast?.("Failed to install: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
+        loadFn();
       }
     });
   });
@@ -258,6 +261,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
         (window as any).showToast?.("Failed to update: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
+        loadFn();
       }
     });
   });
@@ -284,6 +288,9 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
         (window as any).showToast?.("Failed: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
+        // Refresh state — backend may have rolled back (e.g., enabling
+        // bundled source failed and reverted to the old source).
+        loadFn();
       }
     });
   });
@@ -342,6 +349,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
         (window as any).showToast?.("Setup failed: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
+        loadFn();
       }
     });
   });
