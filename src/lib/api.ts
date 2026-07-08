@@ -396,6 +396,8 @@ export interface PluginData {
   isScript?: boolean;
   /** Remote plugin metadata (url, path, ref) */
   remote?: Record<string, any>;
+  /** Programming language: "Rust", "Python", "Node.js", or "unknown" */
+  language?: string;
 }
 
 export async function apiGet<T>(path: string): Promise<T> {

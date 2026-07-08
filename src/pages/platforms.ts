@@ -94,6 +94,7 @@ function renderPlatformsPage(platforms: PluginData[]): string {
         <span class="tool-actions" style="display:flex;gap:0.25rem;align-items:center;">
           <span class="badge ${getStatusBadgeClass(p.status, p.needsBuild)}">${p.needsBuild ? "○ Not Installed" : p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : "● Error"}</span>
           ${p.version ? `<span class="badge badge-info" style="margin-left:0.125rem;">v${escapeHtml(p.version)}</span>` : ""}
+          <span class="badge badge-neutral" style="margin-left:0.125rem;">${p.language ? escapeHtml(p.language) : "unknown"}</span>
           <span class="badge badge-neutral" style="margin-left:0.125rem;">source: ${escapeHtml(p.source)}</span>
           ${p.source !== "built-in" && !p.needsBuild ? `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>` : ""}
           ${p.source !== "built-in" && !p.needsBuild ? `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>` : ""}
@@ -361,7 +362,7 @@ function wirePlatforms(): void {
       if (!confirm(`Uninstall plugin "${pluginName}"?`)) return;
 
       try {
-        await apiDelete(`/plugins/${encodeURIComponent(pluginName)}`);
+        await apiDelete(`/plugins/${encodeURIComponent(pluginName)}?mode=uninstall`);
         (window as any).showToast?.("Plugin uninstalled", "success");
         void loadPlatforms();
       } catch (e) {

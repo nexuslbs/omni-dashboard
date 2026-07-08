@@ -224,6 +224,7 @@ function renderToolsPage(tools: PluginData[], toolMap: Record<string, string[]>)
           ${!p.hasSourceCode ? `<span class="badge badge-warning" style="margin-left:0.125rem;" title="This plugin has no source code directory on disk (Cargo.toml or plugin.json). It exists only as a YAML config entry. Install it to fetch the source, or remove this entry if the plugin was removed.">No source</span>` : ""}
           ${p.isScript && !isDuplicated ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">Script</span>` : ""}
           ${p.version ? `<span class="badge badge-info" style="margin-left:0.125rem;">v${escapeHtml(p.version)}</span>` : ""}
+          <span class="badge badge-neutral" style="margin-left:0.125rem;">${p.language ? escapeHtml(p.language) : "unknown"}</span>
           <span class="badge badge-neutral" style="margin-left:0.125rem;">${p.source === "built-in" ? "built-in tool" : `source: ${escapeHtml(p.source)}`}</span>
           ${hasTools ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">${pluginTools.length} tool${pluginTools.length > 1 ? "s" : ""}</span>` : ""}
           ${renderActionButtons(p, hasRemote, hasCompilableSource)}
