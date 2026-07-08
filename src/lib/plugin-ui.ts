@@ -78,7 +78,6 @@ export function renderActionButtons(
   const isBundled = p.source === "bundled";
   const isInstalled = !p.needsBuild;
   const isScript = p.isScript;
-  const isDuplicated = p.isDuplicated;
   const rs = hasCompilableSource;
 
   if (isBuiltin) {
@@ -87,16 +86,9 @@ export function renderActionButtons(
 
   const buttons: string[] = [];
 
-  if (isRemote && isDuplicated) {
-    // Duplicated remote — primary source handles Install/Reinstall/Update.
-    // Show Remove (not installed) or Uninstall (installed) so the user
-    // can still clean up the duplicated entry.
-    if (isInstalled) {
-      return `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>`;
-    } else {
-      return `<button type="button" class="plugin-remove-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`;
-    }
-  }
+  // Note: duplicated plugins flow through the same logic as non-duplicated.
+  // The "Duplicated" label badge is already rendered in the card header.
+  // They get the same Install/Reinstall/Update/Remove buttons as any plugin.
 
   // Update button for all remote plugins (re-clone from git)
   if (isRemote) {
