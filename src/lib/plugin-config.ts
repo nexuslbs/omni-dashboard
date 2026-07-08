@@ -77,7 +77,7 @@ export function renderConfigField(
     case "integer":
       inputHtml = `
         <input type="tel" id="${fieldId}" class="filter-input setting-input plugin-config-input"
-          value="${escapeHtml(String(value ?? ""))}" inputmode="numeric" pattern="[-0-9.]*" data-key="${escapeHtml(field.key)}"
+          value="${escapeHtml(String(value ?? ""))}" inputmode="numeric" pattern="-?[0-9]*[.]?[0-9]*" data-key="${escapeHtml(field.key)}"
           ${field.min !== undefined ? `min="${field.min}"` : ""}
           ${field.max !== undefined ? `max="${field.max}"` : ""}
           style="max-width:120px;" />

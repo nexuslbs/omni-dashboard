@@ -31,7 +31,7 @@ app.use("/api/profiles", profilesRouter);
 // Proxy to OmniAgent (Rust backend) — endpoints with irregular path mapping
 // ────────────────────────────────────────────────────────────────────────────
 const OMNIAGENT = process.env.OMNIAGENT_URL || "http://omniagent:8080";
-const PROXY_TIMEOUT = 15000;
+const PROXY_TIMEOUT = 600000; // 10 minutes — plugin install/reinstall can take 2-3 min
 
 async function fetchAndForward(
   req: express.Request,
