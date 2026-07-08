@@ -158,6 +158,21 @@ export function renderActionButtons(
     }
   }
 
+  // Catch-all: every non-builtin plugin must show Remove or Uninstall.
+  // Specific branches above may skip a case (e.g. isScript=true bundled).
+  const hasRemoveOrUninstall = buttons.some((b) => b.includes("Remove") || b.includes("Uninstall"));
+  if (!hasRemoveOrUninstall) {
+    if (isInstalled) {
+      buttons.push(
+        `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>`,
+      );
+    } else {
+      buttons.push(
+        `<button type="button" class="plugin-remove-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`,
+      );
+    }
+  }
+
   return buttons.join("");
 }
 
