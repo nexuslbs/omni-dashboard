@@ -138,12 +138,9 @@ export function renderActionButtons(
       );
     }
   } else if (isRemote && !p.hasSourceCode) {
-    // Remote binary-only (no source code) — no Install/Reinstall, just Update + Remove
-    if (isInstalled) {
-      buttons.push(
-        `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>`,
-      );
-    } else {
+    // Remote binary-only (no compilable source) — no Install/Reinstall/Uninstall.
+    // Show Remove only (cleans up .remote dir + YAML entry).
+    if (!isInstalled) {
       buttons.push(
         `<button type="button" class="plugin-remove-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Remove</button>`,
       );
@@ -157,10 +154,10 @@ export function renderActionButtons(
     }
   }
 
-  // Catch-all: every non-builtin plugin must show Remove or Uninstall.
-  // Specific branches above may skip a case (e.g. isScript=true bundled).
+  // Catch-all: plugins with compilable source that fell through specific
+  // branches still need Remove (not installed) or Uninstall (installed).
   const hasRemoveOrUninstall = buttons.some((b) => b.includes("Remove") || b.includes("Uninstall"));
-  if (!hasRemoveOrUninstall) {
+  if (!hasRemoveOrUninstall && rs) {
     if (isInstalled) {
       buttons.push(
         `<button type="button" class="plugin-remove-btn" title="Uninstall" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#fb7185;">Uninstall</button>`,
