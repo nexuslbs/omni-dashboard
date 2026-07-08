@@ -117,18 +117,26 @@ function showToast(message: string, type: "success" | "error" = "success"): void
   textSpan.textContent = message;
   body.appendChild(textSpan);
 
-  // Expand/collapse for long messages (only show toggle when text is long)
-  const needsExpand = message.length > 100;
-  if (needsExpand && type === "error") {
+  // Expand/collapse for long messages — only show toggle when text actually overflows
+  const needsExpand = message.length > 100 && type === "error";
+  if (needsExpand) {
     textSpan.classList.add("clamped");
-    const expandBtn = document.createElement("button");
-    expandBtn.className = "toast-expand-btn";
-    expandBtn.textContent = "Show more";
-    expandBtn.addEventListener("click", () => {
-      const expanded = textSpan.classList.toggle("expanded");
-      expandBtn.textContent = expanded ? "Show less" : "Show more";
-    });
-    body.appendChild(expandBtn);
+    // Force layout so we can measure overflow
+    void textSpan.offsetHeight;
+    // Only show toggle if content is actually being truncated
+    if (textSpan.scrollHeight > textSpan.clientHeight) {
+      const expandBtn = document.createElement("button");
+      expandBtn.className = "toast-expand-btn";
+      expandBtn.textContent = "Show more";
+      expandBtn.addEventListener("click", () => {
+        const expanded = textSpan.classList.toggle("expanded");
+        expandBtn.textContent = expanded ? "Show less" : "Show more";
+      });
+      body.appendChild(expandBtn);
+    } else {
+      // Not actually overflowing — remove the clamp
+      textSpan.classList.remove("clamped");
+    }
   }
 
   toast.appendChild(body);
