@@ -62,11 +62,21 @@ async function fetchAndForward(
     } else {
       res.status(response.status).end();
     }
-  } catch (err) {
+  } catch (err: unknown) {
     console.error(`[omniagent-proxy] Error proxying ${req.method} ${req.path}:`, err);
-    res
-      .status(502)
-      .json({ error: "Failed to reach OmniAgent: " + (err instanceof Error ? err.message : String(err)) });
+    const isTimeout =
+      (err instanceof DOMException && err.name === "AbortError") ||
+      (err instanceof Error &&
+        (err.name === "AbortError" || err.message?.includes("abort") || err.message?.includes("timeout")));
+    if (isTimeout) {
+      res.status(408).json({
+        error: `Request to OmniAgent timed out after ${PROXY_TIMEOUT}ms. Plugin operations (install, reinstall, download) compile Rust code which can take several minutes. Try again — the backend may still be processing the request.`,
+      });
+    } else {
+      res
+        .status(502)
+        .json({ error: "Failed to reach OmniAgent: " + (err instanceof Error ? err.message : String(err)) });
+    }
   }
 }
 
