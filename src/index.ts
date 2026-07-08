@@ -107,13 +107,54 @@ function showToast(message: string, type: "success" | "error" = "success"): void
   }
   const toast = document.createElement("div");
   toast.className = `toast toast-${type}`;
-  toast.textContent = message;
-  container.appendChild(toast);
-  setTimeout(() => {
+
+  // Inner structure: body (text + expand) + close button
+  const body = document.createElement("div");
+  body.className = "toast-body";
+
+  const textSpan = document.createElement("div");
+  textSpan.className = "toast-text";
+  textSpan.textContent = message;
+  body.appendChild(textSpan);
+
+  // Expand/collapse for long messages (only show toggle when text is long)
+  const needsExpand = message.length > 100;
+  if (needsExpand && type === "error") {
+    textSpan.classList.add("clamped");
+    const expandBtn = document.createElement("button");
+    expandBtn.className = "toast-expand-btn";
+    expandBtn.textContent = "Show more";
+    expandBtn.addEventListener("click", () => {
+      const expanded = textSpan.classList.toggle("expanded");
+      expandBtn.textContent = expanded ? "Show less" : "Show more";
+    });
+    body.appendChild(expandBtn);
+  }
+
+  toast.appendChild(body);
+
+  // Close button
+  const closeBtn = document.createElement("button");
+  closeBtn.className = "toast-close";
+  closeBtn.textContent = "✕";
+  closeBtn.setAttribute("aria-label", "Dismiss");
+  closeBtn.addEventListener("click", () => {
     toast.style.opacity = "0";
-    toast.style.transition = "opacity 0.3s";
-    setTimeout(() => toast.remove(), 300);
-  }, 4000);
+    toast.style.transition = "opacity 0.2s";
+    setTimeout(() => toast.remove(), 200);
+  });
+  toast.appendChild(closeBtn);
+
+  container.appendChild(toast);
+
+  // Auto-dismiss only for success toasts; errors are persistent
+  if (type === "success") {
+    setTimeout(() => {
+      toast.style.opacity = "0";
+      toast.style.transition = "opacity 0.3s";
+      setTimeout(() => toast.remove(), 300);
+    }, 3000);
+  }
 }
 
 function createUploadOverlay(): HTMLDivElement {

@@ -3435,20 +3435,67 @@ a.thread-row {
 
 #toast-container {
   position: fixed;
-  top: 16px;
+  bottom: 16px;
   right: 16px;
   z-index: 99999;
   display: flex;
   flex-direction: column;
   gap: 8px;
+  max-width: 420px;
 }
 .toast {
-  padding: 12px 20px;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 10px 12px;
   border-radius: 8px;
   color: #fff;
   font-size: 0.9rem;
+  line-height: 1.4;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-  animation: toast-in 0.3s ease;
+  animation: toast-in 0.25s ease;
+}
+.toast-body {
+  flex: 1;
+  min-width: 0;
+}
+.toast-text {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  word-break: break-word;
+}
+.toast-text.expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+}
+.toast-expand-btn {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0;
+  margin-top: 2px;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.toast-expand-btn:hover {
+  color: #fff;
+}
+.toast-close {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.7);
+  cursor: pointer;
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0 2px;
+  flex-shrink: 0;
+}
+.toast-close:hover {
+  color: #fff;
 }
 .toast-success {
   background: #10b981;
@@ -3459,7 +3506,7 @@ a.thread-row {
 @keyframes toast-in {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(10px);
   }
   to {
     opacity: 1;
