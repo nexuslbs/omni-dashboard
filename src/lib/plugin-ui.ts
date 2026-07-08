@@ -48,7 +48,7 @@ export function renderPluginCard(
           ${!p.hasSourceCode && p.source !== "built-in" && !(p.manifest as any)?.api_mode ? `<span class="badge badge-warning" style="margin-left:0.125rem;" title="This plugin has no source code directory on disk (Cargo.toml or plugin.json). It exists only as a YAML config entry. Install it to fetch the source, or remove this entry if the plugin was removed.">No source</span>` : ""}
           ${p.isScript && !isDuplicated ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">Script</span>` : ""}
           ${p.version ? `<span class="badge badge-info" style="margin-left:0.125rem;">v${escapeHtml(p.version)}</span>` : ""}
-          ${p.language ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">${escapeHtml(p.language)}</span>` : ""}
+          ${p.language && p.language !== "unknown" ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">${escapeHtml(p.language)}</span>` : ""}
           <span class="badge badge-neutral" style="margin-left:0.125rem;">${p.source === "built-in" ? "built-in tool" : `source: ${escapeHtml(p.source)}`}</span>
           ${hasTools ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">${pluginTools!.length} tool${pluginTools!.length > 1 ? "s" : ""}</span>` : ""}
           ${renderActionButtons(p, hasRemote, hasCompilableSource)}
