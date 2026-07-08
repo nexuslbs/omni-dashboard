@@ -175,3 +175,42 @@ describe("src/lib/router.ts", () => {
     assert.ok(paramRoutesIndex < routesIndex, "paramRoutes should be checked before exact routes");
   });
 });
+
+// ── Unit tests for src/lib/plugin-ui.ts ──
+describe("src/lib/plugin-ui.ts", () => {
+  it("renderPluginCard includes card-body with renderPluginConfig call", () => {
+    const content = readFileSync(new URL("../src/lib/plugin-ui.ts", import.meta.url), "utf-8");
+    // Card body must call renderPluginConfig to show the config form when expanded
+    // Use [\\s\\S]* to match across newlines since card-body and renderPluginConfig
+    // are on different lines with content in between
+    assert.ok(
+      /card-body[\s\S]*renderPluginConfig\s*\(/.test(content),
+      "card body should include renderPluginConfig(p) call",
+    );
+  });
+
+  it("renderPluginCard includes tool names in card body when pluginTools provided", () => {
+    const content = readFileSync(new URL("../src/lib/plugin-ui.ts", import.meta.url), "utf-8");
+    // When hasTools and pluginTools are set, the card body shows tool badges
+    assert.ok(/pluginTools/.test(content), "card body should reference pluginTools array");
+    assert.ok(
+      /badge-neutral.*escapeHtml/.test(content) && content.includes("pluginTools.map"),
+      "tool names should render as badge-neutral tags",
+    );
+  });
+
+  it("renderPluginConfig function generates config fields from configSchema", () => {
+    const content = readFileSync(new URL("../src/lib/plugin-ui.ts", import.meta.url), "utf-8");
+    // renderPluginConfig should check configSchema and render fields + save button
+    assert.ok(content.includes("configSchema"), "renderPluginConfig should check configSchema");
+    assert.ok(content.includes("plugin-save-btn"), "renderPluginConfig should include a Save button");
+  });
+
+  it("exports renderPluginCard, renderActionButtons, wirePluginButtons, showInstallModal", () => {
+    const content = readFileSync(new URL("../src/lib/plugin-ui.ts", import.meta.url), "utf-8");
+    assert.ok(/export\s+function\s+renderPluginCard\b/.test(content), "export renderPluginCard");
+    assert.ok(/export\s+function\s+renderActionButtons\b/.test(content), "export renderActionButtons");
+    assert.ok(/export\s+function\s+wirePluginButtons\b/.test(content), "export wirePluginButtons");
+    assert.ok(/export\s+function\s+showInstallModal\b/.test(content), "export showInstallModal");
+  });
+});
