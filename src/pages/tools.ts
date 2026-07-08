@@ -23,10 +23,6 @@ export function renderTools(container: HTMLElement): void {
   void loadTools();
 }
 
-// ── Built-in tools (hardcoded — will be migrated to tools.yml) ──
-
-const BUILT_IN_TOOLS: string[] = ["actions"];
-
 // ── State ──
 
 const savedConfigs: Map<string, Record<string, any>> = new Map();
@@ -56,35 +52,9 @@ async function loadTools(): Promise<void> {
       toolMap[server].push(t.full_name || t.name || t.tool || "?");
     }
 
-    // Build final list: built-in + plugin tools
-    const allTools: PluginData[] = [];
-
-    // Add built-in tools
-    for (const name of BUILT_IN_TOOLS) {
-      // Don't add if a plugin with same name already exists
-      if (!toolPlugins.find((p) => p.name === name)) {
-        allTools.push({
-          name,
-          pluginType: "tool",
-          source: "built-in",
-          status: "enabled",
-          manifest: {
-            name,
-            type: "mcp",
-            description:
-              name === "actions"
-                ? "Built-in system actions: kanban_dispatcher, hindsight_populator, relevance_indexer, setup_knowledge_pipeline"
-                : `Built-in ${name} tool`,
-          },
-          config: {},
-        });
-        // Built-in tools might have entries in the tool map
-        if (!toolMap[name]) toolMap[name] = [];
-      }
-    }
-
-    // Add plugin-based tools
-    allTools.push(...toolPlugins);
+    // All tools come from the backend's /api/plugins endpoint now.
+    // No hardcoded built-in list — the backend discovers everything.
+    const allTools = [...toolPlugins];
 
     content.innerHTML = renderToolsPage(allTools, toolMap);
     wireTools();
