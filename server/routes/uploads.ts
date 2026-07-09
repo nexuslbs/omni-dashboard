@@ -1,5 +1,14 @@
 import { Router, Request, Response } from "express";
-import { existsSync, mkdirSync, readdirSync, statSync, unlinkSync } from "fs";
+import {
+  existsSync,
+  mkdirSync,
+  readdirSync,
+  readFileSync,
+  renameSync,
+  statSync,
+  unlinkSync,
+  writeFileSync,
+} from "fs";
 import { join, normalize } from "path";
 import multer from "multer";
 
@@ -200,12 +209,38 @@ uploadsRouter.post("/kanban", kanbanUpload.array("files", 20), (req: Request, re
       return;
     }
 
-    const result = files.map((file) => ({
-      original_name: file.originalname,
-      size: file.size,
-      mime_type: file.mimetype,
-      path: file.filename,
-    }));
+    const taskId = (req.query.task_id as string) || "";
+
+    const result = files.map((file) => {
+      let destPath = file.filename;
+
+      // If task_id is provided, scope files under data/kanban/{task_id}/
+      if (taskId) {
+        const scopedDir = join(KANBAN_DIR, taskId);
+        if (!existsSync(scopedDir)) {
+          mkdirSync(scopedDir, { recursive: true });
+        }
+        // Move the file from the flat kanban dir to the scoped dir
+        const src = join(KANBAN_DIR, file.filename);
+        const dst = join(scopedDir, file.filename);
+        try {
+          renameSync(src, dst);
+        } catch {
+          // If rename fails (e.g. cross-device), copy+unlink
+          const buf = readFileSync(src);
+          writeFileSync(dst, buf);
+          unlinkSync(src);
+        }
+        destPath = `${taskId}/${file.filename}`;
+      }
+
+      return {
+        original_name: file.originalname,
+        size: file.size,
+        mime_type: file.mimetype,
+        path: destPath,
+      };
+    });
 
     res.json({ files: result });
   } catch (err) {
