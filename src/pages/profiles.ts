@@ -5,6 +5,7 @@ import { escapeHtml, formatApiError } from "../lib/helpers";
 // ── Cached provider/model data ──
 let _providers: string[] = [];
 let _providerModels: Record<string, string[]> = {};
+let _explorerPrefix = ""; // OMNI_DIR path relative to EXPLORER_DIR
 
 export function renderProfiles(container: HTMLElement): void {
   container.innerHTML = `
@@ -25,6 +26,17 @@ export function renderProfiles(container: HTMLElement): void {
 async function loadProfiles(): Promise<void> {
   const content = document.getElementById("profiles-content")!;
   try {
+    // Load filesystem config to compute explorer URL prefix
+    if (!_explorerPrefix) {
+      try {
+        const fsConfig = await apiGet<{ root: string; omniDir: string }>("/fs/config");
+        if (fsConfig.omniDir.startsWith(fsConfig.root)) {
+          _explorerPrefix = fsConfig.omniDir.slice(fsConfig.root.length);
+        }
+      } catch {
+        /* keep default empty prefix */
+      }
+    }
     const profiles = await apiGet<any[]>("/profiles");
     // Load provider names and their model lists (same pattern as channels)
     try {
@@ -227,7 +239,8 @@ function renderSkillsList(profileName: string, skills: string[]): string {
     .map((s) => {
       // Strip extension if present, then add .md
       const skillName = s.endsWith(".md") ? s.slice(0, -3) : s;
-      return `<a class="channel-tag skill-link" href="/explorer?file=%2Fprofiles%2F${encodeURIComponent(profileName)}%2Fskills%2F${encodeURIComponent(skillName)}.md" style="text-decoration:none;cursor:pointer;">${escapeHtml(s)}</a>`;
+      const prefix = _explorerPrefix ? "/" + encodeURIComponent(_explorerPrefix.slice(1)) : "";
+      return `<a class="channel-tag skill-link" href="/explorer?file=${prefix}%2Fprofiles%2F${encodeURIComponent(profileName)}%2Fskills%2F${encodeURIComponent(skillName)}.md" style="text-decoration:none;cursor:pointer;">${escapeHtml(s)}</a>`;
     })
     .join("")}</div>`;
 }

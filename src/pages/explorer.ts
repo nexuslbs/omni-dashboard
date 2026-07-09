@@ -127,6 +127,7 @@ interface TreeNode {
 let treeData: TreeNode[] | null = null;
 const expandedPaths = new Set<string>();
 let lastOpenedFile: string | null = null;
+let explorerRoot = "/opt";
 
 // ── Main render ──
 
@@ -135,7 +136,7 @@ export function renderExplorer(container: HTMLElement): void {
     <div class="search-page" id="search-page">
       <div class="explorer-panel" id="explorer-panel">
         <div class="explorer-header">
-          <span class="explorer-title">📂 Filesystem</span>
+          <span class="explorer-title">📂 Filesystem (${explorerRoot})</span>
           <div class="explorer-header-actions">
             <button class="explorer-refresh channel-refresh-btn" id="explorer-refresh" title="Refresh file tree">⟳</button>
             <button class="explorer-upload-btn" id="explorer-upload-btn" title="Upload files">⬆</button>
@@ -278,7 +279,8 @@ async function loadTree(reset: boolean): Promise<void> {
   }
 
   try {
-    const response = await apiGet<{ entries: FsEntry[]; path: string }>("/fs/list?path=/");
+    const response = await apiGet<{ entries: FsEntry[]; path: string; root?: string }>("/fs/list?path=/");
+    if (response.root) explorerRoot = response.root;
     treeData = response.entries.map((e) => ({
       entry: e,
       expanded: expandedPaths.has(e.path) || false,
@@ -542,12 +544,23 @@ async function openFile(path: string): Promise<void> {
   try {
     const response = await apiGet<FsReadResponse>(`/fs/read?path=${encodeURIComponent(path)}`);
     const isMarkdown = path.toLowerCase().endsWith(".md");
-    const isText =
-      /\.(md|txt|js|ts|py|json|yaml|yml|css|html|sh|toml|xml|conf|env|gitignore|dockerfile|tf|rb|go|rs|c|cpp|h|hpp|java|kt|swift|pl|lua|sql)$/i.test(
-        path,
-      );
 
-    if (isMarkdown) {
+    if (response.binary) {
+      contentView.innerHTML = `
+        <div class="file-header">
+          <span class="file-path">${escapeHtml(path)}</span>
+          <div class="file-header-actions">
+            <a class="file-download-btn" href="/api/fs/download?path=${encodeURIComponent(path)}" download title="Download file">⬇</a>
+            <span class="file-size">${formatSize(response.size)}</span>
+          </div>
+        </div>
+        <div class="empty-state" style="padding:3rem;text-align:center;color:var(--text-muted);">
+          <p>Binary or unsupported file type</p>
+          <p style="font-size:0.875rem;margin-top:0.5rem;">${formatSize(response.size)} — cannot preview</p>
+        </div>
+      `;
+      contentView.scrollTop = 0;
+    } else if (isMarkdown) {
       const rendered = renderMarkdown(response.content);
       contentView.innerHTML = `
         <div class="file-header">
@@ -563,18 +576,6 @@ async function openFile(path: string): Promise<void> {
       // Enhance code blocks with syntax highlighting and copy buttons
       const mdContainer = contentView.querySelector(".markdown-content");
       if (mdContainer) enhanceCodeBlocks(mdContainer as HTMLElement);
-    } else if (isText) {
-      contentView.innerHTML = `
-        <div class="file-header">
-          <span class="file-path">${escapeHtml(path)}</span>
-          <div class="file-header-actions">
-            <a class="file-download-btn" href="/api/fs/download?path=${encodeURIComponent(path)}" download title="Download file">⬇</a>
-            <span class="file-size">${formatSize(response.size)}</span>
-          </div>
-        </div>
-        <pre class="code-block" style="max-height:none;overflow-y:auto;border-radius:var(--radius-md);padding:1rem;font-size:0.8rem;line-height:1.6;"><code>${escapeHtml(response.content)}</code></pre>
-      `;
-      contentView.scrollTop = 0;
     } else {
       contentView.innerHTML = `
         <div class="file-header">
@@ -584,10 +585,7 @@ async function openFile(path: string): Promise<void> {
             <span class="file-size">${formatSize(response.size)}</span>
           </div>
         </div>
-        <div class="empty-state" style="padding:3rem;text-align:center;color:var(--text-muted);">
-          <p>Binary or unsupported file type</p>
-          <p style="font-size:0.875rem;margin-top:0.5rem;">${formatSize(response.size)} — cannot preview</p>
-        </div>
+        <pre class="code-block" style="max-height:none;overflow-y:auto;border-radius:var(--radius-md);padding:1rem;font-size:0.8rem;line-height:1.6;"><code>${escapeHtml(response.content)}</code></pre>
       `;
       contentView.scrollTop = 0;
     }

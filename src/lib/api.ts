@@ -157,6 +157,7 @@ export interface FsEntry {
 export interface FsListResponse {
   entries: FsEntry[];
   path: string;
+  root?: string;
   error?: string;
 }
 
@@ -164,6 +165,7 @@ export interface FsReadResponse {
   path: string;
   content: string;
   size: number;
+  binary?: boolean;
   error?: string;
 }
 

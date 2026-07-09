@@ -211,7 +211,7 @@ function showUploadModal(files: File[], existingSet: Set<string>): void {
 
   backdrop.innerHTML = `<div class="upload-modal">
     <h2>Upload Files</h2>
-    <p class="upload-dest">Files will be uploaded to <code>/tmp/data/user/uploads/</code></p>
+    <p class="upload-dest">Files will be uploaded to <code>data/uploads/</code></p>
     <div class="upload-file-list">${fileRows}</div>
     <div class="upload-actions">
       <button class="upload-btn upload-btn-cancel" id="upload-cancel">Cancel</button>

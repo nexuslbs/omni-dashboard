@@ -8,7 +8,13 @@ export const uploadsRouter = Router();
 const UPLOADS_DIR = (() => {
   const dir = process.env.OMNI_DIR;
   if (!dir) throw new Error("OMNI_DIR environment variable must be set");
-  return dir + "/user/uploads";
+  return dir + "/data/uploads";
+})();
+
+const KANBAN_DIR = (() => {
+  const dir = process.env.OMNI_DIR;
+  if (!dir) throw new Error("OMNI_DIR environment variable must be set");
+  return dir + "/data/kanban";
 })();
 
 // Ensure uploads directory exists
@@ -155,5 +161,55 @@ uploadsRouter.post("/", upload.array("files", 20), (req: Request, res: Response)
   } catch (err) {
     console.error("[uploads] Error uploading files:", err);
     res.status(500).json({ error: "Failed to upload files" });
+  }
+});
+
+// ── Kanban file uploads ────────────────────────────────────────────────
+
+function ensureKanbanDir(): void {
+  if (!existsSync(KANBAN_DIR)) {
+    mkdirSync(KANBAN_DIR, { recursive: true });
+  }
+}
+
+const kanbanStorage = multer.diskStorage({
+  destination: (_req, _file, cb) => {
+    ensureKanbanDir();
+    cb(null, KANBAN_DIR);
+  },
+  filename: (_req, file, cb) => {
+    const name = file.originalname.replace(/[^a-zA-Z0-9._-]/g, "_");
+    cb(null, name);
+  },
+});
+
+const kanbanUpload = multer({
+  storage: kanbanStorage,
+  limits: {
+    fileSize: 50 * 1024 * 1024,
+    files: 20,
+  },
+});
+
+// POST /uploads/kanban — upload files to kanban directory
+uploadsRouter.post("/kanban", kanbanUpload.array("files", 20), (req: Request, res: Response) => {
+  try {
+    const files = req.files as Express.Multer.File[];
+    if (!files || files.length === 0) {
+      res.status(400).json({ error: "No files uploaded" });
+      return;
+    }
+
+    const result = files.map((file) => ({
+      original_name: file.originalname,
+      size: file.size,
+      mime_type: file.mimetype,
+      path: file.filename,
+    }));
+
+    res.json({ files: result });
+  } catch (err) {
+    console.error("[kanban-uploads] Error uploading files:", err);
+    res.status(500).json({ error: "Failed to upload kanban files" });
   }
 });

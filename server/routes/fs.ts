@@ -4,11 +4,7 @@ import { join, resolve } from "path";
 
 export const fsRouter = Router();
 
-const ROOT = (() => {
-  const dir = process.env.OMNI_DIR;
-  if (!dir) throw new Error("OMNI_DIR environment variable must be set");
-  return dir;
-})();
+const ROOT = process.env.EXPLORER_DIR || "/opt";
 
 function sanitizePath(userPath: string): string {
   // Strip any prefix that matches ROOT to prevent double-prefixing
@@ -28,8 +24,16 @@ interface FsEntry {
   size: number | null;
 }
 
+// GET /api/fs/config — returns filesystem root and OMNI_DIR for path computation
+fsRouter.get("/config", (_req, res) => {
+  res.json({
+    root: ROOT,
+    omniDir: process.env.OMNI_DIR || ROOT,
+  });
+});
+
 // GET /api/fs/list?path=<relative-path>
-// Lists directory contents. Path is relative to /host (use "/" for root).
+// Lists directory contents. Path is relative to ROOT (use "/" for root).
 fsRouter.get("/list", (req, res) => {
   try {
     const userPath = (req.query.path as string) || "/";
@@ -53,7 +57,7 @@ fsRouter.get("/list", (req, res) => {
         };
       });
     } catch {
-      res.json({ entries: [], path: userPath, error: "Cannot read directory" });
+      res.json({ entries: [], path: userPath, root: ROOT, error: "Cannot read directory" });
       return;
     }
 
@@ -64,14 +68,14 @@ fsRouter.get("/list", (req, res) => {
       return a.name.localeCompare(b.name);
     });
 
-    res.json({ entries: validEntries, path: userPath });
+    res.json({ entries: validEntries, path: userPath, root: ROOT });
   } catch (e: any) {
     res.status(500).json({ error: e.message || "Unknown error" });
   }
 });
 
 // GET /api/fs/read?path=<relative-path>
-// Reads a file and returns its content.
+// Reads a file and returns its content. Sets binary=true for non-UTF-8 files.
 fsRouter.get("/read", (req, res) => {
   try {
     const userPath = (req.query.path as string) || "";
@@ -82,17 +86,26 @@ fsRouter.get("/read", (req, res) => {
     const filePath = sanitizePath(userPath);
 
     let content: string;
+    let binary = false;
     try {
       content = readFileSync(filePath, "utf-8");
     } catch {
-      res.status(404).json({ error: "File not found or not readable" });
-      return;
+      // File exists but isn't valid UTF-8 — return as binary
+      try {
+        const buf = readFileSync(filePath);
+        content = buf.toString("base64");
+        binary = true;
+      } catch {
+        res.status(404).json({ error: "File not found or not readable" });
+        return;
+      }
     }
 
     res.json({
       path: userPath,
       content,
       size: statSync(filePath).size,
+      binary,
     });
   } catch (e: any) {
     res.status(500).json({ error: e.message || "Unknown error" });
