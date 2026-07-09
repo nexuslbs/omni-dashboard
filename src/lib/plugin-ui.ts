@@ -137,15 +137,17 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
     btn.addEventListener("click", async () => {
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
+      const source = card?.getAttribute("data-source") || "bundled";
       if (!pluginName) return;
       const isUninstall = btn.getAttribute("title") === "Uninstall";
       if (isUninstall && !confirm(`Uninstall plugin "${pluginName}"?`)) return;
       if (!isUninstall && !confirm(`Remove plugin "${pluginName}"?`)) return;
 
       try {
+        const encodedName = encodeURIComponent(pluginName);
         const url = isUninstall
-          ? `/plugins/${encodeURIComponent(pluginName)}?mode=uninstall`
-          : `/plugins/${encodeURIComponent(pluginName)}`;
+          ? `/plugins/${encodedName}?mode=uninstall&source=${encodeURIComponent(source)}`
+          : `/plugins/${encodedName}?source=${encodeURIComponent(source)}`;
         await apiDelete(url);
         (window as any).showToast?.(isUninstall ? "Plugin uninstalled" : "Plugin removed", "success");
         loadFn();
@@ -164,6 +166,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
     btn.addEventListener("click", async () => {
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
+      const source = card?.getAttribute("data-source") || "bundled";
       if (!pluginName) return;
 
       const originalText = btn.textContent || "Reinstall";
@@ -171,7 +174,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       (btn as HTMLButtonElement).disabled = true;
 
       try {
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/reinstall`, {});
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/reinstall`, { source });
         (window as any).showToast?.("Plugin reinstalled", "success");
         loadFn();
       } catch (e) {
@@ -188,6 +191,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
     btn.addEventListener("click", async () => {
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
+      const source = card?.getAttribute("data-source") || "bundled";
       if (!pluginName) return;
 
       const originalText = btn.textContent || "Install";
@@ -195,7 +199,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       (btn as HTMLButtonElement).disabled = true;
 
       try {
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/install`, {});
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/install`, { source });
         (window as any).showToast?.("Plugin installed", "success");
         loadFn();
       } catch (e) {
@@ -212,6 +216,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
     btn.addEventListener("click", async () => {
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
+      const source = card?.getAttribute("data-source") || "bundled";
       if (!pluginName) return;
 
       const originalText = btn.textContent || "Update";
@@ -219,7 +224,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       (btn as HTMLButtonElement).disabled = true;
 
       try {
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/download`, {});
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/download`, { source });
         (window as any).showToast?.("Plugin updated", "success");
         loadFn();
       } catch (e) {
