@@ -43,9 +43,18 @@ export async function renderMemory(container: HTMLElement): Promise<void> {
 
       <!-- Block 3: MEMORY text -->
       <div class="card" style="max-width:100%;">
-        <div class="card-header"><span class="card-title">🧠 MEMORY</span></div>
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+          <span class="card-title">🧠 MEMORY</span>
+          <button id="mem-memory-edit-btn" class="icon-btn" title="Edit MEMORY" style="background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-muted);padding:0.25rem;border-radius:4px;">✏️</button>
+        </div>
         <div class="card-body">
           <pre id="mem-memory-text" class="code-block" style="max-height:300px;max-width:100%;overflow-x:auto;overflow-y:auto;font-size:0.8rem;line-height:1.5;margin:0 0 0.75rem 0;word-break:break-word;white-space:pre-wrap;">Loading...</pre>
+          <textarea id="mem-memory-editor" style="display:none;width:100%;min-height:200px;font-family:monospace;font-size:0.8rem;padding:0.5rem;border:1px solid var(--glass-border);border-radius:6px;background:var(--bg-card);color:var(--text-primary);resize:vertical;margin:0 0 0.75rem 0;box-sizing:border-box;"></textarea>
+          <div id="mem-memory-edit-actions" style="display:none;gap:0.5rem;margin-bottom:0.75rem;">
+            <button id="mem-memory-save-btn" class="btn btn-primary" style="font-size:0.8rem;padding:0.375rem 0.75rem;">💾 Save</button>
+            <button id="mem-memory-cancel-btn" class="btn btn-secondary" style="font-size:0.8rem;padding:0.375rem 0.75rem;">Cancel</button>
+            <span id="mem-memory-edit-status" style="font-size:0.75rem;color:var(--text-muted);"></span>
+          </div>
           <div style="display:flex;align-items:center;gap:0.5rem;">
             <button id="mem-memory-upload-btn" class="btn btn-secondary" style="font-size:0.8rem;padding:0.375rem 0.75rem;">📁 Upload .md</button>
             <span id="mem-memory-status" style="font-size:0.75rem;color:var(--text-muted);"></span>
@@ -56,9 +65,18 @@ export async function renderMemory(container: HTMLElement): Promise<void> {
 
       <!-- Block 4: SOUL text -->
       <div class="card" style="max-width:100%;">
-        <div class="card-header"><span class="card-title">💫 SOUL</span></div>
+        <div class="card-header" style="display:flex;align-items:center;justify-content:space-between;">
+          <span class="card-title">💫 SOUL</span>
+          <button id="mem-soul-edit-btn" class="icon-btn" title="Edit SOUL" style="background:none;border:none;cursor:pointer;font-size:1rem;color:var(--text-muted);padding:0.25rem;border-radius:4px;">✏️</button>
+        </div>
         <div class="card-body">
           <pre id="mem-soul-text" class="code-block" style="max-height:300px;max-width:100%;overflow-x:auto;overflow-y:auto;font-size:0.8rem;line-height:1.5;margin:0 0 0.75rem 0;word-break:break-word;white-space:pre-wrap;">Loading...</pre>
+          <textarea id="mem-soul-editor" style="display:none;width:100%;min-height:200px;font-family:monospace;font-size:0.8rem;padding:0.5rem;border:1px solid var(--glass-border);border-radius:6px;background:var(--bg-card);color:var(--text-primary);resize:vertical;margin:0 0 0.75rem 0;box-sizing:border-box;"></textarea>
+          <div id="mem-soul-edit-actions" style="display:none;gap:0.5rem;margin-bottom:0.75rem;">
+            <button id="mem-soul-save-btn" class="btn btn-primary" style="font-size:0.8rem;padding:0.375rem 0.75rem;">💾 Save</button>
+            <button id="mem-soul-cancel-btn" class="btn btn-secondary" style="font-size:0.8rem;padding:0.375rem 0.75rem;">Cancel</button>
+            <span id="mem-soul-edit-status" style="font-size:0.75rem;color:var(--text-muted);"></span>
+          </div>
           <div style="display:flex;align-items:center;gap:0.5rem;">
             <button id="mem-soul-upload-btn" class="btn btn-secondary" style="font-size:0.8rem;padding:0.375rem 0.75rem;">📁 Upload .md</button>
             <span id="mem-soul-status" style="font-size:0.75rem;color:var(--text-muted);"></span>
@@ -142,6 +160,16 @@ export async function renderMemory(container: HTMLElement): Promise<void> {
     const input = e.target as HTMLInputElement;
     if (input.files && input.files[0]) void uploadMemoryFile(input.files[0], "soul");
   });
+
+  // Wire MEMORY edit
+  document.getElementById("mem-memory-edit-btn")!.addEventListener("click", () => startEdit("memory"));
+  document.getElementById("mem-memory-save-btn")!.addEventListener("click", () => saveEdit("memory"));
+  document.getElementById("mem-memory-cancel-btn")!.addEventListener("click", () => cancelEdit("memory"));
+
+  // Wire SOUL edit
+  document.getElementById("mem-soul-edit-btn")!.addEventListener("click", () => startEdit("soul"));
+  document.getElementById("mem-soul-save-btn")!.addEventListener("click", () => saveEdit("soul"));
+  document.getElementById("mem-soul-cancel-btn")!.addEventListener("click", () => cancelEdit("soul"));
 
   // Wire message search with debounce
   let msgDebounce: ReturnType<typeof setTimeout>;
@@ -354,6 +382,67 @@ async function uploadMemoryFile(file: File, type: "memory" | "soul"): Promise<vo
     }
     const data = await res.json();
     statusEl.textContent = `✅ Uploaded (${data.size} chars)`;
+    if (type === "memory") await loadMemoryText();
+    else await loadSoulText();
+    setTimeout(() => {
+      statusEl.textContent = "";
+    }, 3000);
+  } catch (e) {
+    statusEl.textContent = `❌ Error: ${formatApiError(e)}`;
+  }
+}
+
+// ── Edit helpers ──
+
+function startEdit(type: "memory" | "soul"): void {
+  const pre = document.getElementById(`mem-${type}-text`)!;
+  const textarea = document.getElementById(`mem-${type}-editor`) as HTMLTextAreaElement;
+  const actions = document.getElementById(`mem-${type}-edit-actions`)!;
+  const uploadBtn = document.getElementById(`mem-${type}-upload-btn`)!;
+
+  textarea.value =
+    pre.textContent === "(empty)" || pre.textContent === "(not set or failed to load)"
+      ? ""
+      : pre.textContent || "";
+  pre.style.display = "none";
+  textarea.style.display = "block";
+  actions.style.display = "flex";
+  (uploadBtn as HTMLElement).style.display = "none";
+}
+
+function cancelEdit(type: "memory" | "soul"): void {
+  const pre = document.getElementById(`mem-${type}-text`)!;
+  const textarea = document.getElementById(`mem-${type}-editor`) as HTMLTextAreaElement;
+  const actions = document.getElementById(`mem-${type}-edit-actions`)!;
+  const uploadBtn = document.getElementById(`mem-${type}-upload-btn`)!;
+  const statusEl = document.getElementById(`mem-${type}-edit-status`)!;
+
+  pre.style.display = "block";
+  textarea.style.display = "none";
+  actions.style.display = "none";
+  (uploadBtn as HTMLElement).style.display = "inline-block";
+  statusEl.textContent = "";
+}
+
+async function saveEdit(type: "memory" | "soul"): Promise<void> {
+  const textarea = document.getElementById(`mem-${type}-editor`) as HTMLTextAreaElement;
+  const statusEl = document.getElementById(`mem-${type}-edit-status`)!;
+  const content = textarea.value;
+
+  statusEl.textContent = "Saving...";
+  try {
+    const res = await fetch(`${API_BASE}/memory/edit/${encodeURIComponent(_currentProfile)}/${type}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ content }),
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({ error: "Save failed" }));
+      statusEl.textContent = `❌ ${err.error || "Save failed"}`;
+      return;
+    }
+    statusEl.textContent = "✅ Saved!";
+    cancelEdit(type);
     if (type === "memory") await loadMemoryText();
     else await loadSoulText();
     setTimeout(() => {
