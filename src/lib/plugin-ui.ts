@@ -46,7 +46,7 @@ export function renderPluginCard(
         <span class="tool-actions" style="display:flex;gap:0.25rem;align-items:center;">
           <span class="badge ${getStatusBadgeClass(p.status, p.needsBuild)}">${p.needsBuild ? "○ Not Installed" : p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : p.status === "error" ? "● Error" : p.status === "not_found" ? "○ Not Found" : "○ Unknown"}</span>
           ${isDuplicated ? `<span class="badge badge-warning" style="margin-left:0.125rem;" title="Another source is already active for this plugin name">Duplicated</span>` : ""}
-          ${!p.hasSourceCode && p.source !== "built-in" && !(p.manifest as any)?.api_mode ? `<span class="badge badge-warning" style="margin-left:0.125rem;" title="This plugin has no source code directory on disk (Cargo.toml or plugin.json). It exists only as a YAML config entry. Install it to fetch the source, or remove this entry if the plugin was removed.">No code</span>` : ""}
+          ${!p.hasSourceCode && p.source !== "built-in" && !(p.manifest as any)?.api_mode ? `<span class="badge badge-warning" style="margin-left:0.125rem;" title="This plugin has no source code directory on disk. It exists only as a YAML config entry. Install it to fetch the source, or remove this entry if the plugin was removed.">No code</span>` : ""}
           ${p.isScript && !isDuplicated ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">Script</span>` : ""}
           ${p.version ? `<span class="badge badge-info" style="margin-left:0.125rem;">v${escapeHtml(p.version)}</span>` : ""}
           ${p.language && p.language !== "unknown" ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">${escapeHtml(p.language)}</span>` : ""}
@@ -76,16 +76,16 @@ export function renderActionButtons(
   const isBuiltin = p.source === "built-in";
   const isRemote = p.source === "remote";
   const isInstalled = !p.needsBuild;
-  const rs = hasCompilableSource;
+  const compilable = hasCompilableSource;
 
   if (isBuiltin) {
     return "";
   }
 
   // Determine which buttons to show
-  const showInstall = isRemote && rs && !isInstalled;
-  const showReinstall = rs && isInstalled;
-  const showUninstall = rs && isInstalled;
+  const showInstall = !isBuiltin && compilable && !isInstalled;
+  const showReinstall = compilable && isInstalled;
+  const showUninstall = compilable && isInstalled;
   const showUpdate = isRemote;
   const showRemove = !showUninstall;
 

@@ -11,9 +11,9 @@ import {
   renderProfileSelect,
   renderProviderSelect,
   renderModelSelect,
-  renderPlanningModeSelect,
+  renderPlanSelect,
   renderTemplateInput,
-  planningModeLabel,
+  planBadge,
   _templates,
 } from "./channel-config";
 
@@ -104,7 +104,7 @@ export function renderChannelsPage(channels: ChannelData[]): string {
       <div class="card-header">
         <span class="card-title">${escapeHtml(ch.name)}</span>
         ${ch.readonly ? '<span style="flex:1;text-align:center;"><span class="channel-status-badge badge-neutral">Permanent</span></span>' : '<span style="flex:1;"></span>'}
-        <span class="channel-status-badge" style="--type-color:#8b5cf6;background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.3);color:#8b5cf6;font-size:0.7rem;padding:0.125rem 0.5rem;">${planningModeLabel(ch.planning_mode)}</span>
+        <span class="channel-status-badge" style="--type-color:#8b5cf6;background:rgba(139,92,246,0.12);border-color:rgba(139,92,246,0.3);color:#8b5cf6;font-size:0.7rem;padding:0.125rem 0.5rem;">${planBadge(ch.plan)}</span>
         <span class="channel-status-badge ${ch.closed ? "badge-error" : "badge-success"}">${ch.closed ? "Closed" : "Open"}</span>
       </div>
       <div class="card-body">
@@ -153,7 +153,7 @@ export function renderChannelsPage(channels: ChannelData[]): string {
         <div class="setting-row">
           <div class="setting-controls">
             <div class="setting-name">Planning Mode</div>
-            ${renderPlanningModeSelect(ch.id, ch.planning_mode || "")}
+            ${renderPlanSelect(ch.id, ch.plan)}
           </div>
         </div>
         <div class="setting-row">

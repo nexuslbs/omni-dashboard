@@ -125,13 +125,13 @@ describe("New channels lib modules", () => {
   it("channel-config.ts exports expected functions", () => {
     const content = readFileSync(new URL("../src/lib/channel-config.ts", import.meta.url), "utf-8");
     const expectedExports = [
-      "planningModeLabel",
+      "planBadge",
       "getModelsForProvider",
       "renderNameInput",
       "renderProfileSelect",
       "renderProviderSelect",
       "renderModelSelect",
-      "renderPlanningModeSelect",
+      "renderPlanSelect",
       "wireChannelConfigEditing",
     ];
     for (const exp of expectedExports) {

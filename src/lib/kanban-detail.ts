@@ -305,7 +305,7 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
         </div>
         <div>
           <div class="detail-label">Planning Mode</div>
-          <div>${task.planning_mode ? escapeHtml(task.planning_mode === "prompt_only" ? "No Plan" : task.planning_mode === "auto_plan" ? "Simple Plan" : task.planning_mode === "auto_subtasks" ? "Plan with Subtasks" : task.planning_mode) : "<em>Default</em>"}</div>
+          <div>${task.plan != null ? (task.plan ? "On" : "Off") : "<em>Default</em>"}</div>
         </div>
         <div>
           <div class="detail-label">Created</div>
@@ -376,10 +376,10 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
 
         await populateEditChannelSelect(task.channel_id || "");
         await populateProfileSelect("task-edit-profile", task.profile || "");
-        const planningModeSelect = document.getElementById("task-edit-planning-mode") as HTMLSelectElement;
-        if (planningModeSelect) {
-          planningModeSelect.value = task.planning_mode || "";
-          syncSelectDisplay("task-edit-planning-mode");
+        const planSelect = document.getElementById("task-edit-plan") as HTMLSelectElement;
+        if (planSelect) {
+          planSelect.value = task.plan != null ? String(task.plan) : "";
+          syncSelectDisplay("task-edit-plan");
         }
         await populateTemplatesSelect("task-edit-template", task.template || "");
 
@@ -409,23 +409,25 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
       const profile = (document.getElementById("task-edit-profile") as HTMLSelectElement)?.value || undefined;
       const template =
         (document.getElementById("task-edit-template") as HTMLSelectElement)?.value || undefined;
-      const planning_mode =
-        (document.getElementById("task-edit-planning-mode") as HTMLSelectElement)?.value || undefined;
+      const planVal = (document.getElementById("task-edit-plan") as HTMLSelectElement)?.value || undefined;
 
       try {
+        const reqBody: Record<string, any> = {
+          title,
+          body,
+          priority,
+          status,
+          channel_id,
+          profile,
+          template,
+        };
+        if (planVal !== undefined && planVal !== "") {
+          reqBody.plan = planVal === "true";
+        }
         const res = await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId), {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            title,
-            body,
-            priority,
-            status,
-            channel_id,
-            profile,
-            template,
-            planning_mode,
-          }),
+          body: JSON.stringify(reqBody),
         });
         if (!res.ok) {
           const text = await res.text().catch(() => "Unknown error");

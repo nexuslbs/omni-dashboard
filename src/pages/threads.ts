@@ -23,7 +23,7 @@ interface ThreadRow {
   msg_count: number;
   iterations: number;
   cause_content_preview: string | null;
-  planning_mode: string;
+  plan: boolean;
   cause_msg_type: string | null;
   cause_msg_subtype: string | null;
   parent_id: number | null;
@@ -113,20 +113,6 @@ function causeColor(cause: string): string {
       return "#f59e0b";
     case "kanban":
       return "#8b5cf6";
-    default:
-      return "#64748b";
-  }
-}
-
-/** Planning mode badge colors: styled like Cause — 3 colors. */
-function planningModeColor(mode: string): string {
-  switch (mode) {
-    case "prompt_only":
-      return "#64748b"; // gray — no plan
-    case "auto_plan":
-      return "#f59e0b"; // amber — simple plan
-    case "auto_subtasks":
-      return "#8b5cf6"; // purple — deep plan
     default:
       return "#64748b";
   }
@@ -413,19 +399,6 @@ async function loadThreads(): Promise<void> {
   }
 }
 
-function planningModeLabel(mode: string): string {
-  switch (mode) {
-    case "prompt_only":
-      return "No Plan";
-    case "auto_plan":
-      return "Simple Plan";
-    case "auto_subtasks":
-      return "Plan with Subtasks";
-    default:
-      return "No Plan";
-  }
-}
-
 function renderRow(row: ThreadRow): string {
   const preview = row.cause_content_preview
     ? escapeHtml(row.cause_content_preview.slice(0, 100)) +
@@ -437,7 +410,7 @@ function renderRow(row: ThreadRow): string {
   );
   const tokens = (row.input_tokens || 0) + (row.output_tokens || 0);
   const causeCol = causeColor(row.cause);
-  const pmCol = planningModeColor(row.planning_mode);
+  const pmCol = row.plan ? "#22c55e" : "#64748b";
 
   const typeStr = row.cause_msg_type ? escapeHtml(row.cause_msg_type) : "—";
   const subtypeStr = row.cause_msg_subtype ? escapeHtml(row.cause_msg_subtype) : "—";
@@ -456,7 +429,7 @@ function renderRow(row: ThreadRow): string {
       <div role="cell" style="font-size:0.8rem;color:var(--text-muted);font-style:italic;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${subtypeStr}</div>
       <div role="cell"><span class="badge" style="${channelStyle(row.channel_closed)}"${row.channel_closed ? ' title="Channel closed"' : ""}>${escapeHtml(row.channel_name)}</span></div>
       <div role="cell" class="cell-timestamp">${ts}</div>
-      <div role="cell"><span class="badge" style="--type-color:${pmCol};background:${pmCol}22;border-color:${pmCol}44;color:${pmCol}">${planningModeLabel(row.planning_mode)}</span></div>
+      <div role="cell"><span class="badge" style="--type-color:${pmCol};background:${pmCol}22;border-color:${pmCol}44;color:${pmCol}">${row.plan ? "On" : "Off"}</span></div>
       <div role="cell" style="font-size:0.8rem;color:var(--text-muted)">
         <div style="display:flex;flex-direction:column;gap:0.125rem;">
           ${row.provider ? `<span class="ev-provider" title="Provider" style="line-height:1.3;">${escapeHtml(row.provider)}</span>` : ""}

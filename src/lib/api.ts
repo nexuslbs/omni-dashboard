@@ -313,7 +313,7 @@ export interface ChannelData {
   current_provider: string | null;
   current_model: string | null;
   readonly: boolean;
-  planning_mode: string | null;
+  plan: boolean;
   template: string | null;
 }
 

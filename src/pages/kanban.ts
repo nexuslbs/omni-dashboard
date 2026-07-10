@@ -2,7 +2,7 @@
  * Main kanban page — rendering, wiring, and create-task modal.
  * Delegates to lib/kanban-board.ts, lib/kanban-detail.ts, lib/kanban-subtasks.ts.
  */
-import { apiGet, apiPost } from "../lib/api";
+import { apiGet } from "../lib/api";
 import { loadBoard } from "../lib/kanban-board";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 import { formatApiError } from "../lib/helpers";
@@ -53,10 +53,10 @@ function closeCreateModal(): void {
   const profile = document.getElementById("task-create-profile") as HTMLSelectElement;
   if (profile) profile.value = "";
   syncSelectDisplay("task-create-profile");
-  const planning_mode = document.getElementById("task-create-planning-mode") as HTMLSelectElement;
-  if (planning_mode) {
-    planning_mode.value = "";
-    syncSelectDisplay("task-create-planning-mode");
+  const planEl = document.getElementById("task-create-plan") as HTMLSelectElement;
+  if (planEl) {
+    planEl.value = "";
+    syncSelectDisplay("task-create-plan");
   }
   const template = document.getElementById("task-create-template") as HTMLSelectElement;
   if (template) {
@@ -273,11 +273,10 @@ export function renderKanban(container: HTMLElement): void {
     const status = (document.getElementById("task-create-status") as HTMLSelectElement)?.value || "backlog";
     const template =
       (document.getElementById("task-create-template") as HTMLSelectElement)?.value || undefined;
-    const planning_mode =
-      (document.getElementById("task-create-planning-mode") as HTMLSelectElement)?.value || undefined;
+    const planVal = (document.getElementById("task-create-plan") as HTMLSelectElement)?.value || undefined;
 
     try {
-      await apiPost<any>("/kanban/tasks", {
+      const reqBody: Record<string, any> = {
         title,
         body,
         priority,
@@ -285,7 +284,14 @@ export function renderKanban(container: HTMLElement): void {
         profile,
         status,
         template,
-        planning_mode,
+      };
+      if (planVal !== undefined && planVal !== "") {
+        reqBody.plan = planVal === "true";
+      }
+      await fetch("/api/kanban/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(reqBody),
       });
       closeCreateModal();
       void loadBoard(showArchived);

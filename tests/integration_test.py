@@ -509,7 +509,7 @@ def run():
         "prompt": "test prompt",
         "active": False,
         "enabled": False,
-        "planning_mode": "",
+        "plan": False,
         "template": "",
         "profile": "",
     })

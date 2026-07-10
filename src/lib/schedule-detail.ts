@@ -443,11 +443,10 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
         </div>
         <div style="margin-bottom:1rem;">
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Planning Mode</label>
-          <select id="cron-planning-mode" class="filter-select" style="width:100%;">
+          <select id="cron-plan" class="filter-select" style="width:100%;">
             <option value="">- (Default)</option>
-            <option value="prompt_only" ${isEdit && job.planning_mode === "prompt_only" ? "selected" : ""}>No Plan</option>
-            <option value="auto_plan" ${isEdit && job.planning_mode === "auto_plan" ? "selected" : ""}>Simple Plan</option>
-            <option value="auto_subtasks" ${isEdit && job.planning_mode === "auto_subtasks" ? "selected" : ""}>Plan with Subtasks</option>
+            <option value="true" ${isEdit && job.plan === true ? "selected" : ""}>On</option>
+            <option value="false" ${isEdit && job.plan === false ? "selected" : ""}>Off</option>
           </select>
         </div>
         <div style="margin-bottom:1rem;">
@@ -546,7 +545,7 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
     const schedule = (modal.querySelector("#cron-schedule") as HTMLInputElement).value.trim();
     const channelVal = (modal.querySelector("#cron-channel") as HTMLSelectElement).value;
     const profile = (modal.querySelector("#cron-profile") as HTMLSelectElement).value;
-    const planningMode = (modal.querySelector("#cron-planning-mode") as HTMLSelectElement).value;
+    const planVal = (modal.querySelector("#cron-plan") as HTMLSelectElement).value;
     const mode = (modal.querySelector("#cron-mode") as HTMLSelectElement).value;
     const action_id = (modal.querySelector("#cron-action") as HTMLSelectElement).value;
     const prompt = (modal.querySelector("#cron-prompt") as HTMLTextAreaElement).value.trim();
@@ -599,9 +598,11 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
         profile,
         mode,
         silent,
-        planning_mode: planningMode || "",
         template: template || null,
       };
+      if (planVal !== undefined && planVal !== "") {
+        body.plan = planVal === "true";
+      }
       if (mode === "action") body.action_id = action_id || null;
 
       let res: Response;

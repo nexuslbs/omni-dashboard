@@ -148,29 +148,35 @@ export function renderModelSelect(channelId: number, currentProvider: string, cu
   `;
 }
 
-export function renderPlanningModeSelect(channelId: number, current: string): string {
-  const selectId = `ch-${channelId}-planning-mode`;
+export function planBadge(plan: boolean): string {
+  const color = plan ? "#22c55e" : "#64748b";
+  const label = plan ? "On" : "Off";
+  return `<span class="channel-status-badge" style="--type-color:${color};background:${color}22;border-color:${color}44;color:${color};font-size:0.7rem;padding:0.125rem 0.5rem;">${label}</span>`;
+}
+
+export function renderPlanSelect(channelId: number, current: boolean): string {
+  const selectId = `ch-${channelId}-plan`;
+  const selectedVal = current ? "true" : "false";
   const options = [
     { value: "", label: "- (Default)" },
-    { value: "prompt_only", label: "No Plan" },
-    { value: "auto_plan", label: "Simple Plan" },
-    { value: "auto_subtasks", label: "Plan with Subtasks" },
+    { value: "true", label: "On" },
+    { value: "false", label: "Off" },
   ];
   return `
     <div class="channel-field-group">
       <select id="${selectId}" class="filter-select channel-edit-input"
-        data-channel-id="${channelId}" data-field="planning_mode" data-original="${escapeHtml(current)}">
+        data-channel-id="${channelId}" data-field="plan" data-original="${escapeHtml(selectedVal)}">
         ${options
           .map(
             (opt) =>
-              `<option value="${escapeHtml(opt.value)}" ${opt.value === current ? "selected" : ""}>${escapeHtml(opt.label)}</option>`,
+              `<option value="${escapeHtml(opt.value)}" ${opt.value === selectedVal ? "selected" : ""}>${escapeHtml(opt.label)}</option>`,
           )
           .join("")}
       </select>
-      <button type="button" class="channel-edit-btn save" data-channel-id="${channelId}" data-field="planning_mode" style="display:none;" title="Save">
+      <button type="button" class="channel-edit-btn save" data-channel-id="${channelId}" data-field="plan" style="display:none;" title="Save">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
       </button>
-      <button type="button" class="channel-edit-btn cancel" data-channel-id="${channelId}" data-field="planning_mode" style="display:none;" title="Cancel">
+      <button type="button" class="channel-edit-btn cancel" data-channel-id="${channelId}" data-field="plan" style="display:none;" title="Cancel">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
@@ -341,10 +347,18 @@ export function wireChannelConfigEditing(): void {
       ) as HTMLInputElement | null;
       if (!input) return;
       const value = input.value;
-      const body: Record<string, string> = {};
-      const key =
-        field === "name" ? "name" : field === "planning_mode" ? "planning_mode" : `current_${field}`;
-      body[key] = value;
+      const body: Record<string, any> = {};
+      let key = field === "name" ? "name" : `current_${field}`;
+      if (field === "plan") {
+        // 3-way: empty = omit (use default), "true"/"false" = set value
+        if (value === "") {
+          // skip — don't send plan, let backend use default
+          // The button click should not proceed with empty body
+          return;
+        }
+        key = "plan";
+      }
+      body[key] = field === "plan" ? value === "true" : value;
       try {
         const res = await fetch(`/api/channels/${channelId}`, {
           method: "PATCH",
