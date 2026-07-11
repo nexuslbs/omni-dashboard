@@ -113,9 +113,11 @@ async function refreshToolMappings(): Promise<void> {
     const newToolDetails: Record<string, { name: string; server_name: string | null }> = {};
     for (const t of toolsList) {
       const rawName = t.name || t.tool || "";
-      newDisplayToRaw[rawName] = rawName;
+      // Use full_name for display (prefixes builtin tools like "builtin_list-memories")
+      const displayName = t.full_name || rawName;
+      newDisplayToRaw[displayName] = rawName;
       newToolDetails[rawName] = {
-        name: rawName,
+        name: displayName,
         server_name: t.server_name || t.source || null,
       };
     }
