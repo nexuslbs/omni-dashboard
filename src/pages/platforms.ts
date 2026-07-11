@@ -1,8 +1,37 @@
 import { apiGet, toCamelCase, type PluginData } from "../lib/api";
-import { enhanceSelectElement } from "../lib/dropdown";
+import { enhanceSelectElement, enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 import { formatApiError } from "../lib/helpers";
 import { getCurrentConfig, dirtyCheckSaveButton, wireRefToggles } from "../lib/plugin-config";
 import { renderPluginCard, wirePluginButtons, showInstallModal } from "../lib/plugin-ui";
+
+// ── Filter state ──
+let currentSource = "all";
+let currentStatus = "all";
+let currentEnabled = "all";
+let currentName = "";
+
+function syncPluginFiltersToUrl(): void {
+  const params = new URLSearchParams();
+  if (currentSource !== "all") params.set("source", currentSource);
+  if (currentStatus !== "all") params.set("status", currentStatus);
+  if (currentEnabled !== "all") params.set("enabled", currentEnabled);
+  if (currentName) params.set("name", currentName);
+  const qs = params.toString();
+  const newUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
+  history.replaceState(null, "", newUrl);
+}
+
+function applyPluginFiltersFromUrl(): void {
+  const p = new URLSearchParams(window.location.search);
+  const source = p.get("source");
+  if (source) currentSource = source;
+  const status = p.get("status");
+  if (status) currentStatus = status;
+  const enabled = p.get("enabled");
+  if (enabled) currentEnabled = enabled;
+  const name = p.get("name");
+  if (name) currentName = name;
+}
 
 export function renderPlatforms(container: HTMLElement): void {
   container.innerHTML = `
@@ -13,12 +42,63 @@ export function renderPlatforms(container: HTMLElement): void {
       </div>
       <button id="add-platform-btn" class="btn-primary" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ Add</button>
     </div>
+    <div class="filter-bar" id="platforms-filter-bar">
+      <div class="filter-section">
+        <label class="filter-label">Source</label>
+        <select class="filter-select" id="filter-source">
+          <option value="all">All</option>
+          <option value="built-in">Built-in</option>
+          <option value="bundled">Bundled</option>
+          <option value="remote">Remote</option>
+        </select>
+      </div>
+      <div class="filter-section">
+        <label class="filter-label">Status</label>
+        <select class="filter-select" id="filter-status">
+          <option value="all">All</option>
+          <option value="enabled">Enabled</option>
+          <option value="disabled">Disabled</option>
+          <option value="error">Error</option>
+        </select>
+      </div>
+      <div class="filter-section">
+        <label class="filter-label">Enabled</label>
+        <select class="filter-select" id="filter-enabled">
+          <option value="all">All</option>
+          <option value="yes">Only Enabled</option>
+          <option value="no">Only Disabled</option>
+        </select>
+      </div>
+      <div class="filter-section">
+        <label class="filter-label">Name</label>
+        <input type="text" class="filter-input" id="filter-name" placeholder="Plugin key..." />
+      </div>
+      <div class="filter-actions">
+        <button class="btn btn-secondary" id="btn-reset-filters">✕ Reset</button>
+      </div>
+    </div>
     <div id="platforms-content">
       <div class="loading" style="padding:3rem;text-align:center;">Loading platforms...</div>
     </div>
   `;
 
   document.getElementById("add-platform-btn")?.addEventListener("click", () => showInstallModal("platform"));
+
+  // Restore filter state from URL and set input values
+  currentSource = "all";
+  currentStatus = "all";
+  currentEnabled = "all";
+  currentName = "";
+  applyPluginFiltersFromUrl();
+
+  const sourceSel = document.getElementById("filter-source") as HTMLSelectElement | null;
+  if (sourceSel) sourceSel.value = currentSource;
+  const statusSel = document.getElementById("filter-status") as HTMLSelectElement | null;
+  if (statusSel) statusSel.value = currentStatus;
+  const enabledSel = document.getElementById("filter-enabled") as HTMLSelectElement | null;
+  if (enabledSel) enabledSel.value = currentEnabled;
+  const nameInput = document.getElementById("filter-name") as HTMLInputElement | null;
+  if (nameInput) nameInput.value = currentName;
 
   void loadPlatforms();
 }
@@ -60,9 +140,27 @@ async function loadPlatforms(): Promise<void> {
   }
 }
 
+function filterPlugins(plugins: PluginData[]): PluginData[] {
+  return plugins.filter((p: PluginData) => {
+    // Source filter
+    if (currentSource !== "all" && p.source !== currentSource) return false;
+    // Status filter
+    if (currentStatus !== "all" && p.status !== currentStatus) return false;
+    // Enabled filter
+    if (currentEnabled === "yes" && p.status !== "enabled") return false;
+    if (currentEnabled === "no" && p.status === "enabled") return false;
+    // Name filter — free text search on plugin key
+    if (currentName && !p.name.toLowerCase().includes(currentName.toLowerCase())) return false;
+    return true;
+  });
+}
+
 function renderPlatformsPage(platforms: PluginData[]): string {
-  if (!platforms || platforms.length === 0) {
-    return '<div class="empty-state">No platforms found</div>';
+  // Apply filters
+  const filtered = filterPlugins(platforms);
+
+  if (!filtered || filtered.length === 0) {
+    return '<div class="empty-state">No platforms match the current filters</div>';
   }
 
   // Sort: same-name plugins ordered built-in → bundled → remote
@@ -71,7 +169,7 @@ function renderPlatformsPage(platforms: PluginData[]): string {
     bundled: 1,
     remote: 2,
   };
-  const sorted = [...platforms].sort((a, b) => {
+  const sorted = [...filtered].sort((a, b) => {
     if (a.name === b.name) {
       return (sourcePriority[a.source] ?? 99) - (sourcePriority[b.source] ?? 99);
     }
@@ -89,7 +187,53 @@ function renderPlatformsPage(platforms: PluginData[]): string {
     .join("");
 }
 
+function wireFilterEvents(): void {
+  document.getElementById("filter-source")?.addEventListener("change", (e) => {
+    currentSource = (e.target as HTMLSelectElement).value;
+    syncPluginFiltersToUrl();
+    void loadPlatforms();
+  });
+  document.getElementById("filter-status")?.addEventListener("change", (e) => {
+    currentStatus = (e.target as HTMLSelectElement).value;
+    syncPluginFiltersToUrl();
+    void loadPlatforms();
+  });
+  document.getElementById("filter-enabled")?.addEventListener("change", (e) => {
+    currentEnabled = (e.target as HTMLSelectElement).value;
+    syncPluginFiltersToUrl();
+    void loadPlatforms();
+  });
+  const nameInput = document.getElementById("filter-name") as HTMLInputElement;
+  nameInput?.addEventListener("input", () => {
+    currentName = nameInput.value.trim();
+    syncPluginFiltersToUrl();
+    void loadPlatforms();
+  });
+  document.getElementById("btn-reset-filters")?.addEventListener("click", () => {
+    currentSource = "all";
+    currentStatus = "all";
+    currentEnabled = "all";
+    currentName = "";
+    const sourceSel = document.getElementById("filter-source") as HTMLSelectElement | null;
+    const statusSel = document.getElementById("filter-status") as HTMLSelectElement | null;
+    const enabledSel = document.getElementById("filter-enabled") as HTMLSelectElement | null;
+    const nameInp = document.getElementById("filter-name") as HTMLInputElement | null;
+    if (sourceSel) sourceSel.value = "all";
+    if (statusSel) statusSel.value = "all";
+    if (enabledSel) enabledSel.value = "all";
+    if (nameInp) nameInp.value = "";
+    syncSelectDisplay("filter-source");
+    syncSelectDisplay("filter-status");
+    syncSelectDisplay("filter-enabled");
+    history.replaceState(null, "", window.location.pathname);
+    void loadPlatforms();
+  });
+}
+
 function wirePlatforms(): void {
+  // Wire filter events
+  wireFilterEvents();
+
   // ── Ref toggles for $secret:/$env: references ──
   wireRefToggles();
 
@@ -175,4 +319,9 @@ function wirePlatforms(): void {
   document.querySelectorAll(".plugin-config-form select.plugin-config-input[data-key]").forEach((el) => {
     enhanceSelectElement(el as HTMLSelectElement);
   });
+
+  // Enhance filter selects
+  enhanceSelect("filter-source");
+  enhanceSelect("filter-status");
+  enhanceSelect("filter-enabled");
 }
