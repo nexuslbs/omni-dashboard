@@ -213,8 +213,11 @@ export async function loadBoard(showArchived: boolean): Promise<void> {
           if (!touchDragTaskId) return;
           const te = e as TouchEvent;
           const touch = te.touches[0];
-          const dist = Math.hypot(touch.clientX - touchStartX, touch.clientY - touchStartY);
-          if (dist > 15 && !isTouchDragging) {
+          const dx = touch.clientX - touchStartX;
+          const dy = touch.clientY - touchStartY;
+          const dist = Math.hypot(dx, dy);
+          // Only treat as drag if horizontal movement dominates (not scroll)
+          if (dist > 15 && Math.abs(dx) > Math.abs(dy) && !isTouchDragging) {
             isTouchDragging = true;
           }
           if (isTouchDragging) {
