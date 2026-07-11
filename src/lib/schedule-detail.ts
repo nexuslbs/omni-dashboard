@@ -517,7 +517,6 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
   // Enhance selects
   enhanceSelectElement(document.getElementById("cron-channel") as HTMLSelectElement);
   enhanceSelectElement(document.getElementById("cron-profile") as HTMLSelectElement);
-  enhanceSelectElement(document.getElementById("cron-planning-mode") as HTMLSelectElement);
   enhanceSelectElement(document.getElementById("cron-instruction-file") as HTMLSelectElement);
   enhanceSelectElement(document.getElementById("cron-mode") as HTMLSelectElement);
   enhanceSelectElement(document.getElementById("cron-action") as HTMLSelectElement);

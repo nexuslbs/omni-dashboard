@@ -1,5 +1,5 @@
 /**
- * Channel config editing — name, profile, provider, model, planning mode controls.
+ * Channel config editing — name, profile, provider, model, plan controls.
  * Extracted from src/pages/channels.ts
  */
 import { escapeHtml, formatApiError } from "./helpers";
@@ -23,19 +23,6 @@ export function setChannelData(
 }
 
 // ── Helper functions ──
-
-export function planningModeLabel(mode: string | null): string {
-  switch (mode) {
-    case "prompt_only":
-      return "No Plan";
-    case "auto_plan":
-      return "Simple Plan";
-    case "auto_subtasks":
-      return "Plan with Subtasks";
-    default:
-      return "Default";
-  }
-}
 
 export function getModelsForProvider(provider: string): string[] {
   return _providerModels[provider] || [];

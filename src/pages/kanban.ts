@@ -217,15 +217,6 @@ export function renderKanban(container: HTMLElement): void {
             </select>
           </div>
           <div>
-            <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Planning Mode</label>
-            <select id="task-create-planning-mode" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.85rem;box-sizing:border-box;">
-              <option value="">- (Default)</option>
-              <option value="prompt_only">No Plan</option>
-              <option value="auto_plan">Simple Plan</option>
-              <option value="auto_subtasks">Plan with Subtasks</option>
-            </select>
-          </div>
-          <div>
             <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.25rem;">Template</label>
             <select id="task-create-template" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.85rem;box-sizing:border-box;">
               <option value="">None</option>
@@ -249,7 +240,6 @@ export function renderKanban(container: HTMLElement): void {
     await populateProfileSelect("task-create-profile");
     await populateTemplatesSelect("task-create-template");
     modal.style.display = "flex";
-    enhanceSelect("task-create-planning-mode");
   });
 
   document.getElementById("task-create-cancel")?.addEventListener("click", () => {
