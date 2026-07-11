@@ -7,14 +7,12 @@ import { renderPluginCard, wirePluginButtons, showInstallModal } from "../lib/pl
 // ── Filter state ──
 let currentSource = "all";
 let currentStatus = "all";
-let currentEnabled = "all";
 let currentName = "";
 
 function syncPluginFiltersToUrl(): void {
   const params = new URLSearchParams();
   if (currentSource !== "all") params.set("source", currentSource);
   if (currentStatus !== "all") params.set("status", currentStatus);
-  if (currentEnabled !== "all") params.set("enabled", currentEnabled);
   if (currentName) params.set("name", currentName);
   const qs = params.toString();
   const newUrl = qs ? `${window.location.pathname}?${qs}` : window.location.pathname;
@@ -27,8 +25,6 @@ function applyPluginFiltersFromUrl(): void {
   if (source) currentSource = source;
   const status = p.get("status");
   if (status) currentStatus = status;
-  const enabled = p.get("enabled");
-  if (enabled) currentEnabled = enabled;
   const name = p.get("name");
   if (name) currentName = name;
 }
@@ -62,14 +58,6 @@ export function renderPlatforms(container: HTMLElement): void {
         </select>
       </div>
       <div class="filter-section">
-        <label class="filter-label">Enabled</label>
-        <select class="filter-select" id="filter-enabled">
-          <option value="all">All</option>
-          <option value="yes">Only Enabled</option>
-          <option value="no">Only Disabled</option>
-        </select>
-      </div>
-      <div class="filter-section">
         <label class="filter-label">Name</label>
         <input type="text" class="filter-input" id="filter-name" placeholder="Plugin key..." />
       </div>
@@ -87,7 +75,6 @@ export function renderPlatforms(container: HTMLElement): void {
   // Restore filter state from URL and set input values
   currentSource = "all";
   currentStatus = "all";
-  currentEnabled = "all";
   currentName = "";
   applyPluginFiltersFromUrl();
 
@@ -95,8 +82,6 @@ export function renderPlatforms(container: HTMLElement): void {
   if (sourceSel) sourceSel.value = currentSource;
   const statusSel = document.getElementById("filter-status") as HTMLSelectElement | null;
   if (statusSel) statusSel.value = currentStatus;
-  const enabledSel = document.getElementById("filter-enabled") as HTMLSelectElement | null;
-  if (enabledSel) enabledSel.value = currentEnabled;
   const nameInput = document.getElementById("filter-name") as HTMLInputElement | null;
   if (nameInput) nameInput.value = currentName;
 
@@ -110,6 +95,7 @@ const savedConfigs: Map<string, Record<string, any>> = new Map();
 
 async function loadPlatforms(): Promise<void> {
   const content = document.getElementById("platforms-content")!;
+  content.innerHTML = '<div class="loading" style="padding:3rem;text-align:center;">Loading platforms...</div>';
   try {
     const response = await apiGet<any>("/plugins");
     // Backend wraps in { success, data } — extract data array
@@ -146,9 +132,6 @@ function filterPlugins(plugins: PluginData[]): PluginData[] {
     if (currentSource !== "all" && p.source !== currentSource) return false;
     // Status filter
     if (currentStatus !== "all" && p.status !== currentStatus) return false;
-    // Enabled filter
-    if (currentEnabled === "yes" && p.status !== "enabled") return false;
-    if (currentEnabled === "no" && p.status === "enabled") return false;
     // Name filter — free text search on plugin key
     if (currentName && !p.name.toLowerCase().includes(currentName.toLowerCase())) return false;
     return true;
@@ -198,11 +181,6 @@ function wireFilterEvents(): void {
     syncPluginFiltersToUrl();
     void loadPlatforms();
   });
-  document.getElementById("filter-enabled")?.addEventListener("change", (e) => {
-    currentEnabled = (e.target as HTMLSelectElement).value;
-    syncPluginFiltersToUrl();
-    void loadPlatforms();
-  });
   const nameInput = document.getElementById("filter-name") as HTMLInputElement;
   nameInput?.addEventListener("input", () => {
     currentName = nameInput.value.trim();
@@ -212,19 +190,15 @@ function wireFilterEvents(): void {
   document.getElementById("btn-reset-filters")?.addEventListener("click", () => {
     currentSource = "all";
     currentStatus = "all";
-    currentEnabled = "all";
     currentName = "";
     const sourceSel = document.getElementById("filter-source") as HTMLSelectElement | null;
     const statusSel = document.getElementById("filter-status") as HTMLSelectElement | null;
-    const enabledSel = document.getElementById("filter-enabled") as HTMLSelectElement | null;
     const nameInp = document.getElementById("filter-name") as HTMLInputElement | null;
     if (sourceSel) sourceSel.value = "all";
     if (statusSel) statusSel.value = "all";
-    if (enabledSel) enabledSel.value = "all";
     if (nameInp) nameInp.value = "";
     syncSelectDisplay("filter-source");
     syncSelectDisplay("filter-status");
-    syncSelectDisplay("filter-enabled");
     history.replaceState(null, "", window.location.pathname);
     void loadPlatforms();
   });
@@ -323,5 +297,4 @@ function wirePlatforms(): void {
   // Enhance filter selects
   enhanceSelect("filter-source");
   enhanceSelect("filter-status");
-  enhanceSelect("filter-enabled");
 }

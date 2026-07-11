@@ -429,6 +429,22 @@ async function saveEdit(type: "memory" | "soul"): Promise<void> {
   const statusEl = document.getElementById(`mem-${type}-edit-status`)!;
   const content = textarea.value;
 
+  // Check character limits
+  const maxCharsKey = type === "memory" ? "MEMORY_MAX_CHARS" : "SOUL_MAX_CHARS";
+  try {
+    const settingsData = await apiGet<any>("/settings");
+    const allSettings = settingsData.categories?.flatMap((c: any) => c.settings) || [];
+    const setting = allSettings.find((s: any) => s.name === maxCharsKey);
+    if (setting) {
+      const maxChars = parseInt(setting.value, 10);
+      if (!isNaN(maxChars) && content.length > maxChars) {
+        statusEl.textContent = `⚠️ ${content.length}/${maxChars} chars — exceeds limit`;
+        // Still allow saving, but warn
+        setTimeout(() => { statusEl.textContent = ""; }, 4000);
+      }
+    }
+  } catch { /* skip validation if settings unavailable */ }
+
   statusEl.textContent = "Saving...";
   try {
     const res = await fetch(`${API_BASE}/memory/edit/${encodeURIComponent(_currentProfile)}/${type}`, {

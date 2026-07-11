@@ -127,10 +127,14 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
             return `<option value="${escapeHtml(optId)}"${optId === value ? " selected" : ""}>${escapeHtml(optLabel)}</option>`;
           })
           .join("");
+        // If current value doesn't match any option, add a hidden disabled option 
+        // so the select shows the actual current value, not a wrong one
+        const hasValue = (meta.options || []).some((o: any) => (o.id || o.value) === value);
+        const valueFallback = hasValue ? "" : `<option value="${escapeHtml(value)}" disabled selected style="display:none">${escapeHtml(value)}</option>`;
         inputHtml = `
           <select id="${inputId}" class="filter-select setting-input"
             data-name="${escapeHtml(name)}" data-original="${escapeHtml(value)}">
-            ${opts}
+            ${valueFallback}${opts}
           </select>
         `;
         break;
@@ -163,6 +167,13 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
+        ${meta.default !== undefined && meta.default !== null && meta.default !== "" ? `
+        <button type="button" class="setting-action-btn setting-reset-btn" title="Reset to default" data-name="${escapeHtml(name)}" data-default="${escapeHtml(meta.default)}">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10"/>
+          </svg>
+        </button>
+        ` : ""}
       </div>
     `;
   }
@@ -241,6 +252,29 @@ function wireSettings(): void {
       }
       const actionsEl = document.querySelector(`#actions-${name}`) as HTMLElement | null;
       if (actionsEl) actionsEl.style.display = "none";
+    });
+  });
+
+  // Reset-to-default buttons
+  document.querySelectorAll(".setting-reset-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const name = btn.getAttribute("data-name");
+      const defaultVal = btn.getAttribute("data-default");
+      if (!name || defaultVal === null) return;
+      const input = document.querySelector(`.setting-input[data-name="${name}"]`) as
+        | HTMLInputElement
+        | HTMLSelectElement
+        | HTMLTextAreaElement
+        | null;
+      if (!input) return;
+      const original = input.getAttribute("data-original") || "";
+      if (original === defaultVal) return; // already at default
+      input.value = defaultVal;
+      if (input.tagName === "SELECT") {
+        syncSelectDisplay(input.id);
+      }
+      // Save immediately
+      void saveSetting(name, defaultVal);
     });
   });
 
