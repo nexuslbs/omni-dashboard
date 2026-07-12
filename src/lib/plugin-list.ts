@@ -166,11 +166,13 @@ export function createPluginPage(cfg: PluginPageConfig) {
   };
 }
 
-async function loadPage(type: PluginPageType, cfg: PluginPageConfig): Promise<void> {
+async function loadPage(type: PluginPageType, cfg: PluginPageConfig, background?: boolean): Promise<void> {
   const { showMcpTools, builtinFallbacks } = cfg;
   const cId = contentId(type);
   const content = document.getElementById(cId)!;
-  content.innerHTML = '<div class="loading" style="padding:3rem;text-align:center;">Loading...</div>';
+  if (!background) {
+    content.innerHTML = '<div class="loading" style="padding:3rem;text-align:center;">Loading...</div>';
+  }
   try {
     // Fetch plugins and optionally MCP tools
     const pluginsResponse = await apiGet<any>("/plugins");
@@ -320,7 +322,7 @@ function wirePage(type: PluginPageType): void {
 
   wireRefToggles();
 
-  wirePluginButtons(type, () => void loadPage(type, PAGE_CONFIGS[type]));
+  wirePluginButtons(type, () => void loadPage(type, PAGE_CONFIGS[type], true));
 
   // Card header click also toggles
   document.querySelectorAll(".card-header").forEach((header) => {
