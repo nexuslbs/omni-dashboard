@@ -55,6 +55,10 @@ export function renderTools(container: HTMLElement): void {
           <option value="enabled">Enabled</option>
           <option value="disabled">Disabled</option>
           <option value="error">Error</option>
+          <option value="duplicated">Duplicated</option>
+          <option value="not_installed">Not Installed</option>
+          <option value="no_code">No code</option>
+          <option value="not_found">Not found</option>
         </select>
       </div>
       <div class="filter-section">
@@ -92,9 +96,11 @@ export function renderTools(container: HTMLElement): void {
 
 const savedConfigs: Map<string, Record<string, any>> = new Map();
 
-async function loadTools(): Promise<void> {
+async function loadTools(background?: boolean): Promise<void> {
   const content = document.getElementById("tools-content")!;
-  content.innerHTML = '<div class="loading" style="padding:3rem;text-align:center;">Loading tools...</div>';
+  if (!background) {
+    content.innerHTML = '<div class="loading" style="padding:3rem;text-align:center;">Loading tools...</div>';
+  }
   try {
     const [pluginsResponse, toolsResponse] = await Promise.all([
       apiGet<any>("/plugins"),
@@ -239,7 +245,7 @@ function wireTools(): void {
   wireRefToggles();
 
   // Wire all plugin action buttons via shared handler
-  wirePluginButtons("tool", () => void loadTools());
+  wirePluginButtons("tool", () => void loadTools(true));
 
   // Card header click also toggles
   document.querySelectorAll(".card-header").forEach((header) => {

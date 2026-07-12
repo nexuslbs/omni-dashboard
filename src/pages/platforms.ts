@@ -55,6 +55,10 @@ export function renderPlatforms(container: HTMLElement): void {
           <option value="enabled">Enabled</option>
           <option value="disabled">Disabled</option>
           <option value="error">Error</option>
+          <option value="duplicated">Duplicated</option>
+          <option value="not_installed">Not Installed</option>
+          <option value="no_code">No code</option>
+          <option value="not_found">Not found</option>
         </select>
       </div>
       <div class="filter-section">
@@ -93,10 +97,12 @@ export function renderPlatforms(container: HTMLElement): void {
 // savedConfigs and pending changes map
 const savedConfigs: Map<string, Record<string, any>> = new Map();
 
-async function loadPlatforms(): Promise<void> {
+async function loadPlatforms(background?: boolean): Promise<void> {
   const content = document.getElementById("platforms-content")!;
-  content.innerHTML =
-    '<div class="loading" style="padding:3rem;text-align:center;">Loading platforms...</div>';
+  if (!background) {
+    content.innerHTML =
+      '<div class="loading" style="padding:3rem;text-align:center;">Loading platforms...</div>';
+  }
   try {
     const response = await apiGet<any>("/plugins");
     // Backend wraps in { success, data } — extract data array
@@ -213,7 +219,7 @@ function wirePlatforms(): void {
   wireRefToggles();
 
   // Wire all plugin action buttons via shared handler
-  wirePluginButtons("platform", () => void loadPlatforms());
+  wirePluginButtons("platform", () => void loadPlatforms(true));
 
   // Card header click also toggles
   document.querySelectorAll(".card-header").forEach((header) => {
