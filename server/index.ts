@@ -8,6 +8,7 @@ import { wikiSearchRouter } from "./routes/wiki-search.js";
 import { uploadsRouter } from "./routes/uploads.js";
 import { fsRouter } from "./routes/fs.js";
 import { profilesRouter } from "./routes/profiles.js";
+import { gitRouter } from "./routes/git.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -25,6 +26,7 @@ app.use("/api/health", healthRouter);
 app.use("/api/wiki-search", wikiSearchRouter);
 app.use("/api/uploads", uploadsRouter);
 app.use("/api/fs", fsRouter);
+app.use("/api/git", gitRouter);
 app.use("/api/profiles", profilesRouter);
 
 // ────────────────────────────────────────────────────────────────────────────
@@ -140,7 +142,7 @@ app.all(/^\/api\/plugins(?:\/.*)?$/, async (req, res) => {
 // ────────────────────────────────────────────────────────────────────────────
 // Generic proxy — all other /api/* routes go to OmniAgent with /api prefix stripped
 // ────────────────────────────────────────────────────────────────────────────
-app.all(/^\/api\/(?!health|wiki-search|uploads|fs|profiles|plugins|templates)(?:.*)$/, async (req, res) => {
+app.all(/^\/api\/(?!health|wiki-search|uploads|fs|git|profiles|plugins|templates)(?:.*)$/, async (req, res) => {
   try {
     // Strip the /api prefix: /api/messages/filters → /messages/filters
     const targetPath = req.path.replace(/^\/api/, "");

@@ -1331,6 +1331,218 @@ a.thread-row {
   border-color: var(--border-accent);
 }
 
+/* ── Git Panel ── */
+
+.git-panel {
+  padding: 0.625rem 0.75rem;
+  border-bottom: 1px solid var(--border-primary);
+  font-size: 0.8125rem;
+}
+
+.git-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.git-branch {
+  font-weight: 600;
+  color: var(--text-primary);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.8125rem;
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.git-remote-info {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: 0.75rem;
+  font-family: var(--font-mono, monospace);
+}
+
+.git-ahead {
+  color: #58a6ff;
+}
+
+.git-behind {
+  color: #d2a8ff;
+}
+
+.git-sync-btn {
+  background: var(--glass-bg);
+  border: 1px solid var(--glass-border);
+  color: var(--text-secondary);
+  width: 24px;
+  height: 24px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-size: 0.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.git-sync-btn:hover {
+  background: var(--bg-card-hover);
+  color: var(--text-primary);
+  border-color: var(--border-accent);
+}
+
+.git-sync-btn.spinning {
+  animation: spin 1s linear infinite;
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.git-commit-area {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.git-commit-input {
+  width: 100%;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid var(--border-primary);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input, var(--bg-app));
+  color: var(--text-primary);
+  font-size: 0.8125rem;
+  box-sizing: border-box;
+}
+
+.git-commit-input::placeholder {
+  color: var(--text-muted);
+}
+
+.git-commit-actions {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.git-commit-btn,
+.git-discard-btn {
+  flex: 1;
+  padding: 0.3rem 0.5rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: 1px solid var(--border-primary);
+  transition: all 0.15s ease;
+  text-align: center;
+}
+
+.git-commit-btn {
+  background: var(--accent-color);
+  color: #fff;
+  border-color: var(--accent-color);
+}
+
+.git-commit-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.git-commit-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.git-discard-btn {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.git-discard-btn:hover {
+  background: rgba(248, 81, 73, 0.1);
+  color: #F85149;
+  border-color: #F85149;
+}
+
+.git-files {
+  margin-top: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.git-files-header {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  padding: 0.25rem 0;
+}
+
+.git-files-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.git-file-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0.375rem;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: background 0.1s ease;
+  font-size: 0.8125rem;
+}
+
+.git-file-item:hover {
+  background: var(--bg-card-hover);
+}
+
+.git-file-name {
+  color: var(--text-primary);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  margin-right: 0.5rem;
+}
+
+.git-file-status {
+  flex-shrink: 0;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  width: 1.2em;
+  text-align: center;
+}
+
+.git-error {
+  margin-top: 0.375rem;
+  padding: 0.375rem 0.5rem;
+  border-radius: var(--radius-sm);
+  background: rgba(248, 81, 73, 0.1);
+  color: #F85149;
+  font-size: 0.75rem;
+  border: 1px solid rgba(248, 81, 73, 0.2);
+}
+
+/* Hide git panel when explorer is collapsed */
+.explorer-panel.collapsed .git-panel {
+  display: none !important;
+}
+
+/* ── Explorer tree ── */
+
 .explorer-tree {
   flex: 1;
   overflow: auto;

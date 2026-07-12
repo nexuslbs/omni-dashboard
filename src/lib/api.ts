@@ -185,6 +185,21 @@ export interface UploadListEntry {
   modified_at: string;
 }
 
+// ── Git Types ──
+
+export interface GitFileEntry {
+  path: string;
+  status: "M" | "U" | "D" | "R";
+}
+
+export interface GitStatusResponse {
+  branch: string;
+  ahead: number;
+  behind: number;
+  staged: GitFileEntry[];
+  unstaged: GitFileEntry[];
+}
+
 // ── Kanban Types ──
 
 export interface KanbanBoard {

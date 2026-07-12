@@ -1,4 +1,4 @@
-import { apiGet, apiPost, type SearchResult, type FsEntry, type FsReadResponse } from "../lib/api";
+import { apiGet, apiPost, type SearchResult, type FsEntry, type FsReadResponse, type GitStatusResponse, type GitFileEntry } from "../lib/api";
 import { marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
@@ -146,6 +146,34 @@ export function renderExplorer(container: HTMLElement): void {
             <input type="file" id="file-upload-input" multiple style="display:none" />
           </div>
         </div>
+        <!-- Git Panel -->
+        <div class="git-panel" id="git-panel" style="display:none;">
+          <div class="git-header">
+            <span class="git-branch" id="git-branch">main</span>
+            <div class="git-remote-info" id="git-remote-info" style="display:none;">
+              <span class="git-ahead" id="git-ahead"></span>
+              <span class="git-behind" id="git-behind"></span>
+            </div>
+            <button class="git-sync-btn" id="git-sync-btn" title="Sync (fetch → pull → push)">⟳</button>
+          </div>
+          <div class="git-commit-area" id="git-commit-area" style="display:none;">
+            <input type="text" class="git-commit-input" id="git-commit-input" placeholder="Commit message" />
+            <div class="git-commit-actions">
+              <button class="git-commit-btn" id="git-commit-btn" disabled>Commit</button>
+              <button class="git-discard-btn" id="git-discard-btn">Discard All</button>
+            </div>
+          </div>
+          <div class="git-files" id="git-files" style="display:none;">
+            <div class="git-staged" id="git-staged" style="display:none;">
+              <div class="git-files-header">📦 Staged Changes (<span class="git-files-count" id="git-staged-count">0</span>)</div>
+              <div class="git-files-list" id="git-staged-list"></div>
+            </div>
+            <div class="git-unstaged" id="git-unstaged" style="display:none;">
+              <div class="git-files-header">📦 Unstaged Changes (<span class="git-files-count" id="git-unstaged-count">0</span>)</div>
+              <div class="git-files-list" id="git-unstaged-list"></div>
+            </div>
+          </div>
+        </div>
         <div class="explorer-tree" id="explorer-tree">
           <div class="loading">Loading</div>
         </div>
@@ -193,6 +221,75 @@ export function renderExplorer(container: HTMLElement): void {
     if (typeof checkExistingFiles === "function" && typeof showUploadModal === "function") {
       const existingSet = await checkExistingFiles(fileArray);
       showUploadModal(fileArray, existingSet);
+    }
+  });
+
+  // Git panel — sync button
+  document.getElementById("git-sync-btn")!.addEventListener("click", async () => {
+    const btn = document.getElementById("git-sync-btn") as HTMLButtonElement;
+    btn.classList.add("spinning");
+    btn.disabled = true;
+    try {
+      await apiPost("/git/sync", {});
+      await loadGitStatus();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Sync failed";
+      const panel = document.getElementById("git-panel")!;
+      const errEl = document.createElement("div");
+      errEl.className = "git-error";
+      errEl.textContent = msg;
+      panel.appendChild(errEl);
+      setTimeout(() => errEl.remove(), 5000);
+    } finally {
+      btn.classList.remove("spinning");
+      btn.disabled = false;
+    }
+  });
+
+  // Git panel — commit
+  const commitInput = document.getElementById("git-commit-input") as HTMLInputElement;
+  const commitBtn = document.getElementById("git-commit-btn") as HTMLButtonElement;
+  commitInput.addEventListener("input", () => {
+    commitBtn.disabled = !commitInput.value.trim();
+  });
+  commitBtn.addEventListener("click", async () => {
+    const msg = commitInput.value.trim();
+    if (!msg) return;
+    commitBtn.disabled = true;
+    commitBtn.textContent = "Committing...";
+    try {
+      await apiPost("/git/commit", { message: msg });
+      commitInput.value = "";
+      commitBtn.disabled = true;
+      commitBtn.textContent = "Commit";
+      await loadGitStatus();
+    } catch (e) {
+      commitBtn.disabled = false;
+      commitBtn.textContent = "Commit";
+      const msg = e instanceof Error ? e.message : "Commit failed";
+      const panel = document.getElementById("git-panel")!;
+      const errEl = document.createElement("div");
+      errEl.className = "git-error";
+      errEl.textContent = msg;
+      panel.appendChild(errEl);
+      setTimeout(() => errEl.remove(), 5000);
+    }
+  });
+
+  // Git panel — discard all
+  document.getElementById("git-discard-btn")!.addEventListener("click", async () => {
+    if (!confirm("Discard all unstaged changes? This cannot be undone.")) return;
+    try {
+      await apiPost("/git/discard", {});
+      await loadGitStatus();
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Discard failed";
+      const panel = document.getElementById("git-panel")!;
+      const errEl = document.createElement("div");
+      errEl.className = "git-error";
+      errEl.textContent = msg;
+      panel.appendChild(errEl);
+      setTimeout(() => errEl.remove(), 5000);
     }
   });
 
@@ -266,6 +363,8 @@ export function renderExplorer(container: HTMLElement): void {
       void navigateToFile(filePath);
     }
   });
+  // Load git status
+  void loadGitStatus();
 }
 
 // ── File tree ──
@@ -658,5 +757,123 @@ async function doSearch(query: string): Promise<void> {
   } catch (e) {
     contentView.innerHTML = `<div class="error-state">Search failed: ${formatApiError(e)}</div>`;
     contentView.scrollTop = 0;
+  }
+}
+
+// ── Git Panel ──
+
+function statusColor(status: GitFileEntry["status"]): string {
+  switch (status) {
+    case "U": return "var(--git-status-untracked, #3FB950)";
+    case "M": return "var(--git-status-modified, #E4B341)";
+    case "D": return "var(--git-status-deleted, #F85149)";
+    case "R": return "var(--git-status-renamed, #D4A72C)";
+  }
+}
+
+function statusLabel(status: GitFileEntry["status"]): string {
+  switch (status) {
+    case "U": return "U";
+    case "M": return "M";
+    case "D": return "D";
+    case "R": return "R";
+  }
+}
+
+async function loadGitStatus(): Promise<void> {
+  const panel = document.getElementById("git-panel")!;
+  try {
+    const status = await apiGet<GitStatusResponse>("/git/status");
+
+    // Show the panel if we have a valid branch
+    if (!status.branch || status.branch === "(no repo)" || status.branch.startsWith("(")) {
+      panel.style.display = "none";
+      return;
+    }
+    panel.style.display = "block";
+
+    // Branch name
+    document.getElementById("git-branch")!.textContent = status.branch;
+
+    // Remote info (ahead/behind)
+    const remoteInfo = document.getElementById("git-remote-info")!;
+    const aheadEl = document.getElementById("git-ahead")!;
+    const behindEl = document.getElementById("git-behind")!;
+    if (status.ahead > 0 || status.behind > 0) {
+      remoteInfo.style.display = "inline-flex";
+      aheadEl.textContent = `↓${status.ahead}`;
+      behindEl.textContent = `↑${status.behind}`;
+    } else {
+      remoteInfo.style.display = "none";
+    }
+
+    const totalChanges = status.staged.length + status.unstaged.length;
+    const commitArea = document.getElementById("git-commit-area")!;
+    const filesSection = document.getElementById("git-files")!;
+
+    if (totalChanges === 0) {
+      commitArea.style.display = "none";
+      filesSection.style.display = "none";
+      return;
+    }
+
+    // Show commit area and files section
+    commitArea.style.display = "block";
+    filesSection.style.display = "block";
+
+    // Staged changes
+    const stagedSection = document.getElementById("git-staged")!;
+    const stagedList = document.getElementById("git-staged-list")!;
+    const stagedCount = document.getElementById("git-staged-count")!;
+
+    if (status.staged.length > 0) {
+      stagedSection.style.display = "block";
+      stagedCount.textContent = String(status.staged.length);
+      stagedList.innerHTML = status.staged
+        .map(
+          (f) =>
+            `<div class="git-file-item" data-path="${escapeHtml(f.path)}">
+              <span class="git-file-name">${escapeHtml(f.path)}</span>
+              <span class="git-file-status" style="color:${statusColor(f.status)};font-weight:700;">${statusLabel(f.status)}</span>
+            </div>`,
+        )
+        .join("");
+    } else {
+      stagedSection.style.display = "none";
+    }
+
+    // Unstaged changes
+    const unstagedSection = document.getElementById("git-unstaged")!;
+    const unstagedList = document.getElementById("git-unstaged-list")!;
+    const unstagedCount = document.getElementById("git-unstaged-count")!;
+
+    if (status.unstaged.length > 0) {
+      unstagedSection.style.display = "block";
+      unstagedCount.textContent = String(status.unstaged.length);
+      unstagedList.innerHTML = status.unstaged
+        .map(
+          (f) =>
+            `<div class="git-file-item" data-path="${escapeHtml(f.path)}">
+              <span class="git-file-name">${escapeHtml(f.path)}</span>
+              <span class="git-file-status" style="color:${statusColor(f.status)};font-weight:700;">${statusLabel(f.status)}</span>
+            </div>`,
+        )
+        .join("");
+    } else {
+      unstagedSection.style.display = "none";
+    }
+
+    // Attach click handlers on git file items (open file in explorer)
+    panel.querySelectorAll(".git-file-item").forEach((el) => {
+      el.addEventListener("click", () => {
+        const filePath = (el as HTMLElement).dataset.path || "";
+        if (filePath) {
+          // The file path from git is relative; prepend OMNI_DIR root
+          void openFile(filePath);
+        }
+      });
+    });
+  } catch {
+    panel.style.display = "none";
   }
 }
