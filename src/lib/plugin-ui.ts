@@ -345,6 +345,12 @@ function renderConfigField(pluginName: string, field: any, config: Record<string
   const fieldId = `cfg-${escapeHtml(pluginName)}-${escapeHtml(field.key)}`;
   const value = config[field.key] ?? field.default ?? "";
   const requiredAttr = field.required ? "required" : "";
+  const requiredMark = field.required
+    ? '<span style="color:var(--accent-rose);margin-left:0.125rem;">*</span>'
+    : "";
+  const descHtml = field.description
+    ? `<div class="setting-description">${escapeHtml(field.description)}</div>`
+    : "";
 
   let inputHtml: string;
   switch (field.type) {
@@ -412,14 +418,15 @@ function renderConfigField(pluginName: string, field: any, config: Record<string
   }
 
   const label = field.label || field.key;
-  const description = field.description
-    ? `<div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.125rem;">${escapeHtml(field.description)}</div>`
-    : "";
 
-  return `<div class="setting-row" style="margin-bottom:0.5rem;">
-    <label for="${fieldId}" style="display:block;font-size:0.8rem;color:var(--text-secondary);margin-bottom:0.25rem;">${escapeHtml(label)}</label>
-    ${inputHtml}
-    ${description}
+  return `<div class="setting-row" data-field-key="${escapeHtml(field.key)}">
+    <div class="setting-label">
+      <div class="setting-name">${escapeHtml(label)}${requiredMark}</div>
+      ${descHtml}
+    </div>
+    <div class="setting-controls">
+      <div class="setting-input-group">${inputHtml}</div>
+    </div>
   </div>`;
 }
 
