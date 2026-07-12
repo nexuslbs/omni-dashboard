@@ -94,7 +94,8 @@ const savedConfigs: Map<string, Record<string, any>> = new Map();
 
 async function loadProviders(): Promise<void> {
   const content = document.getElementById("providers-content")!;
-  content.innerHTML = '<div class="loading" style="padding:3rem;text-align:center;">Loading providers...</div>';
+  content.innerHTML =
+    '<div class="loading" style="padding:3rem;text-align:center;">Loading providers...</div>';
   try {
     const response = await apiGet<any>("/plugins");
     const allPlugins: PluginData[] = (response.data || response).map((p: Record<string, any>) =>

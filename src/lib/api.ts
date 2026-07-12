@@ -354,7 +354,17 @@ export interface PlatformData {
 export interface ConfigField {
   key: string;
   label: string;
-  type: "string" | "secret" | "boolean" | "integer" | "enum" | "multi_select";
+  type:
+    | "string"
+    | "secret"
+    | "boolean"
+    | "integer"
+    | "enum"
+    | "multi_select"
+    | "provider"
+    | "model"
+    | "tool"
+    | "platform";
   required?: boolean;
   description?: string;
   default?: string | number | boolean;
@@ -363,6 +373,7 @@ export interface ConfigField {
   max?: number;
   format?: string;
   refresh_url?: string;
+  depends_on?: string;
 }
 
 export interface PluginManifest {

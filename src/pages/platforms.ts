@@ -95,7 +95,8 @@ const savedConfigs: Map<string, Record<string, any>> = new Map();
 
 async function loadPlatforms(): Promise<void> {
   const content = document.getElementById("platforms-content")!;
-  content.innerHTML = '<div class="loading" style="padding:3rem;text-align:center;">Loading platforms...</div>';
+  content.innerHTML =
+    '<div class="loading" style="padding:3rem;text-align:center;">Loading platforms...</div>';
   try {
     const response = await apiGet<any>("/plugins");
     // Backend wraps in { success, data } — extract data array

@@ -440,10 +440,14 @@ async function saveEdit(type: "memory" | "soul"): Promise<void> {
       if (!isNaN(maxChars) && content.length > maxChars) {
         statusEl.textContent = `⚠️ ${content.length}/${maxChars} chars — exceeds limit`;
         // Still allow saving, but warn
-        setTimeout(() => { statusEl.textContent = ""; }, 4000);
+        setTimeout(() => {
+          statusEl.textContent = "";
+        }, 4000);
       }
     }
-  } catch { /* skip validation if settings unavailable */ }
+  } catch {
+    /* skip validation if settings unavailable */
+  }
 
   statusEl.textContent = "Saving...";
   try {

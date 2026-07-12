@@ -121,6 +121,37 @@ export function renderConfigField(
       `;
       break;
     }
+    case "provider":
+    case "tool":
+    case "platform": {
+      const options = (field.allowed_values || []).map(
+        (opt: string) =>
+          `<option value="${escapeHtml(opt)}" ${String(value) === opt ? "selected" : ""}>${escapeHtml(opt)}</option>`,
+      );
+      inputHtml = `
+        <select id="${fieldId}" class="plugin-config-input filter-input" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}">
+          <option value="">—</option>
+          ${options.join("")}
+        </select>`;
+      break;
+    }
+    case "model": {
+      const options = (field.allowed_values || []).map(
+        (opt: string) =>
+          `<option value="${escapeHtml(opt)}" ${String(value) === opt ? "selected" : ""}>${escapeHtml(opt)}</option>`,
+      );
+      inputHtml = `
+        <div style="display:flex;gap:0.25rem;align-items:center;flex:1;">
+          <select id="${fieldId}" class="plugin-config-input filter-input" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}" style="flex:1;">
+            <option value="">—</option>
+            ${options.join("")}
+          </select>
+          <button type="button" class="plugin-refresh-models-btn setting-icon-btn" title="Refresh models" data-plugin-config="true" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}">
+            ⟳
+          </button>
+        </div>`;
+      break;
+    }
     default: {
       // string
       const strVal = String(value ?? "");
