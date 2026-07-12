@@ -375,6 +375,37 @@ function renderConfigField(pluginName: string, field: any, config: Record<string
         <button type="button" class="toggle-pwd-btn" data-target="${escapeHtml(fieldId)}" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:0.85rem;padding:0.25rem;" title="Toggle visibility">👁</button>
       </div>`;
       break;
+    case "provider":
+    case "tool":
+    case "platform": {
+      const options = (field.allowed_values || []).map(
+        (opt: string) =>
+          `<option value="${escapeHtml(opt)}" ${String(value) === opt ? "selected" : ""}>${escapeHtml(opt)}</option>`,
+      );
+      inputHtml = `
+        <select id="${fieldId}" class="plugin-config-input filter-input" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}">
+          <option value="">—</option>
+          ${options.join("")}
+        </select>`;
+      break;
+    }
+    case "model": {
+      const options = (field.allowed_values || []).map(
+        (opt: string) =>
+          `<option value="${escapeHtml(opt)}" ${String(value) === opt ? "selected" : ""}>${escapeHtml(opt)}</option>`,
+      );
+      inputHtml = `
+        <div style="display:flex;gap:0.25rem;align-items:center;flex:1;">
+          <select id="${fieldId}" class="plugin-config-input filter-input" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}" style="flex:1;">
+            <option value="">—</option>
+            ${options.join("")}
+          </select>
+          <button type="button" class="plugin-refresh-models-btn setting-icon-btn" title="Refresh models" data-plugin-config="true" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}">
+            ⟳
+          </button>
+        </div>`;
+      break;
+    }
     default:
       inputHtml = `<input type="text" id="${fieldId}" class="filter-input setting-input plugin-config-input" value="${escapeHtml(String(value))}" data-key="${escapeHtml(field.key)}" ${requiredAttr} style="width:100%;" />`;
       break;
