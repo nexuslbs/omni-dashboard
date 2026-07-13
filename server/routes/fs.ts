@@ -1,21 +1,12 @@
 import { Router } from "express";
-import { readdirSync, readFileSync, statSync } from "fs";
-import { join, resolve } from "path";
+import { existsSync, lstatSync, readdirSync, readFileSync, statSync } from "fs";
+import { join, basename, relative, resolve, sep } from "path";
+import { execSync } from "child_process";
 
 export const fsRouter = Router();
 
-const ROOT = process.env.EXPLORER_DIR || "/opt";
-
-function sanitizePath(userPath: string): string {
-  // Strip any prefix that matches ROOT to prevent double-prefixing
-  const clean = userPath.replace(new RegExp("^" + ROOT.replace(/\//g, "\\/")), "");
-  // Resolve and ensure it stays within ROOT
-  const resolved = resolve(join(ROOT, clean));
-  if (!resolved.startsWith(ROOT)) {
-    throw new Error("Access denied: path traversal detected");
-  }
-  return resolved;
-}
+const ROOT = (process.env.EXPLORER_DIR || "/opt").replace(/\/+$/, "");
+const OMNI_DIR = process.env.OMNI_DIR || ROOT;
 
 interface FsEntry {
   name: string;
@@ -28,7 +19,7 @@ interface FsEntry {
 fsRouter.get("/config", (_req, res) => {
   res.json({
     root: ROOT,
-    omniDir: process.env.OMNI_DIR || ROOT,
+    omniDir: OMNI_DIR,
   });
 });
 
@@ -36,147 +27,187 @@ fsRouter.get("/config", (_req, res) => {
 // Lists directory contents. Path is relative to ROOT (use "/" for root).
 fsRouter.get("/list", (req, res) => {
   try {
-    const userPath = (req.query.path as string) || "/";
-    const dirPath = sanitizePath(userPath);
+    const rawPath = (req.query.path as string) || "/";
+    const absPath = sanitizePath(rawPath);
 
-    let entries: (FsEntry | null)[];
-    try {
-      entries = readdirSync(dirPath).map((name) => {
-        const fullPath = join(dirPath, name);
-        let stat;
-        try {
-          stat = statSync(fullPath);
-        } catch {
-          return null;
-        }
-        return {
-          name,
-          path: fullPath.replace(new RegExp("^" + ROOT), ""),
-          type: stat.isDirectory() ? ("directory" as const) : ("file" as const),
-          size: stat.isFile() ? stat.size : null,
-        };
-      });
-    } catch {
-      res.json({ entries: [], path: userPath, root: ROOT, error: "Cannot read directory" });
+    if (!existsSync(absPath)) {
+      res.status(404).json({ error: "Path not found" });
       return;
     }
 
-    // Filter out nulls (inaccessible entries) and sort: directories first, then alphabetical
-    const validEntries: FsEntry[] = entries.filter((e): e is FsEntry => e !== null);
-    validEntries.sort((a, b) => {
-      if (a.type !== b.type) return a.type === "directory" ? -1 : 1;
-      return a.name.localeCompare(b.name);
-    });
+    const entries: FsEntry[] = readdirSync(absPath)
+      .filter((name) => !name.startsWith("."))
+      .map((name) => {
+        const full = join(absPath, name);
+        let type: "file" | "directory" = "file";
+        let size: number | null = null;
+        try {
+          const stat = lstatSync(full);
+          type = stat.isDirectory() ? "directory" : "file";
+          if (type === "file") size = stat.size;
+        } catch {
+          // Permission denied or broken symlink
+        }
+        const relativePath = join("/", relative(ROOT, full));
+        return { name, path: relativePath, type, size };
+      })
+      .sort((a, b) => {
+        // Directories first, then alphabetical
+        if (a.type !== b.type) return a.type === "directory" ? -1 : 1;
+        return a.name.localeCompare(b.name);
+      });
 
-    res.json({ entries: validEntries, path: userPath, root: ROOT });
+    res.json({ entries, path: rawPath, root: ROOT });
   } catch (e: any) {
-    res.status(500).json({ error: e.message || "Unknown error" });
+    res.status(500).json({ error: e.message || "Failed to list directory" });
   }
 });
 
 // GET /api/fs/read?path=<relative-path>
-// Reads a file and returns its content. Sets binary=true for non-UTF-8 files.
+// Reads a file's text content. Path is relative to ROOT.
 fsRouter.get("/read", (req, res) => {
   try {
-    const userPath = (req.query.path as string) || "";
-    if (!userPath) {
-      res.status(400).json({ error: "path is required" });
+    const rawPath = (req.query.path as string) || "";
+    const absPath = sanitizePath(rawPath);
+
+    if (!existsSync(absPath)) {
+      res.status(404).json({ error: "File not found or not readable (404)" });
       return;
     }
-    const filePath = sanitizePath(userPath);
 
-    let content: string;
-    let binary = false;
-    try {
-      content = readFileSync(filePath, "utf-8");
-    } catch {
-      // File exists but isn't valid UTF-8 — return as binary
-      try {
-        const buf = readFileSync(filePath);
-        content = buf.toString("base64");
-        binary = true;
-      } catch {
-        res.status(404).json({ error: "File not found or not readable" });
-        return;
-      }
+    const stat = statSync(absPath);
+    if (!stat.isFile()) {
+      res.status(400).json({ error: "Not a file" });
+      return;
     }
 
-    res.json({
-      path: userPath,
-      content,
-      size: statSync(filePath).size,
-      binary,
-    });
+    // Try reading as UTF-8; if it fails, mark as binary
+    try {
+      const content = readFileSync(absPath, "utf-8");
+      res.json({
+        content,
+        size: stat.size,
+        binary: false,
+      });
+    } catch {
+      // Binary file — return the size and a binary flag
+      res.json({
+        content: "",
+        size: stat.size,
+        binary: true,
+      });
+    }
   } catch (e: any) {
-    res.status(500).json({ error: e.message || "Unknown error" });
+    res.status(500).json({ error: e.message || "Failed to read file" });
+  }
+});
+
+// GET /api/fs/diff?path=<relative-path>&staged=true&full=true
+// Returns the git diff for a file. Path is relative to ROOT.
+// full=true uses -U99999 to show the entire file with changes highlighted.
+// full=false (or omit) uses git's default context (3 lines).
+fsRouter.get("/diff", (req, res) => {
+  try {
+    const rawPath = (req.query.path as string) || "";
+    const absPath = sanitizePath(rawPath);
+    const staged = req.query.staged === "true";
+    const full = req.query.full !== "false"; // default true
+
+    if (!existsSync(absPath)) {
+      res.status(404).json({ error: "File not found" });
+      return;
+    }
+
+    // Run git diff
+    const diffFlag = staged ? "--cached" : "";
+    const contextFlag = full ? "-U99999" : "";
+    try {
+      const diff = execSync(`git -C "${OMNI_DIR}" diff ${contextFlag} ${diffFlag} -- "${absPath}"`, {
+        timeout: 15000,
+        encoding: "utf-8",
+        stdio: ["pipe", "pipe", "pipe"],
+      }).trim();
+
+      // If the result is empty but we're asking for staged, try showing new file
+      if (!diff && staged) {
+        // Check if it's a new file that was staged (git diff --cached alone would work,
+        // but per-file diff might return empty for a new untracked file)
+        // Try git diff --cached --name-status to verify
+        try {
+          const nameStatus = execSync(`git -C "${OMNI_DIR}" diff --cached --name-status -- "${absPath}"`, {
+            timeout: 5000,
+            encoding: "utf-8",
+            stdio: ["pipe", "pipe", "pipe"],
+          }).trim();
+          if (nameStatus.startsWith("A")) {
+            // Added file — show the full content as addition
+            const content = readFileSync(absPath, "utf-8");
+            const relPath = relative(OMNI_DIR, absPath);
+            const header = `diff --git a/${relPath} b/${relPath}\nnew file mode 100644\nindex 0000000..0000000\n--- /dev/null\n+++ b/${relPath}\n`;
+            const lines = content.split("\n");
+            const body = lines
+              .map((l: string, i: number) => {
+                const lineNum = String(i + 1).padStart(4);
+                return `+${lineNum}\t${l}`;
+              })
+              .join("\n");
+            res.json({ diff: header + body });
+            return;
+          }
+        } catch {
+          // fall through to return empty
+        }
+      }
+
+      res.json({ diff });
+    } catch {
+      // git diff failed (file not tracked, etc)
+      res.json({ diff: "" });
+    }
+  } catch (e: any) {
+    res.status(500).json({ error: e.message || "Failed to get diff" });
   }
 });
 
 // GET /api/fs/download?path=<relative-path>
-// Downloads a file as an attachment.
+// Downloads a file. Path is relative to ROOT.
 fsRouter.get("/download", (req, res) => {
   try {
-    const userPath = (req.query.path as string) || "";
-    if (!userPath) {
-      res.status(400).json({ error: "path is required" });
-      return;
-    }
-    const filePath = sanitizePath(userPath);
+    const rawPath = (req.query.path as string) || "";
+    const absPath = sanitizePath(rawPath);
 
-    if (!statSync(filePath).isFile()) {
-      res.status(404).json({ error: "Not a file" });
+    if (!existsSync(absPath)) {
+      res.status(404).json({ error: "File not found" });
       return;
     }
 
-    const basename = userPath.split("/").pop() || "download";
-    const content = readFileSync(filePath);
-
-    const ext = basename.split(".").pop()?.toLowerCase() || "";
-    const mimeMap: Record<string, string> = {
-      md: "text/markdown",
-      txt: "text/plain",
-      js: "application/javascript",
-      ts: "application/typescript",
-      py: "text/x-python",
-      json: "application/json",
-      yaml: "text/yaml",
-      yml: "text/yaml",
-      css: "text/css",
-      html: "text/html",
-      sh: "application/x-sh",
-      xml: "application/xml",
-      svg: "image/svg+xml",
-      png: "image/png",
-      jpg: "image/jpeg",
-      jpeg: "image/jpeg",
-      gif: "image/gif",
-      webp: "image/webp",
-      ico: "image/x-icon",
-      pdf: "application/pdf",
-      zip: "application/zip",
-      gz: "application/gzip",
-      tar: "application/x-tar",
-      db: "application/octet-stream",
-      log: "text/plain",
-      toml: "text/toml",
-      conf: "text/plain",
-      env: "text/plain",
-      go: "text/x-go",
-      rs: "text/x-rust",
-      rb: "text/x-ruby",
-      java: "text/x-java",
-      kt: "text/x-kotlin",
-      swift: "text/x-swift",
-      pl: "text/x-perl",
-      lua: "text/x-lua",
-      sql: "application/sql",
-    };
-    const mime = mimeMap[ext] || "application/octet-stream";
-
-    res.setHeader("Content-Disposition", `attachment; filename="${basename}"`);
-    res.setHeader("Content-Type", mime);
-    res.send(content);
+    const fileName = basename(absPath);
+    res.download(absPath, fileName);
   } catch (e: any) {
-    res.status(500).json({ error: e.message || "Unknown error" });
+    res.status(500).json({ error: e.message || "Failed to download file" });
   }
 });
+
+/**
+ * Sanitize and resolve a path relative to ROOT.
+ * Accepts paths starting with / (relative to ROOT) or bare filenames.
+ * Prevents directory traversal outside ROOT.
+ */
+function sanitizePath(raw: string): string {
+  // Remove ROOT prefix if present (paths may come as /opt/omni/... or /omni/...)
+  let clean = raw;
+  if (clean.startsWith(ROOT)) {
+    clean = clean.slice(ROOT.length);
+  }
+  // Ensure it starts with /
+  if (!clean.startsWith("/")) {
+    clean = "/" + clean;
+  }
+  // Resolve and prevent traversal
+  const resolved = resolve(join(ROOT, "." + clean));
+  // Double-check the resolved path starts with ROOT
+  if (!resolved.startsWith(ROOT + sep) && resolved !== ROOT) {
+    throw new Error("Invalid path: traversal detected");
+  }
+  return resolved;
+}

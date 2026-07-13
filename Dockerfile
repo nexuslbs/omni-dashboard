@@ -22,6 +22,11 @@ RUN npm run build:server
 # Stage 2: Production image — node serves both static + API
 FROM node:22-alpine
 
+RUN apk add --no-cache git
+
+# Trust the omni-stack repo (owned by host uid 10000, not root)
+RUN git config --global --add safe.directory /opt/omni
+
 WORKDIR /app
 
 # Copy built frontend

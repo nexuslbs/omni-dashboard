@@ -1395,10 +1395,23 @@ a.thread-row {
   border-color: var(--border-accent);
 }
 
-.git-sync-btn.spinning {
+.git-sync-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+}
+
+.git-sync-icon svg {
+  width: 14px;
+  height: 14px;
+  display: block;
+}
+
+.git-sync-icon.spinning {
   animation: spin 1s linear infinite;
   pointer-events: none;
-  opacity: 0.7;
 }
 
 @keyframes spin {
@@ -1410,7 +1423,7 @@ a.thread-row {
   margin-top: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 0.375rem;
+  gap: 0.5rem;
 }
 
 .git-commit-input {
@@ -1434,7 +1447,9 @@ a.thread-row {
 }
 
 .git-commit-btn,
-.git-discard-btn {
+.git-stage-btn,
+.git-discard-btn,
+.git-unstage-btn {
   flex: 1;
   padding: 0.3rem 0.5rem;
   border-radius: var(--radius-sm);
@@ -1461,15 +1476,52 @@ a.thread-row {
   cursor: not-allowed;
 }
 
-.git-discard-btn {
+.git-stage-btn {
   background: transparent;
   color: var(--text-secondary);
 }
 
-.git-discard-btn:hover {
+.git-stage-btn:hover {
+  background: rgba(139, 92, 246, 0.1);
+  color: var(--accent-purple);
+  border-color: var(--accent-purple);
+}
+
+.git-stage-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.git-stage-btn:disabled:hover {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border-primary);
+}
+
+.git-discard-btn,
+.git-unstage-btn {
+  background: transparent;
+  color: var(--text-secondary);
+}
+
+.git-discard-btn:hover,
+.git-unstage-btn:hover {
   background: rgba(248, 81, 73, 0.1);
   color: #F85149;
   border-color: #F85149;
+}
+
+.git-discard-btn:disabled,
+.git-unstage-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.git-discard-btn:disabled:hover,
+.git-unstage-btn:disabled:hover {
+  background: transparent;
+  color: var(--text-secondary);
+  border-color: var(--border-primary);
 }
 
 .git-files {
@@ -1484,6 +1536,23 @@ a.thread-row {
   font-weight: 600;
   color: var(--text-secondary);
   padding: 0.25rem 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  user-select: none;
+}
+
+.git-files-header:hover {
+  color: var(--text-primary);
+}
+
+.git-files-toggle {
+  font-size: 0.6rem;
+  color: var(--text-muted);
+  flex-shrink: 0;
+  width: 0.75rem;
+  text-align: center;
 }
 
 .git-files-list {
@@ -1504,6 +1573,11 @@ a.thread-row {
 
 .git-file-item:hover {
   background: var(--bg-card-hover);
+}
+
+.git-file-item.selected {
+  background: var(--bg-sidebar-active);
+  outline: 1px solid var(--border-accent);
 }
 
 .git-file-name {
@@ -1534,6 +1608,32 @@ a.thread-row {
   color: #F85149;
   font-size: 0.75rem;
   border: 1px solid rgba(248, 81, 73, 0.2);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.git-error-text {
+  flex: 1;
+}
+
+.git-error-close {
+  background: none;
+  border: none;
+  color: #F85149;
+  cursor: pointer;
+  font-size: 0.75rem;
+  padding: 0.125rem 0.25rem;
+  border-radius: var(--radius-sm);
+  line-height: 1;
+  flex-shrink: 0;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.git-error-close:hover {
+  opacity: 1;
+  background: rgba(248, 81, 73, 0.15);
 }
 
 /* Hide git panel when explorer is collapsed */
@@ -1722,7 +1822,8 @@ a.thread-row {
   align-items: center;
   justify-content: space-between;
   padding: 0.75rem 1rem;
-  border-bottom: 1px solid var(--border-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 5px;
   background: var(--bg-secondary);
   flex-shrink: 0;
 }
@@ -1770,6 +1871,121 @@ a.thread-row {
   color: var(--accent-cyan);
   background: rgba(6, 182, 212, 0.1);
   border-color: rgba(6, 182, 212, 0.3);
+}
+
+.diff-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1;
+  border: 1px solid var(--border-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.diff-toggle-btn:hover {
+  color: var(--accent-purple);
+  background: rgba(139, 92, 246, 0.1);
+  border-color: rgba(139, 92, 246, 0.3);
+}
+
+/* Full file toggle button in diff view */
+.full-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  text-decoration: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1;
+  border: 1px solid var(--border-primary);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.full-toggle-btn:hover {
+  color: var(--accent-cyan);
+  background: rgba(6, 182, 212, 0.1);
+  border-color: rgba(6, 182, 212, 0.3);
+}
+
+/* Highlighted state: showing only changes (full=false) — button is active */
+.full-toggle-btn.active {
+  color: var(--accent-cyan);
+  background: rgba(6, 182, 212, 0.15);
+  border-color: var(--accent-cyan);
+}
+
+/* ── Diff2html fixes ── */
+
+/* Outer diff container — single border, no individual wrapper borders */
+.d2h-dark-color-scheme {
+  border: 1px solid #30363d;
+  border-radius: var(--radius-md);
+}
+
+/* Reset td padding for diff cells — no vertical, 0.5rem horizontal */
+.d2h-dark-color-scheme td {
+  padding: 0 0.5rem !important;
+  font-size: inherit;
+  border-bottom: none;
+}
+
+/* Fix font-size conflict: diff2html content cells inherit oversized font from dashboard */
+.d2h-dark-color-scheme .d2h-code-line,
+.d2h-dark-color-scheme .d2h-code-side-line {
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+/* Fix line number font-size to match content and scroll with content */
+.d2h-dark-color-scheme .d2h-code-side-linenumber {
+  font-size: 0.8rem;
+  line-height: 1.56;
+  vertical-align: top;
+  position: relative !important;
+  width: 4em;
+  min-width: 4em;
+}
+
+/* Strip border/radius from individual wrappers — outer container owns it */
+.d2h-dark-color-scheme .d2h-file-wrapper {
+  margin-bottom: 0;
+  border: none !important;
+  border-radius: 0 !important;
+}
+
+/* Fix d2h-tag border-radius */
+.d2h-dark-color-scheme .d2h-tag {
+  border-radius: 3px;
+}
+
+/* Fix double-alpha on empty placeholder — let parent td's bg show through */
+.d2h-dark-color-scheme .d2h-files-diff .d2h-code-side-emptyplaceholder,
+.d2h-dark-color-scheme .d2h-files-diff .d2h-emptyplaceholder {
+  background-color: transparent !important;
+}
+
+/* Content cell takes all remaining width after line number */
+.d2h-dark-color-scheme .d2h-code-side-linenumber + td {
+  width: 100%;
+}
+
+/* Restore content padding to original small size (override diff2html 4.5em) */
+.d2h-dark-color-scheme .d2h-code-side-line {
+  padding-left: 0.5em !important;
+  padding-right: 0.5em !important;
 }
 
 /* ── Attachments Section ── */

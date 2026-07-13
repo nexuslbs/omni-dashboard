@@ -162,11 +162,13 @@ export interface FsListResponse {
 }
 
 export interface FsReadResponse {
-  path: string;
   content: string;
   size: number;
-  binary?: boolean;
-  error?: string;
+  binary: boolean;
+}
+
+export interface FsDiffResponse {
+  diff: string;
 }
 
 export interface UploadResponse {

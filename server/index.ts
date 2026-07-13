@@ -142,21 +142,24 @@ app.all(/^\/api\/plugins(?:\/.*)?$/, async (req, res) => {
 // ────────────────────────────────────────────────────────────────────────────
 // Generic proxy — all other /api/* routes go to OmniAgent with /api prefix stripped
 // ────────────────────────────────────────────────────────────────────────────
-app.all(/^\/api\/(?!health|wiki-search|uploads|fs|git|profiles|plugins|templates)(?:.*)$/, async (req, res) => {
-  try {
-    // Strip the /api prefix: /api/messages/filters → /messages/filters
-    const targetPath = req.path.replace(/^\/api/, "");
-    // Preserve query string
-    const queryStr = req.url.includes("?") ? req.url.substring(req.url.indexOf("?")) : "";
-    const targetUrl = `${OMNIAGENT}${targetPath}${queryStr}`;
-    await fetchAndForward(req, res, targetUrl);
-  } catch (err) {
-    console.error(`[generic-proxy] Error ${req.method} ${req.path}:`, err);
-    res
-      .status(502)
-      .json({ error: "Failed to reach OmniAgent: " + (err instanceof Error ? err.message : String(err)) });
-  }
-});
+app.all(
+  /^\/api\/(?!health|wiki-search|uploads|fs|git|profiles|plugins|templates)(?:.*)$/,
+  async (req, res) => {
+    try {
+      // Strip the /api prefix: /api/messages/filters → /messages/filters
+      const targetPath = req.path.replace(/^\/api/, "");
+      // Preserve query string
+      const queryStr = req.url.includes("?") ? req.url.substring(req.url.indexOf("?")) : "";
+      const targetUrl = `${OMNIAGENT}${targetPath}${queryStr}`;
+      await fetchAndForward(req, res, targetUrl);
+    } catch (err) {
+      console.error(`[generic-proxy] Error ${req.method} ${req.path}:`, err);
+      res
+        .status(502)
+        .json({ error: "Failed to reach OmniAgent: " + (err instanceof Error ? err.message : String(err)) });
+    }
+  },
+);
 
 // ────────────────────────────────────────────────────────────────────────────
 // File-system based API routes
