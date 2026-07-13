@@ -64,12 +64,12 @@ describe("Local (non-proxied) API routes", () => {
           expect(result).toHaveProperty("score");
         }
       } else if (status === 502) {
-        // Backend unavailable — check error structure
+        // Backend unavailable: check error structure
         expect(body).toHaveProperty("error");
         expect(typeof body.error).toBe("string");
         expect(body.error).toContain("unavailable");
       } else {
-        // Unexpected status — fail
+        // Unexpected status: fail
         expect(status).toBeOneOf([200, 502]);
       }
     });
@@ -121,10 +121,10 @@ describe("Named proxy routes (irregular path mappings)", () => {
       const { status, body } = await apiPost("/api/channels/1/stop");
 
       if (status === 200) {
-        // OmniAgent responded — any valid JSON is acceptable
+        // OmniAgent responded: any valid JSON is acceptable
         expect(body).toBeDefined();
       } else if (status === 502) {
-        // Backend unreachable — check error structure
+        // Backend unreachable: check error structure
         expect(body).toHaveProperty("error");
         expect(typeof body.error).toBe("string");
         expect(body.error).toContain("Failed to reach OmniAgent");
@@ -159,7 +159,7 @@ describe("Named proxy routes (irregular path mappings)", () => {
       if (status === 200) {
         expect(body).toBeDefined();
       } else if (status === 404) {
-        // Job not found — omniagent returned an error
+        // Job not found: omniagent returned an error
         expect(body).toHaveProperty("error");
         expect(body).toHaveProperty("schedule_id");
       } else if (status === 502) {
@@ -342,10 +342,10 @@ describe("Generic proxy routes (catch-all /api/*)", () => {
   });
 });
 
-describe("Proxy error handling — 502 for unreachable routes", () => {
+describe("Proxy error handling: 502 for unreachable routes", () => {
   it("Generic proxy returns 502 with error structure when omniagent is unreachable", async () => {
     // Hit a route that goes through the generic proxy.
-    // If omniagent is reachable, the test still passes — the error structure
+    // If omniagent is reachable, the test still passes: the error structure
     // is only verified when we get a 502.
     const { status, body } = await apiGet("/api/threads");
 

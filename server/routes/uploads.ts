@@ -63,7 +63,7 @@ const upload = multer({
   },
 });
 
-// GET /uploads/list — list files in uploads directory
+// GET /uploads/list: list files in uploads directory
 uploadsRouter.get("/list", (_req: Request, res: Response) => {
   try {
     ensureUploadsDir();
@@ -89,7 +89,7 @@ uploadsRouter.get("/list", (_req: Request, res: Response) => {
   }
 });
 
-// DELETE /uploads/:file — delete a file
+// DELETE /uploads/:file: delete a file
 uploadsRouter.delete("/:file", (req: Request, res: Response) => {
   try {
     const fileName = req.params.file;
@@ -122,7 +122,7 @@ uploadsRouter.delete("/:file", (req: Request, res: Response) => {
   }
 });
 
-// POST /uploads/check — check if files exist
+// POST /uploads/check: check if files exist
 uploadsRouter.post("/check", (req: Request, res: Response) => {
   try {
     const { files } = req.body;
@@ -150,7 +150,7 @@ uploadsRouter.post("/check", (req: Request, res: Response) => {
   }
 });
 
-// POST /uploads — upload files
+// POST /uploads: upload files
 uploadsRouter.post("/", upload.array("files", 20), (req: Request, res: Response) => {
   try {
     const files = req.files as Express.Multer.File[];
@@ -200,7 +200,7 @@ const kanbanUpload = multer({
   },
 });
 
-// POST /uploads/kanban — upload files to kanban directory
+// POST /uploads/kanban: upload files to kanban directory
 uploadsRouter.post("/kanban", kanbanUpload.array("files", 20), (req: Request, res: Response) => {
   try {
     const files = req.files as Express.Multer.File[];

@@ -30,7 +30,7 @@ export function renderActions(container: HTMLElement): void {
     <div class="page-header">
       <div>
         <h1 class="page-title">Actions</h1>
-        <p class="page-subtitle">Saved tool invocations — run without calling the agent</p>
+        <p class="page-subtitle">Saved tool invocations: run without calling the agent</p>
       </div>
       <button id="btn-create-action" class="btn-primary" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ New Action</button>
     </div>
@@ -178,7 +178,7 @@ async function showActionModal(existing: Action | null): Promise<void> {
           <div class="setting-controls">
             <div class="setting-input-group">
               <select class="filter-select" id="action-tool">
-                <option value="">— Select a tool —</option>
+                <option value="">Select a tool </option>
                 ${availableTools
                   .slice()
                   .sort((a, b) => {

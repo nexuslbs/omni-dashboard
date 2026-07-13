@@ -1,4 +1,4 @@
-# Agent Development Conventions — Omni-Dashboard
+# Agent Development Conventions: Omni-Dashboard
 
 This document captures the conventions, patterns, and gotchas discovered during the development of the Omni-Dashboard. It is intended for AI agents working on this codebase.
 
@@ -15,7 +15,7 @@ The `queryDb` helper uses `rowMode: 'array'` (for performance), which causes inc
   - ISO strings (from JSON aggregates)
 
 ```typescript
-// Canonical date parsing — in formatTimeAgo (overview.ts:514-524)
+// Canonical date parsing: in formatTimeAgo (overview.ts:514-524)
 const dateVal =
   typeof dateStr === "object" && dateStr instanceof Date
     ? dateStr
@@ -31,7 +31,7 @@ const dateVal =
 - **Bucket normalization for charts**: Convert to ISO string before `.slice(0,10)`:
 
 ```typescript
-// overview.ts:200-202 — normalize bucket for daily aggregation
+// overview.ts:200-202: normalize bucket for daily aggregation
 const bucketStr =
   typeof h.bucket === "object" && h.bucket instanceof Date ? h.bucket.toISOString() : String(h.bucket);
 const day = bucketStr.slice(0, 10);
@@ -94,28 +94,28 @@ Across different names, plugins are sorted alphabetically by name.
 
 ## Plugin Action Buttons (tools.ts)
 
-Action buttons are rendered by `renderActionButtons()` in `tools.ts`. The `is_duplicated` flag does NOT suppress buttons — duplicated sources with source code remain actionable.
+Action buttons are rendered by `renderActionButtons()` in `tools.ts`. The `is_duplicated` flag does NOT suppress buttons: duplicated sources with source code remain actionable.
 
 **Remove button rule:** Remove (`plugin-delete-btn`) shows for non-builtin plugins when NOT installed (`needs_build=true`) OR script plugins. For installed Rust plugins, use Uninstall instead.
 
 | Scenario | `hasRemote` | `hasCompilableSource` | `needsBuild` | Buttons |
 |----------|-------------|-----------------|---------------|---------|
-| Remote script/no-source | ✅ | ❌ | — | **Remove + Update** |
+| Remote script/no-source | ✅ | ❌ | N/A | **Remove + Update** |
 | Remote Rust, not yet built | ✅ | ✅ | ✅ | **Remove + Install + Update** |
 | Remote Rust, already built | ✅ | ✅ | ❌ | **Uninstall + Reinstall + Update** |
-| Bundled script/no-source | ❌ | ❌ | — | **Remove** |
+| Bundled script/no-source | ❌ | ❌ | N/A | **Remove** |
 | Bundled Rust, not yet built | ❌ | ✅ | ✅ | **Install + Remove** |
 | Bundled Rust, already built | ❌ | ✅ | ❌ | **Reinstall + Uninstall** |
-| Built-in script/no-source | ❌ | ❌ | — | *(no buttons)* |
+| Built-in script/no-source | ❌ | ❌ | N/A | *(no buttons)* |
 | Built-in Rust, not yet built | ❌ | ✅ | ✅ | *(no buttons)* |
 | Built-in Rust, already built | ❌ | ✅ | ❌ | *(no buttons)* |
 
 **Button actions:**
-- **Remove** (`plugin-delete-btn`): `DELETE /api/plugins/{name}` — removes YAML entry
-- **Install** (`plugin-install-btn`): `POST /api/plugins/{name}/install` — compiles + registers
-- **Uninstall** (`plugin-remove-btn`): `DELETE /api/plugins/{name}?mode=uninstall` — removes binary + disables
-- **Reinstall** (`plugin-reinstall-btn`): `POST /api/plugins/{name}/reinstall` — recompiles binary
-- **Update** (`plugin-update-btn`, remote only): `POST /api/plugins/{name}/download` — re-clones from git + recompiles
+- **Remove** (`plugin-delete-btn`): `DELETE /api/plugins/{name}`: removes YAML entry
+- **Install** (`plugin-install-btn`): `POST /api/plugins/{name}/install`: compiles + registers
+- **Uninstall** (`plugin-remove-btn`): `DELETE /api/plugins/{name}?mode=uninstall`: removes binary + disables
+- **Reinstall** (`plugin-reinstall-btn`): `POST /api/plugins/{name}/reinstall`: recompiles binary
+- **Update** (`plugin-update-btn`, remote only): `POST /api/plugins/{name}/download`: re-clones from git + recompiles
 - **Enable/Disable** (`plugin-toggle-btn`): `POST /api/plugins/{name}/enable` or `/disable`
 
 **Update vs Reinstall vs Install:**
@@ -128,14 +128,14 @@ Action buttons are rendered by `renderActionButtons()` in `tools.ts`. The `is_du
 All disabled plugins (regardless of `is_duplicated` status) get the `.plugin-disabled-card` amber/yellow background styling:
 
 ```typescript
-// tools.ts line 200 — NO !isDuplicated guard
+// tools.ts line 200: NO !isDuplicated guard
 <div class="card settings-card${p.status === "disabled" ? " plugin-disabled-card" : ""}">
 ```
 
-The platforms page uses a slightly different condition — built-in plugins are excluded from the amber card:
+The platforms page uses a slightly different condition: built-in plugins are excluded from the amber card:
 
 ```typescript
-// platforms.ts — built-in disabled don't get amber card
+// platforms.ts: built-in disabled don't get amber card
 p.source !== "built-in" && p.status === "disabled" ? " plugin-disabled-card" : ""
 ```
 
@@ -159,13 +159,13 @@ All cron schedules in the dashboard use the **5-field Linux format**: `min hour 
 
 **Common examples:**
 ```
-* * * * *     — every minute
-*/10 * * * *  — every 10 minutes
-0 * * * *     — every hour at :00
-0 0 * * *     — daily at midnight
-30 6 * * *    — daily at 06:30
-0 9 * * 1-5   — weekdays at 09:00
-0 0 1 * *     — 1st of every month at midnight
+* * * * *    : every minute
+*/10 * * * * : every 10 minutes
+0 * * * *    : every hour at :00
+0 0 * * *    : daily at midnight
+30 6 * * *   : daily at 06:30
+0 9 * * 1-5  : weekdays at 09:00
+0 0 1 * *    : 1st of every month at midnight
 ```
 
 The default schedule value in the create modal is `0 0 * * *` (daily at midnight). The help box in `src/lib/schedule-detail.ts` (lines 384-395) documents this format.
@@ -174,8 +174,8 @@ The default schedule value in the create modal is `0 0 * * *` (daily at midnight
 
 Plugin config values (in `platforms.yml`, `tools.yml`, `providers.yml`) support prefix-based references:
 
-- `$secret:name` — load from the secrets DB (`/secrets` page). The YAML stores only the reference, never the actual value.
-- `$env:VAR_NAME` — load from the process environment variable.
+- `$secret:name`: load from the secrets DB (`/secrets` page). The YAML stores only the reference, never the actual value.
+- `$env:VAR_NAME`: load from the process environment variable.
 
 These work in any string or secret config field. The dashboard shows a 🔗 toggle on each field to switch between literal mode and reference mode.
 
@@ -197,10 +197,10 @@ Channels now support a `template` field (TEXT column `channels.template`). When 
 4. For Cron/Kanban tasks, the channel template acts as a default fallback when the task doesn't have its own template.
 
 **Frontend files:**
-- `src/lib/channel-config.ts` — `renderTemplateInput()` renders the editable text field
-- `src/lib/channel-status.ts` — renders the template row in the channel card
-- `src/lib/api.ts` — `ChannelData` interface includes `template: string | null`
-- `server/routes/channels.ts` — GET list and PATCH handler support the `template` field
+- `src/lib/channel-config.ts`: `renderTemplateInput()` renders the editable text field
+- `src/lib/channel-status.ts`: renders the template row in the channel card
+- `src/lib/api.ts`: `ChannelData` interface includes `template: string | null`
+- `server/routes/channels.ts`: GET list and PATCH handler support the `template` field
 
 **API contract:**
 - `GET /api/channels` returns `template: string | null` for each channel
@@ -211,7 +211,7 @@ Channels now support a `template` field (TEXT column `channels.template`). When 
 ## CSS Class Conventions
 
 ### Filter Bar Classes
-All filter controls use these classes — never raw `<input>` with inline styles:
+All filter controls use these classes: never raw `<input>` with inline styles:
 
 | Class | Element | Usage |
 |-------|---------|-------|
@@ -223,7 +223,7 @@ All filter controls use these classes — never raw `<input>` with inline styles
 | `filter-checkbox-label` | `<label>` | Checkbox with styled label |
 | `filter-actions` | Container | Action buttons (Refresh, Reset) |
 
-**History**: The Settings page initially used raw inline styles for inputs — the user corrected this to use `filter-bar` classes. All new pages should follow this pattern.
+**History**: The Settings page initially used raw inline styles for inputs: the user corrected this to use `filter-bar` classes. All new pages should follow this pattern.
 
 ### Settings Page Classes
 
@@ -251,15 +251,15 @@ All filter controls use these classes — never raw `<input>` with inline styles
 
 | Class | Meaning |
 |-------|---------|
-| `status-badge-success` | Green — completed/success |
-| `status-badge-completed` | Green — completed |
-| `status-badge-error` | Red — error/failed |
-| `status-badge-created` | Indigo — created/new |
-| `status-badge-failed` | Red — failed |
-| `status-badge-interrupted` | Purple — interrupted |
-| `status-badge-processing` | Amber — processing |
-| `status-badge-pending` | Blue — pending |
-| `status-badge-skipped` | Muted gray — skipped |
+| `status-badge-success` | Green: completed/success |
+| `status-badge-completed` | Green: completed |
+| `status-badge-error` | Red: error/failed |
+| `status-badge-created` | Indigo: created/new |
+| `status-badge-failed` | Red: failed |
+| `status-badge-interrupted` | Purple: interrupted |
+| `status-badge-processing` | Amber: processing |
+| `status-badge-pending` | Blue: pending |
+| `status-badge-skipped` | Muted gray: skipped |
 
 ### Kanban Status Badge Colors
 
@@ -295,7 +295,7 @@ Thread rows in the Threads page must be **real `<a>` elements** with `href` attr
   <div role="cell">...</div>
 </a>
 
-<!-- WRONG — do not use -->
+<!-- WRONG: do not use -->
 <tr onclick="navigate(...)">...</tr>
 ```
 
@@ -306,14 +306,14 @@ The same principle applies to skills on the Profiles page. Skills must be render
 <!-- CORRECT -->
 <a class="channel-tag skill-link" href="/explorer?file=%2Fprofiles%2Fname%2Fskills%2Fname.md">skill-name</a>
 
-<!-- WRONG — do not use -->
+<!-- WRONG: do not use -->
 <a class="channel-tag skill-link" href="javascript:void(0)">skill-name</a>
 ```
 
 This ensures middle-click opens in a new tab, and the browser shows the target URL on hover.
 
 ### Sort Order Button Arrow Alignment
-The `.order-btn .arrow` element (used in Messages, Kanban Task Details, and Schedule Details pages) must have `margin-top: -2px` to vertically center the arrow icon with the label text. This was fixed once before but regressed — ensure it never gets removed:
+The `.order-btn .arrow` element (used in Messages, Kanban Task Details, and Schedule Details pages) must have `margin-top: -2px` to vertically center the arrow icon with the label text. This was fixed once before but regressed: ensure it never gets removed:
 
 ```css
 .order-btn .arrow {
@@ -328,7 +328,7 @@ The `.order-btn .arrow` element (used in Messages, Kanban Task Details, and Sche
 The global drag-drop overlay (for file uploads) checks for `'Files'` in `dataTransfer.types` to distinguish file drops from internal application drags (e.g., kanban card text/plain drags):
 
 ```typescript
-// Skip internal drags (kanban cards) — only handle file drops
+// Skip internal drags (kanban cards): only handle file drops
 if (dragTypes.includes("text/plain") && !dragTypes.includes("Files")) {
   return;
 }
@@ -338,7 +338,7 @@ if (!dragTypes.includes("Files")) {
 ```
 
 ### Use `classList.toggle` for State
-Never manipulate inline styles for toggle state — use `classList.toggle`:
+Never manipulate inline styles for toggle state: use `classList.toggle`:
 
 ```typescript
 // CORRECT
@@ -388,7 +388,7 @@ This handles three cases:
 ### Rules
 - Always use the combined `docker compose up -d --build` (not separate build + recreate).
 - Never use `--no-cache` unless the `dist/` directory is empty and stale cached layers cause issues.
-- The compose file mounts `./dist:/app/dist:ro` — so frontend builds don't need a Docker rebuild.
+- The compose file mounts `./dist:/app/dist:ro`: so frontend builds don't need a Docker rebuild.
 
 ### Caching Gotcha
 - Content-hashed JS/CSS files in `/assets/` are cached for **365 days** with `immutable: true`.
@@ -404,8 +404,8 @@ This handles three cases:
 ### Dual Navigation
 The nav is defined in **two places** in `index.html`:
 
-1. `.sidebar-nav` (desktop sidebar) — lines 56-94
-2. `.mobile-nav` (mobile bottom bar) — lines 109-145
+1. `.sidebar-nav` (desktop sidebar): lines 56-94
+2. `.mobile-nav` (mobile bottom bar): lines 109-145
 
 **Both must be kept in sync** when adding or renaming pages.
 
@@ -421,8 +421,8 @@ The nav is defined in **two places** in `index.html`:
 
 ### Data Attributes
 Each `<a>` needs:
-- `href="/<route-name>"` — the URL path
-- `data-route="<route-name>"` — matching the router key in `router.ts`
+- `href="/<route-name>"`: the URL path
+- `data-route="<route-name>"`: matching the router key in `router.ts`
 - `class="nav-item"` or `class="mobile-nav-item"` depending on position
 
 ### Router
@@ -441,7 +441,7 @@ To add a new page:
 ## Known Bug Patterns
 
 ### Empty-string filter values
-- Setting empty-string filter on `Some("")` from DB — check for **both** `null` and empty string:
+- Setting empty-string filter on `Some("")` from DB: check for **both** `null` and empty string:
   ```typescript
   if (subtypeParam && subtypeParam.trim() !== "") { ... }
   ```
@@ -455,7 +455,7 @@ To add a new page:
 - Fix: Hard refresh (Ctrl+Shift+R). Prevention: `Cache-Control: no-store` on index.html + meta tags.
 
 ### Container networking
-- The dashboard container **cannot reach sibling containers** via `localhost` — Docker maps ports differently.
+- The dashboard container **cannot reach sibling containers** via `localhost`: Docker maps ports differently.
 - Use Docker gateway IP or internal Docker network hostnames (`omniagent:8080`, `qdrant:6333`).
 
 ---

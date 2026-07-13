@@ -3,10 +3,10 @@
 Omni-Dashboard Integration Tests
 
 Tests that the dashboard's key API endpoints return proper data:
-- /api/secrets — full CRUD lifecycle (create, read, update, delete, verify)
-- /api/schedule — create as disabled, verify loaded
-- /api/kanban/tasks — create in backlog, verify loaded
-- /api/plugins/actions/reinstall — verify Rust recompilation works (exit code 101 regression)
+- /api/secrets: full CRUD lifecycle (create, read, update, delete, verify)
+- /api/schedule: create as disabled, verify loaded
+- /api/kanban/tasks: create in backlog, verify loaded
+- /api/plugins/actions/reinstall: verify Rust recompilation works (exit code 101 regression)
 - Each page's data loads correctly (not just HTTP 200)
 
 Usage: python3 tests/integration_test.py
@@ -95,7 +95,7 @@ def test_secrets_crud():
 
     if "error" in create_result:
         error_msg = create_result.get("error", str(create_result))
-        # If it already exists from a previous run, that's OK — we'll update it
+        # If it already exists from a previous run, that's OK: we'll update it
         if "already exists" in error_msg:
             print(f"     ℹ️  Secret already exists (from previous run), proceeding with update/delete cycle")
             update_first = api(f"/secrets/{secret_name}", method="PUT", data={"value": original_value})

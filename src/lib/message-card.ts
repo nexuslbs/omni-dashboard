@@ -48,7 +48,7 @@ function roleColor(role: string): string {
   return ROLE_COLORS[role.toLowerCase()] || "#64748b";
 }
 
-// ── Role display label — map "user" to "cause" ──
+// ── Role display label: map "user" to "cause" ──
 function roleDisplayLabel(role: string): string {
   return role === "user" ? "cause" : role;
 }
@@ -207,7 +207,7 @@ export function wireMessageCardToggles(container: HTMLElement): void {
       const targetView = btnEl.classList.contains("ev-view-md") ? "md" : "json";
 
       if (currentView === targetView) {
-        // Already in this view — switch back to original
+        // Already in this view: switch back to original
         contentDiv.innerHTML = escapeHtml(rawContent);
         contentDiv.setAttribute("data-view", "original");
         btnEl.textContent = btnEl.classList.contains("ev-view-md") ? "See as Markdown" : "See as JSON";
@@ -238,7 +238,7 @@ export function wireMessageCardToggles(container: HTMLElement): void {
           const parsed = JSON.parse(rawContent);
           formatted = JSON.stringify(parsed, null, 2);
         } catch {
-          // Not valid JSON — show as pretty text
+          // Not valid JSON: show as pretty text
           formatted = rawContent;
         }
         const escaped = escapeHtml(formatted);

@@ -1,5 +1,5 @@
 /**
- * Kanban detail view overlay — task details, edit modal, threads.
+ * Kanban detail view overlay: task details, edit modal, threads.
  * Extracted from src/pages/kanban.ts
  */
 import { apiGet } from "./api";
@@ -34,7 +34,7 @@ async function loadKanbanActivity(taskId: string): Promise<void> {
     wireMessageCardToggles(el);
 
     // Wire thread links
-    // ── Thread link wrapping removed — native href in message-card.ts handles navigation ──
+    // ── Thread link wrapping removed: native href in message-card.ts handles navigation ──
 
     // Update pagination
     const currentPage = Math.floor(kanbanActivityOffset / kanbanActivityLimit) + 1;
@@ -272,7 +272,7 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
         channelName = match.name || match.platform || "";
       }
     } catch {
-      // Channel lookup failure — fall back to raw ID
+      // Channel lookup failure: fall back to raw ID
     }
 
     // Update archive button text
@@ -492,7 +492,7 @@ function wireDepsAdd(taskId: string): void {
   // Replace button to clear any stale listeners accumulated from reloads
   const newBtn = btn.cloneNode(true) as HTMLElement;
   btn.parentNode?.replaceChild(newBtn, btn);
-  // Reset to initial state — the button may have been cloned mid-"Adding..."
+  // Reset to initial state: the button may have been cloned mid-"Adding..."
   (newBtn as HTMLButtonElement).textContent = "+ Add";
   newBtn.removeAttribute("disabled");
 

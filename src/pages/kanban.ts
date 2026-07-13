@@ -1,5 +1,5 @@
 /**
- * Main kanban page — rendering, wiring, and create-task modal.
+ * Main kanban page: rendering, wiring, and create-task modal.
  * Delegates to lib/kanban-board.ts, lib/kanban-detail.ts, lib/kanban-subtasks.ts.
  */
 import { apiGet } from "../lib/api";

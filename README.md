@@ -1,6 +1,6 @@
 # Omni-Dashboard
 
-SPA dashboard for OmniAgent — a real-time operational dashboard providing system monitoring, thread/message inspection, kanban task management, schedule management, prompt preview, wiki search, and settings management.
+SPA dashboard for OmniAgent: a real-time operational dashboard providing system monitoring, thread/message inspection, kanban task management, schedule management, prompt preview, wiki search, and settings management.
 
 Built with **Vite + TypeScript** frontend and **Express** backend, sharing a **PostgreSQL** database with OmniAgent.
 
@@ -11,10 +11,10 @@ Built with **Vite + TypeScript** frontend and **Express** backend, sharing a **P
 ### Overview (`/`)
 4-row dashboard page with:
 
-- **Row 1 — KPI Cards**: Threads Today, Avg Response Time, Token Consumption, Active Channels. Each card shows a vs-yesterday trend indicator.
-- **Row 2 — SVG Charts**: Bar chart (7-day hourly thread count), donut chart (status distribution), line chart (14-day token trend). All rendered as pure SVG — no Chart.js used for these.
-- **Row 3 — Tables**: Recent Activity (last 10 threads with preview/time/tokens) and Channel Health (threads today, avg duration, success rate, last activity).
-- **Row 4 — Bottom Bar**: Top Tools Used (7-day tool call counts) and Kanban Snapshot (column counts overview).
+- **Row 1: KPI Cards**: Threads Today, Avg Response Time, Token Consumption, Active Channels. Each card shows a vs-yesterday trend indicator.
+- **Row 2: SVG Charts**: Bar chart (7-day hourly thread count), donut chart (status distribution), line chart (14-day token trend). All rendered as pure SVG: no Chart.js used for these.
+- **Row 3: Tables**: Recent Activity (last 10 threads with preview/time/tokens) and Channel Health (threads today, avg duration, success rate, last activity).
+- **Row 4: Bottom Bar**: Top Tools Used (7-day tool call counts) and Kanban Snapshot (column counts overview).
 
 ### Threads (`/threads`)
 Paginated thread list with filter controls:
@@ -29,7 +29,7 @@ Paginated thread list with filter controls:
 Detailed message viewer with extensive filtering:
 
 - Filters: Channel, Thread ID, Role (cause/agent/system/tool), Type (multi-select toggle buttons for prompt/response/reasoning/tool/tool_output/iteration/delegate_result/skill), Subtype (free-text), Provider, Model, Seq-0 only checkbox.
-- URL search param sync — filters persist in the URL.
+- URL search param sync: filters persist in the URL.
 - Per-message display: color-coded role badges, timing and token display, expandable content with 3-line truncation.
 - Color-coded type and status badges.
 - Custom enhanced `<select>` dropdowns for theme consistency.
@@ -41,7 +41,7 @@ Memory management interface for the agent's persistent memory stores:
 - **Memory/MEMORY.md panel**: View and edit the agent's operational memory (system-level persistent notes).
 - **User/USER.md panel**: View and edit the user profile (personal preferences, habits, environment facts).
 - **Hindsight Memory section**: Shows summaries and retention stats for the Hindsight vector memory system.
-- **Context Preview**: Shows the assembled context section [3] that gets injected into the agent's system prompt — displays retrieved wiki, memory, and recent thread context built from Qdrant and the database.
+- **Context Preview**: Shows the assembled context section [3] that gets injected into the agent's system prompt: displays retrieved wiki, memory, and recent thread context built from Qdrant and the database.
 - Each memory file is loaded from `profiles/<name>/memories/` on the server and saved back via the Settings API.
 
 ### Kanban (`/kanban`)
@@ -67,11 +67,11 @@ Vault secrets manager for API keys and credentials:
 
 - Lists all secrets from HashiCorp Vault at the configured path (typically `kv/data/hermes`).
 - Each secret shows key name with obfuscated value (••••••••).
-- **Eye toggle** to reveal/hide individual secret values — only shown on password-type fields.
+- **Eye toggle** to reveal/hide individual secret values: only shown on password-type fields.
 - **Add Secret** modal: key-value form with custom enhanced `<select>` for secret type.
 - **Delete** action with confirmation.
 - Secrets are fetched and stored via the OmniAgent Secrets API (`/api/secrets`).
-- **Plugin config references**: Secrets can be referenced from plugin config forms (Platforms, Tools, Providers) using the prefix `$secret:name`. The secret value is resolved at runtime — the YAML file stores only the reference, never the actual value. See [Plugin Config References](#-secretconfig-field-reference-toggle) below.
+- **Plugin config references**: Secrets can be referenced from plugin config forms (Platforms, Tools, Providers) using the prefix `$secret:name`. The secret value is resolved at runtime: the YAML file stores only the reference, never the actual value. See [Plugin Config References](#-secretconfig-field-reference-toggle) below.
 
 ### Profiles (`/profiles`)
 Agent profile management:
@@ -108,7 +108,7 @@ MCP tool registry viewer:
 - Lists all registered MCP tools from the OmniAgent MCP registry.
 - Each tool shows: name, description, input schema (JSON).
 - Tools are grouped by source: built-in, external MCP servers, and plugin-provided.
-- Read-only view — tool configuration is managed through Platforms and plugin settings.
+- Read-only view: tool configuration is managed through Platforms and plugin settings.
 
 ### Providers (`/providers`)
 LLM provider configuration:
@@ -208,7 +208,7 @@ repo/
 │   ├── index.ts                   # Entry point: SPA router, sidebar toggle, global drag-drop, upload modal, toast system
 │   ├── style.css                  # All styles (dark SaaS theme, ~4200 lines)
 │   ├── lib/
-│   │   ├── router.ts              # SPA routing — maps route names to page renderers
+│   │   ├── router.ts              # SPA routing: maps route names to page renderers
 │   │   ├── api.ts                 # API client + all TypeScript type definitions
 │   │   ├── helpers.ts             # Shared utilities (escapeHtml, formatCompact, shortDate, parseJsonArray)
 │   │   ├── dropdown.ts            # Custom enhanced <select> dropdowns (dark theme consistent styling)
@@ -279,7 +279,7 @@ repo/
 
 ### Workflow
 
-- **Frontend-only changes**: Run `npm run build:frontend` — no Docker rebuild needed. The compose file mounts `./dist:/app/dist:ro`, so changes are instantly reflected.
+- **Frontend-only changes**: Run `npm run build:frontend`: no Docker rebuild needed. The compose file mounts `./dist:/app/dist:ro`, so changes are instantly reflected.
 - **Server changes**: Run `npm run build:server` + `docker compose up -d --build dashboard`.
 - **Combined changes**: `npm run build` + `docker compose up -d --build dashboard`.
 - Always use the combined `docker compose up -d --build` (not separate build + recreate).
@@ -308,14 +308,14 @@ The server reads the following environment variables:
 The dashboard container connects to:
 - **OmniAgent HTTP API** at `http://omniagent:8080` (for settings and prompt-preview).
 - **Qdrant** at `http://qdrant:6333` (for wiki search).
-- Note: Dashboard cannot reach sibling containers via `localhost` — uses Docker internal networking.
+- Note: Dashboard cannot reach sibling containers via `localhost`: uses Docker internal networking.
 
 ### Caching
 
 - Content-hashed JS/CSS files in `/assets/` are cached for **365 days** with `immutable: true`.
 - `index.html` is served with `Cache-Control: no-store, no-cache, must-revalidate, proxy-revalidate`.
 - After deploying frontend changes, users may need **Ctrl+Shift+R** (hard refresh) to bypass cached JS.
-- If `index.html` loads stale JS references, the page shows blank white — meta tags + Cache-Control headers mitigate this.
+- If `index.html` loads stale JS references, the page shows blank white: meta tags + Cache-Control headers mitigate this.
 
 ---
 
@@ -403,8 +403,8 @@ Plugin config forms (Platforms, Tools, Providers) support referencing values fro
 
 Every string and secret config field has a **🔗** button next to it:
 
-- **Default mode** (🔗) — literal value is entered directly. Works exactly as before.
-- **Reference mode** (✏️) — the field shows a **Secret** / **Env Var** type selector and a **name input**. The value is stored as `$secret:name` or `$env:VAR_NAME`.
+- **Default mode** (🔗): literal value is entered directly. Works exactly as before.
+- **Reference mode** (✏️): the field shows a **Secret** / **Env Var** type selector and a **name input**. The value is stored as `$secret:name` or `$env:VAR_NAME`.
 
 Click 🔗 to switch to reference mode. Click ✏️ to switch back to literal mode.
 

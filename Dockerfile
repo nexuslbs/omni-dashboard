@@ -19,7 +19,7 @@ RUN npm run build:frontend
 # Compile backend TypeScript
 RUN npm run build:server
 
-# Stage 2: Production image — node serves both static + API
+# Stage 2: Production image: node serves both static + API
 FROM node:22-alpine
 
 RUN apk add --no-cache git
@@ -39,7 +39,7 @@ COPY --from=builder /build/server-dist /app/server
 COPY --from=builder /build/package.json /app/package.json
 COPY --from=builder /build/package-lock.json /app/package-lock.json
 
-# Install only production dependencies — remove prepare script to avoid husky dependency
+# Install only production dependencies: remove prepare script to avoid husky dependency
 RUN npm pkg delete scripts.prepare && npm ci --omit=dev
 
 EXPOSE 3001

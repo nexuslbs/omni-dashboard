@@ -258,7 +258,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
         (window as any).showToast?.("Failed: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
-        // Refresh state — backend may have rolled back (e.g., enabling
+        // Refresh state: backend may have rolled back (e.g., enabling
         // bundled source failed and reverted to the old source).
         loadFn();
       }
@@ -390,7 +390,7 @@ function renderConfigField(pluginName: string, field: any, config: Record<string
       );
       inputHtml = `
         <select id="${fieldId}" class="plugin-config-input filter-input" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}">
-          <option value="">—</option>
+          <option value="">N/A</option>
           ${options.join("")}
         </select>`;
       break;
@@ -403,7 +403,7 @@ function renderConfigField(pluginName: string, field: any, config: Record<string
       inputHtml = `
         <div style="display:flex;gap:0.25rem;align-items:center;flex:1;">
           <select id="${fieldId}" class="plugin-config-input filter-input" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}" style="flex:1;">
-            <option value="">—</option>
+            <option value="">N/A</option>
             ${options.join("")}
           </select>
           <button type="button" class="plugin-refresh-models-btn setting-icon-btn" title="Refresh models" data-plugin-config="true" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}">
@@ -455,7 +455,7 @@ export function showInstallModal(pluginType: PluginPageType): void {
       <label style="display:block;font-size:0.8rem;color:var(--text-secondary);margin:0.75rem 0 0.25rem;">Subdirectory Path (optional)</label>
       <input id="install-git-path" type="text" class="filter-input" placeholder="Subdirectory within repo (e.g. plugins/my-plugin)" style="width:100%;" />
 
-      <label style="display:block;font-size:0.8rem;color:var(--text-secondary);margin:0.75rem 0 0.25rem;">Plugin Name (optional — leave empty to use name from plugin.json)</label>
+      <label style="display:block;font-size:0.8rem;color:var(--text-secondary);margin:0.75rem 0 0.25rem;">Plugin Name (optional: leave empty to use name from plugin.json)</label>
       <input id="install-name-input" type="text" class="filter-input" placeholder="Leave empty to use name from plugin.json" style="width:100%;" />
 
       <div id="install-status" style="display:none;padding:0.5rem;margin-bottom:0.75rem;border-radius:6px;font-size:0.85rem;"></div>

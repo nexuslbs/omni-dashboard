@@ -1,5 +1,5 @@
 /**
- * Channel config editing — name, profile, provider, model, plan controls.
+ * Channel config editing: name, profile, provider, model, plan controls.
  * Extracted from src/pages/channels.ts
  */
 import { escapeHtml, formatApiError } from "./helpers";
@@ -179,7 +179,7 @@ export function renderTemplateInput(
   if (readonly) {
     return `
       <div class="channel-field-group">
-        <code class="setting-readonly-code">${current ? escapeHtml(current) : "—"}</code>
+        <code class="setting-readonly-code">${current ? escapeHtml(current) : "-"}</code>
       </div>
     `;
   }
@@ -244,7 +244,7 @@ export function wireChannelConfigEditing(): void {
               .filter((m: string) => m !== prevModel || !prevModelValid)
               .map((m: string) => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`)
               .join("")
-          : '<option value="">—</option>';
+          : '<option value="">N/A</option>';
       const newVal = prevModelValid ? prevModel : models.length > 0 ? models[0] : "";
       modelSelect.value = newVal;
       modelSelect.setAttribute("data-original", newVal);
@@ -310,7 +310,7 @@ export function wireChannelConfigEditing(): void {
                   .filter((m: string) => !currentValValid || m !== currentVal)
                   .map((m: string) => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`)
                   .join("")
-              : '<option value="">—</option>';
+              : '<option value="">N/A</option>';
           const finalVal = currentValValid ? currentVal : models.length > 0 ? models[0] : "";
           modelSelect.value = finalVal;
           modelSelect.setAttribute("data-original", finalVal);
@@ -339,7 +339,7 @@ export function wireChannelConfigEditing(): void {
       if (field === "plan") {
         // 3-way: empty = omit (use default), "true"/"false" = set value
         if (value === "") {
-          // skip — don't send plan, let backend use default
+          // skip: don't send plan, let backend use default
           // The button click should not proceed with empty body
           return;
         }

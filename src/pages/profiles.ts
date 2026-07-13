@@ -12,7 +12,7 @@ export function renderProfiles(container: HTMLElement): void {
     <div class="page-header">
       <div>
         <h1 class="page-title">Profiles</h1>
-        <p class="page-subtitle">LLM profiles — provider, model, and tool configuration</p>
+        <p class="page-subtitle">LLM profiles: provider, model, and tool configuration</p>
       </div>
       <button id="create-profile-btn" class="btn-primary" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ Create Profile</button>
     </div>
@@ -254,7 +254,7 @@ function renderSkillsList(profileName: string, skills: string[]): string {
  * The map is populated from the API BEFORE rendering (see loadProfiles()),
  * so every tool with a server_name IS in the map when this runs.
  * If a tool is NOT in the map (defensive edge case), safe-default to
- * "builtin" — external tools always have server_name and will be present.
+ * "builtin": external tools always have server_name and will be present.
  */
 function toolsetOf(tool: string): string {
   const server = _toolServerMap[tool];
@@ -600,19 +600,19 @@ function showCreateProfileModal(): void {
         <div class="settings-section">
           <label class="filter-label">Name *</label>
           <input class="filter-input" id="create-profile-name" type="text" placeholder="my-profile" style="width:100%;" />
-          <div class="text-muted" style="font-size:0.75rem;margin-top:0.25rem;">Letters, numbers, hyphens, and underscores only — no spaces or special characters.</div>
+          <div class="text-muted" style="font-size:0.75rem;margin-top:0.25rem;">Letters, numbers, hyphens, and underscores only: no spaces or special characters.</div>
         </div>
         <div class="settings-section">
           <label class="filter-label">Provider <span class="text-muted" style="font-size:0.75rem;">(optional)</span></label>
           <select class="filter-select" id="create-profile-provider" style="width:100%;">
-            <option value="">— None —</option>
+            <option value="">None</option>
             ${_providers.map((p) => `<option value="${escapeHtml(p)}">${escapeHtml(p)}</option>`).join("")}
           </select>
         </div>
         <div class="settings-section" id="create-profile-model-section" style="display:none;">
           <label class="filter-label">Model *</label>
           <select class="filter-select" id="create-profile-model" style="width:100%;">
-            <option value="">— Select a model —</option>
+            <option value="">Select a model </option>
           </select>
         </div>
         <div class="settings-section" style="margin-top:0.75rem;">
@@ -658,12 +658,12 @@ function showCreateProfileModal(): void {
       const models = getModelsForProvider(provider);
       modelSelect.innerHTML =
         models.length > 0
-          ? '<option value="">— Select a model —</option>' +
+          ? '<option value="">Select a model </option>' +
             models.map((m) => `<option value="${escapeHtml(m)}">${escapeHtml(m)}</option>`).join("")
-          : '<option value="">— No models available —</option>';
+          : '<option value="">No models available </option>';
       modelSection.style.display = "block";
     } else {
-      modelSelect.innerHTML = '<option value="">— Select a model —</option>';
+      modelSelect.innerHTML = '<option value="">Select a model </option>';
       modelSection.style.display = "none";
     }
     validate();

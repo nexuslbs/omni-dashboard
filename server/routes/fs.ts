@@ -15,7 +15,7 @@ interface FsEntry {
   size: number | null;
 }
 
-// GET /api/fs/config — returns filesystem root and OMNI_DIR for path computation
+// GET /api/fs/config: returns filesystem root and OMNI_DIR for path computation
 fsRouter.get("/config", (_req, res) => {
   res.json({
     root: ROOT,
@@ -90,7 +90,7 @@ fsRouter.get("/read", (req, res) => {
         binary: false,
       });
     } catch {
-      // Binary file — return the size and a binary flag
+      // Binary file: return the size and a binary flag
       res.json({
         content: "",
         size: stat.size,
@@ -140,7 +140,7 @@ fsRouter.get("/diff", (req, res) => {
             stdio: ["pipe", "pipe", "pipe"],
           }).trim();
           if (nameStatus.startsWith("A")) {
-            // Added file — show the full content as addition
+            // Added file: show the full content as addition
             const content = readFileSync(absPath, "utf-8");
             const relPath = relative(OMNI_DIR, absPath);
             const header = `diff --git a/${relPath} b/${relPath}\nnew file mode 100644\nindex 0000000..0000000\n--- /dev/null\n+++ b/${relPath}\n`;
