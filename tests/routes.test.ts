@@ -66,10 +66,10 @@ describe("OmniDashboard API Routes", () => {
           assert.ok(Array.isArray(col.tasks));
         }
       } catch (e: any) {
-        // Graceful skip if server not available - but still report failure
+        // Graceful skip if server not available — but still report failure
         // for unexpected errors (non-connectivity)
         if (e?.cause?.code === "ECONNREFUSED" || e?.message?.includes("fetch failed")) {
-          // This is acceptable - server might not be running
+          // This is acceptable — server might not be running
           return;
         }
         throw e;
@@ -138,7 +138,7 @@ describe("OmniDashboard API Routes", () => {
   describe("/api/wiki-search", () => {
     it("POST / returns expected structure or validation error", async () => {
       try {
-        // Test with empty body - should get 400
+        // Test with empty body — should get 400
         const { status, body } = await apiPost("/api/wiki-search", {});
         // Either 400 (query required) or error from backend
         if (status === 400) {

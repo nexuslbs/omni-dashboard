@@ -14,11 +14,11 @@ import { escapeHtml, formatApiError } from "../lib/helpers";
 import { html as diffHtml } from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
 
-// Functions exposed by the global upload feature (defined in index.ts - same bundle)
+// Functions exposed by the global upload feature (defined in index.ts — same bundle)
 declare function checkExistingFiles(files: File[]): Promise<Set<string>>;
 declare function showUploadModal(files: File[], existingSet: Set<string>): void;
 
-// ── Markdown renderer (uses marked - battle-tested GFM parser) ──
+// ── Markdown renderer (uses marked — battle-tested GFM parser) ──
 // Configure highlight.js and marked-highlight plugin
 hljs.configure({ ignoreUnescapedHTML: true });
 
@@ -40,7 +40,7 @@ marked.use(
 );
 
 function renderMarkdown(md: string): string {
-  // Strip YAML frontmatter (---...---) - marked confuses closing --- as setext heading delimiter
+  // Strip YAML frontmatter (---...---) — marked confuses closing --- as setext heading delimiter
   const clean = md.replace(/^---[\s\S]*?---\n*/, "");
 
   const renderer = new Renderer();
@@ -172,7 +172,7 @@ export function renderExplorer(container: HTMLElement): void {
               <button class="git-commit-btn" id="git-commit-btn" disabled title="Commit staged or all changes">Commit</button>
               <button class="git-stage-btn" id="git-stage-btn" style="display:none;" title="Stage all unstaged changes">Stage</button>
               <button class="git-unstage-btn" id="git-unstage-btn" style="display:none;" title="Unstage all staged changes, keeping file changes">Unstage</button>
-              <button class="git-discard-btn" id="git-discard-btn" title="Discard all unstaged changes - cannot be undone">Discard</button>
+              <button class="git-discard-btn" id="git-discard-btn" title="Discard all unstaged changes — cannot be undone">Discard</button>
             </div>
           </div>
           <div class="git-files" id="git-files" style="display:none;">
@@ -207,7 +207,7 @@ export function renderExplorer(container: HTMLElement): void {
     </div>
   `;
 
-  // Refresh button - reloads tree, preserves expanded state and selected file
+  // Refresh button — reloads tree, preserves expanded state and selected file
   document.getElementById("explorer-refresh")!.addEventListener("click", async () => {
     await loadTree(false);
     // Reload children for ALL expanded directories, not just the file path
@@ -220,7 +220,7 @@ export function renderExplorer(container: HTMLElement): void {
     }
   });
 
-  // Upload button - opens file chooser
+  // Upload button — opens file chooser
   const uploadBtn = document.getElementById("explorer-upload-btn")!;
   const fileInput = document.getElementById("file-upload-input") as HTMLInputElement;
   uploadBtn.addEventListener("click", () => fileInput.click());
@@ -235,7 +235,7 @@ export function renderExplorer(container: HTMLElement): void {
     }
   });
 
-  // Git panel - sync button
+  // Git panel — sync button
   document.getElementById("git-sync-btn")!.addEventListener("click", async () => {
     const btn = document.getElementById("git-sync-btn") as HTMLButtonElement;
     const icon = document.querySelector(".git-sync-icon") as HTMLElement;
@@ -252,7 +252,7 @@ export function renderExplorer(container: HTMLElement): void {
     }
   });
 
-  // Git panel - commit
+  // Git panel — commit
   const commitInput = document.getElementById("git-commit-input") as HTMLInputElement;
   const commitBtn = document.getElementById("git-commit-btn") as HTMLButtonElement;
   commitInput.addEventListener("input", () => {
@@ -276,7 +276,7 @@ export function renderExplorer(container: HTMLElement): void {
     }
   });
 
-  // Git panel - stage all
+  // Git panel — stage all
   document.getElementById("git-stage-btn")!.addEventListener("click", async () => {
     try {
       await apiPost("/git/stage", {});
@@ -286,7 +286,7 @@ export function renderExplorer(container: HTMLElement): void {
     }
   });
 
-  // Git panel - discard all
+  // Git panel — discard all
   document.getElementById("git-discard-btn")!.addEventListener("click", async () => {
     if (!confirm("Discard all unstaged changes? This cannot be undone.")) return;
     try {
@@ -297,7 +297,7 @@ export function renderExplorer(container: HTMLElement): void {
     }
   });
 
-  // Git panel - unstage all
+  // Git panel — unstage all
   document.getElementById("git-unstage-btn")!.addEventListener("click", async () => {
     if (!confirm("Unstage all staged changes? This keeps the file changes.")) return;
     try {
@@ -308,7 +308,7 @@ export function renderExplorer(container: HTMLElement): void {
     }
   });
 
-  // Git panel - one-time toggleExpand setup (not inside loadGitStatus to avoid stacking listeners)
+  // Git panel — one-time toggleExpand setup (not inside loadGitStatus to avoid stacking listeners)
   const toggleExpand = (header: HTMLElement, list: HTMLElement): void => {
     header.addEventListener("click", () => {
       const isHidden = list.style.display === "none";
@@ -404,7 +404,7 @@ async function reloadAllExpanded(): Promise<void> {
       if (!node) break;
 
       // Load children eagerly for EVERY directory on the path,
-      // not just the target - intermediate dirs may not be in expandedPaths
+      // not just the target — intermediate dirs may not be in expandedPaths
       if (node.children === null) {
         try {
           const response: { entries: FsEntry[]; path: string } = await apiGet(
@@ -454,7 +454,7 @@ function renderTree(container: HTMLElement): void {
       if (entryType === "directory") {
         void toggleDirectory(path);
       } else {
-        // Tree file click - clear diff/staged params, only open the file
+        // Tree file click — clear diff/staged params, only open the file
         const params = new URLSearchParams(location.search);
         params.delete("diff");
         params.delete("staged");
@@ -646,7 +646,7 @@ async function openFile(path: string): Promise<void> {
   const params = new URLSearchParams(location.search);
   const isDiff = params.get("diff") === "true";
   const isStaged = params.get("staged") === "true";
-  // Full-file preference stored globally in localStorage - applies to all files
+  // Full-file preference stored globally in localStorage — applies to all files
   const isFull = localStorage.getItem("diff-full") !== "false"; // default true
 
   // Update URL so the file path persists on reload
@@ -655,13 +655,13 @@ async function openFile(path: string): Promise<void> {
   else params.delete("diff");
   if (isStaged) params.set("staged", "true");
   else params.delete("staged");
-  params.delete("full"); // not in URL - stored in localStorage
+  params.delete("full"); // not in URL — stored in localStorage
   const newUrl = location.pathname + "?" + params.toString();
   history.replaceState({ file: path }, "", newUrl);
 
   try {
     if (isDiff) {
-      // Diff mode - fetch diff from backend
+      // Diff mode — fetch diff from backend
       const response = await apiGet<FsDiffResponse>(
         `/fs/diff?path=${encodeURIComponent(path)}&staged=${isStaged}&full=${isFull}`,
       );
@@ -718,7 +718,7 @@ async function openFile(path: string): Promise<void> {
           </div>
           <div class="empty-state" style="padding:3rem;text-align:center;color:var(--text-muted);">
             <p>Binary or unsupported file type</p>
-            <p style="font-size:0.875rem;margin-top:0.5rem;">${formatSize(response.size)} - cannot preview</p>
+            <p style="font-size:0.875rem;margin-top:0.5rem;">${formatSize(response.size)} — cannot preview</p>
           </div>
         `;
         contentView.scrollTop = 0;
@@ -758,7 +758,7 @@ async function openFile(path: string): Promise<void> {
     highlightTreeItem(path);
     attachFilePathClick(contentView, path);
 
-    // Wire up diff toggle button - toggle between diff=true and normal view
+    // Wire up diff toggle button — toggle between diff=true and normal view
     const diffBtn = document.getElementById("diff-toggle-btn");
     if (diffBtn) {
       diffBtn.addEventListener("click", () => {
@@ -778,7 +778,7 @@ async function openFile(path: string): Promise<void> {
       });
     }
 
-    // Wire up full-file toggle button - toggle between full file and changes-only view
+    // Wire up full-file toggle button — toggle between full file and changes-only view
     const fullBtn = document.getElementById("full-toggle-btn");
     if (fullBtn) {
       fullBtn.addEventListener("click", () => {
@@ -874,9 +874,9 @@ async function loadGitStatus(): Promise<void> {
     const behindEl = document.getElementById("git-behind")!;
     remoteInfo.style.display = "inline-flex";
     aheadEl.textContent = `↓${status.behind}`;
-    aheadEl.title = `Commits behind remote - ${status.behind} to pull`;
+    aheadEl.title = `Commits behind remote — ${status.behind} to pull`;
     behindEl.textContent = `↑${status.ahead}`;
-    behindEl.title = `Commits ahead of remote - ${status.ahead} to push`;
+    behindEl.title = `Commits ahead of remote — ${status.ahead} to push`;
 
     const totalChanges = status.staged.length + status.unstaged.length;
     const commitArea = document.getElementById("git-commit-area")!;
@@ -990,7 +990,7 @@ async function loadGitStatus(): Promise<void> {
       });
     });
 
-    // Restore selection from URL - only in diff mode
+    // Restore selection from URL — only in diff mode
     const params = new URLSearchParams(location.search);
     const isDiff = params.get("diff") === "true";
     const currentFile = params.get("file");

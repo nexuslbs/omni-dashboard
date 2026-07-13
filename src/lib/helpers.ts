@@ -93,7 +93,7 @@ export function fixMissingSelectOptions(container?: HTMLElement): void {
       const warning = document.createElement("div");
       warning.style.cssText =
         "font-size:0.7rem;color:#ef4444;margin-top:0.2rem;display:flex;align-items:center;gap:0.25rem;";
-      warning.innerHTML = `⚠ Current value "<strong>${escapeHtml(currentVal)}</strong>" not in options - auto-added`;
+      warning.innerHTML = `⚠ Current value "<strong>${escapeHtml(currentVal)}</strong>" not in options — auto-added`;
       sel.parentNode?.insertBefore(warning, sel.nextSibling);
     }
 

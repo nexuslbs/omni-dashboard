@@ -14,7 +14,7 @@ export async function renderPrompt(container: HTMLElement): Promise<void> {
           <div class="filter-section">
             <label class="filter-label">Channel <span class="required">*</span></label>
             <select id="channel-select" class="filter-select">
-              <option value="">- Select a channel -</option>
+              <option value="">— Select a channel —</option>
             </select>
           </div>
         </div>
@@ -68,7 +68,7 @@ async function loadChannels(): Promise<void> {
   const select = document.getElementById("channel-select") as HTMLSelectElement;
   try {
     const channels = await apiGet<any[]>("/channels");
-    select.innerHTML = '<option value="">- Select a channel -</option>';
+    select.innerHTML = '<option value="">— Select a channel —</option>';
     for (const ch of channels) {
       const opt = document.createElement("option");
       opt.value = ch.name;
@@ -116,7 +116,7 @@ async function submitPreview(): Promise<void> {
       return;
     }
 
-    // Messages - includes system prompt, user message, and plan as inner msg-cards
+    // Messages — includes system prompt, user message, and plan as inner msg-cards
     const msgsEl = document.getElementById("messages-output")!;
     if (data.messages && data.messages.length > 0) {
       msgsEl.innerHTML = data.messages

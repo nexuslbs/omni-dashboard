@@ -117,7 +117,7 @@ function showToast(message: string, type: "success" | "error" = "success"): void
   textSpan.textContent = message;
   body.appendChild(textSpan);
 
-  // Expand/collapse for long messages - only show toggle when text actually overflows
+  // Expand/collapse for long messages — only show toggle when text actually overflows
   const needsExpand = message.length > 100 && type === "error";
   if (needsExpand) {
     textSpan.classList.add("clamped");
@@ -134,7 +134,7 @@ function showToast(message: string, type: "success" | "error" = "success"): void
       });
       body.appendChild(expandBtn);
     } else {
-      // Not actually overflowing - remove the clamp
+      // Not actually overflowing — remove the clamp
       textSpan.classList.remove("clamped");
     }
   }
@@ -198,7 +198,7 @@ function showUploadModal(files: File[], existingSet: Set<string>): void {
           ? `${(f.size / (1024 * 1024)).toFixed(1)} MB`
           : `${(f.size / 1024).toFixed(0)} KB`;
       const warnIcon = existingSet.has(f.name)
-        ? `<span class="upload-file-warn" title="File already exists - will be overwritten">⚠️</span>`
+        ? `<span class="upload-file-warn" title="File already exists — will be overwritten">⚠️</span>`
         : "";
       return `<div class="upload-file-row" data-index="${i}">
       <span class="upload-file-name">${f.name}</span>
@@ -269,13 +269,13 @@ let dragCounter = 0;
 let overlayEl: HTMLDivElement | null = null;
 
 document.body.addEventListener("dragenter", (e) => {
-  // Skip internal drags (kanban cards, text selections, etc.) - only handle file drops
+  // Skip internal drags (kanban cards, text selections, etc.) — only handle file drops
   // text/plain without Files indicates an internal application drag, not a file upload
   let dragTypes: string[];
   try {
     dragTypes = e.dataTransfer ? Array.from(e.dataTransfer.types) : [];
   } catch {
-    // dataTransfer.types may throw on some mobile browsers - treat as non-file drag
+    // dataTransfer.types may throw on some mobile browsers — treat as non-file drag
     return;
   }
   if (dragTypes.includes("text/plain") && !dragTypes.includes("Files")) {
@@ -298,7 +298,7 @@ document.body.addEventListener("dragover", (e) => {
   try {
     dragTypes = e.dataTransfer ? Array.from(e.dataTransfer.types) : [];
   } catch {
-    // dataTransfer.types may throw on some mobile browsers - treat as non-file drag
+    // dataTransfer.types may throw on some mobile browsers — treat as non-file drag
     return;
   }
   if (dragTypes.includes("text/plain") && !dragTypes.includes("Files")) {
@@ -316,7 +316,7 @@ document.body.addEventListener("dragleave", (e) => {
   try {
     dragTypes = e.dataTransfer ? Array.from(e.dataTransfer.types) : [];
   } catch {
-    // dataTransfer.types may throw on some mobile browsers - treat as non-file drag
+    // dataTransfer.types may throw on some mobile browsers — treat as non-file drag
     return;
   }
   if (dragTypes.includes("text/plain") && !dragTypes.includes("Files")) {
@@ -341,7 +341,7 @@ document.body.addEventListener("drop", async (e) => {
   try {
     dragTypes = e.dataTransfer ? Array.from(e.dataTransfer.types) : [];
   } catch {
-    // dataTransfer.types may throw on some mobile browsers - treat as non-file drag
+    // dataTransfer.types may throw on some mobile browsers — treat as non-file drag
     return;
   }
   if (dragTypes.includes("text/plain") && !dragTypes.includes("Files")) {

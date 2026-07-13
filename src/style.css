@@ -146,7 +146,7 @@ body {
   display: none;
 }
 
-/* Collapse bar - visible only when collapsed, shows toggle between dividers */
+/* Collapse bar — visible only when collapsed, shows toggle between dividers */
 .sidebar-collapse-bar {
   display: none;
   flex-direction: column;
@@ -611,7 +611,7 @@ a.thread-row {
 }
 
 /* Status badge variants for overview */
-/* Status badge variants - used in dashboard, channels, and overview */
+/* Status badge variants — used in dashboard, channels, and overview */
 .status-badge {
   display: inline-flex;
   align-items: center;
@@ -1656,7 +1656,7 @@ a.thread-row {
 }
 
 .tree-children {
-  /* Indentation handled by padding-left - compounds naturally per nesting level */
+  /* Indentation handled by padding-left — compounds naturally per nesting level */
   padding-left: 12px;
 }
 
@@ -1920,7 +1920,7 @@ a.thread-row {
   border-color: rgba(6, 182, 212, 0.3);
 }
 
-/* Highlighted state: showing only changes (full=false) - button is active */
+/* Highlighted state: showing only changes (full=false) — button is active */
 .full-toggle-btn.active {
   color: var(--accent-cyan);
   background: rgba(6, 182, 212, 0.15);
@@ -1929,13 +1929,13 @@ a.thread-row {
 
 /* ── Diff2html fixes ── */
 
-/* Outer diff container - single border, no individual wrapper borders */
+/* Outer diff container — single border, no individual wrapper borders */
 .d2h-dark-color-scheme {
   border: 1px solid #30363d;
   border-radius: var(--radius-md);
 }
 
-/* Reset td padding for diff cells - no vertical, 0.5rem horizontal */
+/* Reset td padding for diff cells — no vertical, 0.5rem horizontal */
 .d2h-dark-color-scheme td {
   padding: 0 0.5rem !important;
   font-size: inherit;
@@ -1959,7 +1959,7 @@ a.thread-row {
   min-width: 4em;
 }
 
-/* Strip border/radius from individual wrappers - outer container owns it */
+/* Strip border/radius from individual wrappers — outer container owns it */
 .d2h-dark-color-scheme .d2h-file-wrapper {
   margin-bottom: 0;
   border: none !important;
@@ -1971,7 +1971,7 @@ a.thread-row {
   border-radius: 3px;
 }
 
-/* Fix double-alpha on empty placeholder - let parent td's bg show through */
+/* Fix double-alpha on empty placeholder — let parent td's bg show through */
 .d2h-dark-color-scheme .d2h-files-diff .d2h-code-side-emptyplaceholder,
 .d2h-dark-color-scheme .d2h-files-diff .d2h-emptyplaceholder {
   background-color: transparent !important;
@@ -2102,7 +2102,7 @@ a.thread-row {
   opacity: 1;
 }
 
-/* Custom dropdown - replaces native <select> to avoid OS white popup shell */
+/* Custom dropdown — replaces native <select> to avoid OS white popup shell */
 /* Note: .select-options is now appended to document.body with inline fixed positioning
    to escape backdrop-filter stacking contexts. Only trigger and option styles remain here. */
 .custom-select {
@@ -2152,10 +2152,10 @@ a.thread-row {
   transform: rotate(180deg);
 }
 
-/* Floating options appended to document.body - these are base styles;
+/* Floating options appended to document.body — these are base styles;
    inline fixed-positioning is applied in JS to avoid clipping by parent stacking contexts. */
 .select-options {
-  /* Base styles only - position/sizing handled by JS */
+  /* Base styles only — position/sizing handled by JS */
   background: var(--bg-secondary, #1a1a2e);
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
@@ -3417,7 +3417,7 @@ a.thread-row {
   color: var(--accent-purple);
 }
 
-/* Don't keep purple after click - reset focus to default */
+/* Don't keep purple after click — reset focus to default */
 .nav-btn:focus:not(:focus-visible) {
   background: rgba(255, 255, 255, 0.06);
   border-color: var(--glass-border);
@@ -4024,7 +4024,7 @@ a.thread-row {
   background: rgba(239, 68, 68, 0.15);
 }
 
-/* Collapsed state - hide uploads section */
+/* Collapsed state — hide uploads section */
 .explorer-panel.collapsed .user-uploads-section {
   display: none;
 }
@@ -4281,7 +4281,7 @@ a.thread-row {
 }
 
 .select-options {
-  /* Base styles only - position/sizing handled by JS */
+  /* Base styles only — position/sizing handled by JS */
   background: var(--bg-secondary, #1a1a2e);
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
@@ -5454,7 +5454,7 @@ a.thread-row {
   border-top: 1px solid var(--glass-border, rgba(255, 255, 255, 0.06));
 }
 
-/* ── Danger button - matches "failed" status red hue ── */
+/* ── Danger button — matches "failed" status red hue ── */
 .btn-danger {
   background: rgba(244, 63, 94, 0.1);
   color: #fb7185;

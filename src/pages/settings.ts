@@ -156,7 +156,7 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
         break;
     }
 
-    // Actions (confirm/cancel) - hidden until change detected
+    // Actions (confirm/cancel) — hidden until change detected
     inputHtml += `
       <div class="setting-actions" id="actions-${safeName}" style="display:none;">
         <button type="button" class="setting-action-btn setting-confirm-btn" title="Save changes" data-name="${escapeHtml(name)}">

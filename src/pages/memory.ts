@@ -92,7 +92,7 @@ export async function renderMemory(container: HTMLElement): Promise<void> {
           <div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.75rem;">
             <label class="filter-label" style="margin:0;">Channel</label>
             <select id="mem-channel-select" class="filter-select" style="min-width:0;flex:1;max-width:100%;">
-              <option value="">- Select a channel -</option>
+              <option value="">— Select a channel —</option>
             </select>
           </div>
           <div id="mem-channel-stats" style="display:none;margin-bottom:0.75rem;">
@@ -241,7 +241,7 @@ async function loadChannelSelect(): Promise<void> {
   try {
     const channels = await apiGet<any[]>("/channels");
     select.innerHTML =
-      '<option value="">- Select a channel -</option>' +
+      '<option value="">— Select a channel —</option>' +
       channels
         .map(
           (ch) =>
@@ -249,7 +249,7 @@ async function loadChannelSelect(): Promise<void> {
         )
         .join("");
   } catch {
-    select.innerHTML = '<option value="">- Select a channel -</option>';
+    select.innerHTML = '<option value="">— Select a channel —</option>';
   }
   syncSelectDisplay("mem-channel-select");
 }
@@ -438,7 +438,7 @@ async function saveEdit(type: "memory" | "soul"): Promise<void> {
     if (setting) {
       const maxChars = parseInt(setting.value, 10);
       if (!isNaN(maxChars) && content.length > maxChars) {
-        statusEl.textContent = `⚠️ ${content.length}/${maxChars} chars - exceeds limit`;
+        statusEl.textContent = `⚠️ ${content.length}/${maxChars} chars — exceeds limit`;
         // Still allow saving, but warn
         setTimeout(() => {
           statusEl.textContent = "";

@@ -1,5 +1,5 @@
 /**
- * Main schedule page - rendering, wiring, filter state management.
+ * Main schedule page — rendering, wiring, filter state management.
  * Delegates to lib/schedule-list.ts and lib/schedule-detail.ts.
  */
 import { loadCronJobs } from "../lib/schedule-list";

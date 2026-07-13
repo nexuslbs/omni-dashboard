@@ -138,7 +138,7 @@ function porcelainStatusToEntry(status: string): GitFileEntry["status"] {
   }
 }
 
-// GET /api/git/status - returns branch, ahead/behind, staged and unstaged files
+// GET /api/git/status — returns branch, ahead/behind, staged and unstaged files
 gitRouter.get("/status", (_req, res) => {
   try {
     if (!OMNI_DIR) {
@@ -155,7 +155,7 @@ gitRouter.get("/status", (_req, res) => {
       return;
     }
 
-    // Get ahead/behind counts - fetch first to ensure tracking branch is current
+    // Get ahead/behind counts — fetch first to ensure tracking branch is current
     let ahead = 0;
     let behind = 0;
     try {
@@ -197,7 +197,7 @@ gitRouter.get("/status", (_req, res) => {
   }
 });
 
-// POST /api/git/commit - commits all staged changes
+// POST /api/git/commit — commits all staged changes
 gitRouter.post("/commit", (req, res) => {
   try {
     if (!OMNI_DIR) {
@@ -224,7 +224,7 @@ gitRouter.post("/commit", (req, res) => {
   }
 });
 
-// POST /api/git/stage - stages all unstaged changes (git add -A)
+// POST /api/git/stage — stages all unstaged changes (git add -A)
 gitRouter.post("/stage", (_req, res) => {
   try {
     if (!OMNI_DIR) {
@@ -238,7 +238,7 @@ gitRouter.post("/stage", (_req, res) => {
   }
 });
 
-// POST /api/git/discard - discards all unstaged changes
+// POST /api/git/discard — discards all unstaged changes
 gitRouter.post("/discard", (_req, res) => {
   try {
     if (!OMNI_DIR) {
@@ -252,7 +252,7 @@ gitRouter.post("/discard", (_req, res) => {
   }
 });
 
-// POST /api/git/unstage - unstages all staged changes (keeps file changes)
+// POST /api/git/unstage — unstages all staged changes (keeps file changes)
 gitRouter.post("/unstage", (_req, res) => {
   try {
     if (!OMNI_DIR) {
@@ -266,7 +266,7 @@ gitRouter.post("/unstage", (_req, res) => {
   }
 });
 
-// POST /api/git/sync - fetch → pull (rebase) → push
+// POST /api/git/sync — fetch → pull (rebase) → push
 gitRouter.post("/sync", async (_req, res) => {
   try {
     if (!OMNI_DIR) {

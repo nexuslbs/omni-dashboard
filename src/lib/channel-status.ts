@@ -1,5 +1,5 @@
 /**
- * Channel status controls - open/close toggles, filter controls.
+ * Channel status controls — open/close toggles, filter controls.
  * Extracted from src/pages/channels.ts
  */
 import { escapeHtml, formatApiError } from "./helpers";
@@ -117,13 +117,13 @@ export function renderChannelsPage(channels: ChannelData[]): string {
         <div class="setting-row">
           <div class="setting-controls">
             <div class="setting-name">Platform</div>
-            <code class="setting-value-code">${escapeHtml(ch.platform || "-")}</code>
+            <code class="setting-value-code">${escapeHtml(ch.platform || "—")}</code>
           </div>
         </div>
         <div class="setting-row">
           <div class="setting-controls">
             <div class="setting-name">Resource Identifier</div>
-            <code class="setting-value-code">${escapeHtml(ch.resource_identifier || "-")}</code>
+            <code class="setting-value-code">${escapeHtml(ch.resource_identifier || "—")}</code>
           </div>
         </div>
         <div class="setting-row">

@@ -412,8 +412,8 @@ function renderRow(row: ThreadRow): string {
   const causeCol = causeColor(row.cause);
   const pmCol = row.plan ? "#22c55e" : "#64748b";
 
-  const typeStr = row.cause_msg_type ? escapeHtml(row.cause_msg_type) : "-";
-  const subtypeStr = row.cause_msg_subtype ? escapeHtml(row.cause_msg_subtype) : "-";
+  const typeStr = row.cause_msg_type ? escapeHtml(row.cause_msg_type) : "—";
+  const subtypeStr = row.cause_msg_subtype ? escapeHtml(row.cause_msg_subtype) : "—";
   const parentIdStr = row.parent_id
     ? `<span class="event-type-badge" title="Parent ID: ${escapeHtml(String(row.parent_id))}" style="--type-color:#64748b;background:rgba(100,116,139,0.12);border-color:rgba(100,116,139,0.25);color:#94a3b8;font-size:0.7rem;display:inline-flex;flex-direction:column;align-items:center;line-height:1.3;"><span style="font-size:0.65rem;opacity:0.7;">Parent:</span><span style="font-weight:600;">#${escapeHtml(String(row.parent_id))}</span></span>`
     : "";
@@ -425,7 +425,7 @@ function renderRow(row: ThreadRow): string {
       <div role="cell" style="text-align:center;"><code style="font-size:0.8rem;color:var(--text-secondary);">#${escapeHtml(row.id)}</code>${row.parent_id ? `<br><div style="display:flex;flex-direction:column;align-items:center;gap:0.125rem;">${parentIdStr}</div>` : ""}</div>
       <div role="cell"><div style="display:flex;flex-direction:column;align-items:center;gap:0.25rem;"><span class="badge status-badge-${row.status.toLowerCase()}" style="${statusBadgeStyle(row.status)}">${escapeHtml(row.status)}</span>${row.status === "pending" || row.status === "processing" ? `<button class="thread-stop-btn" data-thread-id="${escapeHtml(row.id)}" style="background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;border-radius:6px;padding:0.3rem 0.85rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;" title="Stop this thread">Stop</button>` : ""}</div></div>
       <div role="cell"><span class="badge" style="--type-color:${causeCol};background:${causeCol}22;border-color:${causeCol}44;color:${causeCol}">${escapeHtml(row.cause)}</span></div>
-      <div role="cell">${typeStr === "-" ? typeStr : `<span class="event-type-badge" title="Type: ${typeStr}" style="--type-color:${seq0TypeColor(row.cause_msg_type || "")};background:${seq0TypeColor(row.cause_msg_type || "")}22;border-color:${seq0TypeColor(row.cause_msg_type || "")}44;color:${seq0TypeColor(row.cause_msg_type || "")}">${typeStr}</span>`}</div>
+      <div role="cell">${typeStr === "—" ? typeStr : `<span class="event-type-badge" title="Type: ${typeStr}" style="--type-color:${seq0TypeColor(row.cause_msg_type || "")};background:${seq0TypeColor(row.cause_msg_type || "")}22;border-color:${seq0TypeColor(row.cause_msg_type || "")}44;color:${seq0TypeColor(row.cause_msg_type || "")}">${typeStr}</span>`}</div>
       <div role="cell" style="font-size:0.8rem;color:var(--text-muted);font-style:italic;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${subtypeStr}</div>
       <div role="cell"><span class="badge" style="${channelStyle(row.channel_closed)}"${row.channel_closed ? ' title="Channel closed"' : ""}>${escapeHtml(row.channel_name)}</span></div>
       <div role="cell" class="cell-timestamp">${ts}</div>
@@ -434,14 +434,14 @@ function renderRow(row: ThreadRow): string {
         <div style="display:flex;flex-direction:column;gap:0.125rem;">
           ${row.provider ? `<span class="ev-provider" title="Provider" style="line-height:1.3;">${escapeHtml(row.provider)}</span>` : ""}
           ${row.model ? `<span class="ev-model" title="Model" style="line-height:1.3;">${escapeHtml(row.model)}</span>` : ""}
-          ${!row.provider && !row.model ? "-" : ""}
+          ${!row.provider && !row.model ? "—" : ""}
         </div>
       </div>
       <div role="cell" class="cell-num">${row.msg_count}</div>
       <div role="cell" class="cell-num">${row.iterations}</div>
       <div role="cell" class="cell-preview">${preview}</div>
-      <div role="cell" class="cell-num">${row.duration_ms !== null ? row.duration_ms.toFixed(0) : "-"}</div>
-      <div role="cell" class="cell-num">${tokens > 0 ? tokens.toLocaleString() : "-"}</div>
+      <div role="cell" class="cell-num">${row.duration_ms !== null ? row.duration_ms.toFixed(0) : "—"}</div>
+      <div role="cell" class="cell-num">${tokens > 0 ? tokens.toLocaleString() : "—"}</div>
     </a>
   `;
 }

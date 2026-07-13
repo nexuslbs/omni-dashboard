@@ -16,6 +16,6 @@ const builtinFallbacks = [
 export const renderPlatforms = createPluginPage({
   type: "platform",
   title: "Platforms",
-  subtitle: "Communication platforms - built-in and plugin-based",
+  subtitle: "Communication platforms — built-in and plugin-based",
   builtinFallbacks,
 });
