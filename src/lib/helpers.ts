@@ -31,9 +31,6 @@ export function formatCompact(n: number): string {
 }
 
 /**
- * Format a token count (same as formatCompact but more descriptive).
- */
-/**
  * Format an API error for clean user display.
  * Parses "500: {"error":"Failed to fetch X"}" → "Failed to fetch X (500)"
  * Falls back to the raw message if parsing fails.
@@ -47,12 +44,6 @@ export function formatApiError(e: unknown): string {
     return `${match[2]} (${match[1]})`;
   }
   return msg;
-}
-
-export function formatTokens(n: number): string {
-  if (n >= 1_000_000) return (n / 1_000_000).toFixed(1) + "M";
-  if (n >= 1_000) return (n / 1_000).toFixed(1) + "k";
-  return n.toString();
 }
 
 /**
