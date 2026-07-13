@@ -102,7 +102,7 @@ function openJsonModal(title: string, jsonObj: any): void {
   const overlay = document.createElement("div");
   overlay.style.cssText =
     "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding-top:8vh;";
-  // Track mousedown origin — only close if both mousedown AND mouseup are on the overlay
+  // Track mousedown origin - only close if both mousedown AND mouseup are on the overlay
   overlay.addEventListener("mousedown", (e) => {
     if (e.target === overlay) {
       overlay.dataset.closing = "true";
@@ -157,7 +157,7 @@ export function renderKanbanHistory(container: HTMLElement): void {
     <div class="page-header">
       <div>
         <h1 class="page-title">Kanban History</h1>
-        <p class="page-subtitle">Historical log of kanban task actions — most recent first</p>
+        <p class="page-subtitle">Historical log of kanban task actions - most recent first</p>
       </div>
     </div>
     <div class="filter-bar" id="kh-filter-bar">
@@ -306,7 +306,7 @@ async function loadHistory(): Promise<void> {
       </div>
     `;
 
-    // Wire JSON view buttons — use data-row-index for correct row mapping
+    // Wire JSON view buttons - use data-row-index for correct row mapping
     listEl.querySelectorAll(".kh-json-btn").forEach((btn) => {
       btn.addEventListener("click", () => {
         const idx = parseInt((btn as HTMLElement).getAttribute("data-row-index") || "", 10);

@@ -130,7 +130,7 @@ export function renderConfigField(
       );
       inputHtml = `
         <select id="${fieldId}" class="plugin-config-input filter-input" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}">
-          <option value="">—</option>
+          <option value="">-</option>
           ${options.join("")}
         </select>`;
       break;
@@ -143,7 +143,7 @@ export function renderConfigField(
       inputHtml = `
         <div style="display:flex;gap:0.25rem;align-items:center;flex:1;">
           <select id="${fieldId}" class="plugin-config-input filter-input" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}" style="flex:1;">
-            <option value="">—</option>
+            <option value="">-</option>
             ${options.join("")}
           </select>
           <button type="button" class="plugin-refresh-models-btn setting-icon-btn" title="Refresh models" data-plugin-config="true" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}">
@@ -267,7 +267,7 @@ export function renderPluginConfig(options: RenderPluginConfigOptions): string {
 
 /**
  * Render a section listing built-in items (e.g. built-in tools list).
- * Optional — only used by pages that show built-in items.
+ * Optional - only used by pages that show built-in items.
  */
 export function renderBuiltinSection(items: string[], heading?: string): string {
   if (!items || items.length === 0) return "";
@@ -384,7 +384,7 @@ export function wireRefToggles(): void {
           nameText.value = "";
         }
         if (nameSelect) {
-          // Don't toggle native select — enhanceSelectElement hides it permanently.
+          // Don't toggle native select - enhanceSelectElement hides it permanently.
           // Toggle the enhanced wrapper instead.
           const wrapper = nameSelect.nextElementSibling as HTMLElement | null;
           const isEnhanced = wrapper && wrapper.classList.contains("custom-select");
@@ -407,7 +407,7 @@ export function wireRefToggles(): void {
     });
   });
 
-  // Update hidden input when ref type changes — also toggle input/select visibility
+  // Update hidden input when ref type changes - also toggle input/select visibility
   document.querySelectorAll(".ref-type-select").forEach((el) => {
     el.addEventListener("change", (e) => {
       updateHiddenFromRef(e);
@@ -419,7 +419,7 @@ export function wireRefToggles(): void {
       const nameSelect = container.querySelector(".ref-name-select") as HTMLElement;
       if (nameText) nameText.style.display = isSecret ? "none" : "block";
       if (nameSelect) {
-        // Don't toggle native select — enhanceSelectElement hides it permanently.
+        // Don't toggle native select - enhanceSelectElement hides it permanently.
         // Toggle the enhanced wrapper instead.
         const wrapper = nameSelect.nextElementSibling as HTMLElement | null;
         const isEnhanced = wrapper && wrapper.classList.contains("custom-select");
@@ -462,7 +462,7 @@ export function wireRefToggles(): void {
         }
       });
     } catch {
-      // Secrets not available — leave selects with placeholder only
+      // Secrets not available - leave selects with placeholder only
     }
   })();
 

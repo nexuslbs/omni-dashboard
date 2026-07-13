@@ -72,7 +72,7 @@ async function loadDashboard(): Promise<void> {
   try {
     const data = await apiGet<DashboardData>("/overview/dashboard");
 
-    // Fetch kanban snapshot separately — direct from /api/kanban/board
+    // Fetch kanban snapshot separately - direct from /api/kanban/board
     let kanbanSnapshot: { id: string; status: string; count: number }[] = [];
     try {
       const kanbanData = await apiGet<KanbanBoardResponse>("/kanban/board");
@@ -128,23 +128,23 @@ function renderKpiRow(kpis: DashboardKpis): string {
   const pctThreads =
     kpis.threads_yesterday > 0
       ? (((kpis.threads_today - kpis.threads_yesterday) / kpis.threads_yesterday) * 100).toFixed(1)
-      : "—";
+      : "-";
   const pctTime =
     kpis.avg_response_yesterday > 0
       ? (
           ((kpis.avg_response_time - kpis.avg_response_yesterday) / kpis.avg_response_yesterday) *
           100
         ).toFixed(1)
-      : "—";
+      : "-";
   const pctTokens =
     kpis.tokens_yesterday > 0
       ? (((kpis.tokens_today - kpis.tokens_yesterday) / kpis.tokens_yesterday) * 100).toFixed(1)
-      : "—";
+      : "-";
   const threadsTrend =
-    pctThreads !== "—" ? (Number(pctThreads) >= 0 ? "+" : "") + pctThreads + "% vs yesterday" : "—";
-  const timeTrend = pctTime !== "—" ? (Number(pctTime) >= 0 ? "+" : "") + pctTime + "% vs yesterday" : "—";
+    pctThreads !== "-" ? (Number(pctThreads) >= 0 ? "+" : "") + pctThreads + "% vs yesterday" : "-";
+  const timeTrend = pctTime !== "-" ? (Number(pctTime) >= 0 ? "+" : "") + pctTime + "% vs yesterday" : "-";
   const tokensTrend =
-    pctTokens !== "—" ? (Number(pctTokens) >= 0 ? "+" : "") + pctTokens + "% vs yesterday" : "—";
+    pctTokens !== "-" ? (Number(pctTokens) >= 0 ? "+" : "") + pctTokens + "% vs yesterday" : "-";
 
   return `
     <div class="dashboard-kpi-row">
@@ -343,7 +343,7 @@ function renderLineChart(tokenTrend: DailyTokens[]): string {
 
   // Points and polyline
   if (tokenTrend.length === 1) {
-    // Single point — just show a dot
+    // Single point - just show a dot
     const x = padding.left + chartW / 2;
     const y = padding.top + chartH / 2;
     const val = values[0];

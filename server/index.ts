@@ -20,7 +20,7 @@ const PORT = parseInt(process.env.PORT || "3001", 10);
 app.use(express.json());
 
 // ────────────────────────────────────────────────────────────────────────────
-// Local (non-proxied) API routes — these don't hit the omniagent backend
+// Local (non-proxied) API routes - these don't hit the omniagent backend
 // ────────────────────────────────────────────────────────────────────────────
 app.use("/api/health", healthRouter);
 app.use("/api/wiki-search", wikiSearchRouter);
@@ -30,10 +30,10 @@ app.use("/api/git", gitRouter);
 app.use("/api/profiles", profilesRouter);
 
 // ────────────────────────────────────────────────────────────────────────────
-// Proxy to OmniAgent (Rust backend) — endpoints with irregular path mapping
+// Proxy to OmniAgent (Rust backend) - endpoints with irregular path mapping
 // ────────────────────────────────────────────────────────────────────────────
 const OMNIAGENT = process.env.OMNIAGENT_URL || "http://omniagent:8080";
-const PROXY_TIMEOUT = 600000; // 10 minutes — plugin install/reinstall can take 2-3 min
+const PROXY_TIMEOUT = 600000; // 10 minutes - plugin install/reinstall can take 2-3 min
 
 async function fetchAndForward(
   req: express.Request,
@@ -72,7 +72,7 @@ async function fetchAndForward(
         (err.name === "AbortError" || err.message?.includes("abort") || err.message?.includes("timeout")));
     if (isTimeout) {
       res.status(408).json({
-        error: `Request to OmniAgent timed out after ${PROXY_TIMEOUT}ms. Plugin operations (install, reinstall, download) compile Rust code which can take several minutes. Try again — the backend may still be processing the request.`,
+        error: `Request to OmniAgent timed out after ${PROXY_TIMEOUT}ms. Plugin operations (install, reinstall, download) compile Rust code which can take several minutes. Try again - the backend may still be processing the request.`,
       });
     } else {
       res
@@ -131,7 +131,7 @@ app.post("/api/channels/:channelId/open", (req, res) => {
 });
 
 // ────────────────────────────────────────────────────────────────────────────
-// Plugin routes — preserve /api prefix (Rust backend serves plugins at /api/plugins/*)
+// Plugin routes - preserve /api prefix (Rust backend serves plugins at /api/plugins/*)
 app.all(/^\/api\/plugins(?:\/.*)?$/, async (req, res) => {
   // Keep the /api prefix: /api/plugins → /api/plugins
   const queryStr = req.url.includes("?") ? req.url.substring(req.url.indexOf("?")) : "";
@@ -140,7 +140,7 @@ app.all(/^\/api\/plugins(?:\/.*)?$/, async (req, res) => {
 });
 
 // ────────────────────────────────────────────────────────────────────────────
-// Generic proxy — all other /api/* routes go to OmniAgent with /api prefix stripped
+// Generic proxy - all other /api/* routes go to OmniAgent with /api prefix stripped
 // ────────────────────────────────────────────────────────────────────────────
 app.all(
   /^\/api\/(?!health|wiki-search|uploads|fs|git|profiles|plugins|templates)(?:.*)$/,
@@ -165,7 +165,7 @@ app.all(
 // File-system based API routes
 // ────────────────────────────────────────────────────────────────────────────
 
-// GET /api/templates — List available template files across all profiles
+// GET /api/templates - List available template files across all profiles
 app.get("/api/templates", (_req, res) => {
   try {
     const dataDir = process.env.OMNI_DIR;

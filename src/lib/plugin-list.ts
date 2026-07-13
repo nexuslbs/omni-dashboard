@@ -23,13 +23,13 @@ const PAGE_CONFIGS: Record<PluginPageType, PluginPageConfig> = {
   tool: {
     type: "tool",
     title: "Tools",
-    subtitle: "MCP tools and servers — built-in and plugin-based",
+    subtitle: "MCP tools and servers - built-in and plugin-based",
     showMcpTools: true,
   },
   platform: {
     type: "platform",
     title: "Platforms",
-    subtitle: "Communication platforms — built-in and plugin-based",
+    subtitle: "Communication platforms - built-in and plugin-based",
     builtinFallbacks: [
       {
         name: "cli",
@@ -48,7 +48,7 @@ const PAGE_CONFIGS: Record<PluginPageType, PluginPageConfig> = {
   provider: {
     type: "provider",
     title: "Providers",
-    subtitle: "AI model providers — built-in and plugin-based",
+    subtitle: "AI model providers - built-in and plugin-based",
   },
 };
 
@@ -207,7 +207,7 @@ async function loadPage(type: PluginPageType, cfg: PluginPageConfig, background?
           toolMap[server].push(t.full_name || t.name || t.tool || "?");
         }
       } catch {
-        // MCP tools endpoint may not be available — continue without tools data
+        // MCP tools endpoint may not be available - continue without tools data
       }
     }
 

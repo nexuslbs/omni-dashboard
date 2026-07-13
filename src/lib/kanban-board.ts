@@ -1,5 +1,5 @@
 /**
- * Kanban board rendering — columns, cards, drag-and-drop.
+ * Kanban board rendering - columns, cards, drag-and-drop.
  * Extracted from src/pages/kanban.ts
  */
 import { apiGet, type KanbanBoardResponse, type KanbanTask } from "./api";
@@ -55,7 +55,7 @@ export function formatRelativeTime(dateStr: string): string {
 }
 
 export function formatTaskDate(dateStr: string): string {
-  if (!dateStr) return "—";
+  if (!dateStr) return "-";
   try {
     return new Date(dateStr).toLocaleDateString("en-US", {
       month: "short",

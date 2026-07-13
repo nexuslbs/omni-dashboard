@@ -18,7 +18,7 @@ let threadsOrder: "desc" | "asc" = "desc";
 
 // ── Date formatting ──
 export function formatDate(dateStr: string | null): string {
-  if (!dateStr) return "—";
+  if (!dateStr) return "-";
   try {
     return new Date(dateStr).toLocaleDateString("en-US", {
       month: "short",
@@ -124,7 +124,7 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
           </div>
           <div style="margin-bottom:0.75rem;">
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Mode</div>
-            <div style="color:var(--text-primary);">${job.mode ? escapeHtml(job.mode) : "—"}</div>
+            <div style="color:var(--text-primary);">${job.mode ? escapeHtml(job.mode) : "-"}</div>
           </div>
           ${
             job.mode === "action"
@@ -143,13 +143,13 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
           </div>
           <div style="margin-bottom:0.75rem;">
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Channel</div>
-            <div style="color:var(--text-primary);">${job.channel_name ? escapeHtml(job.channel_name) : job.channel_id ? `#${job.channel_id}` : "—"}</div>
+            <div style="color:var(--text-primary);">${job.channel_name ? escapeHtml(job.channel_name) : job.channel_id ? `#${job.channel_id}` : "-"}</div>
           </div>
         </div>
         <div>
           <div style="margin-bottom:0.75rem;">
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Profile</div>
-            <div style="color:var(--text-primary);">${job.profile ? escapeHtml(job.profile) : "—"}</div>
+            <div style="color:var(--text-primary);">${job.profile ? escapeHtml(job.profile) : "-"}</div>
           </div>
           <div style="margin-bottom:0.75rem;">
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Last Run</div>
@@ -164,7 +164,7 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
               ? `
           <div style="margin-bottom:0.75rem;">
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Action</div>
-            <div style="color:var(--accent-cyan);font-weight:500;">${escapeHtml(job.action_id ? `[${job.action_id}] ${job.action_name || "—"}` : "—")}</div>
+            <div style="color:var(--accent-cyan);font-weight:500;">${escapeHtml(job.action_id ? `[${job.action_id}] ${job.action_name || "-"}` : "-")}</div>
           </div>`
               : ""
           }
@@ -190,7 +190,7 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
       <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
         <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Action</div>
         <div style="background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:0.75rem;font-size:0.9rem;color:var(--accent-cyan);font-weight:500;">${escapeHtml(job.action_id ? `[${job.action_id}] ${job.action_name || ""}` : "")}</div>
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">This job runs without an agent — the scheduler executes the action directly.</div>
+        <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">This job runs without an agent - the scheduler executes the action directly.</div>
       </div>`
           : ""
       }
@@ -253,7 +253,7 @@ export async function loadScheduleThreads(scheduleId: string): Promise<void> {
     wireMessageCardToggles(el);
 
     // Wire thread links
-    // ── Thread link wrapping removed — native href in message-card.ts handles navigation ──
+    // ── Thread link wrapping removed - native href in message-card.ts handles navigation ──
 
     // Update pagination
     const currentPage = Math.floor(threadsOffset / threadsLimit) + 1;
@@ -413,18 +413,18 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
           <input id="cron-schedule" type="text" class="filter-input" value="${isEdit ? escapeHtml(job.schedule) : "0 0 * * *"}" style="width:100%;font-family:monospace;" />
           <div id="cron-help-box" style="display:none;margin-top:0.5rem;padding:0.75rem;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:6px;font-size:0.78rem;color:var(--text-secondary);line-height:1.6;">
             <div style="margin-bottom:0.5rem;padding:0.375rem 0.5rem;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.25);border-radius:4px;color:var(--accent-purple);font-size:0.75rem;">
-              ⚡ <strong>5-field format (no seconds field)</strong> — the system auto-prepends <code style="background:rgba(0,0,0,0.2);padding:0.125rem 0.25rem;border-radius:3px;">0</code> (second=0) internally. Do <em>not</em> include a seconds field.
+              ⚡ <strong>5-field format (no seconds field)</strong> - the system auto-prepends <code style="background:rgba(0,0,0,0.2);padding:0.125rem 0.25rem;border-radius:3px;">0</code> (second=0) internally. Do <em>not</em> include a seconds field.
             </div>
             <div style="margin-bottom:0.5rem;"><strong style="color:var(--text-primary);">Fields:</strong> <code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">min hour dom month dow</code></div>
             <div style="margin-top:0.5rem;"><strong style="color:var(--text-primary);">Special:</strong> <code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">*</code> = any, <code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">*/N</code> = every N, <code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">,</code> = list, <code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">-</code> = range</div>
             <div style="margin-top:0.5rem;"><strong style="color:var(--text-primary);">Examples:</strong></div>
-            <div><code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">* * * * *</code> — every minute</div>
-            <div><code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">*/10 * * * *</code> — every 10 minutes</div>
-            <div><code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">0 * * * *</code> — every hour at :00</div>
-            <div><code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">0 0 * * *</code> — daily at midnight</div>
-            <div><code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">30 6 * * *</code> — daily at 06:30</div>
-            <div><code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">0 9 * * 1-5</code> — weekdays at 09:00</div>
-            <div><code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">0 0 1 * *</code> — 1st of every month at midnight</div>
+            <div><code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">* * * * *</code> - every minute</div>
+            <div><code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">*/10 * * * *</code> - every 10 minutes</div>
+            <div><code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">0 * * * *</code> - every hour at :00</div>
+            <div><code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">0 0 * * *</code> - daily at midnight</div>
+            <div><code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">30 6 * * *</code> - daily at 06:30</div>
+            <div><code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">0 9 * * 1-5</code> - weekdays at 09:00</div>
+            <div><code style="color:var(--accent-cyan);background:rgba(0,0,0,0.2);padding:0.125rem 0.375rem;border-radius:3px;">0 0 1 * *</code> - 1st of every month at midnight</div>
           </div>
         </div>
         <div style="margin-bottom:1rem;">
@@ -642,7 +642,7 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
       </div>
       <div id="detail-action-buttons" style="display:flex;gap:0.5rem;">
         <button id="detail-run-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;">▶ Run</button>
-        <button id="detail-toggle-active" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;color:var(--text-secondary);">—</button>
+        <button id="detail-toggle-active" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;color:var(--text-secondary);">-</button>
         <button id="detail-edit-btn" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:var(--accent-purple);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;">Edit</button>
         <a href="/schedule" class="back-link" id="back-to-schedule" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);color:var(--accent-cyan);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.85rem;text-decoration:none;">← Back to Schedules</a>
       </div>
@@ -723,7 +723,7 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
       }
       const data = await res.json();
       (window as any).showToast?.(
-        data.thread_id != null ? `Job fired — thread #${data.thread_id}` : "Job fired (no thread created)",
+        data.thread_id != null ? `Job fired - thread #${data.thread_id}` : "Job fired (no thread created)",
         "success",
       );
     } catch (err) {

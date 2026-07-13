@@ -1,5 +1,5 @@
 /**
- * Main channels page — rendering, data loading, filter state management.
+ * Main channels page - rendering, data loading, filter state management.
  * Delegates to lib/channel-config.ts and lib/channel-status.ts.
  */
 import { apiGet, toCamelCase, type ChannelData, type PluginData } from "../lib/api";

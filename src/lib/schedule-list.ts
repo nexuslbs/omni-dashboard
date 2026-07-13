@@ -64,8 +64,8 @@ export async function loadCronJobs(
                       : escapeHtml(j.prompt_preview || "")
                   }
                 </td>
-                <td style="font-size:0.8rem;color:var(--text-muted);">${j.channel_name ? escapeHtml(j.channel_name) : j.channel_id ? `#${j.channel_id}` : "—"}</td>
-                <td style="font-size:0.8rem;color:var(--text-muted);">${j.profile ? escapeHtml(j.profile) : "—"}</td>
+                <td style="font-size:0.8rem;color:var(--text-muted);">${j.channel_name ? escapeHtml(j.channel_name) : j.channel_id ? `#${j.channel_id}` : "-"}</td>
+                <td style="font-size:0.8rem;color:var(--text-muted);">${j.profile ? escapeHtml(j.profile) : "-"}</td>
                 <td style="font-size:0.8rem;color:var(--text-muted);">${formatDate(j.last_run)}</td>
                 <td>
                   <span class="badge ${j.active ? "badge-success" : "badge-neutral"}" style="cursor:pointer;" title="Click to toggle">
@@ -133,7 +133,7 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
       runBtn.disabled = true;
       runBtn.textContent = "Running...";
 
-      // Check if job is inactive — ask for confirmation with force
+      // Check if job is inactive - ask for confirmation with force
       const jobRes = await fetch(`/api/schedule/${encodeURIComponent(cronId)}`);
       const job = jobRes.ok ? await jobRes.json() : null;
       let force = false;
@@ -159,7 +159,7 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
         }
         const data = await res.json();
         (window as any).showToast?.(
-          data.thread_id != null ? `Job fired — thread #${data.thread_id}` : `Job fired (no thread created)`,
+          data.thread_id != null ? `Job fired - thread #${data.thread_id}` : `Job fired (no thread created)`,
           "success",
         );
       } catch (e) {

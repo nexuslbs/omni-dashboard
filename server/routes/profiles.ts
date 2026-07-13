@@ -172,7 +172,7 @@ profilesRouter.get("/", async (_req, res) => {
   }
 });
 
-// POST /api/profiles — create a new profile
+// POST /api/profiles - create a new profile
 profilesRouter.post("/", async (req, res) => {
   try {
     const { name, provider, model } = req.body as any;
@@ -232,7 +232,7 @@ profilesRouter.post("/", async (req, res) => {
   }
 });
 
-// PATCH /api/profiles/:name — update profile config.json fields
+// PATCH /api/profiles/:name - update profile config.json fields
 profilesRouter.patch("/:name", (req, res) => {
   try {
     const { name } = req.params;

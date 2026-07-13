@@ -1,5 +1,5 @@
 /**
- * Custom floating dropdown — replaces native <select> with a dark-themed dropdown
+ * Custom floating dropdown - replaces native <select> with a dark-themed dropdown
  * appended to document.body to escape backdrop-filter stacking contexts.
  *
  * Usage:
