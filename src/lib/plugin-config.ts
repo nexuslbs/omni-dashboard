@@ -1,6 +1,6 @@
 import { escapeHtml } from "./helpers";
 import { apiGet } from "./api";
-import { enhanceSelectElement } from "./dropdown";
+import { enhanceSelectElement, syncSelectDisplay } from "./dropdown";
 import { copyButtonHTML, toggleButtonHTML } from "./secret-buttons";
 import type { ConfigField } from "./api";
 
@@ -494,6 +494,8 @@ export function wireRefToggles(): void {
           if (name === currentVal) opt.selected = true;
           select.appendChild(opt);
         }
+        // Sync enhanced select display after programmatic options update
+        if (select.id) syncSelectDisplay(select.id);
       });
     } catch {
       // Secrets not available: leave selects with placeholder only
