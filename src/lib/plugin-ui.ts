@@ -390,7 +390,10 @@ export function renderPluginConfig(p: PluginData): string {
         return renderConfigFieldV2(field, value, p.name);
       })
       .join("")}
-    <button type="button" class="plugin-save-btn" style="margin-top:0.5rem;background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:6px;padding:0.3rem 0.75rem;cursor:pointer;font-size:0.8rem;color:#22d3ee;">Save</button>
+    <div style="display:flex;gap:0.5rem;margin-top:0.5rem;">
+      <button type="button" class="plugin-save-btn" style="background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:6px;padding:0.3rem 0.75rem;cursor:pointer;font-size:0.8rem;color:#22d3ee;">Save</button>
+      <button type="button" class="plugin-discard-btn" style="display:none;background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.3rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);">Discard</button>
+    </div>
   </div>`;
 }
 

@@ -78,12 +78,14 @@ export function renderConfigField(
       inputHtml = `
         <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;">
           <input type="hidden" class="plugin-config-input" data-key="${escapeHtml(field.key)}" value="${escapeHtml(strVal)}" />
-          <input type="tel" id="${fieldId}" class="filter-input setting-input ref-literal-input"
-            value="${escapeHtml(literalVal)}" inputmode="numeric" pattern="-?[0-9]*[.]?[0-9]*" data-key="${escapeHtml(field.key)}"
-            ${field.min !== undefined ? `min="${field.min}"` : ""}
-            ${field.max !== undefined ? `max="${field.max}"` : ""}
-            style="flex:1;max-width:120px;display:${isRef ? "none" : "block"};" />
-          ${copyButtonHTML(fieldId)}
+          <div class="ref-literal-mode" style="display:${isRef ? "none" : "flex"};flex:1;gap:0.25rem;align-items:center;">
+            <input type="tel" id="${fieldId}" class="filter-input setting-input ref-literal-input"
+              value="${escapeHtml(literalVal)}" inputmode="numeric" pattern="-?[0-9]*[.]?[0-9]*" data-key="${escapeHtml(field.key)}"
+              ${field.min !== undefined ? `min="${field.min}"` : ""}
+              ${field.max !== undefined ? `max="${field.max}"` : ""}
+              style="flex:1;max-width:120px;" />
+            ${copyButtonHTML(fieldId)}
+          </div>
           <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
             <select class="ref-type-select filter-select setting-input" data-key="${escapeHtml(field.key)}">
               <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
@@ -164,9 +166,7 @@ export function renderConfigField(
             <option value="">N/A</option>
             ${options.join("")}
           </select>
-          <button type="button" class="plugin-refresh-models-btn setting-icon-btn" title="Refresh models" data-plugin-config="true" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}">
-            ⟳
-          </button>
+          <button type="button" class="plugin-refresh-models-btn" title="Refresh models" data-plugin-config="true" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.85rem;color:#22d3ee;white-space:nowrap;line-height:1;">⟳</button>
         </div>`;
       break;
     }
@@ -182,10 +182,12 @@ export function renderConfigField(
       inputHtml = `
         <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;">
           <input type="hidden" class="plugin-config-input" data-key="${escapeHtml(field.key)}" value="${escapeHtml(strVal)}" />
-          <input type="text" id="${fieldId}" class="filter-input setting-input ref-literal-input"
-            value="${escapeHtml(literalVal)}" data-key="${escapeHtml(field.key)}" placeholder="Literal value..."
-            style="flex:1;display:${isRef ? "none" : "block"};" />
-          ${copyButtonHTML(fieldId)}
+          <div class="ref-literal-mode" style="display:${isRef ? "none" : "flex"};flex:1;gap:0.25rem;align-items:center;">
+            <input type="text" id="${fieldId}" class="filter-input setting-input ref-literal-input"
+              value="${escapeHtml(literalVal)}" data-key="${escapeHtml(field.key)}" placeholder="Literal value..."
+              style="flex:1;" />
+            ${copyButtonHTML(fieldId)}
+          </div>
           <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
             <select class="ref-type-select filter-select setting-input" data-key="${escapeHtml(field.key)}">
               <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
@@ -281,6 +283,7 @@ export function renderPluginConfig(options: RenderPluginConfigOptions): string {
       ${fieldsHtml}
       <div style="display:flex;gap:0.5rem;margin-top:1rem;padding-top:0.75rem;">
         <button type="button" class="plugin-save-btn btn-primary" style="background:var(--accent-purple);border:none;color:white;border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;">Save Config</button>
+        <button type="button" class="plugin-discard-btn" style="display:none;background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);">Discard</button>
         <button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);">${status === "enabled" ? "Disable" : "Enable"}</button>
         ${extraButtons}
       </div>

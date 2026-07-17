@@ -355,6 +355,32 @@ function wirePage(type: PluginPageType): void {
     dirtyCheckSaveButton(formEl as HTMLElement, pluginName, savedConfigs);
   });
 
+  // Discard buttons: revert all fields to the saved (original) config
+  document.querySelectorAll(".plugin-discard-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const formEl = (btn as HTMLElement).closest(".plugin-config-form") as HTMLElement;
+      if (!formEl) return;
+      const card = formEl.closest(".card") as HTMLElement;
+      const pluginName = card?.getAttribute("data-plugin-name");
+      if (!pluginName) return;
+      const saved = savedConfigs.get(pluginName);
+      if (!saved) return;
+      // Restore each field from saved config
+      formEl.querySelectorAll(".plugin-config-input").forEach((input) => {
+        const el = input as HTMLInputElement | HTMLSelectElement;
+        const key = el.getAttribute("data-key");
+        if (!key) return;
+        if (el.type === "checkbox") {
+          el.checked = !!saved[key];
+        } else {
+          el.value = saved[key] !== undefined ? String(saved[key]) : "";
+        }
+      });
+      // Re-evaluate dirty state
+      dirtyCheckSaveButton(formEl, pluginName, savedConfigs);
+    });
+  });
+
   // Enhance native select elements to styled custom dropdowns
   document.querySelectorAll(".plugin-config-form select.plugin-config-input[data-key]").forEach((el) => {
     enhanceSelectElement(el as HTMLSelectElement);
