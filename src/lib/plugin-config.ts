@@ -22,18 +22,6 @@ export function renderConfigField(
     ? `<div class="setting-description">${escapeHtml(field.description)}</div>`
     : "";
 
-  // If value is an env/secret ref ($env: or $secret:) on a non-string/non-secret type,
-  // render as string type so the ref-toggle controls appear instead of showing the
-  // raw ref string in a numeric/boolean/enum input.
-  const rawVal = String(value ?? "");
-  if (
-    (rawVal.startsWith("$env:") || rawVal.startsWith("$secret:")) &&
-    field.type !== "string" &&
-    field.type !== "secret"
-  ) {
-    field = { ...field, type: "string" };
-  }
-
   let inputHtml: string;
 
   switch (field.type) {
@@ -79,15 +67,40 @@ export function renderConfigField(
         </label>
       `;
       break;
-    case "integer":
+    case "integer": {
+      const strVal = String(value ?? "");
+      const isSecretRef = strVal.startsWith("$secret:");
+      const isEnvRef = strVal.startsWith("$env:");
+      const isRef = isSecretRef || isEnvRef;
+      const refType = isEnvRef ? "env" : "secret";
+      const refName = isRef ? strVal.substring(strVal.indexOf(":") + 1) : "";
+      const literalVal = isRef ? "" : strVal;
       inputHtml = `
-        <input type="tel" id="${fieldId}" class="filter-input setting-input plugin-config-input"
-          value="${escapeHtml(String(value ?? ""))}" inputmode="numeric" pattern="-?[0-9]*[.]?[0-9]*" data-key="${escapeHtml(field.key)}"
-          ${field.min !== undefined ? `min="${field.min}"` : ""}
-          ${field.max !== undefined ? `max="${field.max}"` : ""}
-          style="max-width:120px;" />
+        <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;">
+          <input type="hidden" class="plugin-config-input" data-key="${escapeHtml(field.key)}" value="${escapeHtml(strVal)}" />
+          <input type="tel" id="${fieldId}" class="filter-input setting-input ref-literal-input"
+            value="${escapeHtml(literalVal)}" inputmode="numeric" pattern="-?[0-9]*[.]?[0-9]*" data-key="${escapeHtml(field.key)}"
+            ${field.min !== undefined ? `min="${field.min}"` : ""}
+            ${field.max !== undefined ? `max="${field.max}"` : ""}
+            style="flex:1;max-width:120px;display:${isRef ? "none" : "block"};" />
+          ${copyButtonHTML(fieldId)}
+          <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
+            <select class="ref-type-select filter-select setting-input" data-key="${escapeHtml(field.key)}">
+              <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
+              <option value="env" ${refType === "env" ? "selected" : ""}>Env Var</option>
+            </select>
+            <input type="text" class="ref-name-input ref-name-text filter-input" data-key="${escapeHtml(field.key)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:2;min-width:200px;display:${isRef && refType === "env" ? "block" : "none"};" />
+            <select class="ref-name-input ref-name-select filter-select setting-input" data-key="${escapeHtml(field.key)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
+              <option value="">Select secret...</option>
+            </select>
+            ${copyButtonHTML(fieldId)}
+            ${toggleButtonHTML(fieldId)}
+          </div>
+          <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
+        </div>
       `;
       break;
+    }
     case "enum": {
       const hasDefault = field.default !== undefined && field.default !== null && field.default !== "";
       const showDefault = !value && hasDefault;
