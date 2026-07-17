@@ -490,12 +490,11 @@ export function wireRefToggles(): void {
   document.querySelectorAll(".ref-name-select").forEach((el) => {
     el.addEventListener("change", (e) => updateHiddenFromRef(e));
   });
-
   // Fetch secrets and populate all secret selects
   void (async () => {
     try {
       const response = await apiGet<any>("/secrets");
-      const secrets: any[] = response.data || [];
+      const secrets: any[] = Array.isArray(response) ? response : response?.data || [];
       const secretNames = secrets.map((s: any) => s.name);
       document.querySelectorAll(".ref-name-select").forEach((sel) => {
         const select = sel as HTMLSelectElement;
