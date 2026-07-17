@@ -5,6 +5,8 @@ import { getCurrentConfig, dirtyCheckSaveButton, wireRefToggles } from "./plugin
 import { renderPluginCard, wirePluginButtons, showInstallModal } from "./plugin-ui";
 import { wireCopyButtons, wireToggleButtons } from "./secret-buttons";
 
+const RELOAD_URL = "/api/reload";
+
 // ── Per-type config ──
 
 export type PluginPageType = "tool" | "platform" | "provider";
@@ -111,6 +113,7 @@ export function createPluginPage(cfg: PluginPageConfig) {
           <p class="page-subtitle">${subtitle}</p>
         </div>
         <button id="${abId}" class="btn-primary" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ Add</button>
+        <button id="btn-reload-plugins" class="btn-secondary" title="Reload all plugins from disk configuration" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;color:var(--text-secondary);">⟳ Reload</button>
       </div>
       <div class="filter-bar" id="${fbId}">
         <div class="filter-section">
@@ -149,6 +152,30 @@ export function createPluginPage(cfg: PluginPageConfig) {
     `;
 
     document.getElementById(abId)?.addEventListener("click", () => showInstallModal(type));
+
+    // Wire reload button
+    const reloadBtn = document.getElementById("btn-reload-plugins");
+    if (reloadBtn) {
+      reloadBtn.addEventListener("click", async () => {
+        reloadBtn.textContent = "⟳ Reloading...";
+        (reloadBtn as HTMLButtonElement).disabled = true;
+        try {
+          const resp = await fetch(RELOAD_URL, { method: "POST" });
+          const data = await resp.json();
+          if (data.success) {
+            // Re-fetch and re-render all plugins
+            await loadPage(type, cfg);
+          } else {
+            alert(`Reload failed: ${data.error || "Unknown error"}`);
+          }
+        } catch (e: any) {
+          alert(`Reload request failed: ${e.message}`);
+        } finally {
+          reloadBtn.textContent = "⟳ Reload";
+          (reloadBtn as HTMLButtonElement).disabled = false;
+        }
+      });
+    }
 
     // Restore filter state from URL and set input values
     currentSource = "all";

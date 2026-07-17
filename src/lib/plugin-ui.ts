@@ -54,7 +54,7 @@ export function renderPluginCard(
           <span class="badge badge-neutral" style="margin-left:0.125rem;">${p.source === "built-in" ? "built-in tool" : `source: ${escapeHtml(p.source)}`}</span>
           ${hasTools ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">${pluginTools!.length} tool${pluginTools!.length > 1 ? "s" : ""}</span>` : ""}
           ${renderActionButtons(p, hasRemote, hasCompilableSource)}
-          ${!p.needsBuild && p.status === "enabled" ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : !p.needsBuild && (p.status === "disabled" || p.status === "error") ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>` : ""}
+          ${!p.needsBuild && p.status === "enabled" ? `<button type="button" class="plugin-restart-btn" title="Restart this plugin (disable + enable cycle)" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;margin-right:0.25rem;">⟳</button><button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : !p.needsBuild && (p.status === "disabled" || p.status === "error") ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>` : ""}
           <button type="button" class="plugin-expand-btn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0.25rem;font-size:1rem;" title="Toggle config">▶</button>
         </span>
       </div>
@@ -308,6 +308,28 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
         (btn as HTMLButtonElement).disabled = false;
         // Refresh state: backend may have rolled back (e.g., enabling
         // bundled source failed and reverted to the old source).
+        loadFn();
+      }
+    });
+  });
+
+  // Restart buttons
+  document.querySelectorAll(".plugin-restart-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const card = (btn as HTMLElement).closest(".card") as HTMLElement;
+      const pluginName = card?.getAttribute("data-plugin-name");
+      if (!pluginName) return;
+      const originalText = btn.textContent || "";
+      btn.textContent = "⟳...";
+      (btn as HTMLButtonElement).disabled = true;
+      try {
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/restart`, {});
+        (window as any).showToast?.(`${pluginName} restarted`, "success");
+        loadFn();
+      } catch (e) {
+        (window as any).showToast?.("Restart failed: " + formatApiError(e), "error");
+        btn.textContent = originalText;
+        (btn as HTMLButtonElement).disabled = false;
         loadFn();
       }
     });
