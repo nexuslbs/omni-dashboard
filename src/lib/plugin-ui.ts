@@ -72,7 +72,7 @@ export function renderPluginCard(
 export function renderActionButtons(
   p: PluginData,
   _hasRemote?: boolean,
-  hasCompilableSource?: boolean,
+  _hasCompilableSource?: boolean,
 ): string {
   const isBuiltin = p.source === "built-in";
   const isRemote = p.source === "remote";

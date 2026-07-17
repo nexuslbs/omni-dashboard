@@ -1,7 +1,7 @@
 import { apiGet, apiPut, type SettingCategory } from "../lib/api";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 import { escapeHtml, formatApiError } from "../lib/helpers";
-import { copyButtonHTML, toggleButtonHTML, COPY_SVG, EYE_SVG, EYE_OFF_SVG } from "../lib/secret-buttons";
+import { copyButtonHTML, toggleButtonHTML } from "../lib/secret-buttons";
 
 export function renderSettings(container: HTMLElement): void {
   container.innerHTML = `
@@ -173,12 +173,12 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
             return `<option value="${escapeHtml(optId)}"${optId === value ? " selected" : ""}>${escapeHtml(optLabel)}</option>`;
           })
           .join("");
-        // If current value doesn't match any option, add a hidden disabled option
-        // so the select shows the actual current value, not a wrong one
+        // If current value doesn't match any option, add it as a visible selected option
+        // so $secret:NAME and $env:NAME references are shown rather than a blank select
         const hasValue = (meta.options || []).some((o: any) => (o.id || o.value) === value);
         const valueFallback = hasValue
           ? ""
-          : `<option value="${escapeHtml(value)}" disabled selected style="display:none">${escapeHtml(value)}</option>`;
+          : `<option value="${escapeHtml(value)}" selected>${escapeHtml(value)}</option>`;
         inputHtml = `
           <select id="${inputId}" class="filter-select setting-input"
             data-name="${escapeHtml(name)}" data-original="${escapeHtml(value)}">

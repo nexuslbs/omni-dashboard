@@ -1,7 +1,7 @@
 import { escapeHtml } from "./helpers";
 import { apiGet } from "./api";
 import { enhanceSelectElement } from "./dropdown";
-import { copyButtonHTML, toggleButtonHTML, wireCopyButtons, wireToggleButtons } from "./secret-buttons";
+import { copyButtonHTML, toggleButtonHTML } from "./secret-buttons";
 import type { ConfigField } from "./api";
 
 /**
@@ -23,6 +23,15 @@ export function renderConfigField(
     : "";
 
   let inputHtml: string;
+
+  /**
+   * If the current value doesn't match any option in allowed_values,
+   * return a visible selected option showing the value (e.g. $secret:NAME).
+   */
+  function fallbackOption(value: string, allowed: string[] | undefined): string {
+    if (!value || (allowed || []).includes(value)) return "";
+    return `<option value="${escapeHtml(value)}" selected>${escapeHtml(value)}</option>`;
+  }
 
   switch (field.type) {
     case "secret": {
@@ -113,6 +122,7 @@ export function renderConfigField(
               ? `<option value="" selected>- (Default: ${escapeHtml(String(field.default))}) -</option>`
               : `<option value="">Select...</option>`
           }
+          ${fallbackOption(String(value ?? ""), field.allowed_values)}
           ${(field.allowed_values || [])
             .map(
               (opt) =>
@@ -151,6 +161,7 @@ export function renderConfigField(
       inputHtml = `
         <select id="${fieldId}" class="plugin-config-input filter-input" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}">
           <option value="">N/A</option>
+          ${fallbackOption(String(value ?? ""), field.allowed_values)}
           ${options.join("")}
         </select>`;
       break;
@@ -164,6 +175,7 @@ export function renderConfigField(
         <div style="display:flex;gap:0.25rem;align-items:center;flex:1;">
           <select id="${fieldId}" class="plugin-config-input filter-input" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}" style="flex:1;">
             <option value="">N/A</option>
+            ${fallbackOption(String(value ?? ""), field.allowed_values)}
             ${options.join("")}
           </select>
           <button type="button" class="plugin-refresh-models-btn" title="Refresh models" data-plugin-config="true" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.85rem;color:#22d3ee;white-space:nowrap;line-height:1;">⟳</button>
