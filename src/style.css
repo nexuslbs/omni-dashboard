@@ -4803,6 +4803,9 @@ a.thread-row {
   font-size: 0.8125rem;
   color: var(--text-secondary);
   border: 1px solid var(--glass-border);
+  word-break: break-all;
+  overflow-wrap: break-word;
+  max-width: 100%;
 }
 
 .setting-lock-icon {
