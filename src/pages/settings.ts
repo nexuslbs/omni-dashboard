@@ -89,9 +89,7 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
 
   // Strip $secret: or $env: prefix for display, keeping full value intact
   function displayLabel(v: string): string {
-    return v.startsWith("$secret:") || v.startsWith("$env:")
-      ? v.substring(v.indexOf(":") + 1)
-      : v;
+    return v.startsWith("$secret:") || v.startsWith("$env:") ? v.substring(v.indexOf(":") + 1) : v;
   }
 
   let inputHtml: string;
@@ -119,10 +117,12 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
         inputHtml = `
           <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;">
             <input type="hidden" class="setting-input" data-name="${escapeHtml(name)}" data-original="${escapeHtml(strVal)}" value="${escapeHtml(strVal)}" />
-            <input type="tel" id="${inputId}" class="filter-input setting-input ref-literal-input"
-              value="${escapeHtml(literalVal)}" inputmode="numeric" pattern="[0-9.]*"
-              data-name="${escapeHtml(name)}" data-original="${escapeHtml(literalVal)}" style="flex:1;display:${isRef ? "none" : "block"};" />
-            ${copyButtonHTML(inputId)}
+            <div class="ref-literal-mode" style="display:${isRef ? "none" : "flex"};flex:1;gap:0.25rem;align-items:center;">
+              <input type="tel" id="${inputId}" class="filter-input setting-input ref-literal-input"
+                value="${escapeHtml(literalVal)}" inputmode="numeric" pattern="[0-9.]*"
+                data-name="${escapeHtml(name)}" data-original="${escapeHtml(literalVal)}" style="flex:1;" />
+              ${copyButtonHTML(inputId)}
+            </div>
             <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
               <select class="ref-type-select filter-select setting-input" data-name="${escapeHtml(name)}">
                 <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
@@ -131,9 +131,11 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
               <input type="text" class="ref-name-input ref-name-text filter-input" data-name="${escapeHtml(name)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:2;min-width:200px;display:${isRef && refType === "env" ? "block" : "none"};" />
               <select class="ref-name-input ref-name-select filter-select setting-input" data-name="${escapeHtml(name)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
                 <option value="">Select secret...</option>
+                ${isRef && refType === "secret" && refName ? `<option value="${escapeHtml(refName)}" selected>${escapeHtml(refName)}</option>` : ""}
               </select>
+              ${copyButtonHTML(inputId)}
             </div>
-            <button type="button" class="ref-toggle-btn" data-name="${escapeHtml(name)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "✏️" : "🔗"}</button>
+            <button type="button" class="ref-toggle-btn" data-name="${escapeHtml(name)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           </div>
         `;
         break;
@@ -173,7 +175,9 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
               <input type="text" class="ref-name-input ref-name-text filter-input" data-name="${escapeHtml(name)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:2;min-width:200px;display:${isRef && refType === "env" ? "block" : "none"};" />
               <select class="ref-name-input ref-name-select filter-select setting-input" data-name="${escapeHtml(name)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
                 <option value="">Select secret...</option>
+                ${isRef && refType === "secret" && refName ? `<option value="${escapeHtml(refName)}" selected>${escapeHtml(refName)}</option>` : ""}
               </select>
+              ${copyButtonHTML(inputId)}
             </div>
             <button type="button" class="ref-toggle-btn" data-name="${escapeHtml(name)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           </div>
@@ -220,10 +224,12 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
         inputHtml = `
           <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;">
             <input type="hidden" class="setting-input" data-name="${escapeHtml(name)}" data-original="${escapeHtml(strVal)}" value="${escapeHtml(strVal)}" />
-            <input type="text" id="${inputId}" class="filter-input setting-input ref-literal-input"
-              value="${escapeHtml(literalVal)}"
-              data-name="${escapeHtml(name)}" data-original="${escapeHtml(literalVal)}" style="flex:1;display:${isRef ? "none" : "block"};" />
-            ${copyButtonHTML(inputId)}
+            <div class="ref-literal-mode" style="display:${isRef ? "none" : "flex"};flex:1;gap:0.25rem;align-items:center;">
+              <input type="text" id="${inputId}" class="filter-input setting-input ref-literal-input"
+                value="${escapeHtml(literalVal)}"
+                data-name="${escapeHtml(name)}" data-original="${escapeHtml(literalVal)}" style="flex:1;" />
+              ${copyButtonHTML(inputId)}
+            </div>
             <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
               <select class="ref-type-select filter-select setting-input" data-name="${escapeHtml(name)}">
                 <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
@@ -232,7 +238,9 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
               <input type="text" class="ref-name-input ref-name-text filter-input" data-name="${escapeHtml(name)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:2;min-width:200px;display:${isRef && refType === "env" ? "block" : "none"};" />
               <select class="ref-name-input ref-name-select filter-select setting-input" data-name="${escapeHtml(name)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
                 <option value="">Select secret...</option>
+                ${isRef && refType === "secret" && refName ? `<option value="${escapeHtml(refName)}" selected>${escapeHtml(refName)}</option>` : ""}
               </select>
+              ${copyButtonHTML(inputId)}
             </div>
             <button type="button" class="ref-toggle-btn" data-name="${escapeHtml(name)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           </div>
@@ -420,14 +428,20 @@ function wireSettings(): void {
         const nameSelect = refControls.querySelector(".ref-name-select") as HTMLSelectElement;
         const prefix = select.value === "secret" ? "$secret:" : "$env:";
         const isSecretMode = select.value === "secret";
+        // Preserve current ref values from hidden input when available
+        const hv = hiddenInput.value;
+        const currentSecret = hv.startsWith("$secret:") ? hv.substring(8) : "";
+        const currentEnv = hv.startsWith("$env:") ? hv.substring(5) : "";
         if (nameText) {
           nameText.style.display = isSecretMode ? "none" : "block";
-          nameText.value = "";
+          nameText.value = !isSecretMode && currentEnv ? currentEnv : "";
         }
         if (nameSelect) {
-          nameSelect.value = "";
+          nameSelect.value = currentSecret || "";
           const wrapper = nameSelect.nextElementSibling as HTMLElement | null;
           if (wrapper && wrapper.classList.contains("custom-select")) {
+            const textEl = wrapper.querySelector(".select-trigger-text") as HTMLElement | null;
+            if (textEl) textEl.textContent = currentSecret || "Select secret...";
             wrapper.style.display = isSecretMode ? "block" : "none";
           } else {
             nameSelect.style.display = isSecretMode ? "block" : "none";
@@ -539,7 +553,9 @@ function wireSettings(): void {
         const container = select.closest(".ref-toggle-container");
         let secretName = "";
         if (container) {
-          const hiddenInput = container.querySelector(".setting-input[type=\"hidden\"]") as HTMLInputElement | null;
+          const hiddenInput = container.querySelector(
+            '.setting-input[type="hidden"]',
+          ) as HTMLInputElement | null;
           if (hiddenInput) {
             const hv = hiddenInput.value;
             secretName = hv.startsWith("$secret:") ? hv.substring(8) : "";

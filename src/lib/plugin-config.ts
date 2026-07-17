@@ -68,9 +68,9 @@ export function renderConfigField(
             <input type="text" class="ref-name-input ref-name-text filter-input" data-key="${escapeHtml(field.key)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:2;min-width:200px;display:${isRef && refType === "env" ? "block" : "none"};" />
             <select class="ref-name-input ref-name-select filter-select setting-input" data-key="${escapeHtml(field.key)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
               <option value="">Select secret...</option>
+              ${isRef && refType === "secret" && refName ? `<option value="${escapeHtml(refName)}" selected>${escapeHtml(refName)}</option>` : ""}
             </select>
             ${copyButtonHTML(fieldId)}
-            ${toggleButtonHTML(fieldId)}
           </div>
           <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
         </div>
@@ -112,9 +112,9 @@ export function renderConfigField(
             <input type="text" class="ref-name-input ref-name-text filter-input" data-key="${escapeHtml(field.key)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:2;min-width:200px;display:${isRef && refType === "env" ? "block" : "none"};" />
             <select class="ref-name-input ref-name-select filter-select setting-input" data-key="${escapeHtml(field.key)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
               <option value="">Select secret...</option>
+              ${isRef && refType === "secret" && refName ? `<option value="${escapeHtml(refName)}" selected>${escapeHtml(refName)}</option>` : ""}
             </select>
             ${copyButtonHTML(fieldId)}
-            ${toggleButtonHTML(fieldId)}
           </div>
           <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
         </div>
@@ -217,9 +217,9 @@ export function renderConfigField(
             <input type="text" class="ref-name-input ref-name-text filter-input" data-key="${escapeHtml(field.key)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:2;min-width:200px;display:${isRef && refType === "env" ? "block" : "none"};" />
             <select class="ref-name-input ref-name-select filter-select setting-input" data-key="${escapeHtml(field.key)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
               <option value="">Select secret...</option>
+              ${isRef && refType === "secret" && refName ? `<option value="${escapeHtml(refName)}" selected>${escapeHtml(refName)}</option>` : ""}
             </select>
             ${copyButtonHTML(fieldId)}
-            ${toggleButtonHTML(fieldId)}
           </div>
           <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
         </div>
@@ -422,21 +422,27 @@ export function wireRefToggles(): void {
         const prefix = select.value === "secret" ? "$secret:" : "$env:";
         // Show the appropriate input based on ref type
         const isSecretMode = select.value === "secret";
+        // Preserve current ref values from hidden input when available
+        const hv = hiddenInput.value;
+        const currentSecret = hv.startsWith("$secret:") ? hv.substring(8) : "";
+        const currentEnv = hv.startsWith("$env:") ? hv.substring(5) : "";
         if (nameText) {
           nameText.style.display = isSecretMode ? "none" : "block";
-          nameText.value = "";
+          nameText.value = !isSecretMode && currentEnv ? currentEnv : "";
         }
         if (nameSelect) {
+          nameSelect.value = currentSecret || "";
           // Don't toggle native select: enhanceSelectElement hides it permanently.
           // Toggle the enhanced wrapper instead.
           const wrapper = nameSelect.nextElementSibling as HTMLElement | null;
           const isEnhanced = wrapper && wrapper.classList.contains("custom-select");
           if (isEnhanced) {
+            const textEl = wrapper.querySelector(".select-trigger-text") as HTMLElement | null;
+            if (textEl) textEl.textContent = currentSecret || "Select secret...";
             wrapper.style.display = isSecretMode ? "block" : "none";
           } else {
             nameSelect.style.display = isSecretMode ? "block" : "none";
           }
-          nameSelect.value = "";
         }
         const activeInput = isSecretMode ? nameSelect : nameText;
         hiddenInput.value = prefix + (activeInput ? activeInput.value : "");
@@ -497,7 +503,9 @@ export function wireRefToggles(): void {
         const container = select.closest(".ref-toggle-container");
         let secretName = "";
         if (container) {
-          const hiddenInput = container.querySelector(".plugin-config-input[type=\"hidden\"]") as HTMLInputElement | null;
+          const hiddenInput = container.querySelector(
+            '.plugin-config-input[type="hidden"]',
+          ) as HTMLInputElement | null;
           if (hiddenInput) {
             const hv = hiddenInput.value;
             secretName = hv.startsWith("$secret:") ? hv.substring(8) : "";
