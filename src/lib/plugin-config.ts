@@ -25,12 +25,21 @@ export function renderConfigField(
   let inputHtml: string;
 
   /**
+   * Strip $secret: or $env: prefix for display, keeping the full value intact.
+   */
+  function displayLabel(value: string): string {
+    return value.startsWith("$secret:") || value.startsWith("$env:")
+      ? value.substring(value.indexOf(":") + 1)
+      : value;
+  }
+
+  /**
    * If the current value doesn't match any option in allowed_values,
-   * return a visible selected option showing the value (e.g. $secret:NAME).
+   * return a visible selected option showing the secret/env name (without the $secret:/$env: prefix).
    */
   function fallbackOption(value: string, allowed: string[] | undefined): string {
     if (!value || (allowed || []).includes(value)) return "";
-    return `<option value="${escapeHtml(value)}" selected>${escapeHtml(value)}</option>`;
+    return `<option value="${escapeHtml(value)}" selected>${escapeHtml(displayLabel(value))}</option>`;
   }
 
   switch (field.type) {

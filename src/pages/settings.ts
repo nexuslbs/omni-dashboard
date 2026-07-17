@@ -75,6 +75,13 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
   const inputId = `setting-${escapeHtml(name)}`;
   const safeName = CSS.escape(name);
 
+  // Strip $secret: or $env: prefix for display, keeping full value intact
+  function displayLabel(v: string): string {
+    return v.startsWith("$secret:") || v.startsWith("$env:")
+      ? v.substring(v.indexOf(":") + 1)
+      : v;
+  }
+
   let inputHtml: string;
 
   if (isReadonly) {
@@ -178,7 +185,7 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
         const hasValue = (meta.options || []).some((o: any) => (o.id || o.value) === value);
         const valueFallback = hasValue
           ? ""
-          : `<option value="${escapeHtml(value)}" selected>${escapeHtml(value)}</option>`;
+          : `<option value="${escapeHtml(value)}" selected>${escapeHtml(displayLabel(value))}</option>`;
         inputHtml = `
           <select id="${inputId}" class="filter-select setting-input"
             data-name="${escapeHtml(name)}" data-original="${escapeHtml(value)}">
