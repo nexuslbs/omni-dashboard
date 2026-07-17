@@ -1,6 +1,7 @@
 import { escapeHtml } from "./helpers";
 import { apiGet } from "./api";
 import { enhanceSelectElement } from "./dropdown";
+import { wireCopyButtons, wireToggleButtons } from "./secret-buttons";
 import type { ConfigField } from "./api";
 
 /**
@@ -38,18 +39,8 @@ export function renderConfigField(
           <div class="ref-literal-mode" style="display:${isRef ? "none" : "flex"};flex:1;gap:0.25rem;align-items:center;">
             <input type="password" id="${fieldId}" class="filter-input setting-input setting-secret-input ref-literal-input"
               value="${escapeHtml(literalVal)}" data-key="${escapeHtml(field.key)}" style="flex:1;" />
-            <button type="button" class="setting-secret-copy" title="Copy to clipboard" data-target="${fieldId}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-                <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-              </svg>
-            </button>
-            <button type="button" class="setting-secret-toggle" title="Toggle visibility" data-target="${fieldId}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-            </button>
+            ${copyButtonHTML(fieldId)}
+            ${toggleButtonHTML(fieldId)}
           </div>
           <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
             <select class="ref-type-select filter-select setting-input" data-key="${escapeHtml(field.key)}">
@@ -167,12 +158,7 @@ export function renderConfigField(
           <input type="text" id="${fieldId}" class="filter-input setting-input ref-literal-input"
             value="${escapeHtml(literalVal)}" data-key="${escapeHtml(field.key)}" placeholder="Literal value..."
             style="flex:1;display:${isRef ? "none" : "block"};" />
-          <button type="button" class="setting-secret-copy" title="Copy to clipboard" data-target="${fieldId}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"/>
-              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>
-            </svg>
-          </button>
+          ${copyButtonHTML(fieldId)}
           <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
             <select class="ref-type-select filter-select setting-input" data-key="${escapeHtml(field.key)}">
               <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
