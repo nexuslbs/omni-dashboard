@@ -261,7 +261,7 @@ export function renderPluginConfig(options: RenderPluginConfigOptions): string {
         ? envVal
         : values[field.key] !== undefined
           ? values[field.key]
-          : (field.default ?? "");
+          : "";
       const envBadge = isFromEnv
         ? '<span class="badge badge-info" style="margin-left:0.375rem;font-size:0.65rem;vertical-align:middle;">env</span>'
         : "";

@@ -77,9 +77,11 @@ export function renderActionButtons(
   const isBuiltin = p.source === "built-in";
   const isRemote = p.source === "remote";
   const isInstalled = !p.needsBuild;
-  // Only compiled languages (Rust, Go, etc.) should show Reinstall/Uninstall.
-  // Scripts (Python, JS, shell) use Update/Remove instead.
-  const isCompilable = !p.isScript && !!p.hasSourceCode && (p.language === "Rust" || p.language === "Go");
+  // A plugin is compilable (needs cargo build etc.) when it has source code
+  // AND the server reports it's not a script. Scripts (Python, JS, shell) are
+  // installed by copying files — no compilation needed. The server determines
+  // isScript based on build system files (Cargo.toml, package.json, pyproject.toml).
+  const isCompilable = !p.isScript && !!p.hasSourceCode;
   // Remote plugins that haven't been downloaded yet (no source code on disk)
   const needsDownload = isRemote && !p.hasSourceCode;
 
@@ -384,7 +386,7 @@ export function renderPluginConfig(p: PluginData): string {
   return `<div class="plugin-config-form" style="margin-top:0.5rem;">
     ${p.configSchema
       .map((field: any) => {
-        const value = (p.config || {})[field.key] ?? field.default ?? "";
+        const value = (p.config || {})[field.key] ?? "";
         return renderConfigFieldV2(field, value, p.name);
       })
       .join("")}
