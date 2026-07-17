@@ -1,7 +1,7 @@
 import { escapeHtml } from "./helpers";
 import { apiGet } from "./api";
 import { enhanceSelectElement } from "./dropdown";
-import { wireCopyButtons, wireToggleButtons } from "./secret-buttons";
+import { copyButtonHTML, toggleButtonHTML, wireCopyButtons, wireToggleButtons } from "./secret-buttons";
 import type { ConfigField } from "./api";
 
 /**
@@ -21,6 +21,18 @@ export function renderConfigField(
   const descHtml = field.description
     ? `<div class="setting-description">${escapeHtml(field.description)}</div>`
     : "";
+
+  // If value is an env/secret ref ($env: or $secret:) on a non-string/non-secret type,
+  // render as string type so the ref-toggle controls appear instead of showing the
+  // raw ref string in a numeric/boolean/enum input.
+  const rawVal = String(value ?? "");
+  if (
+    (rawVal.startsWith("$env:") || rawVal.startsWith("$secret:")) &&
+    field.type !== "string" &&
+    field.type !== "secret"
+  ) {
+    field = { ...field, type: "string" };
+  }
 
   let inputHtml: string;
 
@@ -51,6 +63,8 @@ export function renderConfigField(
             <select class="ref-name-input ref-name-select filter-select setting-input" data-key="${escapeHtml(field.key)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
               <option value="">Select secret...</option>
             </select>
+            ${copyButtonHTML(fieldId)}
+            ${toggleButtonHTML(fieldId)}
           </div>
           <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
         </div>
@@ -168,6 +182,8 @@ export function renderConfigField(
             <select class="ref-name-input ref-name-select filter-select setting-input" data-key="${escapeHtml(field.key)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
               <option value="">Select secret...</option>
             </select>
+            ${copyButtonHTML(fieldId)}
+            ${toggleButtonHTML(fieldId)}
           </div>
           <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
         </div>
@@ -180,7 +196,9 @@ export function renderConfigField(
     <div class="setting-row" data-field-key="${escapeHtml(field.key)}">
       <div class="setting-label">
         <div class="setting-name">${escapeHtml(field.label)}${requiredMark}${envBadge ?? ""}</div>
+        <div class="setting-key-name" style="font-size:0.7rem;color:var(--text-muted);margin-top:0.125rem;">${escapeHtml(field.key)}</div>
         ${descHtml}
+        ${field.default !== undefined && field.default !== null && field.default !== "" ? `<div class="setting-default" style="font-size:0.7rem;color:var(--text-muted);margin-top:0.125rem;">Default: <code style="background:rgba(255,255,255,0.05);padding:0.0625rem 0.25rem;border-radius:2px;">${escapeHtml(String(field.default))}</code></div>` : ""}
       </div>
       <div class="setting-controls">
         <div class="setting-input-group">${inputHtml}</div>

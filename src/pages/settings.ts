@@ -1,6 +1,7 @@
 import { apiGet, apiPut, type SettingCategory } from "../lib/api";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 import { escapeHtml, formatApiError } from "../lib/helpers";
+import { copyButtonHTML, toggleButtonHTML, COPY_SVG, EYE_SVG, EYE_OFF_SVG } from "../lib/secret-buttons";
 
 export function renderSettings(container: HTMLElement): void {
   container.innerHTML = `
@@ -104,21 +105,41 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
           </select>
         `;
         break;
-      case "secret":
+      case "secret": {
+        const strVal = String(value ?? "");
+        const isSecretRef = strVal.startsWith("$secret:");
+        const isEnvRef = strVal.startsWith("$env:");
+        const isRef = isSecretRef || isEnvRef;
+        const refType = isEnvRef ? "env" : "secret";
+        const refName = isRef ? strVal.substring(strVal.indexOf(":") + 1) : "";
+        const literalVal = isRef ? "" : strVal;
         inputHtml = `
-          <div class="setting-secret-wrapper">
-            <input type="password" id="${inputId}" class="filter-input setting-input setting-secret-input"
-              value="${escapeHtml(value)}"
-              data-name="${escapeHtml(name)}" data-original="${escapeHtml(value)}" />
-            <button type="button" class="setting-secret-toggle" title="Toggle visibility" data-target="${inputId}">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                <circle cx="12" cy="12" r="3"/>
-              </svg>
-            </button>
+          <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;">
+            <input type="hidden" class="setting-input" data-name="${escapeHtml(name)}" data-original="${escapeHtml(strVal)}" value="${escapeHtml(strVal)}" />
+            <div class="ref-literal-mode" style="display:${isRef ? "none" : "flex"};flex:1;gap:0.25rem;align-items:center;">
+              <input type="password" id="${inputId}" class="filter-input setting-input setting-secret-input ref-literal-input"
+                value="${escapeHtml(literalVal)}"
+                data-name="${escapeHtml(name)}" data-original="${escapeHtml(literalVal)}" style="flex:1;" />
+              ${copyButtonHTML(inputId)}
+              ${toggleButtonHTML(inputId)}
+            </div>
+            <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
+              <select class="ref-type-select filter-select setting-input" data-name="${escapeHtml(name)}">
+                <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
+                <option value="env" ${refType === "env" ? "selected" : ""}>Env Var</option>
+              </select>
+              <input type="text" class="ref-name-input ref-name-text filter-input" data-name="${escapeHtml(name)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:2;min-width:200px;display:${isRef && refType === "env" ? "block" : "none"};" />
+              <select class="ref-name-input ref-name-select filter-select setting-input" data-name="${escapeHtml(name)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
+                <option value="">Select secret...</option>
+              </select>
+              ${copyButtonHTML(inputId)}
+              ${toggleButtonHTML(inputId)}
+            </div>
+            <button type="button" class="ref-toggle-btn" data-name="${escapeHtml(name)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           </div>
         `;
         break;
+      }
       case "select": {
         const opts = (meta.options || [])
           .map((o: any) => {
@@ -147,13 +168,39 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
             data-name="${escapeHtml(name)}" data-original="${escapeHtml(value)}">${escapeHtml(value)}</textarea>
         `;
         break;
-      default: // text
+      default: {
+        // text
+        const strVal = String(value ?? "");
+        const isSecretRef = strVal.startsWith("$secret:");
+        const isEnvRef = strVal.startsWith("$env:");
+        const isRef = isSecretRef || isEnvRef;
+        const refType = isEnvRef ? "env" : "secret";
+        const refName = isRef ? strVal.substring(strVal.indexOf(":") + 1) : "";
+        const literalVal = isRef ? "" : strVal;
         inputHtml = `
-          <input type="text" id="${inputId}" class="filter-input setting-input"
-            value="${escapeHtml(value)}"
-            data-name="${escapeHtml(name)}" data-original="${escapeHtml(value)}" />
+          <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;">
+            <input type="hidden" class="setting-input" data-name="${escapeHtml(name)}" data-original="${escapeHtml(strVal)}" value="${escapeHtml(strVal)}" />
+            <input type="text" id="${inputId}" class="filter-input setting-input ref-literal-input"
+              value="${escapeHtml(literalVal)}"
+              data-name="${escapeHtml(name)}" data-original="${escapeHtml(literalVal)}" style="flex:1;display:${isRef ? "none" : "block"};" />
+            ${copyButtonHTML(inputId)}
+            <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
+              <select class="ref-type-select filter-select setting-input" data-name="${escapeHtml(name)}">
+                <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
+                <option value="env" ${refType === "env" ? "selected" : ""}>Env Var</option>
+              </select>
+              <input type="text" class="ref-name-input ref-name-text filter-input" data-name="${escapeHtml(name)}" placeholder="Env var name..." value="${escapeHtml(isRef && refType === "env" ? refName : "")}" style="flex:2;min-width:200px;display:${isRef && refType === "env" ? "block" : "none"};" />
+              <select class="ref-name-input ref-name-select filter-select setting-input" data-name="${escapeHtml(name)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
+                <option value="">Select secret...</option>
+              </select>
+              ${copyButtonHTML(inputId)}
+              ${toggleButtonHTML(inputId)}
+            </div>
+            <button type="button" class="ref-toggle-btn" data-name="${escapeHtml(name)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
+          </div>
         `;
         break;
+      }
     }
 
     // Actions (confirm/cancel): hidden until change detected
@@ -189,6 +236,7 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
       <div class="setting-label">
         <div class="setting-name">${escapeHtml(name)}</div>
         <div class="setting-description">${escapeHtml(desc)}</div>
+        ${meta.default !== undefined && meta.default !== null && meta.default !== "" ? `<div class="setting-default" style="font-size:0.7rem;color:var(--text-muted);margin-top:0.125rem;">Default: <code style="background:rgba(255,255,255,0.05);padding:0.0625rem 0.25rem;border-radius:2px;">${escapeHtml(String(meta.default))}</code></div>` : ""}
       </div>
       <div class="setting-controls">
         <div class="setting-input-group">
@@ -305,6 +353,176 @@ function wireSettings(): void {
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
             <circle cx="12" cy="12" r="3"/>
           </svg>`;
+    });
+  });
+
+  // Ref toggle buttons
+  document.querySelectorAll(".ref-toggle-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const container = (btn as HTMLElement).closest(".ref-toggle-container") as HTMLElement;
+      if (!container) return;
+      const hiddenInput = container.querySelector(".setting-input") as HTMLInputElement;
+      const literalInput = container.querySelector(".ref-literal-input") as HTMLInputElement;
+      const literalMode = container.querySelector(".ref-literal-mode") as HTMLElement;
+      const refControls = container.querySelector(".ref-mode-controls") as HTMLElement;
+      const isRefMode = refControls.style.display !== "none";
+      if (isRefMode) {
+        if (literalMode) literalMode.style.display = "flex";
+        if (literalInput) literalInput.style.display = "block";
+        refControls.style.display = "none";
+        hiddenInput.value = literalInput ? literalInput.value : "";
+        btn.textContent = "\uD83D\uDD17";
+        btn.setAttribute("title", "Use secret/env ref");
+      } else {
+        if (literalMode) literalMode.style.display = "none";
+        if (literalInput) literalInput.style.display = "none";
+        refControls.style.display = "flex";
+        const select = refControls.querySelector(".ref-type-select") as HTMLSelectElement;
+        const nameText = refControls.querySelector(".ref-name-text") as HTMLInputElement;
+        const nameSelect = refControls.querySelector(".ref-name-select") as HTMLSelectElement;
+        const prefix = select.value === "secret" ? "$secret:" : "$env:";
+        const isSecretMode = select.value === "secret";
+        if (nameText) {
+          nameText.style.display = isSecretMode ? "none" : "block";
+          nameText.value = "";
+        }
+        if (nameSelect) {
+          nameSelect.value = "";
+          const wrapper = nameSelect.nextElementSibling as HTMLElement | null;
+          if (wrapper && wrapper.classList.contains("custom-select")) {
+            wrapper.style.display = isSecretMode ? "block" : "none";
+          } else {
+            nameSelect.style.display = isSecretMode ? "block" : "none";
+          }
+        }
+        const activeInput = isSecretMode ? nameSelect : nameText;
+        hiddenInput.value = prefix + (activeInput ? activeInput.value : "");
+        btn.textContent = "\u270F\uFE0F";
+        btn.setAttribute("title", "Use literal value");
+      }
+      hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
+      hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  });
+
+  // Ref type select
+  document.querySelectorAll(".ref-type-select").forEach((el) => {
+    el.addEventListener("change", () => {
+      const container = (el as HTMLElement).closest(".ref-mode-controls") as HTMLElement;
+      if (!container) return;
+      const hiddenInput = container
+        .closest(".ref-toggle-container")
+        ?.querySelector(".setting-input") as HTMLInputElement;
+      const isSecret = (el as HTMLSelectElement).value === "secret";
+      const nameText = container.querySelector(".ref-name-text") as HTMLElement;
+      const nameSelect = container.querySelector(".ref-name-select") as HTMLElement;
+      if (nameText) nameText.style.display = isSecret ? "none" : "block";
+      if (nameSelect) {
+        const wrapper = nameSelect.nextElementSibling as HTMLElement | null;
+        if (wrapper && wrapper.classList.contains("custom-select")) {
+          wrapper.style.display = isSecret ? "block" : "none";
+        } else {
+          nameSelect.style.display = isSecret ? "block" : "none";
+        }
+      }
+      const activeInput = isSecret ? (nameSelect as HTMLSelectElement) : (nameText as HTMLInputElement);
+      const prefix = isSecret ? "$secret:" : "$env:";
+      hiddenInput.value = prefix + (activeInput ? activeInput.value : "");
+      hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
+      hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  });
+
+  // Ref name inputs
+  document.querySelectorAll(".ref-name-text").forEach((el) => {
+    el.addEventListener("input", () => {
+      const container = (el as HTMLElement).closest(".ref-mode-controls") as HTMLElement;
+      if (!container) return;
+      const select = container.querySelector(".ref-type-select") as HTMLSelectElement;
+      const hiddenInput = container
+        .closest(".ref-toggle-container")
+        ?.querySelector(".setting-input") as HTMLInputElement;
+      if (!hiddenInput) return;
+      const prefix = select.value === "secret" ? "$secret:" : "$env:";
+      hiddenInput.value = prefix + (el as HTMLInputElement).value;
+      hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
+      hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  });
+  document.querySelectorAll(".ref-name-select").forEach((el) => {
+    el.addEventListener("change", () => {
+      const container = (el as HTMLElement).closest(".ref-mode-controls") as HTMLElement;
+      if (!container) return;
+      const select = container.querySelector(".ref-type-select") as HTMLSelectElement;
+      const hiddenInput = container
+        .closest(".ref-toggle-container")
+        ?.querySelector(".setting-input") as HTMLInputElement;
+      if (!hiddenInput) return;
+      const prefix = select.value === "secret" ? "$secret:" : "$env:";
+      hiddenInput.value = prefix + (el as HTMLSelectElement).value;
+      hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
+      hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+  });
+
+  // Copy buttons
+  document.querySelectorAll(".setting-secret-copy").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const targetId = btn.getAttribute("data-target");
+      if (!targetId) return;
+      const input = document.getElementById(targetId) as HTMLInputElement | null;
+      if (!input) return;
+      navigator.clipboard
+        .writeText(input.value)
+        .then(() => {
+          const original = btn.innerHTML;
+          btn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`;
+          setTimeout(() => {
+            btn.innerHTML = original;
+          }, 1500);
+        })
+        .catch(() => {
+          input.select();
+          document.execCommand("copy");
+        });
+    });
+  });
+
+  // Fetch secrets and populate ref-name-select dropdowns
+  void (async () => {
+    try {
+      const response = await apiGet<any>("/secrets");
+      const secrets: any[] = response.data || [];
+      const secretNames = secrets.map((s: any) => s.name);
+      document.querySelectorAll(".ref-name-select").forEach((sel) => {
+        const select = sel as HTMLSelectElement;
+        const currentVal = select.value;
+        select.innerHTML = '<option value="">Select secret...</option>';
+        for (const name of secretNames) {
+          const opt = document.createElement("option");
+          opt.value = name;
+          opt.textContent = name;
+          if (name === currentVal) opt.selected = true;
+          select.appendChild(opt);
+        }
+      });
+    } catch {
+      // Secrets not available
+    }
+  })();
+
+  // Sync literal input to hidden input
+  document.querySelectorAll(".ref-literal-input").forEach((el) => {
+    el.addEventListener("input", () => {
+      const input = el as HTMLInputElement;
+      const container = input.closest(".ref-toggle-container") as HTMLElement;
+      if (!container) return;
+      const hiddenInput = container.querySelector(".setting-input") as HTMLInputElement;
+      if (hiddenInput) {
+        hiddenInput.value = input.value;
+        hiddenInput.dispatchEvent(new Event("input", { bubbles: true }));
+        hiddenInput.dispatchEvent(new Event("change", { bubbles: true }));
+      }
     });
   });
 }

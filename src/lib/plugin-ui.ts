@@ -2,6 +2,7 @@
 
 import { apiDelete, apiPost, type PluginData } from "./api";
 import { escapeHtml, formatApiError } from "./helpers";
+import { renderConfigField as renderConfigFieldV2 } from "./plugin-config";
 
 export type PluginPageType = "tool" | "platform" | "provider";
 
@@ -76,20 +77,34 @@ export function renderActionButtons(
   const isBuiltin = p.source === "built-in";
   const isRemote = p.source === "remote";
   const isInstalled = !p.needsBuild;
-  const compilable = hasCompilableSource;
+  // Only compiled languages (Rust, Go, etc.) should show Reinstall/Uninstall.
+  // Scripts (Python, JS, shell) use Update/Remove instead.
+  const isCompilable = !p.isScript && !!p.hasSourceCode && (p.language === "Rust" || p.language === "Go");
+  // Remote plugins that haven't been downloaded yet (no source code on disk)
+  const needsDownload = isRemote && !p.hasSourceCode;
 
   if (isBuiltin) {
     return "";
   }
 
   // Determine which buttons to show
-  const showInstall = !isBuiltin && compilable && !isInstalled;
-  const showReinstall = compilable && isInstalled;
-  const showUninstall = compilable && isInstalled;
-  const showUpdate = isRemote;
-  const showRemove = !showUninstall;
+  const showInstall = !isBuiltin && isCompilable && !isInstalled;
+  const showReinstall = isCompilable && isInstalled;
+  const showUninstall = isCompilable && isInstalled;
 
-  // Render in fixed order: Install - Reinstall - Uninstall - Update - Remove
+  // Remote plugins that need their source cloned first
+  const showDownload = needsDownload;
+
+  // Non-compilable installed plugins (scripts): Update copies the files
+  const showScriptUpdate = !isCompilable && isInstalled && !isBuiltin;
+
+  // Remote compilable installed plugins: Update pulls latest from git
+  const showRemoteUpdate = isRemote && isCompilable && isInstalled;
+
+  // Remove for everything non-builtin (hidden when Uninstall is shown instead)
+  const showRemove = !isBuiltin && !showUninstall;
+
+  // Render in fixed order: Install - Reinstall - Uninstall - Download - Update - Remove
   const buttons: string[] = [];
 
   if (showInstall) {
@@ -110,7 +125,13 @@ export function renderActionButtons(
     );
   }
 
-  if (showUpdate) {
+  if (showDownload) {
+    buttons.push(
+      `<button type="button" class="plugin-download-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Download</button>`,
+    );
+  }
+
+  if (showScriptUpdate || showRemoteUpdate) {
     buttons.push(
       `<button type="button" class="plugin-update-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Update</button>`,
     );
@@ -236,6 +257,31 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
     });
   });
 
+  // Download buttons (remote plugins needing source clone)
+  document.querySelectorAll(".plugin-download-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const card = (btn as HTMLElement).closest(".card") as HTMLElement;
+      const pluginName = card?.getAttribute("data-plugin-name");
+      const source = card?.getAttribute("data-source") || "bundled";
+      if (!pluginName) return;
+
+      const originalText = btn.textContent || "Download";
+      btn.textContent = "Downloading...";
+      (btn as HTMLButtonElement).disabled = true;
+
+      try {
+        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/download`, { source });
+        (window as any).showToast?.("Plugin downloaded — now click Install to compile", "success");
+        loadFn();
+      } catch (e) {
+        (window as any).showToast?.("Failed to download: " + formatApiError(e), "error");
+        btn.textContent = originalText;
+        (btn as HTMLButtonElement).disabled = false;
+        loadFn();
+      }
+    });
+  });
+
   // Enable/Disable toggle buttons
   document.querySelectorAll(".plugin-toggle-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -336,99 +382,17 @@ export function renderPluginConfig(p: PluginData): string {
     return '<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.5rem;">No configuration options available</div>';
   }
   return `<div class="plugin-config-form" style="margin-top:0.5rem;">
-    ${p.configSchema.map((field: any) => renderConfigField(p.name, field, p.config || {})).join("")}
+    ${p.configSchema
+      .map((field: any) => {
+        const value = (p.config || {})[field.key] ?? field.default ?? "";
+        return renderConfigFieldV2(field, value, p.name);
+      })
+      .join("")}
     <button type="button" class="plugin-save-btn" style="margin-top:0.5rem;background:rgba(34,211,238,0.1);border:1px solid rgba(34,211,238,0.2);border-radius:6px;padding:0.3rem 0.75rem;cursor:pointer;font-size:0.8rem;color:#22d3ee;">Save</button>
   </div>`;
 }
 
-function renderConfigField(pluginName: string, field: any, config: Record<string, any>): string {
-  const fieldId = `cfg-${escapeHtml(pluginName)}-${escapeHtml(field.key)}`;
-  const value = config[field.key] ?? field.default ?? "";
-  const requiredAttr = field.required ? "required" : "";
-  const requiredMark = field.required
-    ? '<span style="color:var(--accent-rose);margin-left:0.125rem;">*</span>'
-    : "";
-  const descHtml = field.description
-    ? `<div class="setting-description">${escapeHtml(field.description)}</div>`
-    : "";
-
-  let inputHtml: string;
-  switch (field.type) {
-    case "boolean":
-      inputHtml = `<input type="checkbox" id="${fieldId}" class="plugin-config-input" data-key="${escapeHtml(field.key)}" ${value ? "checked" : ""} />`;
-      break;
-    case "integer":
-      inputHtml = `<input type="tel" id="${fieldId}" class="filter-input setting-input plugin-config-input" value="${escapeHtml(String(value))}" inputmode="numeric" pattern="-?[0-9]*[.]?[0-9]*" data-key="${escapeHtml(field.key)}" ${field.min !== undefined ? `min="${field.min}"` : ""} ${field.max !== undefined ? `max="${field.max}"` : ""} style="max-width:120px;" />`;
-      break;
-    case "enum": {
-      const options = field.allowed_values || [];
-      inputHtml = `<select id="${fieldId}" class="filter-input setting-input plugin-config-input" data-key="${escapeHtml(field.key)}">
-        ${!field.required ? '<option value="">Select...</option>' : ""}
-        ${options
-          .map((opt: any) => {
-            const optValue = typeof opt === "object" ? (opt.value ?? opt) : opt;
-            const optLabel = typeof opt === "object" ? (opt.label ?? optValue) : opt;
-            const selected = String(value) === String(optValue) ? "selected" : "";
-            return `<option value="${escapeHtml(String(optValue))}" ${selected}>${escapeHtml(String(optLabel))}</option>`;
-          })
-          .join("")}
-      </select>`;
-      break;
-    }
-    case "secret":
-      inputHtml = `<div style="display:flex;gap:0.25rem;align-items:center;">
-        <input type="password" id="${fieldId}" class="filter-input setting-input plugin-config-input" value="${escapeHtml(String(value))}" data-key="${escapeHtml(field.key)}" ${requiredAttr} style="flex:1;min-width:0;" />
-        <button type="button" class="toggle-pwd-btn" data-target="${escapeHtml(fieldId)}" style="background:none;border:none;cursor:pointer;color:var(--text-muted);font-size:0.85rem;padding:0.25rem;" title="Toggle visibility">👁</button>
-      </div>`;
-      break;
-    case "provider":
-    case "tool":
-    case "platform": {
-      const options = (field.allowed_values || []).map(
-        (opt: string) =>
-          `<option value="${escapeHtml(opt)}" ${String(value) === opt ? "selected" : ""}>${escapeHtml(opt)}</option>`,
-      );
-      inputHtml = `
-        <select id="${fieldId}" class="plugin-config-input filter-input" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}">
-          <option value="">N/A</option>
-          ${options.join("")}
-        </select>`;
-      break;
-    }
-    case "model": {
-      const options = (field.allowed_values || []).map(
-        (opt: string) =>
-          `<option value="${escapeHtml(opt)}" ${String(value) === opt ? "selected" : ""}>${escapeHtml(opt)}</option>`,
-      );
-      inputHtml = `
-        <div style="display:flex;gap:0.25rem;align-items:center;flex:1;">
-          <select id="${fieldId}" class="plugin-config-input filter-input" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}" style="flex:1;">
-            <option value="">N/A</option>
-            ${options.join("")}
-          </select>
-          <button type="button" class="plugin-refresh-models-btn setting-icon-btn" title="Refresh models" data-plugin-config="true" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}">
-            ⟳
-          </button>
-        </div>`;
-      break;
-    }
-    default:
-      inputHtml = `<input type="text" id="${fieldId}" class="filter-input setting-input plugin-config-input" value="${escapeHtml(String(value))}" data-key="${escapeHtml(field.key)}" ${requiredAttr} style="width:100%;" />`;
-      break;
-  }
-
-  const label = field.label || field.key;
-
-  return `<div class="setting-row" data-field-key="${escapeHtml(field.key)}">
-    <div class="setting-label">
-      <div class="setting-name">${escapeHtml(label)}${requiredMark}</div>
-      ${descHtml}
-    </div>
-    <div class="setting-controls">
-      <div class="setting-input-group">${inputHtml}</div>
-    </div>
-  </div>`;
-}
+// renderConfigField is now imported from ./plugin-config as renderConfigFieldV2
 
 // ── Install from Git Modal ──
 
