@@ -4794,6 +4794,7 @@ a.thread-row {
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  min-width: 0;
 }
 
 .setting-readonly-code {

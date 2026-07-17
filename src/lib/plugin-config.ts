@@ -259,11 +259,7 @@ export function renderPluginConfig(options: RenderPluginConfigOptions): string {
     .map((field) => {
       const envVal = resolvedEnv[field.key];
       const isFromEnv = envVal !== undefined && (values[field.key] === undefined || values[field.key] === "");
-      const currentVal = isFromEnv
-        ? envVal
-        : values[field.key] !== undefined
-          ? values[field.key]
-          : "";
+      const currentVal = isFromEnv ? envVal : values[field.key] !== undefined ? values[field.key] : "";
       const envBadge = isFromEnv
         ? '<span class="badge badge-info" style="margin-left:0.375rem;font-size:0.65rem;vertical-align:middle;">env</span>'
         : "";
