@@ -1,5 +1,5 @@
 import { apiGet, apiPut, type SettingCategory } from "../lib/api";
-import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
+import { enhanceSelect, enhanceSelectElement, syncSelectDisplay } from "../lib/dropdown";
 import { escapeHtml, formatApiError } from "../lib/helpers";
 import { copyButtonHTML, toggleButtonHTML } from "../lib/secret-buttons";
 
@@ -38,6 +38,18 @@ async function loadSettings(): Promise<void> {
     document.querySelectorAll(".setting-input[data-name]").forEach((el) => {
       if (el.tagName === "SELECT") {
         enhanceSelect(el.id);
+      }
+    });
+    // Enhance secret name selects by element reference (they have no id)
+    document.querySelectorAll(".ref-name-select").forEach((el) => {
+      if (el.tagName === "SELECT") {
+        const select = el as HTMLSelectElement;
+        const wasVisible = select.style.display !== "none";
+        enhanceSelectElement(select);
+        const wrapper = select.nextElementSibling as HTMLElement | null;
+        if (wrapper && wrapper.classList.contains("custom-select")) {
+          wrapper.style.display = wasVisible ? "block" : "none";
+        }
       }
     });
   } catch (e) {
@@ -120,8 +132,6 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
               <select class="ref-name-input ref-name-select filter-select setting-input" data-name="${escapeHtml(name)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
                 <option value="">Select secret...</option>
               </select>
-              ${copyButtonHTML(inputId)}
-              ${toggleButtonHTML(inputId)}
             </div>
             <button type="button" class="ref-toggle-btn" data-name="${escapeHtml(name)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "✏️" : "🔗"}</button>
           </div>
@@ -164,8 +174,6 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
               <select class="ref-name-input ref-name-select filter-select setting-input" data-name="${escapeHtml(name)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
                 <option value="">Select secret...</option>
               </select>
-              ${copyButtonHTML(inputId)}
-              ${toggleButtonHTML(inputId)}
             </div>
             <button type="button" class="ref-toggle-btn" data-name="${escapeHtml(name)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           </div>
@@ -225,8 +233,6 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
               <select class="ref-name-input ref-name-select filter-select setting-input" data-name="${escapeHtml(name)}" style="flex:1;display:${isRef && refType === "secret" ? "block" : "none"};">
                 <option value="">Select secret...</option>
               </select>
-              ${copyButtonHTML(inputId)}
-              ${toggleButtonHTML(inputId)}
             </div>
             <button type="button" class="ref-toggle-btn" data-name="${escapeHtml(name)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           </div>
@@ -528,17 +534,33 @@ function wireSettings(): void {
       const secretNames = secrets.map((s: any) => s.name);
       document.querySelectorAll(".ref-name-select").forEach((sel) => {
         const select = sel as HTMLSelectElement;
-        const currentVal = select.value;
+        // Read current secret name from the hidden input, not from select.value
+        // (select.value is always empty — only has a placeholder before populate)
+        const container = select.closest(".ref-toggle-container");
+        let secretName = "";
+        if (container) {
+          const hiddenInput = container.querySelector(".setting-input[type=\"hidden\"]") as HTMLInputElement | null;
+          if (hiddenInput) {
+            const hv = hiddenInput.value;
+            secretName = hv.startsWith("$secret:") ? hv.substring(8) : "";
+          }
+        }
         select.innerHTML = '<option value="">Select secret...</option>';
         for (const name of secretNames) {
           const opt = document.createElement("option");
           opt.value = name;
           opt.textContent = name;
-          if (name === currentVal) opt.selected = true;
+          if (name === secretName) opt.selected = true;
           select.appendChild(opt);
         }
         // Sync enhanced select display after programmatic options update
-        if (select.id) syncSelectDisplay(select.id);
+        if (container) {
+          const enhancedSelect = container.querySelector(".custom-select");
+          if (enhancedSelect) {
+            const textEl = enhancedSelect.querySelector(".select-trigger-text") as HTMLElement | null;
+            if (textEl) textEl.textContent = secretName || "Select secret...";
+          }
+        }
       });
     } catch {
       // Secrets not available

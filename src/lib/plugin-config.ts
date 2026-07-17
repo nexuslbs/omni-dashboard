@@ -1,6 +1,6 @@
 import { escapeHtml } from "./helpers";
 import { apiGet } from "./api";
-import { enhanceSelectElement, syncSelectDisplay } from "./dropdown";
+import { enhanceSelectElement } from "./dropdown";
 import { copyButtonHTML, toggleButtonHTML } from "./secret-buttons";
 import type { ConfigField } from "./api";
 
@@ -493,18 +493,33 @@ export function wireRefToggles(): void {
       const secretNames = secrets.map((s: any) => s.name);
       document.querySelectorAll(".ref-name-select").forEach((sel) => {
         const select = sel as HTMLSelectElement;
-        const currentVal = select.value;
+        // Read current secret name from the hidden input, not from select.value
+        const container = select.closest(".ref-toggle-container");
+        let secretName = "";
+        if (container) {
+          const hiddenInput = container.querySelector(".plugin-config-input[type=\"hidden\"]") as HTMLInputElement | null;
+          if (hiddenInput) {
+            const hv = hiddenInput.value;
+            secretName = hv.startsWith("$secret:") ? hv.substring(8) : "";
+          }
+        }
         // Keep the first option (empty placeholder)
         select.innerHTML = '<option value="">Select secret...</option>';
         for (const name of secretNames) {
           const opt = document.createElement("option");
           opt.value = name;
           opt.textContent = name;
-          if (name === currentVal) opt.selected = true;
+          if (name === secretName) opt.selected = true;
           select.appendChild(opt);
         }
-        // Sync enhanced select display after programmatic options update
-        if (select.id) syncSelectDisplay(select.id);
+        // Sync enhanced select display after populating options
+        if (container) {
+          const enhancedSelect = container.querySelector(".custom-select");
+          if (enhancedSelect) {
+            const textEl = enhancedSelect.querySelector(".select-trigger-text") as HTMLElement | null;
+            if (textEl) textEl.textContent = secretName || "Select secret...";
+          }
+        }
       });
     } catch {
       // Secrets not available: leave selects with placeholder only
