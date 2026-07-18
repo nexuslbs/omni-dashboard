@@ -10,6 +10,7 @@ interface Action {
   params: Record<string, any>;
   enabled: boolean;
   is_builtin: boolean;
+  description?: string;
 }
 
 interface McpToolInfo {
@@ -115,7 +116,11 @@ function renderActionRow(a: Action, i: number): string {
   })();
 
   return `<tr class="${isDisabled ? "action-disabled" : ""}">
-    <td><strong>${escapeHtml(a.name)}</strong>${isDisabled ? ' <span class="badge badge-neutral" style="font-size:0.7rem;background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);padding:0.05rem 0.35rem;border-radius:4px;margin-left:0.35rem;vertical-align:middle">Disabled</span>' : ""}</td>
+    <td>
+      <div style="font-weight:600;">${escapeHtml(a.name)}</div>
+      ${a.description ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.15rem;">${escapeHtml(a.description)}</div>` : ""}
+      ${isDisabled ? ' <span class="badge badge-neutral" style="font-size:0.7rem;background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);padding:0.05rem 0.35rem;border-radius:4px;margin-left:0;margin-top:0.25rem;display:inline-block;vertical-align:middle">Disabled</span>' : ""}
+    </td>
     <td><code>${toolDisplay}</code></td>
     <td style="font-size:0.8rem;color:var(--text-muted);max-width:300px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${paramsStr}</td>
     <td style="text-align:right;white-space:nowrap" class="actions-cell">
@@ -167,7 +172,18 @@ async function showActionModal(existing: Action | null): Promise<void> {
           </div>
           <div class="setting-controls">
             <div class="setting-input-group">
-              <input class="filter-input" id="action-name" type="text" value="${isEdit ? escapeHtml(existing!.name) : ""}" placeholder="My Action" />
+              <input class="filter-input" id="action-name" type="text" value="${isEdit ? escapeHtml(existing!.name) : ""}" placeholder="my-action-name" />
+              <span style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Only letters, numbers, hyphens, and underscores</span>
+            </div>
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-label">
+            <div class="setting-name">Description</div>
+          </div>
+          <div class="setting-controls">
+            <div class="setting-input-group">
+              <textarea class="filter-input" id="action-description" rows="2" style="resize:vertical;width:100%;font-family:inherit;padding:0.375rem 0.5rem;" placeholder="Optional description">${isEdit ? escapeHtml(existing!.description || "") : ""}</textarea>
             </div>
           </div>
         </div>
@@ -331,7 +347,9 @@ async function showActionModal(existing: Action | null): Promise<void> {
   function validateForm(): void {
     const name = nameInput.value.trim();
     const tool = toolSelect.value;
-    saveBtn.disabled = !name || !tool;
+    const nameValid = name.length > 0 && /^[a-zA-Z0-9_-]+$/.test(name);
+    saveBtn.disabled = !nameValid || !tool;
+    nameInput.style.borderColor = name && !nameValid ? "var(--danger, #f43f5e)" : "";
   }
 
   // Pre-populate params if editing
@@ -360,6 +378,8 @@ async function showActionModal(existing: Action | null): Promise<void> {
   saveBtn.addEventListener("click", async () => {
     const name = nameInput.value.trim();
     const toolName = toolSelect.value;
+    const descriptionEl = backdrop.querySelector("#action-description") as HTMLTextAreaElement | null;
+    const description = descriptionEl?.value.trim() || undefined;
     if (!name || !toolName) return;
 
     // Build params from the form
@@ -386,9 +406,9 @@ async function showActionModal(existing: Action | null): Promise<void> {
     saveBtn.textContent = "Saving...";
     try {
       if (isEdit) {
-        await apiPut(`/actions/${existing!.id}`, { name, tool_name: toolName, params });
+        await apiPut(`/actions/${existing!.id}`, { name, tool_name: toolName, params, description });
       } else {
-        await apiPost("/actions", { name, tool_name: toolName, params });
+        await apiPost("/actions", { name, tool_name: toolName, params, description });
       }
       closeModal();
       void loadActions();

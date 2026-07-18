@@ -552,7 +552,7 @@ function wireSettings(): void {
       document.querySelectorAll(".ref-name-select").forEach((sel) => {
         const select = sel as HTMLSelectElement;
         // Read current secret name from the hidden input, not from select.value
-        // (select.value is always empty — only has a placeholder before populate)
+        // (select.value is always empty : only has a placeholder before populate)
         const container = select.closest(".ref-toggle-container");
         let secretName = "";
         if (container) {

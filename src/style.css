@@ -2599,6 +2599,17 @@ a.thread-row {
   display: block;
   -webkit-line-clamp: unset;
 }
+.ev-content-text[data-view="json+md"] {
+  font-family: inherit;
+  font-size: 0.875rem;
+  color: var(--text-primary);
+  white-space: normal;
+  line-height: 1.7;
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.15);
+  display: block;
+  -webkit-line-clamp: unset;
+}
 .ev-content-text[data-view="md"] .markdown-content {
   padding: 0;
 }
@@ -2775,6 +2786,26 @@ a.thread-row {
   background: rgba(100, 116, 139, 0.2);
   border-color: rgba(100, 116, 139, 0.4);
   color: var(--text-primary);
+}
+
+/* JSON + Markdown button : green hue matching completed status */
+.ev-view-json-plus-md {
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  color: #34d399;
+  border-radius: var(--radius-sm);
+  padding: 0.2rem 0.5rem;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 500;
+  line-height: 1.4;
+  transition: all 0.15s ease;
+}
+
+.ev-view-json-plus-md:hover {
+  background: rgba(16, 185, 129, 0.2);
+  border-color: rgba(16, 185, 129, 0.4);
+  color: #6ee7b7;
 }
 
 /* ── Code actions for message card code blocks (same as .markdown-content pre's) ── */

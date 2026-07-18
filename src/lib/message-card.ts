@@ -168,12 +168,60 @@ export function renderMessageCard(msg: any): string {
           <button class="ev-expand-btn">Show more</button>
           <button class="ev-view-btn ev-view-md" data-msg-id="${msg.id}">See as Markdown</button>
           <button class="ev-view-btn ev-view-json" data-msg-id="${msg.id}">See as JSON</button>
+          <button class="ev-view-json-plus-md" data-msg-id="${msg.id}">See as JSON + Markdown</button>
         </div>`
             : ""
         }
       </div>
     </div>
   `;
+}
+
+// ── Flatten parsed JSON to markdown with key[index] notation ──
+function flattenJsonToMarkdown(data: unknown): string {
+  const lines: string[] = [];
+
+  function walk(value: unknown, prefix: string = ""): void {
+    if (Array.isArray(value)) {
+      for (let i = 0; i < value.length; i++) {
+        const elem = value[i] as unknown;
+        if (typeof elem === "object" && elem !== null && !Array.isArray(elem)) {
+          // Object inside array: suffix each key with [i]
+          for (const [key, sub] of Object.entries(elem)) {
+            const path = `${prefix ? prefix + "." : ""}${key}[${i}]`;
+            if (typeof sub === "object" && sub !== null) {
+              walk(sub, path);
+            } else {
+              lines.push(`# ${path}\n\n${String(sub)}`);
+            }
+          }
+        } else {
+          const path = `${prefix}[${i}]`;
+          if (typeof elem === "object" && elem !== null) {
+            walk(elem, path);
+          } else {
+            lines.push(`# ${path}\n\n${String(elem)}`);
+          }
+        }
+      }
+    } else if (typeof value === "object" && value !== null) {
+      for (const [key, sub] of Object.entries(value as Record<string, unknown>)) {
+        const path = prefix ? `${prefix}.${key}` : key;
+        if (typeof sub === "object" && sub !== null) {
+          walk(sub, path);
+        } else {
+          lines.push(`# ${path}\n\n${String(sub)}`);
+        }
+      }
+    } else if (prefix) {
+      lines.push(`# ${prefix}\n\n${String(value)}`);
+    } else {
+      lines.push(String(value));
+    }
+  }
+
+  walk(data);
+  return lines.join("\n\n");
 }
 
 // ── Wire up expand/collapse toggles for rendered cards ──
@@ -261,6 +309,61 @@ export function wireMessageCardToggles(container: HTMLElement): void {
           other.textContent = other.classList.contains("ev-view-md") ? "See as Markdown" : "See as JSON";
         }
       });
+    });
+  });
+
+  // ── "See as JSON + Markdown" button ──
+  container.querySelectorAll(".ev-view-json-plus-md").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const btnEl = e.currentTarget as HTMLElement;
+      const msgId = btnEl.getAttribute("data-msg-id");
+      if (!msgId) return;
+      const card = btnEl.closest(".event-row")!;
+      const contentDiv = card.querySelector(`.ev-content-text[data-msg-id="${msgId}"]`) as HTMLElement | null;
+      if (!contentDiv) return;
+
+      const rawB64 = contentDiv.getAttribute("data-view-raw") || "";
+      let rawContent: string;
+      try {
+        rawContent = decodeURIComponent(atob(rawB64));
+      } catch {
+        rawContent = rawB64;
+      }
+
+      const currentView = contentDiv.getAttribute("data-view") || "original";
+
+      if (currentView === "json+md") {
+        contentDiv.innerHTML = escapeHtml(rawContent);
+        contentDiv.setAttribute("data-view", "original");
+        btnEl.textContent = "See as JSON + Markdown";
+        // Reset sibling view buttons
+        card.querySelectorAll(".ev-view-btn").forEach((b) => {
+          const other = b as HTMLElement;
+          other.textContent = other.classList.contains("ev-view-md") ? "See as Markdown" : "See as JSON";
+        });
+        return;
+      }
+
+      try {
+        const parsed = JSON.parse(rawContent);
+        const md = flattenJsonToMarkdown(parsed);
+        const rendered = renderMarkdown(md);
+        const wrapper = document.createElement("div");
+        wrapper.innerHTML = rendered;
+        enhanceCodeBlocks(wrapper);
+        contentDiv.innerHTML = `<div class="markdown-content">${wrapper.innerHTML}</div>`;
+        contentDiv.setAttribute("data-view", "json+md");
+        btnEl.textContent = "Show original";
+        // Reset sibling view buttons
+        card.querySelectorAll(".ev-view-btn").forEach((b) => {
+          const other = b as HTMLElement;
+          other.textContent = other.classList.contains("ev-view-md") ? "See as Markdown" : "See as JSON";
+        });
+      } catch {
+        contentDiv.innerHTML = `<em style="color:var(--text-muted)">Content is not valid JSON</em>`;
+        contentDiv.setAttribute("data-view", "json+md");
+        btnEl.textContent = "Show original";
+      }
     });
   });
 }

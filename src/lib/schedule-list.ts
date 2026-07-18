@@ -13,9 +13,7 @@ export function formatActionLabel(
   actionName: string | null,
   fallback: string,
 ): string {
-  if (!actionId) return actionName || fallback;
-  const name = actionName || fallback;
-  return `[${actionId}] ${name}`;
+  return actionName || actionId || fallback;
 }
 
 /**
@@ -136,22 +134,20 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
       // Check if job is inactive: ask for confirmation with force
       const jobRes = await fetch(`/api/schedule/${encodeURIComponent(cronId)}`);
       const job = jobRes.ok ? await jobRes.json() : null;
-      let force = false;
 
       if (job && !job.active) {
-        if (!confirm(`Job "${job.name}" is inactive. Run anyway?`)) {
+        if (!confirm(`Job "${job.name || job.id}" is inactive. Run anyway?`)) {
           runBtn.disabled = false;
           runBtn.textContent = originalText;
           return;
         }
-        force = true;
       }
 
       try {
         const res = await fetch(`/api/schedule/${encodeURIComponent(cronId)}/run`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ force }),
+          body: JSON.stringify({ force: true }),
         });
         if (!res.ok) {
           const errData = await res.text();

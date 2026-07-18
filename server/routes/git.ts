@@ -111,7 +111,7 @@ function gitCmd(args: string, cwd?: string): string {
 }
 
 /** Convert any SSH-style remotes (git@github.com:...) to HTTPS so they work
- *  without the ssh binary. Idempotent — safe to call on every request. */
+ *  without the ssh binary. Idempotent : safe to call on every request. */
 function ensureHttpsRemotes(): void {
   const dir = OMNI_DIR;
   if (!dir) return;
@@ -318,7 +318,7 @@ gitRouter.post("/sync", async (_req, res) => {
     // Pull with rebase
     try {
       gitCmd("pull --rebase");
-    } catch (_e: any) {
+    } catch {
       // Pull may fail if there's nothing to pull or merge conflicts
     }
 

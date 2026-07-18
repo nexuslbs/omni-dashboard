@@ -80,7 +80,7 @@ export function renderActionButtons(
   const isInstalled = !p.needsBuild;
   // A plugin is compilable (needs cargo build etc.) when it has source code
   // AND the server reports it's not a script. Scripts (Python, JS, shell) are
-  // installed by copying files — no compilation needed. The server determines
+  // installed by copying files : no compilation needed. The server determines
   // isScript based on build system files (Cargo.toml, package.json, pyproject.toml).
   const isCompilable = !p.isScript && !!p.hasSourceCode;
   // Remote plugins that haven't been downloaded yet (no source code on disk)
@@ -274,7 +274,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
 
       try {
         await apiPost(`/plugins/${encodeURIComponent(pluginName)}/download`, { source });
-        (window as any).showToast?.("Plugin downloaded — now click Install to compile", "success");
+        (window as any).showToast?.("Plugin downloaded : now click Install to compile", "success");
         loadFn();
       } catch (e) {
         (window as any).showToast?.("Failed to download: " + formatApiError(e), "error");

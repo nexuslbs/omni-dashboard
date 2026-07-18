@@ -164,7 +164,7 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
               ? `
           <div style="margin-bottom:0.75rem;">
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Action</div>
-            <div style="color:var(--accent-cyan);font-weight:500;">${escapeHtml(job.action_id ? `[${job.action_id}] ${job.action_name || "-"}` : "-")}</div>
+            <div style="color:var(--accent-cyan);font-weight:500;">${escapeHtml(job.action_name || job.action_id || "-")}</div>
           </div>`
               : ""
           }
@@ -189,7 +189,7 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
           ? `
       <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
         <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Action</div>
-        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:0.75rem;font-size:0.9rem;color:var(--accent-cyan);font-weight:500;">${escapeHtml(job.action_id ? `[${job.action_id}] ${job.action_name || ""}` : "")}</div>
+        <div style="background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:0.75rem;font-size:0.9rem;color:var(--accent-cyan);font-weight:500;">${escapeHtml(job.action_name || job.action_id || "")}</div>
         <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">This job runs without an agent: the scheduler executes the action directly.</div>
       </div>`
           : ""
@@ -702,21 +702,19 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
     runBtn.disabled = true;
     runBtn.textContent = "Running...";
 
-    let force = false;
     if (!job.active) {
-      if (!confirm(`Job "${job.name}" is inactive. Run anyway?`)) {
+      if (!confirm(`Job "${job.name || job.id}" is inactive. Run anyway?`)) {
         runBtn.disabled = false;
         runBtn.textContent = originalText;
         return;
       }
-      force = true;
     }
 
     try {
       const res = await fetch(`/api/schedule/${encodeURIComponent(job.id)}/run`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ force }),
+        body: JSON.stringify({ force: true }),
       });
       if (!res.ok) {
         const errData = await res.text();
