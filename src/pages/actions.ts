@@ -117,8 +117,8 @@ function renderActionRow(a: Action, i: number): string {
 
   return `<tr class="${isDisabled ? "action-disabled" : ""}">
     <td>
-      <div style="font-weight:600;">${escapeHtml(a.name)}</div>
-      ${a.description ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.15rem;">${escapeHtml(a.description)}</div>` : ""}
+      <div style="font-weight:600;">${escapeHtml(a.id)}</div>
+      ${a.description ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.15rem;">${escapeHtml(a.description)}</div>` : a.name !== a.id ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-top:0.15rem;">${escapeHtml(a.name)}</div>` : ""}
       ${isDisabled ? ' <span class="badge badge-neutral" style="font-size:0.7rem;background:rgba(245,158,11,0.15);color:#f59e0b;border:1px solid rgba(245,158,11,0.3);padding:0.05rem 0.35rem;border-radius:4px;margin-left:0;margin-top:0.25rem;display:inline-block;vertical-align:middle">Disabled</span>' : ""}
     </td>
     <td><code>${toolDisplay}</code></td>
@@ -173,7 +173,7 @@ async function showActionModal(existing: Action | null): Promise<void> {
           <div class="setting-controls">
             <div class="setting-input-group">
               <input class="filter-input" id="action-name" type="text" value="${isEdit ? escapeHtml(existing!.name) : ""}" placeholder="my-action-name" />
-              <span style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Only letters, numbers, hyphens, and underscores</span>
+              <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;width:100%;">Only letters, numbers, hyphens, and underscores</div>
             </div>
           </div>
         </div>
