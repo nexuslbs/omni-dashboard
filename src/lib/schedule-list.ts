@@ -51,7 +51,7 @@ export async function loadCronJobs(
           <tbody>
             ${jobs
               .map(
-                (j: any) => `
+                (j: Record<string, unknown>) => `
               <tr data-cron-id="${escapeHtml(j.id)}">
                 <td style="color:var(--text-primary);font-weight:500;">${escapeHtml(j.name || j.id)}</td>
                 <td><code style="background:var(--bg-card);padding:0.125rem 0.375rem;border-radius:3px;font-size:0.75rem;">${escapeHtml(j.schedule)}</code></td>
@@ -154,12 +154,12 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
           throw new Error(errData);
         }
         const data = await res.json();
-        (window as any).showToast?.(
+        showToast(
           data.thread_id != null ? `Job fired: thread #${data.thread_id}` : `Job fired (no thread created)`,
           "success",
         );
       } catch (e) {
-        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
+        showToast("Failed: " + formatApiError(e), "error");
       } finally {
         runBtn.disabled = false;
         runBtn.textContent = originalText;
@@ -182,10 +182,10 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
           body: JSON.stringify({ active: isActive }),
         });
         if (!res.ok) throw new Error(await res.text());
-        (window as any).showToast?.(isActive ? "Activated" : "Deactivated", "success");
+        showToast(isActive ? "Activated" : "Deactivated", "success");
         void loadCronJobs(activeOnly, onStateChange);
       } catch (e) {
-        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
+        showToast("Failed: " + formatApiError(e), "error");
       }
     });
   });
@@ -206,7 +206,7 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
         if (!res.ok) throw new Error(await res.text());
         void loadCronJobs(activeOnly, onStateChange);
       } catch (e) {
-        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
+        showToast("Failed: " + formatApiError(e), "error");
       }
     });
   });

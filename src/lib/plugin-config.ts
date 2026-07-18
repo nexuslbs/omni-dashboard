@@ -10,7 +10,7 @@ import type { ConfigField } from "./api";
  */
 export function renderConfigField(
   field: ConfigField,
-  value: any,
+  value: Record<string, unknown>,
   pluginName: string,
   envBadge?: string,
 ): string {
@@ -494,8 +494,8 @@ export function wireRefToggles(): void {
   void (async () => {
     try {
       const response = await apiGet<any>("/secrets");
-      const secrets: any[] = Array.isArray(response) ? response : response?.data || [];
-      const secretNames = secrets.map((s: any) => s.name);
+      const secrets: Record<string, unknown>[] = Array.isArray(response) ? response : response?.data || [];
+      const secretNames = secrets.map((s: Record<string, unknown>) => s.name);
       document.querySelectorAll(".ref-name-select").forEach((sel) => {
         const select = sel as HTMLSelectElement;
         // Read current secret name from the hidden input, not from select.value
@@ -589,7 +589,7 @@ export function wireRefToggles(): void {
             ...((detail.configSchema || []) as any[]),
             ...((detail.manifest?.config_schema || []) as any[]),
           ];
-          const modelField = schema.find((f: any) => f.key === "default_model");
+          const modelField = schema.find((f: Record<string, unknown>) => f.key === "default_model");
           if (modelField?.allowed_values?.length) {
             models = modelField.allowed_values as string[];
           } else if (modelField?.default) {

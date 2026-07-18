@@ -52,7 +52,7 @@ export async function loadKanbanSubtasks(taskId: string): Promise<void> {
     }
     el.innerHTML = data.subtasks
       .map(
-        (st: any) => `
+        (st: Record<string, unknown>) => `
       <div style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.375rem 0;border-bottom:1px solid var(--glass-border,rgba(255,255,255,0.08));font-size:0.8rem;">
         <span style="flex-shrink:0;font-size:1rem;">${subtaskStatusEmoji(st.status)}</span>
         <div style="flex:1;">

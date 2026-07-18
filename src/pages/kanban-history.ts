@@ -8,7 +8,7 @@ interface HistoryRow {
   action: string;
   initial_board: string | null;
   final_board: string | null;
-  previous_values: any;
+  previous_values?: Record<string, unknown>;
   created_at: string | null;
 }
 
@@ -98,7 +98,7 @@ function formatTimestamp(ts: string | null): string {
 }
 
 /** Open a modal with formatted JSON content. */
-function openJsonModal(title: string, jsonObj: any): void {
+function openJsonModal(title: string, jsonObj: Record<string, unknown>): void {
   const overlay = document.createElement("div");
   overlay.style.cssText =
     "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:2000;display:flex;align-items:flex-start;justify-content:center;padding-top:8vh;";
@@ -257,7 +257,7 @@ async function loadHistory(): Promise<void> {
 
     const response = await fetch(`/api/kanban/history?${params.toString()}`);
     const text = await response.text();
-    let res: any;
+    let res: Record<string, unknown>;
     try {
       res = JSON.parse(text);
     } catch {
@@ -325,7 +325,9 @@ async function loadHistory(): Promise<void> {
         if (!href) return;
         const taskId = href.replace("/kanban/", "");
         history.pushState({}, "", href);
-        void import("../lib/router").then((mod: any) => mod.router.go(`kanban/${taskId}`));
+        void import("../lib/router").then((mod: { router: { go: (path: string) => void } }) =>
+          mod.router.go(`kanban/${taskId}`),
+        );
       });
     });
   } catch (e) {

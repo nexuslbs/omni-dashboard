@@ -97,7 +97,7 @@ async function loadChannels(): Promise<void> {
             ...((p.configSchema || []) as any[]),
             ...((p.manifest?.config_schema || []) as any[]),
           ];
-          const modelField = schema.find((f: any) => f.key === "default_model");
+          const modelField = schema.find((f: SettingDefinition) => f.key === "default_model");
           if (modelField && modelField.allowed_values && modelField.allowed_values.length > 0) {
             modelMap[p.name] = modelField.allowed_values as string[];
           } else if (modelField && modelField.default) {

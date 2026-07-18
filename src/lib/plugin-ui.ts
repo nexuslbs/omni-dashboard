@@ -1,3 +1,4 @@
+import { showToast } from "./utils";
 // ── Shared plugin UI helpers for tools/platforms/providers pages ──
 
 import { apiDelete, apiPost, type PluginData } from "./api";
@@ -173,13 +174,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
           ? `/plugins/${encodedName}?mode=uninstall&source=${encodeURIComponent(source)}`
           : `/plugins/${encodedName}?source=${encodeURIComponent(source)}`;
         await apiDelete(url);
-        (window as any).showToast?.(isUninstall ? "Plugin uninstalled" : "Plugin removed", "success");
+        showToast(isUninstall ? "Plugin uninstalled" : "Plugin removed", "success");
         loadFn();
       } catch (e) {
-        (window as any).showToast?.(
-          "Failed to " + (isUninstall ? "uninstall" : "remove") + ": " + formatApiError(e),
-          "error",
-        );
+        showToast("Failed to " + (isUninstall ? "uninstall" : "remove") + ": " + formatApiError(e), "error");
         loadFn();
       }
     });
@@ -199,10 +197,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
 
       try {
         await apiPost(`/plugins/${encodeURIComponent(pluginName)}/reinstall`, { source });
-        (window as any).showToast?.("Plugin reinstalled", "success");
+        showToast("Plugin reinstalled", "success");
         loadFn();
       } catch (e) {
-        (window as any).showToast?.("Failed to reinstall: " + formatApiError(e), "error");
+        showToast("Failed to reinstall: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
         loadFn();
@@ -224,10 +222,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
 
       try {
         await apiPost(`/plugins/${encodeURIComponent(pluginName)}/install`, { source });
-        (window as any).showToast?.("Plugin installed", "success");
+        showToast("Plugin installed", "success");
         loadFn();
       } catch (e) {
-        (window as any).showToast?.("Failed to install: " + formatApiError(e), "error");
+        showToast("Failed to install: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
         loadFn();
@@ -249,10 +247,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
 
       try {
         await apiPost(`/plugins/${encodeURIComponent(pluginName)}/download`, { source });
-        (window as any).showToast?.("Plugin updated", "success");
+        showToast("Plugin updated", "success");
         loadFn();
       } catch (e) {
-        (window as any).showToast?.("Failed to update: " + formatApiError(e), "error");
+        showToast("Failed to update: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
         loadFn();
@@ -274,10 +272,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
 
       try {
         await apiPost(`/plugins/${encodeURIComponent(pluginName)}/download`, { source });
-        (window as any).showToast?.("Plugin downloaded : now click Install to compile", "success");
+        showToast("Plugin downloaded : now click Install to compile", "success");
         loadFn();
       } catch (e) {
-        (window as any).showToast?.("Failed to download: " + formatApiError(e), "error");
+        showToast("Failed to download: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
         loadFn();
@@ -301,10 +299,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       try {
         const endpoint = isCurrentlyEnabled ? "disable" : "enable";
         await apiPost(`/plugins/${encodeURIComponent(pluginName)}/${endpoint}`, { source });
-        (window as any).showToast?.(isCurrentlyEnabled ? "Disabled" : "Enabled", "success");
+        showToast(isCurrentlyEnabled ? "Disabled" : "Enabled", "success");
         loadFn();
       } catch (e) {
-        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
+        showToast("Failed: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
         // Refresh state: backend may have rolled back (e.g., enabling
@@ -325,10 +323,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       (btn as HTMLButtonElement).disabled = true;
       try {
         await apiPost(`/plugins/${encodeURIComponent(pluginName)}/restart`, {});
-        (window as any).showToast?.(`${pluginName} restarted`, "success");
+        showToast(`${pluginName} restarted`, "success");
         loadFn();
       } catch (e) {
-        (window as any).showToast?.("Restart failed: " + formatApiError(e), "error");
+        showToast("Restart failed: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
         loadFn();
@@ -363,10 +361,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
           config[el.getAttribute("data-key") || el.name] = el.value;
         });
         await apiPost(`/plugins/${encodeURIComponent(pluginName)}/config`, { config });
-        (window as any).showToast?.("Configuration saved", "success");
+        showToast("Configuration saved", "success");
         loadFn();
       } catch (e) {
-        (window as any).showToast?.("Failed to save: " + formatApiError(e), "error");
+        showToast("Failed to save: " + formatApiError(e), "error");
       }
     });
   });
@@ -384,10 +382,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
 
       try {
         await apiPost(`/plugins/${encodeURIComponent(pluginName)}/setup`, {});
-        (window as any).showToast?.("Setup completed successfully", "success");
+        showToast("Setup completed successfully", "success");
         loadFn();
       } catch (e) {
-        (window as any).showToast?.("Setup failed: " + formatApiError(e), "error");
+        showToast("Setup failed: " + formatApiError(e), "error");
         btn.textContent = originalText;
         (btn as HTMLButtonElement).disabled = false;
         loadFn();
@@ -408,7 +406,7 @@ export function renderPluginConfig(p: PluginData): string {
   }
   return `<div class="plugin-config-form" style="margin-top:0.5rem;">
     ${p.configSchema
-      .map((field: any) => {
+      .map((field: Record<string, unknown>) => {
         const value = (p.config || {})[field.key] ?? "";
         return renderConfigFieldV2(field, value, p.name);
       })
@@ -497,12 +495,12 @@ export function showInstallModal(pluginType: PluginPageType): void {
       if (gitRef) body.git_ref = gitRef;
       if (path) body.path = path;
       if (name) body.name = name;
-      const result: any = await apiPost("/plugins/install-git", body);
+      const result: Record<string, unknown> = await apiPost("/plugins/install-git", body);
       showStatus(
         `Installed "${result.name || name || "plugin"}" from git. Now install it from the list above.`,
         "success",
       );
-      (window as any).showToast?.("Plugin cloned from git. Click Install to compile.", "success");
+      showToast("Plugin cloned from git. Click Install to compile.", "success");
       installBtn.textContent = "Done";
       // Reload the page list after a moment
       setTimeout(() => {

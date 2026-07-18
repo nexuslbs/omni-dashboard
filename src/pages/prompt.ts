@@ -121,7 +121,7 @@ async function submitPreview(): Promise<void> {
     if (data.messages && data.messages.length > 0) {
       msgsEl.innerHTML = data.messages
         .map(
-          (msg: any, i: number) => `
+          (msg: Record<string, unknown>, i: number) => `
         <div class="msg-card msg-${msg.role} ${msg.msg_type === "plan" ? "msg-plan" : ""}">
           <div class="msg-header">
             <span class="msg-role-badge msg-role-${msg.role === "system" ? "system" : msg.role === "agent" ? "assistant" : msg.role === "user" ? "cause" : msg.role}">

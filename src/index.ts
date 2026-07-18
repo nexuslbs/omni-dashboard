@@ -1,6 +1,7 @@
 import "./style.css";
 import { router } from "./lib/router";
 import { API_BASE, type HealthCheck } from "./lib/api";
+import { showToast } from "./lib/utils";
 
 async function checkConnection(): Promise<void> {
   const statusDot = document.querySelector(".status-dot")!;
@@ -98,73 +99,6 @@ if (sidebarToggle && sidebar && layout) {
 // ── Global File Upload (Drag & Drop) ──
 let uploadFiles: File[] = [];
 
-function showToast(message: string, type: "success" | "error" = "success"): void {
-  let container = document.getElementById("toast-container");
-  if (!container) {
-    container = document.createElement("div");
-    container.id = "toast-container";
-    document.body.appendChild(container);
-  }
-  const toast = document.createElement("div");
-  toast.className = `toast toast-${type}`;
-
-  // Inner structure: body (text + expand) + close button
-  const body = document.createElement("div");
-  body.className = "toast-body";
-
-  const textSpan = document.createElement("div");
-  textSpan.className = "toast-text";
-  textSpan.textContent = message;
-  body.appendChild(textSpan);
-
-  // Expand/collapse for long messages: only show toggle when text actually overflows
-  const needsExpand = message.length > 100 && type === "error";
-  if (needsExpand) {
-    textSpan.classList.add("clamped");
-    // Force layout so we can measure overflow
-    void textSpan.offsetHeight;
-    // Only show toggle if content is actually being truncated
-    if (textSpan.scrollHeight > textSpan.clientHeight) {
-      const expandBtn = document.createElement("button");
-      expandBtn.className = "toast-expand-btn";
-      expandBtn.textContent = "Show more";
-      expandBtn.addEventListener("click", () => {
-        const expanded = textSpan.classList.toggle("expanded");
-        expandBtn.textContent = expanded ? "Show less" : "Show more";
-      });
-      body.appendChild(expandBtn);
-    } else {
-      // Not actually overflowing: remove the clamp
-      textSpan.classList.remove("clamped");
-    }
-  }
-
-  toast.appendChild(body);
-
-  // Close button
-  const closeBtn = document.createElement("button");
-  closeBtn.className = "toast-close";
-  closeBtn.textContent = "✕";
-  closeBtn.setAttribute("aria-label", "Dismiss");
-  closeBtn.addEventListener("click", () => {
-    toast.style.opacity = "0";
-    toast.style.transition = "opacity 0.2s";
-    setTimeout(() => toast.remove(), 200);
-  });
-  toast.appendChild(closeBtn);
-
-  container.appendChild(toast);
-
-  // Auto-dismiss only for success toasts; errors are persistent
-  if (type === "success") {
-    setTimeout(() => {
-      toast.style.opacity = "0";
-      toast.style.transition = "opacity 0.3s";
-      setTimeout(() => toast.remove(), 300);
-    }, 3000);
-  }
-}
-
 function createUploadOverlay(): HTMLDivElement {
   const overlay = document.createElement("div");
   overlay.className = "upload-overlay";
@@ -251,7 +185,7 @@ function showUploadModal(files: File[], existingSet: Set<string>): void {
       const result = await res.json();
       backdrop.remove();
       showToast(`${result.files?.length || currentFiles.length} file(s) uploaded`, "success");
-    } catch (err: any) {
+    } catch (err: unknown) {
       showToast(err?.message || "Upload failed", "error");
       confirmBtn.disabled = false;
       confirmBtn.textContent = `Upload ${currentFiles.length} file${currentFiles.length !== 1 ? "s" : ""}`;

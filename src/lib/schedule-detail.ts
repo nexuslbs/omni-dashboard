@@ -80,7 +80,7 @@ async function loadScheduleSubtasks(scheduleId: string): Promise<void> {
     }
     el.innerHTML = data.subtasks
       .map(
-        (st: any) => `
+        (st: Record<string, unknown>) => `
       <div style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid var(--glass-border,rgba(255,255,255,0.08));font-size:0.8rem;">
         <span style="flex-shrink:0;font-size:1rem;">${scheduleSubtaskEmoji(st.status)}</span>
         <div style="flex:1;">
@@ -249,7 +249,7 @@ export async function loadScheduleThreads(scheduleId: string): Promise<void> {
       return;
     }
 
-    el.innerHTML = `<div class="events-scroll">${rows.map((row: any) => renderMessageCard(row)).join("")}</div>`;
+    el.innerHTML = `<div class="events-scroll">${rows.map((row: Record<string, unknown>) => renderMessageCard(row)).join("")}</div>`;
     wireMessageCardToggles(el);
 
     // Wire thread links
@@ -355,13 +355,13 @@ export async function loadScheduleThreads(scheduleId: string): Promise<void> {
 }
 
 // ── Create/Edit Modal ──
-export async function showCronModal(job: any, onReload: () => void): Promise<void> {
+export async function showCronModal(job: Record<string, unknown>, onReload: () => void): Promise<void> {
   const isEdit = job !== null;
 
   // Fetch available data
-  let channels: any[] = [];
-  let profiles: any[] = [];
-  let existingJobs: any[] = [];
+  let channels: Record<string, unknown>[] = [];
+  let profiles: Record<string, unknown>[] = [];
+  let existingJobs: Record<string, unknown>[] = [];
   let actions: { id: string; name: string; tool_name: string; is_builtin: boolean }[] = [];
   let templates: { profile: string; name: string; label: string }[] = [];
   try {
@@ -431,14 +431,14 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Channel</label>
           <select id="cron-channel" class="filter-select" style="width:100%;">
             <option value="">- (Default cron channel)</option>
-            ${channels.map((ch: any) => `<option value="${ch.id}" ${isEdit && job.channel_id === ch.id ? "selected" : ""}>${escapeHtml(ch.name)} (${escapeHtml(ch.platform || "")})</option>`).join("")}
+            ${channels.map((ch: Record<string, unknown>) => `<option value="${ch.id}" ${isEdit && job.channel_id === ch.id ? "selected" : ""}>${escapeHtml(ch.name)} (${escapeHtml(ch.platform || "")})</option>`).join("")}
           </select>
         </div>
         <div style="margin-bottom:1rem;">
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Profile</label>
           <select id="cron-profile" class="filter-select" style="width:100%;">
             <option value="">- (Default)</option>
-            ${profiles.map((p: any) => `<option value="${escapeHtml(p.name)}" ${isEdit && job.profile === p.name ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}
+            ${profiles.map((p: Record<string, unknown>) => `<option value="${escapeHtml(p.name)}" ${isEdit && job.profile === p.name ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}
           </select>
         </div>
         <div style="margin-bottom:1rem;">
@@ -453,7 +453,7 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Template</label>
           <select id="cron-instruction-file" class="filter-select" style="width:100%;">
             <option value="">- (None)</option>
-            ${templates.map((t: any) => `<option value="${escapeHtml(t.name)}" ${isEdit && job.template === t.name ? "selected" : ""}>${escapeHtml(t.name)} (${escapeHtml(t.profile)})</option>`).join("")}
+            ${templates.map((t: Record<string, unknown>) => `<option value="${escapeHtml(t.name)}" ${isEdit && job.template === t.name ? "selected" : ""}>${escapeHtml(t.name)} (${escapeHtml(t.profile)})</option>`).join("")}
           </select>
           <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Template file to inject into the agent's prompt when this job runs.</div>
         </div>
@@ -469,7 +469,7 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
           <select id="cron-action" class="filter-select" style="width:100%;">
             <option value="">Select action...</option>
             ${actions
-              .map((a: any) => {
+              .map((a: Record<string, unknown>) => {
                 const displayName =
                   a.is_builtin && a.name.startsWith("builtin_")
                     ? `actions:${a.name.replace(/^builtin_/, "")}`
@@ -555,7 +555,7 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
     const channel_id = channelVal ? parseInt(channelVal, 10) : null;
 
     if (!display_name) {
-      (window as any).showToast?.("Display Name is required", "error");
+      showToast("Display Name is required", "error");
       return;
     }
     let name: string;
@@ -568,19 +568,19 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
         .replace(/-+/g, "-")
         .replace(/^-|-$/g, "");
       if (!name) name = "unnamed";
-      if (existingJobs.some((j: any) => j.id === name || j.name === name)) {
+      if (existingJobs.some((j: Record<string, unknown>) => j.id === name || j.name === name)) {
         name = name + "-" + Date.now();
       }
     }
     if (!schedule) {
-      (window as any).showToast?.("Schedule is required", "error");
+      showToast("Schedule is required", "error");
       return;
     }
 
     // Client-side 5-field cron validation
     const cronFields = schedule.trim().split(/\s+/);
     if (cronFields.length !== 5) {
-      (window as any).showToast?.(
+      showToast(
         `Invalid cron expression: expected 5 fields (min hour dom month dow), got ${cronFields.length}. Use 5-field Linux format, e.g. '0 9 * * 1-5' for weekdays at 9am.`,
         "error",
       );
@@ -588,7 +588,7 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
     }
 
     try {
-      const body: any = {
+      const body: Record<string, unknown> = {
         name,
         display_name,
         schedule,
@@ -621,11 +621,11 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
       }
 
       if (!res.ok) throw new Error(await res.text());
-      (window as any).showToast?.(isEdit ? "Schedule updated" : "Schedule created", "success");
+      showToast(isEdit ? "Schedule updated" : "Schedule created", "success");
       modal.remove();
       onReload();
     } catch (e) {
-      (window as any).showToast?.("Failed: " + formatApiError(e), "error");
+      showToast("Failed: " + formatApiError(e), "error");
     }
   });
 }
@@ -721,12 +721,12 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
         throw new Error(errData);
       }
       const data = await res.json();
-      (window as any).showToast?.(
+      showToast(
         data.thread_id != null ? `Job fired: thread #${data.thread_id}` : "Job fired (no thread created)",
         "success",
       );
     } catch (err) {
-      (window as any).showToast?.("Failed: " + (err instanceof Error ? err.message : "Unknown"), "error");
+      showToast("Failed: " + (err instanceof Error ? err.message : "Unknown"), "error");
     } finally {
       runBtn.disabled = false;
       runBtn.textContent = originalText;
@@ -746,7 +746,7 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
         body: JSON.stringify({ active: isActive }),
       });
       if (!res.ok) throw new Error(await res.text());
-      (window as any).showToast?.(isActive ? "Activated" : "Deactivated", "success");
+      showToast(isActive ? "Activated" : "Deactivated", "success");
       // Re-render the detail page with fresh data
       const freshJob = await loadScheduleDetail(cronId);
       if (freshJob) {
@@ -754,7 +754,7 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
         void loadScheduleThreads(freshJob.id);
       }
     } catch (err) {
-      (window as any).showToast?.("Failed: " + (err instanceof Error ? err.message : "Unknown"), "error");
+      showToast("Failed: " + (err instanceof Error ? err.message : "Unknown"), "error");
     }
   });
 

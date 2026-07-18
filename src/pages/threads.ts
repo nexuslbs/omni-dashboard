@@ -1,3 +1,4 @@
+import { showToast } from "../lib/utils";
 import { apiGet } from "../lib/api";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 import { escapeHtml, formatApiError } from "../lib/helpers";
@@ -384,10 +385,10 @@ async function loadThreads(): Promise<void> {
             const err = await res.text();
             throw new Error(err);
           }
-          (window as any).showToast?.("Thread stopped", "success");
+          showToast("Thread stopped", "success");
           void loadThreads();
         } catch (err) {
-          (window as any).showToast?.("Failed: " + (err instanceof Error ? err.message : "Unknown"), "error");
+          showToast("Failed: " + (err instanceof Error ? err.message : "Unknown"), "error");
         } finally {
           btnEl.disabled = false;
           btnEl.textContent = originalText;

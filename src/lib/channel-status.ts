@@ -240,10 +240,10 @@ export function wireChannelToggleButtons(onReload: () => void): void {
           const text = await res.text();
           throw new Error(text);
         }
-        (window as any).showToast?.(closed ? "Channel closed" : "Channel opened", "success");
+        showToast(closed ? "Channel closed" : "Channel opened", "success");
         onReload();
       } catch (e) {
-        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
+        showToast("Failed: " + formatApiError(e), "error");
       }
     });
   });
@@ -266,10 +266,10 @@ export function wireChannelToggleButtons(onReload: () => void): void {
           const err = await res.text();
           throw new Error(err);
         }
-        (window as any).showToast?.("Channel threads stopped", "success");
+        showToast("Channel threads stopped", "success");
         onReload();
       } catch (e) {
-        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
+        showToast("Failed: " + formatApiError(e), "error");
       } finally {
         btnEl.disabled = false;
         btnEl.textContent = originalText;

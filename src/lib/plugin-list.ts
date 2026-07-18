@@ -179,7 +179,7 @@ export function createPluginPage(cfg: PluginPageConfig) {
           } else {
             alert(`Reload failed: ${data.error || "Unknown error"}`);
           }
-        } catch (e: any) {
+        } catch (e: Record<string, unknown>) {
           alert(`Reload request failed: ${e.message}`);
         } finally {
           reloadBtn.textContent = "⟳ Reload";
@@ -237,7 +237,7 @@ async function loadPage(type: PluginPageType, cfg: PluginPageConfig, background?
     if (showMcpTools) {
       try {
         const toolsResponse = await apiGet<any>("/mcp/tools");
-        const toolsList: any[] = Array.isArray(toolsResponse)
+        const toolsList: Record<string, unknown>[] = Array.isArray(toolsResponse)
           ? toolsResponse
           : toolsResponse?.tools || toolsResponse?.data || [];
         for (const t of toolsList) {

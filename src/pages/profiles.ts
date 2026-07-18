@@ -1,6 +1,8 @@
+import { showToast } from "../lib/utils";
 import { apiGet, apiPost } from "../lib/api";
 import { enhanceSelect, unenhanceSelect } from "../lib/dropdown";
 import { escapeHtml, formatApiError } from "../lib/helpers";
+import type { PluginBase, SettingDefinition, ProfileData, ApiResponse } from "../lib/types";
 
 // ── Cached provider/model data ──
 let _providers: string[] = [];
@@ -37,19 +39,21 @@ async function loadProfiles(): Promise<void> {
         /* keep default empty prefix */
       }
     }
-    const profiles = await apiGet<any[]>("/profiles");
+    const profiles = await apiGet<ProfileData[]>("/profiles");
     // Load provider names and their model lists (same pattern as channels)
     try {
-      const pluginResp = await apiGet<any>("/plugins");
-      const allPlugins: any[] = (pluginResp.data || pluginResp).map((p: any) => {
-        const r: any = {};
+      const pluginResp = await apiGet<{ data: PluginBase[] }>("/plugins");
+      const rawPlugins: Record<string, unknown>[] = (
+        (pluginResp.data as PluginBase[]) || (pluginResp as PluginBase[])
+      ).map((p: Record<string, unknown>) => {
+        const r: Record<string, unknown> = {};
         for (const k of Object.keys(p)) {
           r[k.replace(/_([a-z])/g, (_, c) => c.toUpperCase())] = p[k];
         }
         return r;
       });
-      const providers = allPlugins.filter((p: any) => p.pluginType === "provider");
-      _providers = providers.map((p: any) => p.name).sort();
+      const providers = rawPlugins.filter((p) => (p as Record<string, unknown>).pluginType === "provider");
+      _providers = (providers as { name: string }[]).map((p) => p.name).sort();
       const modelMap: Record<string, string[]> = {};
       for (const p of providers) {
         try {
@@ -59,7 +63,7 @@ async function loadProfiles(): Promise<void> {
             ...((p.configSchema || []) as any[]),
             ...((p.manifest?.config_schema || []) as any[]),
           ];
-          const modelField = schema.find((f: any) => f.key === "default_model");
+          const modelField = schema.find((f: Record<string, unknown>) => f.key === "default_model");
           if (modelField && modelField.allowed_values && modelField.allowed_values.length > 0) {
             modelMap[p.name] = modelField.allowed_values as string[];
           } else if (modelField && modelField.default) {
@@ -101,7 +105,7 @@ function getModelsForProvider(provider: string): string[] {
   return _providerModels[provider] || [];
 }
 
-function renderProfilesPage(profiles: any[]): string {
+function renderProfilesPage(profiles: ProfileData[]): string {
   if (!profiles || profiles.length === 0) {
     return '<div class="empty-state">No profiles found on filesystem.</div>';
   }
@@ -439,9 +443,9 @@ function wireProfiles(): void {
           `.profile-edit-cancel[data-profile-name="${profileName}"][data-field="${field}"]`,
         ) as HTMLElement | null;
         if (cancelBtn) cancelBtn.style.display = "none";
-        (window as any).showToast?.("Profile updated", "success");
+        showToast("Profile updated", "success");
       } catch (e) {
-        (window as any).showToast?.("Failed: " + formatApiError(e), "error");
+        showToast("Failed: " + formatApiError(e), "error");
       }
     });
   });
@@ -539,23 +543,25 @@ function wireProfiles(): void {
         // Trigger server-side model refresh first (same as channels handler)
         await apiPost(`/plugins/${encodeURIComponent(provider)}/refresh-models`, {});
         // Re-fetch the plugin list to get updated config_schema
-        const freshResp = await apiGet<any>("/plugins");
-        const freshPlugins: any[] = (freshResp.data || freshResp).map((p: any) => {
-          const r: any = {};
+        const freshResp = await apiGet<{ data: PluginBase[] }>("/plugins");
+        const freshPlugins: Record<string, unknown>[] = (
+          (freshResp.data as PluginBase[]) || (freshResp as PluginBase[])
+        ).map((p: Record<string, unknown>) => {
+          const r: Record<string, unknown> = {};
           for (const k of Object.keys(p)) {
             r[k.replace(/_([a-z])/g, (_, c) => c.toUpperCase())] = p[k];
           }
           return r;
         });
         const providerPlugin = freshPlugins.find(
-          (fp: any) => fp.pluginType === "provider" && fp.name === provider,
+          (fp: Record<string, unknown>) => fp.pluginType === "provider" && fp.name === provider,
         );
         if (!providerPlugin) throw new Error(`Provider "${provider}" not found`);
         const schema = [
           ...((providerPlugin.config_schema || []) as any[]),
           ...((providerPlugin.manifest?.config_schema || []) as any[]),
         ];
-        const modelField = schema.find((f: any) => f.key === "default_model");
+        const modelField = schema.find((f: Record<string, unknown>) => f.key === "default_model");
         let models: string[] = [];
         if (modelField && modelField.allowed_values && modelField.allowed_values.length > 0) {
           models = modelField.allowed_values as string[];
@@ -575,9 +581,9 @@ function wireProfiles(): void {
                 .join("")
             : "");
         modelSelect.value = currentVal && models.includes(currentVal) ? currentVal : "";
-        (window as any).showToast?.(`Models refreshed for ${provider} (${models.length} models)`, "success");
+        showToast(`Models refreshed for ${provider} (${models.length} models)`, "success");
       } catch (e) {
-        (window as any).showToast?.("Failed to refresh: " + formatApiError(e), "error");
+        showToast("Failed to refresh: " + formatApiError(e), "error");
       } finally {
         (btn as HTMLElement).style.opacity = "1";
       }
@@ -680,11 +686,11 @@ function showCreateProfileModal(): void {
     saveBtn.textContent = "Creating...";
     try {
       await apiPost("/profiles", { name, provider, model });
-      (window as any).showToast?.(`Profile '${name}' created`, "success");
+      showToast(`Profile '${name}' created`, "success");
       close();
       void loadProfiles();
     } catch (e) {
-      (window as any).showToast?.("Failed: " + formatApiError(e), "error");
+      showToast("Failed: " + formatApiError(e), "error");
       saveBtn.disabled = false;
       saveBtn.textContent = "Create";
     }
@@ -714,9 +720,9 @@ async function saveTools(profileName: string): Promise<void> {
       const text = await res.text();
       throw new Error(text);
     }
-    (window as any).showToast?.("Tools updated", "success");
+    showToast("Tools updated", "success");
   } catch (e) {
-    (window as any).showToast?.("Failed: " + formatApiError(e), "error");
+    showToast("Failed: " + formatApiError(e), "error");
   }
 }
 

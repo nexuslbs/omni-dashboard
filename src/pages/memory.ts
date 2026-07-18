@@ -433,8 +433,11 @@ async function saveEdit(type: "memory" | "soul"): Promise<void> {
   const maxCharsKey = type === "memory" ? "MEMORY_MAX_CHARS" : "SOUL_MAX_CHARS";
   try {
     const settingsData = await apiGet<any>("/settings");
-    const allSettings = settingsData.categories?.flatMap((c: any) => c.settings) || [];
-    const setting = allSettings.find((s: any) => s.name === maxCharsKey);
+    const allSettings =
+      settingsData.categories?.flatMap(
+        (c: { name: string; label?: string; settings: unknown[] }) => c.settings,
+      ) || [];
+    const setting = allSettings.find((s: Record<string, unknown>) => s.name === maxCharsKey);
     if (setting) {
       const maxChars = parseInt(setting.value, 10);
       if (!isNaN(maxChars) && content.length > maxChars) {
@@ -551,7 +554,9 @@ async function searchMessages(query: string): Promise<void> {
     params.set("limit", "10");
     if (_currentProfile) params.set("profile", _currentProfile);
     if (_currentChannel) params.set("channel", _currentChannel);
-    const data = await apiGet<{ messages: any[]; total: number }>(`/memory/search?${params.toString()}`);
+    const data = await apiGet<{ messages: Record<string, unknown>[]; total: number }>(
+      `/memory/search?${params.toString()}`,
+    );
     if (data.messages.length === 0) {
       el.innerHTML = '<div class="empty-state">No matching messages in this channel</div>';
       return;

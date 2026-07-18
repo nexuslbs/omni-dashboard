@@ -18,7 +18,7 @@ async function loadKanbanActivity(taskId: string): Promise<void> {
   const el = document.getElementById("kanban-threads");
   if (!el) return;
   try {
-    const data = await apiGet<{ rows: any[]; total: number }>(
+    const data = await apiGet<{ rows: Record<string, unknown>[]; total: number }>(
       `/kanban/tasks/${encodeURIComponent(taskId)}/threads?offset=${kanbanActivityOffset}&limit=${kanbanActivityLimit}&order=${kanbanActivityOrder}`,
     );
     const total = parseInt(String(data.total)) || 0;
@@ -30,7 +30,7 @@ async function loadKanbanActivity(taskId: string): Promise<void> {
       return;
     }
 
-    el.innerHTML = `<div class="events-scroll">${rows.map((row: any) => renderMessageCard(row)).join("")}</div>`;
+    el.innerHTML = `<div class="events-scroll">${rows.map((row: Record<string, unknown>) => renderMessageCard(row)).join("")}</div>`;
     wireMessageCardToggles(el);
 
     // Wire thread links
@@ -267,7 +267,9 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
     let channelName = "";
     try {
       const channels = await apiGet<any[]>("/channels");
-      const match = channels.find((ch: any) => String(ch.id) === String(task.channel_id));
+      const match = channels.find(
+        (ch: { id: string; platform?: string }) => String(ch.id) === String(task.channel_id),
+      );
       if (match) {
         channelName = match.name || match.platform || "";
       }
@@ -453,7 +455,7 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
   }
 }
 
-function renderDepsTable(task: any): void {
+function renderDepsTable(task: Record<string, unknown>): void {
   const tbody = document.getElementById("deps-tbody");
   const countEl = document.getElementById("deps-count");
   if (!tbody) return;
@@ -466,7 +468,7 @@ function renderDepsTable(task: any): void {
   }
   tbody.innerHTML = deps
     .map(
-      (dep: any) =>
+      (dep: Record<string, unknown>) =>
         `<tr data-dep-id="${escapeHtml(dep.depends_on_id || dep.id)}" style="border-bottom:1px solid var(--glass-border,rgba(255,255,255,0.06));">
           <td style="padding:0.4rem 0.5rem;"><code style="font-size:0.75rem;color:var(--accent-cyan);">${escapeHtml(dep.depends_on_id || dep.id)}</code></td>
           <td style="padding:0.4rem 0.5rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary);">${escapeHtml(dep.title || "")}</td>
@@ -513,10 +515,10 @@ function wireDepsAdd(taskId: string): void {
         throw new Error(err);
       }
       input.value = "";
-      (window as any).showToast?.("Dependency added", "success");
+      showToast("Dependency added", "success");
       void loadTaskDetail(taskId);
-    } catch (e: any) {
-      (window as any).showToast?.("Failed: " + (e.message || "Unknown"), "error");
+    } catch (e: unknown) {
+      showToast("Failed: " + ((e instanceof Error ? e.message : String(e)) || "Unknown"), "error");
     } finally {
       (newBtn as HTMLButtonElement).textContent = original;
       newBtn.removeAttribute("disabled");
@@ -541,10 +543,10 @@ function wireDepsRemove(taskId: string): void {
           { method: "DELETE" },
         );
         if (!res.ok) throw new Error(await res.text());
-        (window as any).showToast?.("Dependency removed", "success");
+        showToast("Dependency removed", "success");
         void loadTaskDetail(taskId);
-      } catch (e: any) {
-        (window as any).showToast?.("Failed: " + (e.message || "Unknown"), "error");
+      } catch (e: unknown) {
+        showToast("Failed: " + (e.message || "Unknown"), "error");
       }
     });
   });

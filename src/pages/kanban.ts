@@ -72,7 +72,7 @@ async function populateCreateChannelSelect(): Promise<void> {
   if (!select) return;
   try {
     const channels = await apiGet<any[]>("/channels");
-    const kanbanChannel = channels.find((ch: any) => ch.platform === "kanban");
+    const kanbanChannel = channels.find((ch: Record<string, unknown>) => ch.platform === "kanban");
     select.innerHTML = '<option value="">None</option>';
     for (const ch of channels) {
       const opt = document.createElement("option");

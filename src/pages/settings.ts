@@ -1,3 +1,4 @@
+import { showToast } from "../lib/utils";
 import { apiGet, apiPut, type SettingCategory } from "../lib/api";
 import { enhanceSelect, enhanceSelectElement, syncSelectDisplay } from "../lib/dropdown";
 import { escapeHtml, formatApiError } from "../lib/helpers";
@@ -189,7 +190,7 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
       }
       case "select": {
         const opts = (meta.options || [])
-          .map((o: any) => {
+          .map((o: Record<string, unknown>) => {
             const optId = o.id || o.value;
             const optLabel = (o as any).name || o.label || optId;
             return `<option value="${escapeHtml(optId)}"${optId === value ? " selected" : ""}>${escapeHtml(optLabel)}</option>`;
@@ -197,7 +198,9 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
           .join("");
         // If current value doesn't match any option, add it as a visible selected option
         // so $secret:NAME and $env:NAME references are shown rather than a blank select
-        const hasValue = (meta.options || []).some((o: any) => (o.id || o.value) === value);
+        const hasValue = (meta.options || []).some(
+          (o: Record<string, unknown>) => (o.id || o.value) === value,
+        );
         const valueFallback = hasValue
           ? ""
           : `<option value="${escapeHtml(value)}" selected>${escapeHtml(displayLabel(value))}</option>`;
@@ -547,8 +550,10 @@ function wireSettings(): void {
   void (async () => {
     try {
       const response = await apiGet<any>("/secrets");
-      const secrets: any[] = Array.isArray(response) ? response : response?.data || [];
-      const secretNames = secrets.map((s: any) => s.name);
+      const secrets: { name: string; fieldType?: string; value?: string }[] = Array.isArray(response)
+        ? response
+        : response?.data || [];
+      const secretNames = secrets.map((s) => s.name);
       document.querySelectorAll(".ref-name-select").forEach((sel) => {
         const select = sel as HTMLSelectElement;
         // Read current secret name from the hidden input, not from select.value
@@ -622,9 +627,9 @@ async function saveSetting(name: string, value: string): Promise<void> {
     changedValues.delete(name);
     const actionsEl = document.querySelector(`#actions-${safeName}`) as HTMLElement | null;
     if (actionsEl) actionsEl.style.display = "none";
-    (window as any).showToast?.("Setting saved", "success");
+    showToast("Setting saved", "success");
   } catch (e) {
-    (window as any).showToast?.("Failed to save: " + formatApiError(e), "error");
+    showToast("Failed to save: " + formatApiError(e), "error");
   }
 }
 

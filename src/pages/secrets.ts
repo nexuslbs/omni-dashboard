@@ -1,3 +1,4 @@
+import { showToast } from "../lib/utils";
 import { apiGet, apiPost, apiPut, apiDelete } from "../lib/api";
 import { enhanceSelectElement } from "../lib/dropdown";
 import { escapeHtml, formatApiError } from "../lib/helpers";
@@ -302,19 +303,19 @@ async function saveSecret(name: string, value: string): Promise<void> {
     changedSecrets.delete(name);
     const actionsEl = document.querySelector(`#actions-${CSS.escape(name)}`) as HTMLElement | null;
     if (actionsEl) actionsEl.style.display = "none";
-    (window as any).showToast?.("Secret updated", "success");
+    showToast("Secret updated", "success");
   } catch (e) {
-    (window as any).showToast?.("Failed to save: " + formatApiError(e), "error");
+    showToast("Failed to save: " + formatApiError(e), "error");
   }
 }
 
 async function deleteSecret(name: string): Promise<void> {
   try {
     await apiDelete(`/secrets/${encodeURIComponent(name)}`);
-    (window as any).showToast?.("Secret deleted", "success");
+    showToast("Secret deleted", "success");
     void loadSecrets();
   } catch (e) {
-    (window as any).showToast?.("Failed to delete: " + formatApiError(e), "error");
+    showToast("Failed to delete: " + formatApiError(e), "error");
   }
 }
 
@@ -500,7 +501,7 @@ function showCreateModal(): void {
     try {
       await apiPost("/secrets", { name, fieldType, value });
       backdrop.remove();
-      (window as any).showToast?.("Secret created", "success");
+      showToast("Secret created", "success");
       void loadSecrets();
     } catch (e) {
       showStatus(statusEl, "Error: " + formatApiError(e), "error");

@@ -404,6 +404,17 @@ export interface PluginManifest {
   config_schema?: ConfigField[];
 }
 
+export interface PluginConfig {
+  [key: string]: string | number | boolean | undefined;
+}
+
+export interface PluginRemote {
+  url?: string;
+  path?: string;
+  git_ref?: string;
+  [key: string]: unknown;
+}
+
 export interface PluginData {
   id?: string;
   name: string;
@@ -412,7 +423,7 @@ export interface PluginData {
   source: "built-in" | "installed" | "bundled" | "remote" | "mcp_config";
   status: "enabled" | "disabled" | "error";
   manifest: PluginManifest;
-  config: Record<string, any>;
+  config: PluginConfig;
   configSchema?: ConfigField[];
   resolvedEnv?: Record<string, string>;
   createdAt?: string;
@@ -425,7 +436,7 @@ export interface PluginData {
   /** True if this is a script-language MCP (no Cargo.toml, just entrypoint command) */
   isScript?: boolean;
   /** Remote plugin metadata (url, path, ref) */
-  remote?: Record<string, any>;
+  remote?: PluginRemote;
   /** Programming language: "Rust", "Python", "Node.js", or "unknown" */
   language?: string;
 }
@@ -445,8 +456,8 @@ export async function apiGet<T>(path: string): Promise<T> {
 }
 
 /** Convert all snake_case keys in an object to camelCase (shallow). */
-export function toCamelCase<T = Record<string, any>>(obj: Record<string, any>): T {
-  const result: Record<string, any> = {};
+export function toCamelCase<T = Record<string, unknown>>(obj: Record<string, unknown>): T {
+  const result: Record<string, unknown> = {};
   for (const key of Object.keys(obj)) {
     const camelKey = key.replace(/_([a-z])/g, (_, c) => c.toUpperCase());
     result[camelKey] = obj[key];
