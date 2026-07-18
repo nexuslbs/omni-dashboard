@@ -64,7 +64,10 @@ function renderSettingsPage(categories: SettingCategory[]): string {
     return '<div class="empty-state">No settings available</div>';
   }
 
-  return categories
+  // Sort categories alphabetically by key
+  const sorted = [...categories].sort((a, b) => a.name.localeCompare(b.name));
+
+  return sorted
     .map(
       (cat) => `
     <div class="card settings-card" data-category="${escapeHtml(cat.name)}">
@@ -571,8 +574,10 @@ function wireSettings(): void {
         }
         // Sync enhanced select display after programmatic options update
         if (container) {
-          const enhancedSelect = container.querySelector(".custom-select");
-          if (enhancedSelect) {
+          // Use nextElementSibling to target THIS select's wrapper, not
+          // container.querySelector which picks the FIRST custom-select (ref-type's).
+          const enhancedSelect = select.nextElementSibling as HTMLElement | null;
+          if (enhancedSelect && enhancedSelect.classList.contains("custom-select")) {
             const textEl = enhancedSelect.querySelector(".select-trigger-text") as HTMLElement | null;
             if (textEl) textEl.textContent = secretName || "Select secret...";
           }

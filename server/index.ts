@@ -139,6 +139,11 @@ app.all(/^\/api\/plugins(?:\/.*)?$/, async (req, res) => {
   await fetchAndForward(req, res, targetUrl);
 });
 
+// Reload plugins — preserve /api prefix (Rust backend serves at /api/reload)
+app.post("/api/reload", (req, res) => {
+  void fetchAndForward(req, res, `${OMNIAGENT}/api/reload`);
+});
+
 // ────────────────────────────────────────────────────────────────────────────
 // Generic proxy: all other /api/* routes go to OmniAgent with /api prefix stripped
 // ────────────────────────────────────────────────────────────────────────────

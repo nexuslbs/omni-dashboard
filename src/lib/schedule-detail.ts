@@ -453,7 +453,7 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Template</label>
           <select id="cron-instruction-file" class="filter-select" style="width:100%;">
             <option value="">- (None)</option>
-            ${templates.map((t: any) => `<option value="${escapeHtml(t.name)}" ${isEdit && job.template === t.name ? "selected" : ""}>${escapeHtml(t.label)} (${escapeHtml(t.profile)})</option>`).join("")}
+            ${templates.map((t: any) => `<option value="${escapeHtml(t.name)}" ${isEdit && job.template === t.name ? "selected" : ""}>${escapeHtml(t.name)} (${escapeHtml(t.profile)})</option>`).join("")}
           </select>
           <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Template file to inject into the agent's prompt when this job runs.</div>
         </div>
@@ -520,6 +520,7 @@ export async function showCronModal(job: any, onReload: () => void): Promise<voi
   enhanceSelectElement(document.getElementById("cron-instruction-file") as HTMLSelectElement);
   enhanceSelectElement(document.getElementById("cron-mode") as HTMLSelectElement);
   enhanceSelectElement(document.getElementById("cron-action") as HTMLSelectElement);
+  enhanceSelectElement(document.getElementById("cron-plan") as HTMLSelectElement);
   fixMissingSelectOptions(modal);
 
   // Wire mode selector

@@ -124,7 +124,7 @@ async function populateTemplatesSelect(selectId: string): Promise<void> {
     for (const t of templates) {
       const opt = document.createElement("option");
       opt.value = t.name;
-      opt.textContent = `${t.label} (${t.profile})`;
+      opt.textContent = `${t.name} (${t.profile})`;
       select.appendChild(opt);
     }
     refreshEnhancedSelect(selectId);

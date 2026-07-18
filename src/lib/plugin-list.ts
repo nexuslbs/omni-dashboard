@@ -112,8 +112,10 @@ export function createPluginPage(cfg: PluginPageConfig) {
           <h1 class="page-title">${title}</h1>
           <p class="page-subtitle">${subtitle}</p>
         </div>
-        <button id="${abId}" class="btn-primary" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ Add</button>
-        <button id="btn-reload-plugins" class="btn-secondary" title="Reload all plugins from disk configuration" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;color:var(--text-secondary);">⟳ Reload</button>
+        <div style="display:flex;gap:0.5rem;">
+          <button id="${abId}" class="btn-primary" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ Add</button>
+          <button id="btn-reload-plugins" class="btn-secondary" title="Reload all plugins from disk configuration" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;color:var(--text-secondary);">⟳ Reload</button>
+        </div>
       </div>
       <div class="filter-bar" id="${fbId}">
         <div class="filter-section">
@@ -161,7 +163,16 @@ export function createPluginPage(cfg: PluginPageConfig) {
         (reloadBtn as HTMLButtonElement).disabled = true;
         try {
           const resp = await fetch(RELOAD_URL, { method: "POST" });
-          const data = await resp.json();
+          if (!resp.ok) {
+            alert(`Reload failed (HTTP ${resp.status}): expected success`);
+            return;
+          }
+          const text = await resp.text();
+          if (!text.trim()) {
+            alert(`Reload failed: server returned empty response (HTTP ${resp.status})`);
+            return;
+          }
+          const data = JSON.parse(text);
           if (data.success) {
             // Re-fetch and re-render all plugins
             await loadPage(type, cfg);

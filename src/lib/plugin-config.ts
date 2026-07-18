@@ -59,6 +59,7 @@ export function renderConfigField(
               value="${escapeHtml(literalVal)}" data-key="${escapeHtml(field.key)}" style="flex:1;" />
             ${copyButtonHTML(fieldId)}
             ${toggleButtonHTML(fieldId)}
+            <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);flex-shrink:0;">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           </div>
           <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
             <select class="ref-type-select filter-select setting-input" data-key="${escapeHtml(field.key)}">
@@ -72,7 +73,6 @@ export function renderConfigField(
             </select>
             ${copyButtonHTML(fieldId)}
           </div>
-          <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
         </div>
       `;
       break;
@@ -103,6 +103,7 @@ export function renderConfigField(
               ${field.max !== undefined ? `max="${field.max}"` : ""}
               style="flex:1;max-width:120px;" />
             ${copyButtonHTML(fieldId)}
+            <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);flex-shrink:0;">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           </div>
           <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
             <select class="ref-type-select filter-select setting-input" data-key="${escapeHtml(field.key)}">
@@ -116,7 +117,6 @@ export function renderConfigField(
             </select>
             ${copyButtonHTML(fieldId)}
           </div>
-          <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
         </div>
       `;
       break;
@@ -208,6 +208,7 @@ export function renderConfigField(
               value="${escapeHtml(literalVal)}" data-key="${escapeHtml(field.key)}" placeholder="Literal value..."
               style="flex:1;" />
             ${copyButtonHTML(fieldId)}
+            <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);flex-shrink:0;">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           </div>
           <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
             <select class="ref-type-select filter-select setting-input" data-key="${escapeHtml(field.key)}">
@@ -221,7 +222,6 @@ export function renderConfigField(
             </select>
             ${copyButtonHTML(fieldId)}
           </div>
-          <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
         </div>
       `;
       break;
@@ -521,8 +521,10 @@ export function wireRefToggles(): void {
         }
         // Sync enhanced select display after populating options
         if (container) {
-          const enhancedSelect = container.querySelector(".custom-select");
-          if (enhancedSelect) {
+          // Use nextElementSibling to get the specific enhanced wrapper for THIS select,
+          // NOT container.querySelector which picks the FIRST custom-select (ref-type's wrapper).
+          const enhancedSelect = select.nextElementSibling as HTMLElement | null;
+          if (enhancedSelect && enhancedSelect.classList.contains("custom-select")) {
             const textEl = enhancedSelect.querySelector(".select-trigger-text") as HTMLElement | null;
             if (textEl) textEl.textContent = secretName || "Select secret...";
           }
@@ -561,6 +563,75 @@ export function wireRefToggles(): void {
       if (wrapper && wrapper.classList.contains("custom-select")) {
         wrapper.style.display = wasVisible ? "block" : "none";
       }
+    }
+  });
+  // ── Provider→Model auto-populate ──
+  // When a provider-type select changes, find any model-type select that depends_on
+  // this provider's key and populate it with models from the selected provider.
+  document.querySelectorAll(".plugin-config-input[data-key]").forEach((el) => {
+    el.addEventListener("change", async () => {
+      const select = el as HTMLSelectElement;
+      const providerKey = select.getAttribute("data-key");
+      if (!providerKey) return;
+      const providerName = select.value;
+      // Find model selects that depend on this provider key
+      const modelSelects = document.querySelectorAll<HTMLSelectElement>(
+        `.plugin-config-input[data-depends-on="${providerKey}"]`,
+      );
+      if (modelSelects.length === 0) return;
+      // Fetch models for the selected provider
+      let models: string[] = [];
+      if (providerName) {
+        try {
+          const resp = await apiGet<any>(`/plugins/${encodeURIComponent(providerName)}`);
+          const detail = resp && resp.data ? resp.data : resp;
+          const schema = [
+            ...((detail.configSchema || []) as any[]),
+            ...((detail.manifest?.config_schema || []) as any[]),
+          ];
+          const modelField = schema.find((f: any) => f.key === "default_model");
+          if (modelField?.allowed_values?.length) {
+            models = modelField.allowed_values as string[];
+          } else if (modelField?.default) {
+            models = [modelField.default as string];
+          }
+        } catch {
+          // Provider not found or not responding — leave models empty
+        }
+      }
+      // Update all dependent model selects
+      for (const ms of modelSelects) {
+        const currentVal = ms.value;
+        ms.innerHTML = '<option value="">N/A</option>';
+        for (const m of models) {
+          const opt = document.createElement("option");
+          opt.value = m;
+          opt.textContent = m;
+          if (m === currentVal) opt.selected = true;
+          ms.appendChild(opt);
+        }
+        // Sync enhanced display
+        const wrapper = ms.nextElementSibling as HTMLElement | null;
+        if (wrapper && wrapper.classList.contains("custom-select")) {
+          const textEl = wrapper.querySelector(".select-trigger-text") as HTMLElement | null;
+          if (textEl) textEl.textContent = ms.options[ms.selectedIndex]?.label || "N/A";
+        }
+        ms.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    });
+  });
+  // ── Initial provider→model sync ──
+  // For each provider→model pair that already has a provider selected, populate
+  // the model select immediately. Runs after all change handlers are registered.
+  document.querySelectorAll<HTMLSelectElement>(".plugin-config-input[data-depends-on]").forEach((ms) => {
+    const dependsOn = ms.getAttribute("data-depends-on");
+    if (!dependsOn) return;
+    const providerSelect = document.querySelector<HTMLSelectElement>(
+      `.plugin-config-input[data-key="${dependsOn}"]`,
+    );
+    if (providerSelect && providerSelect.value) {
+      // Trigger the same populate flow
+      providerSelect.dispatchEvent(new Event("change", { bubbles: true }));
     }
   });
 }

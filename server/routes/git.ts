@@ -110,6 +110,41 @@ function gitCmd(args: string, cwd?: string): string {
   });
 }
 
+/** Convert any SSH-style remotes (git@github.com:...) to HTTPS so they work
+ *  without the ssh binary. Idempotent — safe to call on every request. */
+function ensureHttpsRemotes(): void {
+  const dir = OMNI_DIR;
+  if (!dir) return;
+  try {
+    const remotes = execSync(`git remote`, { cwd: dir, encoding: "utf-8", timeout: 5000 })
+      .trim()
+      .split("\n")
+      .filter(Boolean);
+    for (const remote of remotes) {
+      try {
+        const url = execSync(`git remote get-url ${remote}`, {
+          cwd: dir,
+          encoding: "utf-8",
+          timeout: 5000,
+        }).trim();
+        if (url.startsWith("git@github.com:")) {
+          const httpsUrl = url.replace(/^git@github\.com:/, "https://github.com/");
+          execSync(`git remote set-url ${remote} "${httpsUrl}"`, {
+            cwd: dir,
+            encoding: "utf-8",
+            timeout: 5000,
+          });
+          console.log(`[git] Converted SSH→HTTPS for remote '${remote}'`);
+        }
+      } catch {
+        // skip remotes that fail to read/set
+      }
+    }
+  } catch {
+    // Not a git repo or no remotes
+  }
+}
+
 function parsePorcelainLine(
   line: string,
 ): { stagedStatus: string | null; unstagedStatus: string; path: string } | null {
@@ -145,6 +180,8 @@ gitRouter.get("/status", (_req, res) => {
       res.status(500).json({ error: "OMNI_DIR not set" });
       return;
     }
+
+    ensureHttpsRemotes();
 
     // Get branch name
     let branch: string;
@@ -273,6 +310,8 @@ gitRouter.post("/sync", async (_req, res) => {
       res.status(500).json({ error: "OMNI_DIR not set" });
       return;
     }
+    ensureHttpsRemotes();
+
     // Fetch all
     gitCmd("fetch --all");
 

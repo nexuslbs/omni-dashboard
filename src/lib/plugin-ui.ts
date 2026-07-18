@@ -76,6 +76,7 @@ export function renderActionButtons(
 ): string {
   const isBuiltin = p.source === "built-in";
   const isRemote = p.source === "remote";
+  const isBundled = p.source === "bundled";
   const isInstalled = !p.needsBuild;
   // A plugin is compilable (needs cargo build etc.) when it has source code
   // AND the server reports it's not a script. Scripts (Python, JS, shell) are
@@ -98,7 +99,7 @@ export function renderActionButtons(
   const showDownload = needsDownload;
 
   // Non-compilable installed plugins (scripts): Update copies the files
-  const showScriptUpdate = !isCompilable && isInstalled && !isBuiltin;
+  const showScriptUpdate = !isCompilable && isInstalled && !isBuiltin && !isBundled;
 
   // Remote compilable installed plugins: Update pulls latest from git
   const showRemoteUpdate = isRemote && isCompilable && isInstalled;
