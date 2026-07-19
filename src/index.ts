@@ -3,6 +3,16 @@ import { router } from "./lib/router";
 import { API_BASE, type HealthCheck } from "./lib/api";
 import { showToast } from "./lib/utils";
 
+// ── Global error boundary ──
+window.addEventListener("error", (event) => {
+  console.error("[App] Unhandled error:", event.error || event.message);
+  showToast(`Unexpected error: ${event.error?.message || event.message}`, "error");
+});
+window.addEventListener("unhandledrejection", (event) => {
+  console.error("[App] Unhandled promise rejection:", event.reason);
+  showToast(`Promise error: ${event.reason?.message || event.reason}`, "error");
+});
+
 async function checkConnection(): Promise<void> {
   const statusDot = document.querySelector(".status-dot")!;
   const statusText = document.querySelector(".status-text")!;
@@ -301,6 +311,6 @@ document.body.addEventListener("drop", async (e) => {
 });
 
 // ── Expose functions globally for wiki.ts and other modules ──
-(window as any).checkExistingFiles = checkExistingFiles;
-(window as any).showUploadModal = showUploadModal;
-(window as any).showToast = showToast;
+(window as unknown as Record<string, unknown>).checkExistingFiles = checkExistingFiles;
+(window as unknown as Record<string, unknown>).showUploadModal = showUploadModal;
+(window as unknown as Record<string, unknown>).showToast = showToast;

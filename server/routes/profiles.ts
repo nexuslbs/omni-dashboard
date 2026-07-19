@@ -107,8 +107,12 @@ async function refreshToolMappings(): Promise<void> {
     const omniagentUrl = process.env.OMNIAGENT_URL || "http://omniagent:8080";
     const response = await fetch(`${omniagentUrl}/mcp/tools`);
     if (!response.ok) return;
-    const data: any = await response.json();
-    const toolsList: any[] = Array.isArray(data) ? data : data?.tools || data?.data || [];
+    const data:
+      | { tools?: Array<Record<string, unknown>>; data?: Array<Record<string, unknown>> }
+      | Array<Record<string, unknown>> = await response.json();
+    const toolsList: Array<Record<string, unknown>> = Array.isArray(data)
+      ? data
+      : data?.tools || data?.data || [];
     const newDisplayToRaw: Record<string, string> = {};
     const newToolDetails: Record<string, { name: string; server_name: string | null }> = {};
     for (const t of toolsList) {
@@ -247,7 +251,7 @@ profilesRouter.patch("/:name", (req, res) => {
     }
 
     // Read existing config or start fresh
-    let config: any = {};
+    let config: { provider: string | null; model: string | null; allowed_tools?: string[] } = {};
     if (existsSync(configPath)) {
       try {
         config = JSON.parse(readFileSync(configPath, "utf-8"));

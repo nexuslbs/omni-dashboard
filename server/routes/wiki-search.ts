@@ -30,13 +30,14 @@ wikiSearchRouter.post("/", async (req: Request, res: Response) => {
       return;
     }
 
-    const data: any = await response.json();
+    const data: { result?: { points?: Array<{ id: number; payload?: { title?: string; path?: string } }> } } =
+      await response.json();
     const points = data.result?.points ?? [];
 
     const queryLower = query.toLowerCase();
 
     // Filter by case-insensitive substring match on payload fields
-    const filtered = points.filter((p: any) => {
+    const filtered = points.filter((p: { payload?: { title?: string; path?: string } }) => {
       const payload = p.payload || {};
       const title: string = payload.title || "";
       const path: string = payload.path || "";
@@ -45,7 +46,13 @@ wikiSearchRouter.post("/", async (req: Request, res: Response) => {
     });
 
     // Sort by relevance: path match > title match
-    const scored = filtered.map((p: any) => {
+    interface ScoredResult {
+      file_path: string;
+      section_title: string;
+      content_preview: string;
+      score: number;
+    }
+    const scored: ScoredResult[] = filtered.map((p: { payload?: { title?: string; path?: string } }) => {
       const payload = p.payload || {};
       const path: string = payload.path || "";
       const title: string = payload.title || "";
@@ -62,7 +69,7 @@ wikiSearchRouter.post("/", async (req: Request, res: Response) => {
       };
     });
 
-    scored.sort((a: any, b: any) => b.score - a.score);
+    scored.sort((a: ScoredResult, b: ScoredResult) => b.score - a.score);
 
     res.json(scored.slice(0, limit));
   } catch (err) {

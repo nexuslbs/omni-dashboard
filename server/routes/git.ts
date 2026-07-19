@@ -229,7 +229,7 @@ gitRouter.get("/status", (_req, res) => {
 
     const result: GitStatusResponse = { branch, ahead, behind, staged, unstaged };
     res.json(result);
-  } catch (e: any) {
+  } catch (e: unknown) {
     res.json({ branch: "(error)", ahead: 0, behind: 0, staged: [], unstaged: [], error: e.message });
   }
 });
@@ -256,7 +256,7 @@ gitRouter.post("/commit", (req, res) => {
     const safeMsg = message.replace(/'/g, "'\\''");
     gitCmd(`commit -m '${safeMsg}'`);
     res.json({ success: true });
-  } catch (e: any) {
+  } catch (e: unknown) {
     res.status(500).json({ error: e.message || "Commit failed" });
   }
 });
@@ -270,7 +270,7 @@ gitRouter.post("/stage", (_req, res) => {
     }
     gitCmd("add -A");
     res.json({ success: true });
-  } catch (e: any) {
+  } catch (e: unknown) {
     res.status(500).json({ error: e.message || "Stage failed" });
   }
 });
@@ -284,7 +284,7 @@ gitRouter.post("/discard", (_req, res) => {
     }
     gitCmd("checkout -- .");
     res.json({ success: true });
-  } catch (e: any) {
+  } catch (e: unknown) {
     res.status(500).json({ error: e.message || "Discard failed" });
   }
 });
@@ -298,7 +298,7 @@ gitRouter.post("/unstage", (_req, res) => {
     }
     gitCmd("reset HEAD -- .");
     res.json({ success: true });
-  } catch (e: any) {
+  } catch (e: unknown) {
     res.status(500).json({ error: e.message || "Unstage failed" });
   }
 });
@@ -333,12 +333,12 @@ gitRouter.post("/sync", async (_req, res) => {
     // Push
     try {
       gitCmd("push nexuslbs");
-    } catch (e: any) {
+    } catch (e: unknown) {
       res.status(500).json({ error: `Push failed: ${e.message}` });
       return;
     }
     res.json({ success: true });
-  } catch (e: any) {
+  } catch (e: unknown) {
     res.status(500).json({ error: e.message || "Sync failed" });
   }
 });

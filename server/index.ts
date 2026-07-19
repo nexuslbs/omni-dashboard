@@ -205,9 +205,10 @@ app.get("/api/templates", (_req, res) => {
     }
 
     res.json(templates);
-  } catch (e: any) {
-    console.error("[templates] Error listing templates:", e?.message || e);
-    res.status(500).json({ error: e.message || "Unknown error" });
+  } catch (e: unknown) {
+    const errMsg = e instanceof Error ? e.message : String(e);
+    console.error("[templates] Error listing templates:", errMsg);
+    res.status(500).json({ error: errMsg || "Unknown error" });
   }
 });
 
@@ -226,7 +227,7 @@ if (existsSync(distPath)) {
   app.use(
     express.static(distPath, {
       maxAge: "1h",
-      setHeaders(res: any, filePath: string) {
+      setHeaders(res: express.Response, filePath: string) {
         if (filePath.endsWith("index.html")) {
           res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
           res.setHeader("Pragma", "no-cache");

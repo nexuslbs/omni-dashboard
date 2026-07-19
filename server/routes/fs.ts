@@ -58,7 +58,7 @@ fsRouter.get("/list", (req, res) => {
       });
 
     res.json({ entries, path: rawPath, root: ROOT });
-  } catch (e: any) {
+  } catch (e: unknown) {
     res.status(500).json({ error: e.message || "Failed to list directory" });
   }
 });
@@ -97,7 +97,7 @@ fsRouter.get("/read", (req, res) => {
         binary: true,
       });
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     res.status(500).json({ error: e.message || "Failed to read file" });
   }
 });
@@ -164,7 +164,7 @@ fsRouter.get("/diff", (req, res) => {
       // git diff failed (file not tracked, etc)
       res.json({ diff: "" });
     }
-  } catch (e: any) {
+  } catch (e: unknown) {
     res.status(500).json({ error: e.message || "Failed to get diff" });
   }
 });
@@ -183,7 +183,7 @@ fsRouter.get("/download", (req, res) => {
 
     const fileName = basename(absPath);
     res.download(absPath, fileName);
-  } catch (e: any) {
+  } catch (e: unknown) {
     res.status(500).json({ error: e.message || "Failed to download file" });
   }
 });
