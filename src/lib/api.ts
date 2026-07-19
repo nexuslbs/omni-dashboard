@@ -37,6 +37,8 @@ export interface Message {
   channel_name?: string;
   type: string | null;
   subtype: string | null;
+  thread_status: string | null;
+  iteration_number: number | null;
 }
 
 export interface TokenUsage {

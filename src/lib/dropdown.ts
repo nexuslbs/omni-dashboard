@@ -53,13 +53,13 @@ export function unenhanceSelect(selectId: string): HTMLSelectElement | null {
     wrapper.remove();
   }
   el.style.display = "";
-  delete (el as any).dataset._enhanced;
+  delete (el as HTMLSelectElement).dataset._enhanced;
   return el;
 }
 
 export function enhanceSelectElement(select: HTMLSelectElement): void {
-  if (!select || (select as any).dataset._enhanced) return;
-  (select as any).dataset._enhanced = "1";
+  if (!select || (select as HTMLSelectElement).dataset._enhanced) return;
+  (select as HTMLSelectElement).dataset._enhanced = "1";
 
   const wrapper = document.createElement("div");
   wrapper.className = "custom-select";

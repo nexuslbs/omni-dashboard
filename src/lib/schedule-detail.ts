@@ -2,7 +2,7 @@
  * Schedule job detail view and create/edit modal.
  * Extracted from src/pages/schedule.ts
  */
-import { apiGet } from "./api";
+import { apiGet, type Message } from "./api";
 import { escapeHtml, formatApiError } from "./helpers";
 import { enhanceSelectElement } from "./dropdown";
 import { renderMessageCard, wireMessageCardToggles } from "./message-card";
@@ -81,7 +81,7 @@ async function loadScheduleSubtasks(scheduleId: string): Promise<void> {
     }
     el.innerHTML = data.subtasks
       .map(
-        (st: Record<string, any>) => `
+        (st: Record<string, string>) => `
       <div style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid var(--glass-border,rgba(255,255,255,0.08));font-size:0.8rem;">
         <span style="flex-shrink:0;font-size:1rem;">${scheduleSubtaskEmoji(st.status)}</span>
         <div style="flex:1;">
@@ -250,7 +250,8 @@ export async function loadScheduleThreads(scheduleId: string): Promise<void> {
       return;
     }
 
-    el.innerHTML = `<div class="events-scroll">${rows.map((row: Record<string, unknown>) => renderMessageCard(row)).join("")}</div>`;
+    el.innerHTML =
+      '<div class="events-scroll">' + rows.map((row: Message) => renderMessageCard(row)).join("") + "</div>";
     wireMessageCardToggles(el);
 
     // Wire thread links
@@ -360,8 +361,8 @@ export async function showCronModal(job: Record<string, unknown>, onReload: () =
   const isEdit = job !== null;
 
   // Fetch available data
-  let channels: Record<string, unknown>[] = [];
-  let profiles: Record<string, unknown>[] = [];
+  let channels: { id: string; name: string; platform: string }[] = [];
+  let profiles: { name: string }[] = [];
   let existingJobs: Record<string, unknown>[] = [];
   let actions: { id: string; name: string; tool_name: string; is_builtin: boolean }[] = [];
   let templates: { profile: string; name: string; label: string }[] = [];
@@ -432,14 +433,14 @@ export async function showCronModal(job: Record<string, unknown>, onReload: () =
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Channel</label>
           <select id="cron-channel" class="filter-select" style="width:100%;">
             <option value="">- (Default cron channel)</option>
-            ${channels.map((ch: Record<string, any>) => `<option value="${ch.id}" ${isEdit && job.channel_id === ch.id ? "selected" : ""}>${escapeHtml(ch.name)} (${escapeHtml(ch.platform || "")})</option>`).join("")}
+            ${channels.map((ch: { id: string; name: string; platform: string }) => `<option value="${ch.id}" ${isEdit && job.channel_id === ch.id ? "selected" : ""}>${escapeHtml(ch.name)} (${escapeHtml(ch.platform || "")})</option>`).join("")}
           </select>
         </div>
         <div style="margin-bottom:1rem;">
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Profile</label>
           <select id="cron-profile" class="filter-select" style="width:100%;">
             <option value="">- (Default)</option>
-            ${profiles.map((p: Record<string, any>) => `<option value="${escapeHtml(p.name)}" ${isEdit && job.profile === p.name ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}
+            ${profiles.map((p: { name: string }) => `<option value="${escapeHtml(p.name)}" ${isEdit && job.profile === p.name ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}
           </select>
         </div>
         <div style="margin-bottom:1rem;">
@@ -454,7 +455,7 @@ export async function showCronModal(job: Record<string, unknown>, onReload: () =
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Template</label>
           <select id="cron-instruction-file" class="filter-select" style="width:100%;">
             <option value="">- (None)</option>
-            ${templates.map((t: Record<string, any>) => `<option value="${escapeHtml(t.name)}" ${isEdit && job.template === t.name ? "selected" : ""}>${escapeHtml(t.name)} (${escapeHtml(t.profile)})</option>`).join("")}
+            ${templates.map((t: { name: string; profile: string }) => `<option value="${escapeHtml(t.name)}" ${isEdit && job.template === t.name ? "selected" : ""}>${escapeHtml(t.name)} (${escapeHtml(t.profile)})</option>`).join("")}
           </select>
           <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Template file to inject into the agent's prompt when this job runs.</div>
         </div>

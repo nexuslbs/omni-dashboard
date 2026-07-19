@@ -2,6 +2,7 @@ import { escapeHtml } from "./helpers";
 import { marked, Renderer } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
+import type { Message } from "./api";
 
 // ── Configure markdown/highlight once (same as explorer.ts) ──
 hljs.configure({ ignoreUnescapedHTML: true });
@@ -116,7 +117,7 @@ function formatRelativeTime(date: Date): string {
 }
 
 // ── Render a single message as a card block ──
-export function renderMessageCard(msg: Record<string, any>): string {
+export function renderMessageCard(msg: Message): string {
   const role = msg.role || "unknown";
   const rColor = roleColor(role);
   const contentRaw = msg.content || "";

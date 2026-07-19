@@ -218,7 +218,7 @@ function renderBarChart(hourly: HourlyBucket[]): string {
   for (const h of hourly) {
     // bucket may be Date object (pg rowMode:array) or ISO string (JSON aggregate); normalize to ISO string
     const bucketStr =
-      typeof h.bucket === "object" && (h.bucket as any) instanceof Date
+      typeof h.bucket === "object" && (h.bucket as Date) instanceof Date
         ? (h.bucket as Date).toISOString()
         : String(h.bucket);
     const day = bucketStr.slice(0, 10);

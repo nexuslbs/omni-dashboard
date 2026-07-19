@@ -1,9 +1,8 @@
-import { apiGet, apiPost, type SearchResult } from "../lib/api";
+import { API_BASE, apiGet, apiPost, type Message, type SearchResult } from "../lib/api";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 import { renderMessageCard, wireMessageCardToggles } from "../lib/message-card";
 import { router } from "../lib/router";
 import { escapeHtml, formatApiError } from "../lib/helpers";
-import { API_BASE } from "../lib/api";
 
 // ── Block state ──
 let _currentProfile = "omni";
@@ -554,9 +553,7 @@ async function searchMessages(query: string): Promise<void> {
     params.set("limit", "10");
     if (_currentProfile) params.set("profile", _currentProfile);
     if (_currentChannel) params.set("channel", _currentChannel);
-    const data = await apiGet<{ messages: Record<string, unknown>[]; total: number }>(
-      `/memory/search?${params.toString()}`,
-    );
+    const data = await apiGet<{ messages: Message[]; total: number }>(`/memory/search?${params.toString()}`);
     if (data.messages.length === 0) {
       el.innerHTML = '<div class="empty-state">No matching messages in this channel</div>';
       return;

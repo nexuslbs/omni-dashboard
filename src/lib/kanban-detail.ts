@@ -2,7 +2,7 @@
  * Kanban detail view overlay: task details, edit modal, threads.
  * Extracted from src/pages/kanban.ts
  */
-import { apiGet } from "./api";
+import { apiGet, type Message } from "./api";
 import { STATUS_LABELS, statusBadge, moveTask } from "./kanban-board";
 // ── Helper imports ──
 import { escapeHtml, formatApiError } from "./helpers";
@@ -19,7 +19,7 @@ async function loadKanbanActivity(taskId: string): Promise<void> {
   const el = document.getElementById("kanban-threads");
   if (!el) return;
   try {
-    const data = await apiGet<{ rows: Record<string, unknown>[]; total: number }>(
+    const data = await apiGet<{ rows: Message[]; total: number }>(
       `/kanban/tasks/${encodeURIComponent(taskId)}/threads?offset=${kanbanActivityOffset}&limit=${kanbanActivityLimit}&order=${kanbanActivityOrder}`,
     );
     const total = parseInt(String(data.total)) || 0;
@@ -31,7 +31,8 @@ async function loadKanbanActivity(taskId: string): Promise<void> {
       return;
     }
 
-    el.innerHTML = `<div class="events-scroll">${rows.map((row: Record<string, unknown>) => renderMessageCard(row)).join("")}</div>`;
+    el.innerHTML =
+      '<div class="events-scroll">' + rows.map((row: Message) => renderMessageCard(row)).join("") + "</div>";
     wireMessageCardToggles(el);
 
     // Wire thread links

@@ -65,8 +65,12 @@ function renderSettingsPage(categories: SettingCategory[]): string {
     return '<div class="empty-state">No settings available</div>';
   }
 
-  // Sort categories alphabetically by key
-  const sorted = [...categories].sort((a, b) => a.name.localeCompare(b.name));
+  // Put "general" first, then sort the rest alphabetically by name
+  const sorted = [...categories].sort((a, b) => {
+    if (a.name === "general") return -1;
+    if (b.name === "general") return 1;
+    return a.name.localeCompare(b.name);
+  });
 
   return sorted
     .map(

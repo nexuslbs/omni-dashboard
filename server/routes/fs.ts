@@ -36,7 +36,6 @@ fsRouter.get("/list", (req, res) => {
     }
 
     const entries: FsEntry[] = readdirSync(absPath)
-      .filter((name) => !name.startsWith("."))
       .map((name) => {
         const full = join(absPath, name);
         let type: "file" | "directory" = "file";
