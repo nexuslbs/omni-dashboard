@@ -3,6 +3,7 @@
  * Extracted from src/pages/channels.ts
  */
 import { escapeHtml, formatApiError } from "./helpers";
+import { showToast } from "./utils";
 // syncSelectDisplay used indirectly via channel-config calls
 
 import type { ChannelData } from "./api";

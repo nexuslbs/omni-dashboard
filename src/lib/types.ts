@@ -1,5 +1,6 @@
 // ── Plugin Types ──
 export interface PluginBase {
+  [key: string]: unknown;
   name: string;
   description?: string;
   plugin_type: string;
@@ -12,6 +13,7 @@ export interface PluginBase {
 }
 
 export interface SettingDefinition {
+  [key: string]: unknown;
   key: string;
   label: string;
   type: string;
@@ -21,8 +23,16 @@ export interface SettingDefinition {
   required?: boolean;
 }
 
+export interface SettingOption {
+  [key: string]: unknown;
+  id?: string;
+  value?: string;
+  label?: string;
+}
+
 // ── Channel Types ──
 export interface ChannelData {
+  [key: string]: unknown;
   id: string;
   name?: string;
   platform: string;
@@ -35,16 +45,24 @@ export interface ChannelData {
 
 // ── Profile Types ──
 export interface ProfileData {
+  [key: string]: unknown;
   name: string;
   label?: string;
   allowed_tools?: string[];
+  all_tools?: string[];
+  all_tool_details?: { name: string; server_name?: string }[];
+  skills?: string[];
+  provider?: string;
+  model?: string;
   default_model?: string;
   default_provider?: string;
   config?: Record<string, unknown>;
+  config_schema?: SettingDefinition[];
 }
 
 // ── Kanban Types ──
 export interface KanbanTask {
+  [key: string]: unknown;
   id: string;
   title: string;
   status: string;
@@ -57,6 +75,7 @@ export interface KanbanTask {
 }
 
 export interface KanbanHistoryEntry {
+  [key: string]: unknown;
   id: string;
   kanban_task_id: string;
   action: string;
@@ -68,6 +87,7 @@ export interface KanbanHistoryEntry {
 
 // ── Message Types ──
 export interface MessageData {
+  [key: string]: unknown;
   id: string;
   thread_id: string;
   role: string;
@@ -80,6 +100,7 @@ export interface MessageData {
 
 // ── Settings Types ──
 export interface SettingCategory {
+  [key: string]: unknown;
   name: string;
   label?: string;
   settings: SettingDefinition[];
@@ -94,6 +115,7 @@ export interface SettingsResponse {
 
 // ── Secret Types ──
 export interface SecretData {
+  [key: string]: unknown;
   name: string;
   fieldType?: string;
   value?: string;

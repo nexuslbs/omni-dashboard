@@ -2,7 +2,7 @@ import { showToast } from "../lib/utils";
 import { apiGet, apiPost } from "../lib/api";
 import { enhanceSelect, unenhanceSelect } from "../lib/dropdown";
 import { escapeHtml, formatApiError } from "../lib/helpers";
-import type { PluginBase, SettingDefinition, ProfileData, ApiResponse } from "../lib/types";
+import type { PluginBase, ProfileData } from "../lib/types";
 
 // ── Cached provider/model data ──
 let _providers: string[] = [];

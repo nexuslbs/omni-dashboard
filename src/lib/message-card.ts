@@ -116,7 +116,7 @@ function formatRelativeTime(date: Date): string {
 }
 
 // ── Render a single message as a card block ──
-export function renderMessageCard(msg: Record<string, unknown>): string {
+export function renderMessageCard(msg: Record<string, any>): string {
   const role = msg.role || "unknown";
   const rColor = roleColor(role);
   const contentRaw = msg.content || "";

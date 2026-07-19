@@ -15,6 +15,7 @@ export interface SystemStats {
 }
 
 export interface Message {
+  [key: string]: unknown;
   id: number;
   channel_id: number | null;
   role: string;
@@ -46,6 +47,7 @@ export interface TokenUsage {
 }
 
 export interface OverviewRow {
+  [key: string]: unknown;
   id: number;
   content_preview: string | null;
   status: string;
@@ -205,6 +207,7 @@ export interface GitStatusResponse {
 // ── Kanban Types ──
 
 export interface KanbanBoard {
+  [key: string]: unknown;
   id: string;
   name: string;
   description: string | null;
@@ -216,6 +219,7 @@ export interface KanbanBoardsResponse {
 }
 
 export interface KanbanTask {
+  [key: string]: unknown;
   id: string;
   display_id?: number;
   title: string;
@@ -246,6 +250,7 @@ export interface KanbanBoardResponse {
 // ── Cron/Schedule Types ──
 
 export interface CronJob {
+  [key: string]: unknown;
   id: string;
   name: string;
   schedule: string;
@@ -276,6 +281,7 @@ export interface CronJob {
 // ── Settings Types ──
 
 export interface SettingOption {
+  [key: string]: unknown;
   value: string;
   label: string;
 }
@@ -295,6 +301,7 @@ export interface SettingEntry {
 }
 
 export interface SettingCategory {
+  [key: string]: unknown;
   name: string;
   label: string;
   settings: SettingEntry[];
@@ -310,6 +317,7 @@ export interface ProfileChannel {
 }
 
 export interface ProfileData {
+  [key: string]: unknown;
   name: string;
   provider: string | null;
   model: string | null;
@@ -321,6 +329,7 @@ export interface ProfileData {
 // ── Channel Types ──
 
 export interface ChannelData {
+  [key: string]: unknown;
   id: number;
   name: string;
   platform: string | null;
@@ -369,6 +378,7 @@ export interface PlatformData {
 // ── Plugin Types ──
 
 export interface ConfigField {
+  [key: string]: unknown;
   key: string;
   label: string;
   type:
@@ -416,6 +426,7 @@ export interface PluginRemote {
 }
 
 export interface PluginData {
+  [key: string]: unknown;
   id?: string;
   name: string;
   pluginType: "platform" | "tool" | "provider";

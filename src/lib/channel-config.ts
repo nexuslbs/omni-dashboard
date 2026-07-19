@@ -5,7 +5,8 @@
 import { escapeHtml, formatApiError } from "./helpers";
 import { enhanceSelect, unenhanceSelect } from "./dropdown";
 import { apiGet, apiPost } from "./api";
-import type { PluginBase, SettingDefinition, ProfileData, ChannelData } from "./types";
+import type { SettingDefinition, ProfileData } from "./types";
+import { showToast } from "./utils";
 
 // ── Module-level data shared across channel modules ──
 export let _profiles: ProfileData[] = [];
@@ -63,8 +64,8 @@ export function renderProfileSelect(channelId: number, current: string): string 
         data-channel-id="${channelId}" data-field="profile" data-original="${escapeHtml(current)}">
         ${_profiles
           .map(
-            (p: Record<string, unknown>) =>
-              `<option value="${escapeHtml(p.name)}" ${p.name === current ? "selected" : ""}>${escapeHtml(p.name)}</option>`,
+            (p: ProfileData) =>
+              `<option value="${escapeHtml(p.name!)}" ${p.name === current ? "selected" : ""}>${escapeHtml(p.name!)}</option>`,
           )
           .join("")}
       </select>
@@ -190,7 +191,7 @@ export function renderTemplateInput(
       <select id="${selectId}" class="filter-select channel-edit-input"
         data-channel-id="${channelId}" data-field="template" data-original="${escapeHtml(current)}">
         <option value="">- (None) -</option>
-        ${(templates || []).map((t: Record<string, unknown>) => `<option value="${escapeHtml(t.name)}" ${t.name === current ? "selected" : ""}>${escapeHtml(t.name)} (${escapeHtml(t.profile)})</option>`).join("")}
+        ${(templates || []).map((t: { name: string; profile: string }) => `<option value="${escapeHtml(t.name)}" ${t.name === current ? "selected" : ""}>${escapeHtml(t.name)} (${escapeHtml(t.profile)})</option>`).join("")}
       </select>
       <button type="button" class="channel-edit-btn save" data-channel-id="${channelId}" data-field="template" style="display:none;" title="Save">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>

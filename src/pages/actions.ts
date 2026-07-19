@@ -64,8 +64,7 @@ async function loadActions(): Promise<void> {
     availableTools = tools;
     renderActionList(listEl);
   } catch (e: unknown) {
-    const errMsg = e instanceof Error ? e.message : String(e);
-    listEl.innerHTML = `<div class="error-state">Failed to load: ${escapeHtml(e?.message || "Unknown error")}</div>`;
+    listEl.innerHTML = `<div class="error-state">Failed to load: ${escapeHtml(e instanceof Error ? e.message : String(e))}</div>`;
   }
 }
 
@@ -148,8 +147,7 @@ async function runAction(action: Action, index: number): Promise<void> {
     // Show result in a modal
     showResultModal(action.name, msg, isError);
   } catch (e: unknown) {
-    const errMsg = e instanceof Error ? e.message : String(e);
-    showResultModal(action.name, `Error: ${e?.message || "Request failed"}`, true);
+    showResultModal(action.name, `Error: ${e instanceof Error ? e.message : String(e)}`, true);
   } finally {
     btn.disabled = false;
     btn.textContent = "▶ Run";
@@ -415,7 +413,6 @@ async function showActionModal(existing: Action | null): Promise<void> {
       closeModal();
       void loadActions();
     } catch (e: unknown) {
-      const errMsg = e instanceof Error ? e.message : String(e);
       saveBtn.disabled = false;
       saveBtn.textContent = isEdit ? "Update" : "Create";
       alert(`Failed to save: ${e?.message || "Unknown error"}`);
@@ -430,8 +427,7 @@ async function deleteAction(action: Action): Promise<void> {
     await apiDelete(`/actions/${action.id}`);
     void loadActions();
   } catch (e: unknown) {
-    const errMsg = e instanceof Error ? e.message : String(e);
-    alert(`Failed to delete: ${e?.message || "Unknown error"}`);
+    alert(`Failed to delete: ${e instanceof Error ? e.message : String(e)}`);
   }
 }
 
@@ -447,8 +443,7 @@ async function toggleAction(action: Action): Promise<void> {
     });
     void loadActions();
   } catch (e: unknown) {
-    const errMsg = e instanceof Error ? e.message : String(e);
-    alert(`Failed to toggle action: ${e?.message || "Unknown error"}`);
+    alert(`Failed to toggle action: ${e instanceof Error ? e.message : String(e)}`);
   }
 }
 

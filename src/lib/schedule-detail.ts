@@ -8,6 +8,7 @@ import { enhanceSelectElement } from "./dropdown";
 import { renderMessageCard, wireMessageCardToggles } from "./message-card";
 import { router } from "./router";
 import { fixMissingSelectOptions } from "./helpers";
+import { showToast } from "./utils";
 
 // ── Pagination state for schedule threads ──
 let threadsOffset = 0;

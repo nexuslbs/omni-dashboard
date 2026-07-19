@@ -6,6 +6,7 @@ import { apiGet } from "./api";
 import { escapeHtml, formatApiError } from "./helpers";
 import { formatDate } from "./schedule-detail";
 import { router } from "./router";
+import { showToast } from "./utils";
 
 // ── Action label formatting ──
 export function formatActionLabel(

@@ -196,7 +196,7 @@ function showUploadModal(files: File[], existingSet: Set<string>): void {
       backdrop.remove();
       showToast(`${result.files?.length || currentFiles.length} file(s) uploaded`, "success");
     } catch (err: unknown) {
-      showToast(err?.message || "Upload failed", "error");
+      showToast((err as any)?.message || "Upload failed", "error");
       confirmBtn.disabled = false;
       confirmBtn.textContent = `Upload ${currentFiles.length} file${currentFiles.length !== 1 ? "s" : ""}`;
     }

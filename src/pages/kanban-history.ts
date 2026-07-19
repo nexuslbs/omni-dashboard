@@ -270,7 +270,7 @@ async function loadHistory(): Promise<void> {
       return;
     }
 
-    const rows: HistoryRow[] = res.data;
+    const rows = res.data as HistoryRow[];
     if (rows.length === 0) {
       listEl.innerHTML = '<div class="empty-state">No history entries match the current filters</div>';
       return;

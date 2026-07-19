@@ -8,6 +8,7 @@ import { STATUS_LABELS, statusBadge, moveTask } from "./kanban-board";
 import { escapeHtml, formatApiError } from "./helpers";
 import { enhanceSelect, syncSelectDisplay } from "./dropdown";
 import { renderMessageCard, wireMessageCardToggles } from "./message-card";
+import { showToast } from "./utils";
 
 // ── Pagination state for kanban activity ──
 let kanbanActivityOffset = 0;
@@ -455,11 +456,11 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
   }
 }
 
-function renderDepsTable(task: Record<string, unknown>): void {
+function renderDepsTable(task: Record<string, any>): void {
   const tbody = document.getElementById("deps-tbody");
   const countEl = document.getElementById("deps-count");
   if (!tbody) return;
-  const deps = task.dependencies || [];
+  const deps = (task.dependencies || []) as Record<string, unknown>[];
   if (countEl) countEl.textContent = `${deps.length} dependenc${deps.length === 1 ? "y" : "ies"}`;
   if (deps.length === 0) {
     tbody.innerHTML =
@@ -468,7 +469,7 @@ function renderDepsTable(task: Record<string, unknown>): void {
   }
   tbody.innerHTML = deps
     .map(
-      (dep: Record<string, unknown>) =>
+      (dep: Record<string, any>) =>
         `<tr data-dep-id="${escapeHtml(dep.depends_on_id || dep.id)}" style="border-bottom:1px solid var(--glass-border,rgba(255,255,255,0.06));">
           <td style="padding:0.4rem 0.5rem;"><code style="font-size:0.75rem;color:var(--accent-cyan);">${escapeHtml(dep.depends_on_id || dep.id)}</code></td>
           <td style="padding:0.4rem 0.5rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary);">${escapeHtml(dep.title || "")}</td>
