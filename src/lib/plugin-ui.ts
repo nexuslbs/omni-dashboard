@@ -4,6 +4,7 @@ import { showToast } from "./utils";
 import { apiDelete, apiPost, type PluginData } from "./api";
 import { escapeHtml, formatApiError } from "./helpers";
 import { renderConfigField as renderConfigFieldV2 } from "./plugin-config";
+import type { ConfigField } from "./api";
 
 export type PluginPageType = "tool" | "platform" | "provider";
 
@@ -406,8 +407,8 @@ export function renderPluginConfig(p: PluginData): string {
   }
   return `<div class="plugin-config-form" style="margin-top:0.5rem;">
     ${p.configSchema
-      .map((field: Record<string, unknown>) => {
-        const value = (p.config || {})[field.key] ?? "";
+      .map((field: ConfigField) => {
+        const value = String((p.config || {})[field.key] ?? "");
         return renderConfigFieldV2(field, value, p.name);
       })
       .join("")}

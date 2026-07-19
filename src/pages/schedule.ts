@@ -57,7 +57,7 @@ export function renderSchedule(container: HTMLElement): void {
   // Wire create button
   document.getElementById("create-cron-btn")?.addEventListener("click", async () => {
     const { showCronModal } = await import("../lib/schedule-detail");
-    void showCronModal(null, () => loadCronJobs(_activeOnly, () => {}));
+    void showCronModal(null as any, () => loadCronJobs(_activeOnly, () => {}));
   });
 
   document.getElementById("toggle-all-filter")?.addEventListener("click", () => {

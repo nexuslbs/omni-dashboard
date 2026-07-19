@@ -120,9 +120,9 @@ async function loadChannels(): Promise<void> {
     // Populate platform filter from data
     const platformSel = document.getElementById("filter-platform") as HTMLSelectElement | null;
     if (platformSel) {
-      const platforms = [
-        ...new Set(channels.map((c: ChannelData) => c.platform).filter(Boolean)),
-      ].sort() as string[];
+      const platforms = Array.from(
+        new Set(channels.map((c: ChannelData) => c.platform).filter(Boolean)),
+      ).sort() as string[];
       platformSel.innerHTML = '<option value="all">All</option>';
       for (const p of platforms) {
         platformSel.innerHTML += '<option value="' + escapeHtml(p) + '">' + escapeHtml(p) + "</option>";

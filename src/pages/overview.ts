@@ -224,7 +224,7 @@ function renderBarChart(hourly: HourlyBucket[]): string {
     const day = bucketStr.slice(0, 10);
     dayMap.set(day, (dayMap.get(day) || 0) + h.count);
   }
-  for (const [day, count] of dayMap) {
+  for (const [day, count] of Array.from(dayMap)) {
     const shortDay = new Date(day + "T00:00:00Z").toLocaleDateString("en-US", { weekday: "short" });
     daily.push({ label: shortDay, count });
   }

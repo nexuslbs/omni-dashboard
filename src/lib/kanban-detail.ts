@@ -547,7 +547,7 @@ function wireDepsRemove(taskId: string): void {
         showToast("Dependency removed", "success");
         void loadTaskDetail(taskId);
       } catch (e: unknown) {
-        showToast("Failed: " + (e.message || "Unknown"), "error");
+        showToast("Failed: " + ((e as any).message || "Unknown"), "error");
       }
     });
   });

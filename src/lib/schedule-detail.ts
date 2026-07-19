@@ -81,7 +81,7 @@ async function loadScheduleSubtasks(scheduleId: string): Promise<void> {
     }
     el.innerHTML = data.subtasks
       .map(
-        (st: Record<string, unknown>) => `
+        (st: Record<string, any>) => `
       <div style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid var(--glass-border,rgba(255,255,255,0.08));font-size:0.8rem;">
         <span style="flex-shrink:0;font-size:1rem;">${scheduleSubtaskEmoji(st.status)}</span>
         <div style="flex:1;">
@@ -403,7 +403,7 @@ export async function showCronModal(job: Record<string, unknown>, onReload: () =
       <div style="padding:1.25rem;">
         <div style="margin-bottom:1rem;">
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Display Name</label>
-          <input id="cron-display" type="text" class="filter-input" value="${isEdit ? escapeHtml(job.display_name || job.name || "") : ""}" style="width:100%;" />
+          <input id="cron-display" type="text" class="filter-input" value="${isEdit ? escapeHtml((job as any).display_name || (job as any).name || "") : ""}" style="width:100%;" />
           <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">${isEdit ? "" : "The internal name is auto-generated from this value."}</div>
         </div>
         <div style="margin-bottom:1rem;">
@@ -411,7 +411,7 @@ export async function showCronModal(job: Record<string, unknown>, onReload: () =
             <label style="font-size:0.8rem;color:var(--text-muted);">Schedule (cron expression)</label>
             <button id="cron-help-btn" type="button" style="background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:0.7rem;padding:0;line-height:1;width:14px;height:14px;border-radius:50%;border:1px solid var(--text-muted);display:inline-flex;align-items:center;justify-content:center;" title="Cron format help">?</button>
           </div>
-          <input id="cron-schedule" type="text" class="filter-input" value="${isEdit ? escapeHtml(job.schedule) : "0 0 * * *"}" style="width:100%;font-family:monospace;" />
+          <input id="cron-schedule" type="text" class="filter-input" value="${isEdit ? escapeHtml((job as any).schedule) : "0 0 * * *"}" style="width:100%;font-family:monospace;" />
           <div id="cron-help-box" style="display:none;margin-top:0.5rem;padding:0.75rem;background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:6px;font-size:0.78rem;color:var(--text-secondary);line-height:1.6;">
             <div style="margin-bottom:0.5rem;padding:0.375rem 0.5rem;background:rgba(139,92,246,0.12);border:1px solid rgba(139,92,246,0.25);border-radius:4px;color:var(--accent-purple);font-size:0.75rem;">
               ⚡ <strong>5-field format (no seconds field)</strong>: the system auto-prepends <code style="background:rgba(0,0,0,0.2);padding:0.125rem 0.25rem;border-radius:3px;">0</code> (second=0) internally. Do <em>not</em> include a seconds field.
@@ -432,14 +432,14 @@ export async function showCronModal(job: Record<string, unknown>, onReload: () =
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Channel</label>
           <select id="cron-channel" class="filter-select" style="width:100%;">
             <option value="">- (Default cron channel)</option>
-            ${channels.map((ch: Record<string, unknown>) => `<option value="${ch.id}" ${isEdit && job.channel_id === ch.id ? "selected" : ""}>${escapeHtml(ch.name)} (${escapeHtml(ch.platform || "")})</option>`).join("")}
+            ${channels.map((ch: Record<string, any>) => `<option value="${ch.id}" ${isEdit && job.channel_id === ch.id ? "selected" : ""}>${escapeHtml(ch.name)} (${escapeHtml(ch.platform || "")})</option>`).join("")}
           </select>
         </div>
         <div style="margin-bottom:1rem;">
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Profile</label>
           <select id="cron-profile" class="filter-select" style="width:100%;">
             <option value="">- (Default)</option>
-            ${profiles.map((p: Record<string, unknown>) => `<option value="${escapeHtml(p.name)}" ${isEdit && job.profile === p.name ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}
+            ${profiles.map((p: Record<string, any>) => `<option value="${escapeHtml(p.name)}" ${isEdit && job.profile === p.name ? "selected" : ""}>${escapeHtml(p.name)}</option>`).join("")}
           </select>
         </div>
         <div style="margin-bottom:1rem;">
@@ -454,7 +454,7 @@ export async function showCronModal(job: Record<string, unknown>, onReload: () =
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Template</label>
           <select id="cron-instruction-file" class="filter-select" style="width:100%;">
             <option value="">- (None)</option>
-            ${templates.map((t: Record<string, unknown>) => `<option value="${escapeHtml(t.name)}" ${isEdit && job.template === t.name ? "selected" : ""}>${escapeHtml(t.name)} (${escapeHtml(t.profile)})</option>`).join("")}
+            ${templates.map((t: Record<string, any>) => `<option value="${escapeHtml(t.name)}" ${isEdit && job.template === t.name ? "selected" : ""}>${escapeHtml(t.name)} (${escapeHtml(t.profile)})</option>`).join("")}
           </select>
           <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Template file to inject into the agent's prompt when this job runs.</div>
         </div>
@@ -470,7 +470,7 @@ export async function showCronModal(job: Record<string, unknown>, onReload: () =
           <select id="cron-action" class="filter-select" style="width:100%;">
             <option value="">Select action...</option>
             ${actions
-              .map((a: Record<string, unknown>) => {
+              .map((a: Record<string, any>) => {
                 const displayName =
                   a.is_builtin && a.name.startsWith("builtin_")
                     ? `actions:${a.name.replace(/^builtin_/, "")}`
@@ -489,7 +489,7 @@ export async function showCronModal(job: Record<string, unknown>, onReload: () =
         </div>
         <div id="cron-agentic-section" style="display:${isEdit ? (job.mode === "agentic" ? "block" : "none") : "block"};margin-bottom:1rem;">
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Prompt</label>
-          <textarea id="cron-prompt" class="filter-input" style="width:100%;min-height:80px;resize:vertical;font-family:monospace;font-size:0.8rem;">${isEdit && job.prompt ? escapeHtml(job.prompt) : ""}</textarea>
+          <textarea id="cron-prompt" class="filter-input" style="width:100%;min-height:80px;resize:vertical;font-family:monospace;font-size:0.8rem;">${isEdit && (job as any).prompt ? escapeHtml((job as any).prompt) : ""}</textarea>
         </div>
         <div style="margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem;">
           <input id="cron-active" type="checkbox" ${isEdit ? (job.active ? "checked" : "") : ""} />
@@ -561,7 +561,7 @@ export async function showCronModal(job: Record<string, unknown>, onReload: () =
     }
     let name: string;
     if (isEdit) {
-      name = job.name;
+      name = (job as any).name;
     } else {
       name = display_name
         .toLowerCase()
@@ -608,7 +608,7 @@ export async function showCronModal(job: Record<string, unknown>, onReload: () =
 
       let res: Response;
       if (isEdit) {
-        res = await fetch(`/api/schedule/${encodeURIComponent(job.id)}`, {
+        res = await fetch(`/api/schedule/${encodeURIComponent((job as any).id)}`, {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),

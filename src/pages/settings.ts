@@ -190,9 +190,9 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
       }
       case "select": {
         const opts = (meta.options || [])
-          .map((o: Record<string, unknown>) => {
+          .map((o: any) => {
             const optId = o.id || o.value;
-            const optLabel = (o as any).name || o.label || optId;
+            const optLabel = o.name || o.label || optId;
             return `<option value="${escapeHtml(optId)}"${optId === value ? " selected" : ""}>${escapeHtml(optLabel)}</option>`;
           })
           .join("");

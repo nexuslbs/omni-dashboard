@@ -129,7 +129,7 @@ async function submitPreview(): Promise<void> {
             </span>
             <span class="msg-idx">#${i + 1}</span>
           </div>
-          <pre class="msg-content">${escapeHtml(msg.content || "")}</pre>
+          <pre class="msg-content">${escapeHtml((msg as any).content || "")}</pre>
         </div>
       `,
         )

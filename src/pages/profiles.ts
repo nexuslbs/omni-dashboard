@@ -43,16 +43,16 @@ async function loadProfiles(): Promise<void> {
     // Load provider names and their model lists (same pattern as channels)
     try {
       const pluginResp = await apiGet<{ data: PluginBase[] }>("/plugins");
-      const rawPlugins: Record<string, unknown>[] = (
-        (pluginResp.data as PluginBase[]) || (pluginResp as PluginBase[])
-      ).map((p: Record<string, unknown>) => {
-        const r: Record<string, unknown> = {};
-        for (const k of Object.keys(p)) {
-          r[k.replace(/_([a-z])/g, (_, c) => c.toUpperCase())] = p[k];
-        }
-        return r;
-      });
-      const providers = rawPlugins.filter((p) => (p as Record<string, unknown>).pluginType === "provider");
+      const rawPlugins: Record<string, any>[] = ((pluginResp as any).data || pluginResp || []).map(
+        (p: Record<string, any>) => {
+          const r: Record<string, unknown> = {};
+          for (const k of Object.keys(p)) {
+            r[k.replace(/_([a-z])/g, (_, c) => c.toUpperCase())] = p[k];
+          }
+          return r;
+        },
+      );
+      const providers = rawPlugins.filter((p) => p.pluginType === "provider");
       _providers = (providers as { name: string }[]).map((p) => p.name).sort();
       const modelMap: Record<string, string[]> = {};
       for (const p of providers) {
@@ -154,7 +154,7 @@ function renderProfilesPage(profiles: ProfileData[]): string {
             <div class="text-muted" style="font-size:0.75rem;margin-bottom:0.5rem;">
               Skills are stored on the filesystem at <code>profiles/${escapeHtml(p.name)}/skills/</code>. Add or remove files there to manage skills.
             </div>
-            ${renderSkillsList(p.name, p.skills)}
+            ${renderSkillsList(p.name, p.skills || [])}
           </div>
         </div>
       </div>
@@ -544,15 +544,15 @@ function wireProfiles(): void {
         await apiPost(`/plugins/${encodeURIComponent(provider)}/refresh-models`, {});
         // Re-fetch the plugin list to get updated config_schema
         const freshResp = await apiGet<{ data: PluginBase[] }>("/plugins");
-        const freshPlugins: Record<string, unknown>[] = (
-          (freshResp.data as PluginBase[]) || (freshResp as PluginBase[])
-        ).map((p: Record<string, unknown>) => {
-          const r: Record<string, unknown> = {};
-          for (const k of Object.keys(p)) {
-            r[k.replace(/_([a-z])/g, (_, c) => c.toUpperCase())] = p[k];
-          }
-          return r;
-        });
+        const freshPlugins: Record<string, any>[] = ((freshResp as any).data || freshResp || []).map(
+          (p: Record<string, any>) => {
+            const r: Record<string, unknown> = {};
+            for (const k of Object.keys(p)) {
+              r[k.replace(/_([a-z])/g, (_, c) => c.toUpperCase())] = p[k];
+            }
+            return r;
+          },
+        );
         const providerPlugin = freshPlugins.find(
           (fp: Record<string, unknown>) => fp.pluginType === "provider" && fp.name === provider,
         );

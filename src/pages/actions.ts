@@ -415,7 +415,7 @@ async function showActionModal(existing: Action | null): Promise<void> {
     } catch (e: unknown) {
       saveBtn.disabled = false;
       saveBtn.textContent = isEdit ? "Update" : "Create";
-      alert(`Failed to save: ${e?.message || "Unknown error"}`);
+      alert(`Failed to save: ${(e as any)?.message || "Unknown error"}`);
     }
   });
 }
