@@ -30,8 +30,9 @@ wikiSearchRouter.post("/", async (req: Request, res: Response) => {
       return;
     }
 
-    const data: { result?: { points?: Array<{ id: number; payload?: { title?: string; path?: string } }> } } =
-      await response.json();
+    const data = (await response.json()) as {
+      result?: { points?: Array<{ id: number; payload?: { title?: string; path?: string } }> };
+    };
     const points = data.result?.points ?? [];
 
     const queryLower = query.toLowerCase();

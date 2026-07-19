@@ -107,22 +107,23 @@ async function refreshToolMappings(): Promise<void> {
     const omniagentUrl = process.env.OMNIAGENT_URL || "http://omniagent:8080";
     const response = await fetch(`${omniagentUrl}/mcp/tools`);
     if (!response.ok) return;
-    const data:
+    const data = (await response.json()) as
       | { tools?: Array<Record<string, unknown>>; data?: Array<Record<string, unknown>> }
-      | Array<Record<string, unknown>> = await response.json();
+      | Array<Record<string, unknown>>;
     const toolsList: Array<Record<string, unknown>> = Array.isArray(data)
       ? data
       : data?.tools || data?.data || [];
     const newDisplayToRaw: Record<string, string> = {};
     const newToolDetails: Record<string, { name: string; server_name: string | null }> = {};
     for (const t of toolsList) {
-      const rawName = t.name || t.tool || "";
+      const tAny = t as Record<string, string>;
+      const rawName = tAny.name || tAny.tool || "";
       // Use full_name for display (prefixes builtin tools like "builtin_list-memories")
-      const displayName = t.full_name || rawName;
+      const displayName = tAny.full_name || rawName;
       newDisplayToRaw[displayName] = rawName;
       newToolDetails[rawName] = {
         name: displayName,
-        server_name: t.server_name || t.source || null,
+        server_name: tAny.server_name || tAny.source || null,
       };
     }
     DISPLAY_TO_RAW = newDisplayToRaw;
@@ -251,12 +252,15 @@ profilesRouter.patch("/:name", (req, res) => {
     }
 
     // Read existing config or start fresh
-    let config: { provider: string | null; model: string | null; allowed_tools?: string[] } = {};
+    let config: { provider: string | null; model: string | null; allowed_tools?: string[] } = {
+      provider: null,
+      model: null,
+    };
     if (existsSync(configPath)) {
       try {
         config = JSON.parse(readFileSync(configPath, "utf-8"));
       } catch {
-        config = {};
+        config = { provider: null, model: null };
       }
     }
 
