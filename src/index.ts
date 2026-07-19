@@ -4,12 +4,10 @@ import { API_BASE, type HealthCheck } from "./lib/api";
 import { showToast } from "./lib/utils";
 
 // ── Global error boundary ──
-window.addEventListener("error", (event) => {
-  console.error("[App] Unhandled error:", event.error || event.message);
+window.addEventListener("error", (event: ErrorEvent) => {
   showToast(`Unexpected error: ${event.error?.message || event.message}`, "error");
 });
-window.addEventListener("unhandledrejection", (event) => {
-  console.error("[App] Unhandled promise rejection:", event.reason);
+window.addEventListener("unhandledrejection", (event: PromiseRejectionEvent) => {
   showToast(`Promise error: ${event.reason?.message || event.reason}`, "error");
 });
 
@@ -196,7 +194,7 @@ function showUploadModal(files: File[], existingSet: Set<string>): void {
       backdrop.remove();
       showToast(`${result.files?.length || currentFiles.length} file(s) uploaded`, "success");
     } catch (err: unknown) {
-      showToast((err as any)?.message || "Upload failed", "error");
+      showToast((err as { message?: string })?.message || "Upload failed", "error");
       confirmBtn.disabled = false;
       confirmBtn.textContent = `Upload ${currentFiles.length} file${currentFiles.length !== 1 ? "s" : ""}`;
     }

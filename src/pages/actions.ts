@@ -7,7 +7,7 @@ interface Action {
   id: string;
   name: string;
   tool_name: string;
-  params: Record<string, any>;
+  params: Record<string, unknown>;
   enabled: boolean;
   is_builtin: boolean;
   description?: string;
@@ -139,8 +139,11 @@ async function runAction(action: Action, index: number): Promise<void> {
   btn.disabled = true;
   btn.textContent = "Running...";
   try {
-    const result = await apiPost<any>(`/actions/${action.id}/run`, {});
-    const isError = result.is_error;
+    const result = await apiPost<{ is_error?: boolean; result?: string; error?: string }>(
+      `/actions/${action.id}/run`,
+      {},
+    );
+    const isError = result.is_error ?? false;
     const msg = isError
       ? `Failed: ${result.result || result.error || "Unknown error"}`
       : `Success: ${JSON.stringify(result.result || "Done")}`;
@@ -260,7 +263,9 @@ async function showActionModal(existing: Action | null): Promise<void> {
     const required = new Set<string>(schema.required || []);
 
     let html = "";
-    for (const [key, prop] of Object.entries<any>(properties)) {
+    for (const [key, prop] of Object.entries(
+      properties as Record<string, { type?: string; description?: string; items?: { enum?: string[] } }>,
+    )) {
       const value = currentParamValues[key] ?? "";
       const type = prop.type || "string";
       const isRequired = required.has(key);
@@ -383,10 +388,12 @@ async function showActionModal(existing: Action | null): Promise<void> {
     if (!name || !toolName) return;
 
     // Build params from the form
-    const params: Record<string, any> = {};
+    const params: Record<string, string | number | boolean> = {};
     const tool = availableTools.find((t) => t.name === toolName);
     const properties = tool?.input_schema?.properties || {};
-    for (const [key, prop] of Object.entries<any>(properties)) {
+    for (const [key, prop] of Object.entries(
+      properties as Record<string, { type?: string; description?: string; items?: { enum?: string[] } }>,
+    )) {
       const value = currentParamValues[key];
       if (value !== undefined && value !== "") {
         const type = prop.type || "string";
@@ -415,7 +422,7 @@ async function showActionModal(existing: Action | null): Promise<void> {
     } catch (e: unknown) {
       saveBtn.disabled = false;
       saveBtn.textContent = isEdit ? "Update" : "Create";
-      alert(`Failed to save: ${(e as any)?.message || "Unknown error"}`);
+      alert(`Failed to save: ${(e as Error)?.message || "Unknown error"}`);
     }
   });
 }

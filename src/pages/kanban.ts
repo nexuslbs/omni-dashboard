@@ -71,18 +71,19 @@ async function populateCreateChannelSelect(): Promise<void> {
   const select = document.getElementById("task-create-channel") as HTMLSelectElement;
   if (!select) return;
   try {
-    const channels = await apiGet<any[]>("/channels");
+    const channels = (await apiGet("/channels")) as Record<string, unknown>[];
     const kanbanChannel = channels.find((ch: Record<string, unknown>) => ch.platform === "kanban");
     select.innerHTML = '<option value="">None</option>';
     for (const ch of channels) {
       const opt = document.createElement("option");
-      opt.value = ch.id || ch.name || ch.channel_id || "";
-      opt.textContent = ch.name || ch.id || "";
+      const chAny = ch as Record<string, string>;
+      opt.value = chAny.id || chAny.name || chAny.channel_id || "";
+      opt.textContent = chAny.name || chAny.id || "";
       if (
         kanbanChannel &&
-        (opt.value === kanbanChannel.id ||
-          opt.value === kanbanChannel.name ||
-          opt.value === kanbanChannel.channel_id)
+        (opt.value === (kanbanChannel as Record<string, string>).id ||
+          opt.value === (kanbanChannel as Record<string, string>).name ||
+          opt.value === (kanbanChannel as Record<string, string>).channel_id)
       ) {
         opt.selected = true;
       }

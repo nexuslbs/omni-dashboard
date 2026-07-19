@@ -194,10 +194,10 @@ function renderSettingRow(setting: SettingCategory["settings"][0]): string {
       }
       case "select": {
         const opts = (meta.options || [])
-          .map((o: any) => {
-            const optId = o.id || o.value;
+          .map((o: { id?: string; value?: string; name?: string; label?: string }) => {
+            const optId = o.id || o.value || "";
             const optLabel = o.name || o.label || optId;
-            return `<option value="${escapeHtml(optId)}"${optId === value ? " selected" : ""}>${escapeHtml(optLabel)}</option>`;
+            return `<option value="${escapeHtml(optId)}"${optId === value ? " selected" : ""}>${escapeHtml(optLabel || "")}</option>`;
           })
           .join("");
         // If current value doesn't match any option, add it as a visible selected option
@@ -553,10 +553,14 @@ function wireSettings(): void {
   // Fetch secrets and populate ref-name-select dropdowns
   void (async () => {
     try {
-      const response = await apiGet<any>("/secrets");
+      const response = await apiGet("/secrets");
       const secrets: { name: string; fieldType?: string; value?: string }[] = Array.isArray(response)
-        ? response
-        : response?.data || [];
+        ? (response as { name: string; fieldType?: string; value?: string }[])
+        : ((response as Record<string, unknown>)?.data as {
+            name: string;
+            fieldType?: string;
+            value?: string;
+          }[]) || [];
       const secretNames = secrets.map((s) => s.name);
       document.querySelectorAll(".ref-name-select").forEach((sel) => {
         const select = sel as HTMLSelectElement;

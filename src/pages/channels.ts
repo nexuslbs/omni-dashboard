@@ -73,9 +73,9 @@ async function loadChannels(): Promise<void> {
   try {
     const channels = await apiGet<ChannelData[]>("/channels");
     try {
-      const p = await apiGet<any[]>("/profiles");
+      const p = (await apiGet("/profiles")) as Record<string, unknown>[];
       _profiles.length = 0;
-      _profiles.push(...p);
+      _profiles.push(...(p as any));
     } catch {
       _profiles.length = 0;
     }

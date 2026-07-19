@@ -67,7 +67,7 @@ export async function renderPrompt(container: HTMLElement): Promise<void> {
 async function loadChannels(): Promise<void> {
   const select = document.getElementById("channel-select") as HTMLSelectElement;
   try {
-    const channels = await apiGet<any[]>("/channels");
+    const channels = await apiGet<{ name: string; platform?: string; id?: string }[]>("/channels");
     select.innerHTML = '<option value="">Select a channel </option>';
     for (const ch of channels) {
       const opt = document.createElement("option");
@@ -75,9 +75,8 @@ async function loadChannels(): Promise<void> {
       opt.textContent = `${ch.name}${ch.platform ? ` (${ch.platform})` : ""}`;
       select.appendChild(opt);
     }
-  } catch (e) {
+  } catch {
     select.innerHTML = '<option value="">Failed to load channels</option>';
-    console.error("[prompt] Failed to load channels:", e);
   }
 }
 

@@ -165,7 +165,7 @@ async function populateProfileSelect(selectId: string, currentProfile?: string):
   const select = document.getElementById(selectId) as HTMLSelectElement;
   if (!select) return;
   try {
-    const profiles = await apiGet<any[]>("/profiles");
+    const profiles = (await apiGet("/profiles")) as { name?: string }[];
     select.innerHTML = '<option value="">None</option>';
     for (const p of profiles) {
       const name = typeof p === "string" ? p : p.name || "";
@@ -213,7 +213,7 @@ function refreshEnhancedSelect(selectId: string): void {
   if (wrapper && wrapper.classList.contains("custom-select")) {
     wrapper.remove();
   }
-  (select as any).dataset._enhanced = "";
+  (select as HTMLSelectElement).dataset._enhanced = "";
   select.style.display = "";
   enhanceSelect(selectId);
 }
@@ -262,13 +262,13 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
   }
 
   try {
-    const task = await apiGet<any>("/kanban/tasks/" + encodeURIComponent(taskId));
+    const task = (await apiGet("/kanban/tasks/" + encodeURIComponent(taskId))) as any;
     if (subtitle) subtitle.textContent = `Task: ${escapeHtml(task.title)}`;
 
     // Load channels to resolve channel name
     let channelName = "";
     try {
-      const channels = await apiGet<any[]>("/channels");
+      const channels = (await apiGet("/channels")) as { id: string; name?: string; platform?: string }[];
       const match = channels.find(
         (ch: { id: string; platform?: string }) => String(ch.id) === String(task.channel_id),
       );
@@ -457,7 +457,7 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
   }
 }
 
-function renderDepsTable(task: Record<string, any>): void {
+function renderDepsTable(task: any): void {
   const tbody = document.getElementById("deps-tbody");
   const countEl = document.getElementById("deps-count");
   if (!tbody) return;
@@ -470,7 +470,7 @@ function renderDepsTable(task: Record<string, any>): void {
   }
   tbody.innerHTML = deps
     .map(
-      (dep: Record<string, any>) =>
+      (dep: any) =>
         `<tr data-dep-id="${escapeHtml(dep.depends_on_id || dep.id)}" style="border-bottom:1px solid var(--glass-border,rgba(255,255,255,0.06));">
           <td style="padding:0.4rem 0.5rem;"><code style="font-size:0.75rem;color:var(--accent-cyan);">${escapeHtml(dep.depends_on_id || dep.id)}</code></td>
           <td style="padding:0.4rem 0.5rem;max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-primary);">${escapeHtml(dep.title || "")}</td>

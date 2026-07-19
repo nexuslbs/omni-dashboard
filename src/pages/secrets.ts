@@ -53,7 +53,7 @@ const changedSecrets = new Map<string, ChangedSecret>();
 async function loadSecrets(): Promise<void> {
   const content = document.getElementById("secrets-content")!;
   try {
-    const response = await apiGet<any>("/secrets");
+    const response = (await apiGet("/secrets")) as SecretEntry[];
     const secrets: SecretEntry[] = response || [];
     changedSecrets.clear();
     content.innerHTML =
