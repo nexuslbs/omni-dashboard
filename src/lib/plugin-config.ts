@@ -334,7 +334,7 @@ export function renderBuiltinSection(items: string[], heading?: string): string 
  * Collect current form values from a plugin config form, matching save logic.
  */
 export function getCurrentConfig(formEl: HTMLElement): Record<string, any> {
-  const config: Record<string, any> = {};
+  const config: Record<string, unknown> = {};
   formEl.querySelectorAll(".plugin-config-input:not(.plugin-multi-select)").forEach((input) => {
     const el = input as HTMLInputElement | HTMLSelectElement;
     const key = el.getAttribute("data-key");

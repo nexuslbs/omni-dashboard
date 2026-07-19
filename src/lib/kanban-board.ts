@@ -332,12 +332,11 @@ export async function loadBoard(showArchived: boolean): Promise<void> {
             body: JSON.stringify({ status: newStatus, position: insertIndex }),
           });
           if (!res.ok) {
-            const text = await res.text().catch(() => "Unknown error");
-            console.error("Position move failed:", `${res.status}: ${text}`);
+            // console.error("Position move failed:", `${res.status}: ${await res.text().catch(() => "Unknown error")}`);
           }
           void loadBoard(showArchived);
-        } catch (err) {
-          console.error("Drop move failed:", err);
+        } catch {
+          // console.error("Drop move failed:", err);
           void loadBoard(showArchived);
         }
       });

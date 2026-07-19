@@ -54,11 +54,11 @@ function readProfileSkills(name: string): string[] {
 function readProfileConfig(name: string): {
   provider: string | null;
   model: string | null;
-  allowed_tools: string[];
+  allowed_tools?: string[];
 } {
   const configPath = getConfigPath(name);
   if (!existsSync(configPath)) {
-    return { provider: null, model: null, allowed_tools: null as any };
+    return { provider: null, model: null, allowed_tools: undefined };
   }
   try {
     const raw = readFileSync(configPath, "utf-8");
@@ -66,10 +66,10 @@ function readProfileConfig(name: string): {
     return {
       provider: cfg.provider ?? null,
       model: cfg.model ?? null,
-      allowed_tools: Array.isArray(cfg.allowed_tools) ? cfg.allowed_tools : (null as any),
+      allowed_tools: Array.isArray(cfg.allowed_tools) ? cfg.allowed_tools : undefined,
     };
   } catch {
-    return { provider: null, model: null, allowed_tools: null as any };
+    return { provider: null, model: null, allowed_tools: undefined };
   }
 }
 

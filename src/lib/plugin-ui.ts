@@ -49,7 +49,7 @@ export function renderPluginCard(
         <span class="tool-actions" style="display:flex;gap:0.25rem;align-items:center;">
           <span class="badge ${getStatusBadgeClass(p.status, p.needsBuild)}">${p.needsBuild ? "○ Not Installed" : p.status === "enabled" ? "● Enabled" : p.status === "disabled" ? "○ Disabled" : p.status === "error" ? "● Error" : p.status === "not_found" ? "○ Not Found" : "○ Unknown"}</span>
           ${isDuplicated ? `<span class="badge badge-warning" style="margin-left:0.125rem;" title="Another source is already active for this plugin name">Duplicated</span>` : ""}
-          ${!p.hasSourceCode && p.source !== "built-in" && !(p.manifest as any)?.api_mode ? `<span class="badge badge-warning" style="margin-left:0.125rem;" title="This plugin has no source code directory on disk. It exists only as a YAML config entry. Install it to fetch the source, or remove this entry if the plugin was removed.">No code</span>` : ""}
+          ${!p.hasSourceCode && p.source !== "built-in" && !(p.manifest as unknown as Record<string, unknown>)?.api_mode ? `<span class="badge badge-warning" style="margin-left:0.125rem;" title="This plugin has no source code directory on disk. It exists only as a YAML config entry. Install it to fetch the source, or remove this entry if the plugin was removed.">No code</span>` : ""}
           ${p.isScript && !isDuplicated ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">Script</span>` : ""}
           ${p.version ? `<span class="badge badge-info" style="margin-left:0.125rem;">v${escapeHtml(p.version)}</span>` : ""}
           ${p.language && p.language !== "unknown" ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">${escapeHtml(p.language)}</span>` : ""}
@@ -356,7 +356,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       if (!pluginName) return;
 
       try {
-        const config: Record<string, any> = {};
+        const config: Record<string, string> = {};
         card?.querySelectorAll(".plugin-config-input").forEach((input) => {
           const el = input as HTMLInputElement;
           config[el.getAttribute("data-key") || el.name] = el.value;
@@ -492,7 +492,7 @@ export function showInstallModal(pluginType: PluginPageType): void {
     showStatus("Cloning repository...", "success");
 
     try {
-      const body: Record<string, any> = { url };
+      const body: Record<string, string> = { url };
       if (gitRef) body.git_ref = gitRef;
       if (path) body.path = path;
       if (name) body.name = name;

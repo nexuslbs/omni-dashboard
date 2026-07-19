@@ -95,7 +95,7 @@ function applyPluginFiltersFromUrl(): void {
 
 // ── Card-level config dirty tracking ──
 
-const savedConfigs: Map<string, Record<string, any>> = new Map();
+const savedConfigs: Map<string, Record<string, unknown>> = new Map();
 
 // ── Page renderer factory ──
 
@@ -180,7 +180,7 @@ export function createPluginPage(cfg: PluginPageConfig) {
             alert(`Reload failed: ${data.error || "Unknown error"}`);
           }
         } catch (e: unknown) {
-          alert(`Reload request failed: ${(e as any).message}`);
+          alert(`Reload request failed: ${(e as Error).message}`);
         } finally {
           reloadBtn.textContent = "⟳ Reload";
           (reloadBtn as HTMLButtonElement).disabled = false;
@@ -214,12 +214,12 @@ async function loadPage(type: PluginPageType, cfg: PluginPageConfig, background?
   }
   try {
     // Fetch plugins and optionally MCP tools
-    const pluginsResponse = await apiGet<any>("/plugins");
+    const pluginsResponse = await apiGet("/plugins") as Record<string, unknown>;
 
     // Parse plugins
-    const allPlugins: PluginData[] = (pluginsResponse.data || pluginsResponse).map((p: Record<string, any>) =>
-      toCamelCase<PluginData>(p),
-    );
+    const pluginsData = (pluginsResponse as Record<string, unknown>).data || pluginsResponse;
+    const rawPlugins = Array.isArray(pluginsData) ? pluginsData : [];
+    const allPlugins: PluginData[] = (rawPlugins as PluginData[]).map((p) => toCamelCase<PluginData>(p));
     const pluginTypeKey = type === "tool" ? "tool" : type;
     const filteredPlugins = allPlugins.filter((p: PluginData) => p.pluginType === pluginTypeKey);
 
@@ -236,10 +236,10 @@ async function loadPage(type: PluginPageType, cfg: PluginPageConfig, background?
     const toolMap: Record<string, string[]> = {};
     if (showMcpTools) {
       try {
-        const toolsResponse = await apiGet<any>("/mcp/tools");
-        const toolsList: Record<string, any>[] = Array.isArray(toolsResponse)
+        const toolsResponse = await apiGet("/mcp/tools") as { tools?: Record<string, unknown>[]; data?: Record<string, unknown>[] };
+        const toolsList = Array.isArray(toolsResponse)
           ? toolsResponse
-          : toolsResponse?.tools || toolsResponse?.data || [];
+          : (toolsResponse?.tools || toolsResponse?.data || []) as Record<string, unknown>[];
         for (const t of toolsList) {
           const server = t.server_name || t.source || "unknown";
           if (!toolMap[server]) toolMap[server] = [];

@@ -73,14 +73,14 @@ async function getGitHubToken(): Promise<string | null> {
       body: "{}",
     });
     if (!resp.ok) {
-      const text = await resp.text();
-      console.error(`[git-token] HTTP ${resp.status}: ${text}`);
+      await resp.text();
+      // console.error(`[git-token] HTTP ${resp.status}: ${text}`);
       return null;
     }
     const data = (await resp.json()) as { token: string };
     return data.token;
-  } catch (e) {
-    console.error("[git-token] Fetch error:", e);
+  } catch {
+    // console.error("[git-token] Fetch error:", e);
     return null;
   }
 }
@@ -134,7 +134,7 @@ function ensureHttpsRemotes(): void {
             encoding: "utf-8",
             timeout: 5000,
           });
-          console.log(`[git] Converted SSH→HTTPS for remote '${remote}'`);
+          // console.log(`[git] Converted SSH→HTTPS for remote '${remote}'`);
         }
       } catch {
         // skip remotes that fail to read/set
@@ -334,7 +334,7 @@ gitRouter.post("/sync", async (_req, res) => {
     if (token) {
       gitCmd(`remote set-url nexuslbs "https://x-access-token:${token}@github.com/nexuslbs/omni-stack.git"`);
     } else {
-      console.warn("[git-sync] Could not generate fresh token, using existing remote URL");
+      // console.warn("[git-sync] Could not generate fresh token, using existing remote URL");
     }
 
     // Push

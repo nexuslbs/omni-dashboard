@@ -90,8 +90,8 @@ async function populateCreateChannelSelect(): Promise<void> {
       select.appendChild(opt);
     }
     refreshEnhancedSelect("task-create-channel");
-  } catch (e) {
-    console.error("Failed to load channels:", e);
+  } catch {
+    // console.error("Failed to load channels:", e);
     select.innerHTML = '<option value="">Error loading channels</option>';
   }
 }

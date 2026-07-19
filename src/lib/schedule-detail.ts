@@ -367,7 +367,7 @@ export async function showCronModal(job: Record<string, unknown>, onReload: () =
   let actions: { id: string; name: string; tool_name: string; is_builtin: boolean }[] = [];
   let templates: { profile: string; name: string; label: string }[] = [];
   try {
-    channels = await apiGet<any[]>("/channels");
+    channels = await apiGet("/channels") as {id:string;name:string;platform:string}[];
   } catch {
     /* ok */
   }

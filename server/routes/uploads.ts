@@ -83,8 +83,8 @@ uploadsRouter.get("/list", (_req: Request, res: Response) => {
     result.sort((a, b) => new Date(b.modified_at).getTime() - new Date(a.modified_at).getTime());
 
     res.json(result);
-  } catch (err) {
-    console.error("[uploads] Error listing files:", err);
+  } catch {
+    // console.error("[uploads] Error listing files:", err);
     res.status(500).json({ error: "Failed to list uploads" });
   }
 });
@@ -116,8 +116,8 @@ uploadsRouter.delete("/:file", (req: Request, res: Response) => {
 
     unlinkSync(filePath);
     res.json({ success: true, file: fileName });
-  } catch (err) {
-    console.error("[uploads] Error deleting file:", err);
+  } catch {
+    // console.error("[uploads] Error deleting file:", err);
     res.status(500).json({ error: "Failed to delete file" });
   }
 });
@@ -144,8 +144,8 @@ uploadsRouter.post("/check", (req: Request, res: Response) => {
     }
 
     res.json(result);
-  } catch (err) {
-    console.error("[uploads] Error checking files:", err);
+  } catch {
+    // console.error("[uploads] Error checking files:", err);
     res.status(500).json({ error: "Failed to check files" });
   }
 });
@@ -167,8 +167,8 @@ uploadsRouter.post("/", upload.array("files", 20), (req: Request, res: Response)
     }));
 
     res.json({ files: result });
-  } catch (err) {
-    console.error("[uploads] Error uploading files:", err);
+  } catch {
+    // console.error("[uploads] Error uploading files:", err);
     res.status(500).json({ error: "Failed to upload files" });
   }
 });
@@ -243,8 +243,8 @@ uploadsRouter.post("/kanban", kanbanUpload.array("files", 20), (req: Request, re
     });
 
     res.json({ files: result });
-  } catch (err) {
-    console.error("[kanban-uploads] Error uploading files:", err);
+  } catch {
+    // console.error("[kanban-uploads] Error uploading files:", err);
     res.status(500).json({ error: "Failed to upload kanban files" });
   }
 });

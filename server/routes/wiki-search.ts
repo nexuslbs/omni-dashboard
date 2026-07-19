@@ -24,8 +24,7 @@ wikiSearchRouter.post("/", async (req: Request, res: Response) => {
     });
 
     if (!response.ok) {
-      const errText = await response.text().catch(() => "Unknown error");
-      console.error("[wiki-search] Qdrant error:", response.status, errText);
+      // console.error("[wiki-search] Qdrant error:", response.status, await response.text().catch(() => "Unknown error"));
       res.status(502).json({ error: "Search backend unavailable" });
       return;
     }

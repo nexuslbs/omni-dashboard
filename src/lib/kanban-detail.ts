@@ -143,7 +143,7 @@ async function populateEditChannelSelect(currentChannelId: string): Promise<void
   const select = document.getElementById("task-edit-channel") as HTMLSelectElement;
   if (!select) return;
   try {
-    const channels = await apiGet<any[]>("/channels");
+    const channels = await apiGet("/channels") as {name?: string;id?: string;platform?: string;channel_id?: string}[];
     select.innerHTML = '<option value="">None</option>';
     for (const ch of channels) {
       const opt = document.createElement("option");
@@ -155,8 +155,8 @@ async function populateEditChannelSelect(currentChannelId: string): Promise<void
       select.appendChild(opt);
     }
     refreshEnhancedSelect("task-edit-channel");
-  } catch (e) {
-    console.error("Failed to load channels:", e);
+  } catch {
+    // console.error("Failed to load channels:", e);
     select.innerHTML = '<option value="">Error loading channels</option>';
   }
 }

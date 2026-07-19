@@ -65,7 +65,7 @@ async function fetchAndForward(
       res.status(response.status).end();
     }
   } catch (err: unknown) {
-    console.error(`[omniagent-proxy] Error proxying ${req.method} ${req.path}:`, err);
+    // console.error(`[omniagent-proxy] Error proxying ${req.method} ${req.path}:`, err);
     const isTimeout =
       (err instanceof DOMException && err.name === "AbortError") ||
       (err instanceof Error &&
@@ -158,7 +158,7 @@ app.all(
       const targetUrl = `${OMNIAGENT}${targetPath}${queryStr}`;
       await fetchAndForward(req, res, targetUrl);
     } catch (err) {
-      console.error(`[generic-proxy] Error ${req.method} ${req.path}:`, err);
+      // console.error(`[generic-proxy] Error ${req.method} ${req.path}:`, err);
       res
         .status(502)
         .json({ error: "Failed to reach OmniAgent: " + (err instanceof Error ? err.message : String(err)) });
@@ -207,7 +207,7 @@ app.get("/api/templates", (_req, res) => {
     res.json(templates);
   } catch (e: unknown) {
     const errMsg = e instanceof Error ? e.message : String(e);
-    console.error("[templates] Error listing templates:", errMsg);
+    // console.error("[templates] Error listing templates:", errMsg);
     res.status(500).json({ error: errMsg || "Unknown error" });
   }
 });
@@ -252,5 +252,5 @@ app.use((_req, res) => {
 });
 
 app.listen(PORT, "0.0.0.0", () => {
-  console.log(`[server] Omni-dashboard server running on http://0.0.0.0:${PORT}`);
+  // console.log(`[server] Omni-dashboard server running on http://0.0.0.0:${PORT}`);
 });
