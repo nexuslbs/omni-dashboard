@@ -583,7 +583,7 @@ export function wireRefToggles(): void {
       let models: string[] = [];
       if (providerName) {
         try {
-          const resp = await apiGet<any>(`/plugins/${encodeURIComponent(providerName)}`);
+          const resp = await apiGet<any>(`/plugins/providers/bundled/${encodeURIComponent(providerName)}`);
           const detail = resp && resp.data ? resp.data : resp;
           const schema = [
             ...((detail.configSchema || []) as any[]),

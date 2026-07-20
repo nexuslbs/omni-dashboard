@@ -541,7 +541,7 @@ function wireProfiles(): void {
       (btn as HTMLElement).style.opacity = "0.5";
       try {
         // Trigger server-side model refresh first (same as channels handler)
-        await apiPost(`/plugins/${encodeURIComponent(provider)}/refresh-models`, {});
+        await apiPost(`/plugins/providers/bundled/${encodeURIComponent(provider)}/refresh-models`, {});
         // Re-fetch the plugin list to get updated config_schema
         const freshResp = await apiGet<{ data: PluginBase[] }>("/plugins");
         const freshPlugins: Record<string, any>[] = ((freshResp as any).data || freshResp || []).map(

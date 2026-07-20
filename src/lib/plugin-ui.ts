@@ -40,7 +40,7 @@ export function renderPluginCard(
   const { hasTools, pluginTools, hasRemote, hasCompilableSource, isDuplicated } = opts;
 
   return `
-    <div class="card settings-card${p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}" data-source="${escapeHtml(p.source)}" data-remote='${hasRemote ? escapeHtml(JSON.stringify(p.remote)) : ""}'>
+    <div class="card settings-card${p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}" data-source="${escapeHtml(p.source)}" data-plugin-type="${escapeHtml(p.pluginType)}" data-remote='${hasRemote ? escapeHtml(JSON.stringify(p.remote)) : ""}'>
       <div class="card-header" style="cursor:pointer;">
         <span class="card-title">
           <span class="plugin-name" style="font-weight:600;">${escapeHtml(p.name)}</span>
@@ -164,6 +164,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
       const source = card?.getAttribute("data-source") || "bundled";
+      const pType = card?.getAttribute("data-plugin-type") || "tool";
       if (!pluginName) return;
       const isUninstall = btn.getAttribute("title") === "Uninstall";
       if (isUninstall && !confirm(`Uninstall plugin "${pluginName}"?`)) return;
@@ -171,9 +172,11 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
 
       try {
         const encodedName = encodeURIComponent(pluginName);
+        const typeDir = pType + "s";
+        const encodedSource = encodeURIComponent(source);
         const url = isUninstall
-          ? `/plugins/${encodedName}?mode=uninstall&source=${encodeURIComponent(source)}`
-          : `/plugins/${encodedName}?source=${encodeURIComponent(source)}`;
+          ? `/plugins/${typeDir}/${encodedSource}/${encodedName}?mode=uninstall`
+          : `/plugins/${typeDir}/${encodedSource}/${encodedName}`;
         await apiDelete(url);
         showToast(isUninstall ? "Plugin uninstalled" : "Plugin removed", "success");
         loadFn();
@@ -190,6 +193,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
       const source = card?.getAttribute("data-source") || "bundled";
+      const pType = card?.getAttribute("data-plugin-type") || "tool";
       if (!pluginName) return;
 
       const originalText = btn.textContent || "Reinstall";
@@ -197,7 +201,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       (btn as HTMLButtonElement).disabled = true;
 
       try {
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/reinstall`, { source });
+        const typeDir = pType + "s";
+        const encodedName = encodeURIComponent(pluginName);
+        const encodedSource = encodeURIComponent(source);
+        await apiPost(`/plugins/${typeDir}/${encodedSource}/${encodedName}/reinstall`, {});
         showToast("Plugin reinstalled", "success");
         loadFn();
       } catch (e) {
@@ -215,6 +222,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
       const source = card?.getAttribute("data-source") || "bundled";
+      const pType = card?.getAttribute("data-plugin-type") || "tool";
       if (!pluginName) return;
 
       const originalText = btn.textContent || "Install";
@@ -222,7 +230,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       (btn as HTMLButtonElement).disabled = true;
 
       try {
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/install`, { source });
+        const typeDir = pType + "s";
+        const encodedName = encodeURIComponent(pluginName);
+        const encodedSource = encodeURIComponent(source);
+        await apiPost(`/plugins/${typeDir}/${encodedSource}/${encodedName}/install`, {});
         showToast("Plugin installed", "success");
         loadFn();
       } catch (e) {
@@ -240,6 +251,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
       const source = card?.getAttribute("data-source") || "bundled";
+      const pType = card?.getAttribute("data-plugin-type") || "tool";
       if (!pluginName) return;
 
       const originalText = btn.textContent || "Update";
@@ -247,7 +259,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       (btn as HTMLButtonElement).disabled = true;
 
       try {
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/download`, { source });
+        const typeDir = pType + "s";
+        const encodedName = encodeURIComponent(pluginName);
+        const encodedSource = encodeURIComponent(source);
+        await apiPost(`/plugins/${typeDir}/${encodedSource}/${encodedName}/download`, {});
         showToast("Plugin updated", "success");
         loadFn();
       } catch (e) {
@@ -265,6 +280,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
       const source = card?.getAttribute("data-source") || "bundled";
+      const pType = card?.getAttribute("data-plugin-type") || "tool";
       if (!pluginName) return;
 
       const originalText = btn.textContent || "Download";
@@ -272,7 +288,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       (btn as HTMLButtonElement).disabled = true;
 
       try {
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/download`, { source });
+        const typeDir = pType + "s";
+        const encodedName = encodeURIComponent(pluginName);
+        const encodedSource = encodeURIComponent(source);
+        await apiPost(`/plugins/${typeDir}/${encodedSource}/${encodedName}/download`, {});
         showToast("Plugin downloaded : now click Install to compile", "success");
         loadFn();
       } catch (e) {
@@ -290,6 +309,7 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
       const source = card?.getAttribute("data-source") || "bundled";
+      const pType = card?.getAttribute("data-plugin-type") || "tool";
       if (!pluginName) return;
       const isCurrentlyEnabled = btn.textContent?.trim() === "Disable";
 
@@ -299,7 +319,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
 
       try {
         const endpoint = isCurrentlyEnabled ? "disable" : "enable";
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/${endpoint}`, { source });
+        const typeDir = pType + "s";
+        const encodedName = encodeURIComponent(pluginName);
+        const encodedSource = encodeURIComponent(source);
+        await apiPost(`/plugins/${typeDir}/${encodedSource}/${encodedName}/${endpoint}`, {});
         showToast(isCurrentlyEnabled ? "Disabled" : "Enabled", "success");
         loadFn();
       } catch (e) {
@@ -318,12 +341,17 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
     btn.addEventListener("click", async () => {
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
+      const source = card?.getAttribute("data-source") || "bundled";
+      const pType = card?.getAttribute("data-plugin-type") || "tool";
       if (!pluginName) return;
       const originalText = btn.textContent || "";
       btn.textContent = "⟳...";
       (btn as HTMLButtonElement).disabled = true;
       try {
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/restart`, {});
+        const typeDir = pType + "s";
+        const encodedName = encodeURIComponent(pluginName);
+        const encodedSource = encodeURIComponent(source);
+        await apiPost(`/plugins/${typeDir}/${encodedSource}/${encodedName}/restart`, {});
         showToast(`${pluginName} restarted`, "success");
         loadFn();
       } catch (e) {
@@ -353,6 +381,8 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
     btn.addEventListener("click", async () => {
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
+      const source = card?.getAttribute("data-source") || "bundled";
+      const pType = card?.getAttribute("data-plugin-type") || "tool";
       if (!pluginName) return;
 
       try {
@@ -361,7 +391,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
           const el = input as HTMLInputElement;
           config[el.getAttribute("data-key") || el.name] = el.value;
         });
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/config`, { config });
+        const typeDir = pType + "s";
+        const encodedName = encodeURIComponent(pluginName);
+        const encodedSource = encodeURIComponent(source);
+        await apiPost(`/plugins/${typeDir}/${encodedSource}/${encodedName}/config`, { config });
         showToast("Configuration saved", "success");
         loadFn();
       } catch (e) {
@@ -375,6 +408,8 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
     btn.addEventListener("click", async () => {
       const card = (btn as HTMLElement).closest(".card") as HTMLElement;
       const pluginName = card?.getAttribute("data-plugin-name");
+      const source = card?.getAttribute("data-source") || "bundled";
+      const pType = card?.getAttribute("data-plugin-type") || "tool";
       if (!pluginName) return;
 
       const originalText = btn.textContent || "Setup";
@@ -382,7 +417,10 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       (btn as HTMLButtonElement).disabled = true;
 
       try {
-        await apiPost(`/plugins/${encodeURIComponent(pluginName)}/setup`, {});
+        const typeDir = pType + "s";
+        const encodedName = encodeURIComponent(pluginName);
+        const encodedSource = encodeURIComponent(source);
+        await apiPost(`/plugins/${typeDir}/${encodedSource}/${encodedName}/setup`, {});
         showToast("Setup completed successfully", "success");
         loadFn();
       } catch (e) {

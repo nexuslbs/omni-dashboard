@@ -273,7 +273,7 @@ export function wireChannelConfigEditing(): void {
       el.textContent = "⟳";
       el.style.opacity = "0.5";
       try {
-        await apiPost(`/plugins/${encodeURIComponent(provider)}/refresh-models`, {});
+        await apiPost(`/plugins/providers/bundled/${encodeURIComponent(provider)}/refresh-models`, {});
         // Re-fetch the plugin list to get updated config_schema
         const freshResp = await apiGet("/plugins") as Record<string, unknown>;
         const freshPlugins = (freshResp.data || freshResp).map(
