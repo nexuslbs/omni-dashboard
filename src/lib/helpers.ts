@@ -47,6 +47,24 @@ export function formatApiError(e: unknown): string {
 }
 
 /**
+ * Fetch the default profile name from the server settings API.
+ * Falls back to "omni" if the API is unreachable.
+ */
+let _cachedDefaultProfile: string | null = null;
+export async function getDefaultProfile(): Promise<string> {
+  if (_cachedDefaultProfile) return _cachedDefaultProfile;
+  try {
+    const res = await fetch("/api/settings");
+    if (!res.ok) return "omni";
+    const data = await res.json();
+    _cachedDefaultProfile = data.settings?.default_profile || "omni";
+    return _cachedDefaultProfile;
+  } catch {
+    return "omni";
+  }
+}
+
+/**
  * Scan all select elements on the page and fix any that have a value
  * not present in their options. If a display-name mapping exists for the
  * value, it's added as an option. Otherwise a red warning is shown below

@@ -4,7 +4,7 @@
  */
 import { apiGet, toCamelCase, type ChannelData, type PluginData } from "../lib/api";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
-import { escapeHtml, fixMissingSelectOptions, formatApiError } from "../lib/helpers";
+import { escapeHtml, fixMissingSelectOptions, formatApiError, getDefaultProfile } from "../lib/helpers";
 import {
   _profiles,
   _providers,
@@ -152,7 +152,8 @@ async function loadChannels(): Promise<void> {
       _templates.length = 0;
     }
 
-    content.innerHTML = renderChannelsPage(channels);
+    const defaultProfile = await getDefaultProfile();
+    content.innerHTML = renderChannelsPage(channels, defaultProfile);
     wireChannels();
     // Enhance channel card selects
     document.querySelectorAll(".channel-field-group select").forEach((el) => {

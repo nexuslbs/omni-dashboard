@@ -2,7 +2,7 @@
  * Channel status controls: open/close toggles, filter controls.
  * Extracted from src/pages/channels.ts
  */
-import { escapeHtml, formatApiError } from "./helpers";
+import { escapeHtml, formatApiError, getDefaultProfile } from "./helpers";
 import { showToast } from "./utils";
 // syncSelectDisplay used indirectly via channel-config calls
 
@@ -72,7 +72,7 @@ export function renderStatusControl(ch: ChannelData): string {
 
 // ── Main channel page rendering ──
 
-export function renderChannelsPage(channels: ChannelData[]): string {
+export function renderChannelsPage(channels: ChannelData[], defaultProfile: string = "omni"): string {
   if (!channels || channels.length === 0) {
     return '<div class="empty-state">No channels configured</div>';
   }
@@ -136,7 +136,7 @@ export function renderChannelsPage(channels: ChannelData[]): string {
         <div class="setting-row">
           <div class="setting-controls">
             <div class="setting-name">Profile</div>
-            ${renderProfileSelect(ch.id, ch.current_profile || "default")}
+            ${renderProfileSelect(ch.id, ch.current_profile || defaultProfile)}
           </div>
         </div>
         <div class="setting-row">
