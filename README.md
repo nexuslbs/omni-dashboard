@@ -76,7 +76,7 @@ Vault secrets manager for API keys and credentials:
 ### Profiles (`/profiles`)
 Agent profile management:
 
-- Lists all profiles from the `profiles` DB table, plus a synthetic "default" profile.
+- Lists all profiles from the `profiles` DB table.
 - Each profile displays: provider, model, base_url, max_tokens, temperature, allowed_tools (JSONB).
 - **Read-only display** of channels currently using this profile.
 - Profiles define the LLM configuration and tool access for threads created under them.
