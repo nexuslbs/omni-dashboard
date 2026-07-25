@@ -44,4 +44,3 @@ RUN npm pkg delete scripts.prepare && npm ci --omit=dev
 
 EXPOSE 3001
 
-CMD ["node", "/app/server/index.js"]
