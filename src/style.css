@@ -1817,6 +1817,7 @@ a.thread-row {
 .content-view {
   flex: 1;
   overflow-y: auto;
+  min-width: 0;
 }
 
 /* File header */

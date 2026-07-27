@@ -14,8 +14,8 @@ interface Action {
 }
 
 interface McpToolInfo {
-  name: string;
-  full_name?: string;
+  name?: string;
+  full_name: string;
   description: string;
   input_schema: Record<string, any>;
   server_name?: string;
@@ -106,10 +106,10 @@ function renderActionRow(a: Action, i: number): string {
     Object.keys(a.params).length > 0 ? escapeHtml(JSON.stringify(a.params)) : "<em>No params</em>";
   const isDisabled = !a.enabled;
 
-  // Build display name: use full_name when available
+  // Build display name: use full_name
   const toolDisplay = ((): string => {
-    const tool = availableTools.find((t) => t.name === a.tool_name);
-    if (tool?.full_name) return escapeHtml(tool.full_name);
+    const tool = availableTools.find((t) => t.full_name === a.tool_name);
+    if (tool) return escapeHtml(tool.full_name);
     if (a.is_builtin) return "actions:" + escapeHtml(a.tool_name);
     if (tool?.server_name) return escapeHtml(tool.server_name) + ":" + escapeHtml(a.tool_name);
     return escapeHtml(a.tool_name);
@@ -201,13 +201,13 @@ async function showActionModal(existing: Action | null): Promise<void> {
                 ${availableTools
                   .slice()
                   .sort((a, b) => {
-                    const fa = a.full_name || a.name;
-                    const fb = b.full_name || b.name;
+                    const fa = a.full_name || a.name || "";
+                    const fb = b.full_name || b.name || "";
                     return fa.localeCompare(fb);
                   })
                   .map(
                     (t) =>
-                      `<option value="${escapeHtml(t.name)}"${isEdit && existing!.tool_name === t.name ? " selected" : ""}>${escapeHtml(t.full_name || t.name)}</option>`,
+                      `<option value="${escapeHtml(t.full_name)}"${isEdit && existing!.tool_name === t.full_name ? " selected" : ""}>${escapeHtml(t.full_name)}</option>`,
                   )
                   .join("")}
               </select>
@@ -249,7 +249,7 @@ async function showActionModal(existing: Action | null): Promise<void> {
 
   function updateParamsForm(): void {
     const toolName = toolSelect.value;
-    const tool = availableTools.find((t) => t.name === toolName);
+    const tool = availableTools.find((t) => t.full_name === toolName);
     const props = tool?.input_schema?.properties || {};
     if (!tool || Object.keys(props).length === 0) {
       paramsSection.style.display = "none";
@@ -395,7 +395,7 @@ async function showActionModal(existing: Action | null): Promise<void> {
 
     // Build params from the form
     const params: Record<string, string | number | boolean> = {};
-    const tool = availableTools.find((t) => t.name === toolName);
+    const tool = availableTools.find((t) => t.full_name === toolName);
     const properties = tool?.input_schema?.properties || {};
     for (const [key, prop] of Object.entries(
       properties as Record<string, { type?: string; description?: string; items?: { enum?: string[] } }>,
