@@ -59,8 +59,8 @@ export function renderConfigField(
               value="${escapeHtml(literalVal)}" data-key="${escapeHtml(field.key)}" style="flex:1;" />
             ${copyButtonHTML(fieldId)}
             ${toggleButtonHTML(fieldId)}
-            <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);flex-shrink:0;">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           </div>
+          <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);flex-shrink:0;">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
             <select class="ref-type-select filter-select setting-input" data-key="${escapeHtml(field.key)}">
               <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
@@ -103,8 +103,8 @@ export function renderConfigField(
               ${field.max !== undefined ? `max="${field.max}"` : ""}
               style="flex:1;max-width:120px;" />
             ${copyButtonHTML(fieldId)}
-            <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);flex-shrink:0;">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           </div>
+          <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);flex-shrink:0;">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
             <select class="ref-type-select filter-select setting-input" data-key="${escapeHtml(field.key)}">
               <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
@@ -208,8 +208,8 @@ export function renderConfigField(
               value="${escapeHtml(literalVal)}" data-key="${escapeHtml(field.key)}" placeholder="Literal value..."
               style="flex:1;" />
             ${copyButtonHTML(fieldId)}
-            <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);flex-shrink:0;">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           </div>
+          <button type="button" class="ref-toggle-btn" data-key="${escapeHtml(field.key)}" title="${isRef ? "Use literal value" : "Use secret/env ref"}" style="background:none;border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:4px;cursor:pointer;font-size:0.8rem;padding:0.375rem 0.5rem;color:var(--text-secondary);flex-shrink:0;">${isRef ? "\u270F\uFE0F" : "\uD83D\uDD17"}</button>
           <div class="ref-mode-controls" style="display:${isRef ? "flex" : "none"};flex:1;gap:0.375rem;align-items:center;">
             <select class="ref-type-select filter-select setting-input" data-key="${escapeHtml(field.key)}">
               <option value="secret" ${refType === "secret" ? "selected" : ""}>Secret</option>
