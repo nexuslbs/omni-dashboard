@@ -214,7 +214,7 @@ async function loadPage(type: PluginPageType, cfg: PluginPageConfig, background?
   }
   try {
     // Fetch plugins and optionally MCP tools
-    const pluginsResponse = await apiGet("/plugins") as Record<string, unknown>;
+    const pluginsResponse = (await apiGet("/plugins")) as Record<string, unknown>;
 
     // Parse plugins
     const pluginsData = (pluginsResponse as Record<string, unknown>).data || pluginsResponse;
@@ -236,10 +236,13 @@ async function loadPage(type: PluginPageType, cfg: PluginPageConfig, background?
     const toolMap: Record<string, string[]> = {};
     if (showMcpTools) {
       try {
-        const toolsResponse = await apiGet("/mcp/tools") as { tools?: Record<string, unknown>[]; data?: Record<string, unknown>[] };
+        const toolsResponse = (await apiGet("/mcp/tools")) as {
+          tools?: Record<string, unknown>[];
+          data?: Record<string, unknown>[];
+        };
         const toolsList = Array.isArray(toolsResponse)
           ? toolsResponse
-          : (toolsResponse?.tools || toolsResponse?.data || []) as Record<string, unknown>[];
+          : ((toolsResponse?.tools || toolsResponse?.data || []) as Record<string, unknown>[]);
         for (const t of toolsList) {
           const server = t.server_name || t.source || "unknown";
           if (!toolMap[server]) toolMap[server] = [];
@@ -361,7 +364,7 @@ function wirePage(type: PluginPageType): void {
 
   wireRefToggles();
 
-  wirePluginButtons(type, () => void loadPage(type, PAGE_CONFIGS[type], true));
+  wirePluginButtons(type, () => void loadPage(type, PAGE_CONFIGS[type], true), savedConfigs);
 
   // Card header click also toggles
   document.querySelectorAll(".card-header").forEach((header) => {

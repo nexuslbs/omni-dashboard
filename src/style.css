@@ -952,6 +952,9 @@ a.thread-row {
     min-height: auto;
     height: auto;
   }
+  .dashboard-layout.sidebar-collapsed {
+    grid-template-columns: 1fr;
+  }
   .sidebar {
     display: none;
   }

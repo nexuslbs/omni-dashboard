@@ -2,7 +2,7 @@
  * Channel status controls: open/close toggles, filter controls.
  * Extracted from src/pages/channels.ts
  */
-import { escapeHtml, formatApiError, getDefaultProfile } from "./helpers";
+import { escapeHtml, formatApiError } from "./helpers";
 import { showToast } from "./utils";
 // syncSelectDisplay used indirectly via channel-config calls
 

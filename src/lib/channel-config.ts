@@ -275,7 +275,7 @@ export function wireChannelConfigEditing(): void {
       try {
         await apiPost(`/plugins/providers/bundled/${encodeURIComponent(provider)}/refresh-models`, {});
         // Re-fetch the plugin list to get updated config_schema
-        const freshResp = await apiGet("/plugins") as Record<string, unknown>;
+        const freshResp = (await apiGet("/plugins")) as Record<string, unknown>;
         const freshPlugins = (freshResp.data || freshResp).map(
           (p: Record<string, unknown>): Record<string, unknown> => {
             const r: Record<string, unknown> = {};

@@ -52,7 +52,7 @@ export function renderConfigField(
       const refName = isRef ? strVal.substring(strVal.indexOf(":") + 1) : "";
       const literalVal = isRef ? "" : strVal;
       inputHtml = `
-        <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;">
+        <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;flex-wrap:wrap;">
           <input type="hidden" class="plugin-config-input" data-key="${escapeHtml(field.key)}" value="${escapeHtml(strVal)}" />
           <div class="ref-literal-mode" style="display:${isRef ? "none" : "flex"};flex:1;gap:0.25rem;align-items:center;">
             <input type="password" id="${fieldId}" class="filter-input setting-input setting-secret-input ref-literal-input"
@@ -94,7 +94,7 @@ export function renderConfigField(
       const refName = isRef ? strVal.substring(strVal.indexOf(":") + 1) : "";
       const literalVal = isRef ? "" : strVal;
       inputHtml = `
-        <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;">
+        <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;flex-wrap:wrap;">
           <input type="hidden" class="plugin-config-input" data-key="${escapeHtml(field.key)}" value="${escapeHtml(strVal)}" />
           <div class="ref-literal-mode" style="display:${isRef ? "none" : "flex"};flex:1;gap:0.25rem;align-items:center;">
             <input type="tel" id="${fieldId}" class="filter-input setting-input ref-literal-input"
@@ -201,7 +201,7 @@ export function renderConfigField(
       const refName = isRef ? strVal.substring(strVal.indexOf(":") + 1) : "";
       const literalVal = isRef ? "" : strVal;
       inputHtml = `
-        <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;">
+        <div class="ref-toggle-container" style="display:flex;gap:0.25rem;align-items:center;flex:1;flex-wrap:wrap;">
           <input type="hidden" class="plugin-config-input" data-key="${escapeHtml(field.key)}" value="${escapeHtml(strVal)}" />
           <div class="ref-literal-mode" style="display:${isRef ? "none" : "flex"};flex:1;gap:0.25rem;align-items:center;">
             <input type="text" id="${fieldId}" class="filter-input setting-input ref-literal-input"
@@ -375,6 +375,11 @@ export function dirtyCheckSaveButton(
   const isDirty = JSON.stringify(current) !== JSON.stringify(saved);
   saveBtn.style.opacity = isDirty ? "1" : "0.4";
   saveBtn.style.pointerEvents = isDirty ? "auto" : "none";
+  // Show discard button when dirty, hide when clean
+  const discardBtn = formEl.querySelector(".plugin-discard-btn") as HTMLButtonElement | null;
+  if (discardBtn) {
+    discardBtn.style.display = isDirty ? "inline-block" : "none";
+  }
 }
 
 /**

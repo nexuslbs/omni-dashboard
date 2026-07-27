@@ -143,7 +143,12 @@ async function populateEditChannelSelect(currentChannelId: string): Promise<void
   const select = document.getElementById("task-edit-channel") as HTMLSelectElement;
   if (!select) return;
   try {
-    const channels = await apiGet("/channels") as {name?: string;id?: string;platform?: string;channel_id?: string}[];
+    const channels = (await apiGet("/channels")) as {
+      name?: string;
+      id?: string;
+      platform?: string;
+      channel_id?: string;
+    }[];
     select.innerHTML = '<option value="">None</option>';
     for (const ch of channels) {
       const opt = document.createElement("option");

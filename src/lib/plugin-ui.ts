@@ -3,7 +3,7 @@ import { showToast } from "./utils";
 
 import { apiDelete, apiPost, type PluginData } from "./api";
 import { escapeHtml, formatApiError } from "./helpers";
-import { renderConfigField as renderConfigFieldV2 } from "./plugin-config";
+import { renderConfigField as renderConfigFieldV2, dirtyCheckSaveButton } from "./plugin-config";
 import type { ConfigField } from "./api";
 
 export type PluginPageType = "tool" | "platform" | "provider";
@@ -157,7 +157,11 @@ export function renderActionButtons(
  * Wire all plugin action buttons for a given page type.
  * Call this after setting innerHTML with renderPluginCard() results.
  */
-export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => void): void {
+export function wirePluginButtons(
+  _pluginType: PluginPageType,
+  loadFn: () => void,
+  savedConfigs?: Map<string, Record<string, any>>,
+): void {
   // Uninstall buttons
   document.querySelectorAll(".plugin-remove-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -402,6 +406,65 @@ export function wirePluginButtons(_pluginType: PluginPageType, loadFn: () => voi
       }
     });
   });
+
+  // Discard buttons: reset form to saved baseline
+  if (savedConfigs) {
+    document.querySelectorAll(".plugin-discard-btn").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        const card = (btn as HTMLElement).closest(".card") as HTMLElement;
+        const pluginName = card?.getAttribute("data-plugin-name");
+        if (!pluginName) return;
+        const saved = savedConfigs!.get(pluginName);
+        if (!saved) return;
+        // Reset all config inputs to saved values
+        card.querySelectorAll(".plugin-config-input").forEach((input) => {
+          const el = input as HTMLInputElement;
+          const key = el.getAttribute("data-key") || el.name;
+          if (key && saved[key] !== undefined) {
+            el.value = String(saved[key]);
+          }
+        });
+        // Reset ref-toggle containers to match saved values
+        card.querySelectorAll(".ref-toggle-container").forEach((container) => {
+          const hiddenInput = container.querySelector(".plugin-config-input") as HTMLInputElement;
+          if (!hiddenInput) return;
+          const key = hiddenInput.getAttribute("data-key") || hiddenInput.name;
+          if (!key || saved[key] === undefined) return;
+          const savedVal = String(saved[key]);
+          hiddenInput.value = savedVal;
+          const isRef = savedVal.startsWith("$secret:") || savedVal.startsWith("$env:");
+          const literalMode = container.querySelector(".ref-literal-mode") as HTMLElement;
+          const refMode = container.querySelector(".ref-mode-controls") as HTMLElement;
+          const refToggleBtn = container.querySelector(".ref-toggle-btn") as HTMLButtonElement;
+          if (literalMode) literalMode.style.display = isRef ? "none" : "flex";
+          if (refMode) refMode.style.display = isRef ? "flex" : "none";
+          if (refToggleBtn) {
+            refToggleBtn.title = isRef ? "Use literal value" : "Use secret/env ref";
+            refToggleBtn.textContent = isRef ? "\u270F\uFE0F" : "\uD83D\uDD17";
+          }
+          // Set ref type select
+          const refTypeSelect = container.querySelector(".ref-type-select") as HTMLSelectElement;
+          if (refTypeSelect) {
+            const refType = savedVal.startsWith("$env:") ? "env" : "secret";
+            refTypeSelect.value = refType;
+          }
+          // Set ref name input
+          const refNameInputs = container.querySelectorAll(".ref-name-input");
+          refNameInputs.forEach((inp) => {
+            const el = inp as HTMLInputElement | HTMLSelectElement;
+            if (isRef) {
+              const refName = savedVal.substring(savedVal.indexOf(":") + 1);
+              el.value = refName;
+            } else {
+              el.value = "";
+            }
+          });
+        });
+        // Update dirty check
+        dirtyCheckSaveButton(card, pluginName, savedConfigs!);
+      });
+    });
+  }
 
   // Setup buttons
   document.querySelectorAll(".plugin-setup-btn").forEach((btn) => {
