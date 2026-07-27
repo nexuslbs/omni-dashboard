@@ -1,37 +1,9 @@
 import { escapeHtml } from "./helpers";
-import { marked, Renderer } from "marked";
-import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
 import type { Message } from "./api";
+import { renderMarkdown } from "./markdown";
 
-// ── Configure markdown/highlight once (same as explorer.ts) ──
-hljs.configure({ ignoreUnescapedHTML: true });
-
-marked.use(
-  markedHighlight({
-    langPrefix: "hljs language-",
-    highlight(code, lang) {
-      if (lang && hljs.getLanguage(lang)) {
-        return hljs.highlight(code, { language: lang }).value;
-      }
-      try {
-        return hljs.highlightAuto(code).value;
-      } catch {
-        return code;
-      }
-    },
-  }),
-);
-
-function renderMarkdown(md: string): string {
-  const renderer = new Renderer();
-  const origTable = renderer.table.bind(renderer);
-  renderer.table = (header: string, body: string) => {
-    const html = (origTable as (header: string, body: string) => string)(header, body);
-    return '<div class="table-scroll">' + html + "</div>";
-  };
-  return marked.parse(md, { gfm: true, renderer }) as string;
-}
+// ── hljs kept for JSON formatting (configured in markdown.ts) ──
 
 // ── Shared message card rendering ──
 // Used by both /messages and /schedule/<id> pages

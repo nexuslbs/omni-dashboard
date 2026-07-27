@@ -1,4 +1,5 @@
 import "./style.css";
+import "highlight.js/styles/github-dark.css";
 import { router } from "./lib/router";
 import { API_BASE, type HealthCheck } from "./lib/api";
 import { showToast } from "./lib/utils";

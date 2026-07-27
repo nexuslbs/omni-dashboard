@@ -2317,7 +2317,6 @@ a.thread-row {
 
 .markdown-content pre code {
   font-family: inherit;
-  color: inherit;
   background: none;
   border: none;
   padding: 0;
@@ -2720,7 +2719,6 @@ a.thread-row {
 }
 .ev-content-text[data-view="md"] .markdown-content pre code {
   font-family: inherit;
-  color: inherit;
   background: none;
   border: none;
   padding: 0;

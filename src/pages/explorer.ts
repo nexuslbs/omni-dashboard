@@ -7,10 +7,8 @@ import {
   type GitStatusResponse,
   type GitFileEntry,
 } from "../lib/api";
-import { marked, Renderer } from "marked";
-import { markedHighlight } from "marked-highlight";
-import hljs from "highlight.js";
 import { escapeHtml, formatApiError } from "../lib/helpers";
+import { renderMarkdown } from "../lib/markdown";
 import { html as diffHtml } from "diff2html";
 import "diff2html/bundles/css/diff2html.min.css";
 
@@ -18,40 +16,8 @@ import "diff2html/bundles/css/diff2html.min.css";
 declare function checkExistingFiles(files: File[]): Promise<Set<string>>;
 declare function showUploadModal(files: File[], existingSet: Set<string>): void;
 
-// ── Markdown renderer (uses marked: battle-tested GFM parser) ──
-// Configure highlight.js and marked-highlight plugin
-hljs.configure({ ignoreUnescapedHTML: true });
-
-marked.use(
-  markedHighlight({
-    langPrefix: "hljs language-",
-    highlight(code, lang) {
-      if (lang && hljs.getLanguage(lang)) {
-        return hljs.highlight(code, { language: lang }).value;
-      }
-      // Auto-detect language if none specified
-      try {
-        return hljs.highlightAuto(code).value;
-      } catch {
-        return code;
-      }
-    },
-  }),
-);
-
-function renderMarkdown(md: string): string {
-  // Strip YAML frontmatter (---...---): marked confuses closing --- as setext heading delimiter
-  const clean = md.replace(/^---[\s\S]*?---\n*/, "");
-
-  const renderer = new Renderer();
-  const origTable = renderer.table.bind(renderer);
-  renderer.table = (header: string, body: string) => {
-    const html = (origTable as (header: string, body: string) => string)(header, body);
-    return '<div class="table-scroll">' + html + "</div>";
-  };
-
-  return marked.parse(clean, { gfm: true, renderer }) as string;
-}
+// ── Markdown renderer (uses shared markdown module) ──
+// renderMarkdown imported from ../lib/markdown
 
 /** Inject copy button and language label into each <pre><code> block in rendered HTML */
 function enhanceCodeBlocks(container: HTMLElement): void {
@@ -733,12 +699,14 @@ async function openFile(path: string): Promise<void> {
               <a class="file-download-btn" href="/api/fs/download?path=${encodeURIComponent(path)}" download title="Download file">⬇</a>
             </div>
           </div>
-          <div class="markdown-content">${rendered}</div>
         `;
+        const mdContainer = document.createElement("div");
+        mdContainer.className = "markdown-content";
+        mdContainer.innerHTML = rendered;
+        contentView.appendChild(mdContainer);
         contentView.scrollTop = 0;
         // Enhance code blocks with syntax highlighting and copy buttons
-        const mdContainer = contentView.querySelector(".markdown-content");
-        if (mdContainer) enhanceCodeBlocks(mdContainer as HTMLElement);
+        enhanceCodeBlocks(mdContainer);
       } else {
         contentView.innerHTML = `
           <div class="file-header">
