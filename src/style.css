@@ -1829,6 +1829,7 @@ a.thread-row {
   border-radius: 5px;
   background: var(--bg-secondary);
   flex-shrink: 0;
+  min-width: 0;
 }
 
 .file-path {
@@ -1836,6 +1837,11 @@ a.thread-row {
   color: var(--accent-cyan);
   font-family: "SF Mono", "Fira Code", "Consolas", monospace;
   cursor: pointer;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  flex: 1;
+  min-width: 0;
 }
 
 .file-path:hover {

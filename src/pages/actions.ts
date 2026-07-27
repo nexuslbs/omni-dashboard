@@ -336,6 +336,12 @@ async function showActionModal(existing: Action | null): Promise<void> {
     }
     paramsForm.innerHTML = html;
 
+    // Enhance any selects in the parameter form generically
+    paramsForm.querySelectorAll("select.filter-select").forEach((sel) => {
+      enhanceSelectElement(sel as HTMLSelectElement);
+    });
+    fixMissingSelectOptions(paramsForm);
+
     // Live-update param values on input
     paramsForm.querySelectorAll(".param-input").forEach((el) => {
       el.addEventListener("input", () => {
