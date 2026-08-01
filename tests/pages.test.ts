@@ -10,6 +10,7 @@ describe("Page modules exist and export render functions", () => {
     { name: "kanban", exports: ["renderKanban", "renderKanbanDetail"] },
     { name: "schedule", exports: ["renderSchedule", "renderScheduleDetail"] },
     { name: "channels", exports: ["renderChannels"] },
+    { name: "database", exports: ["renderDatabase"] },
   ];
 
   for (const { name, exports: expected } of pagesToCheck) {

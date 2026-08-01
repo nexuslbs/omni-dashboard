@@ -9,6 +9,7 @@ import { uploadsRouter } from "./routes/uploads.js";
 import { fsRouter } from "./routes/fs.js";
 import { profilesRouter } from "./routes/profiles.js";
 import { gitRouter } from "./routes/git.js";
+import { dbRouter } from "./routes/db.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -28,6 +29,7 @@ app.use("/api/uploads", uploadsRouter);
 app.use("/api/fs", fsRouter);
 app.use("/api/git", gitRouter);
 app.use("/api/profiles", profilesRouter);
+app.use("/api/db", dbRouter);
 
 // ────────────────────────────────────────────────────────────────────────────
 // Proxy to OmniAgent (Rust backend): endpoints with irregular path mapping
@@ -148,7 +150,7 @@ app.post("/api/reload", (req, res) => {
 // Generic proxy: all other /api/* routes go to OmniAgent with /api prefix stripped
 // ────────────────────────────────────────────────────────────────────────────
 app.all(
-  /^\/api\/(?!health|wiki-search|uploads|fs|git|profiles|plugins|templates)(?:.*)$/,
+  /^\/api\/(?!health|wiki-search|uploads|fs|git|profiles|plugins|templates|db)(?:.*)$/,
   async (req, res) => {
     try {
       // Strip the /api prefix: /api/messages/filters → /messages/filters

@@ -5620,3 +5620,125 @@ a.thread-row {
 .task-id-link.badge-blue-link:hover { border-color: #3b82f6 !important; }
 .task-id-link.badge-success-link:hover { border-color: #10b981 !important; }
 .task-id-link.badge-error-link:hover { border-color: #f43f5e !important; }
+
+/* ── Database page ── */
+.db-layout {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+}
+.db-sidebar {
+  width: 280px;
+  flex-shrink: 0;
+}
+.db-main {
+  flex: 1;
+  min-width: 0;
+}
+.db-table-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+.db-table-item {
+  text-align: left;
+  padding: 0.45rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  background: none;
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-family: inherit;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.db-table-item:hover {
+  background: var(--bg-card-hover);
+}
+.db-table-item.active {
+  background: var(--bg-sidebar-active);
+  border-color: var(--border-accent);
+  font-weight: 600;
+}
+.db-sql-box {
+  margin-bottom: 0.75rem;
+}
+.db-label {
+  display: block;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  margin-bottom: 0.35rem;
+}
+#db-custom-sql {
+  width: 100%;
+  box-sizing: border-box;
+  font-family: "SF Mono", "Fira Code", "Consolas", monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  padding: 0.5rem 0.6rem;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-primary);
+  background: rgba(0, 0, 0, 0.4);
+  color: var(--text-primary);
+  resize: vertical;
+}
+#db-custom-sql:focus {
+  outline: none;
+  border-color: var(--border-accent);
+}
+.db-sql-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.4rem;
+}
+.db-hint {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.db-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  margin: 0.6rem 0;
+}
+.db-page-info {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+}
+.db-th {
+  cursor: pointer;
+  user-select: none;
+  white-space: nowrap;
+}
+.db-th .db-sort-ind {
+  opacity: 0.45;
+  font-size: 0.7em;
+  margin-left: 0.15em;
+}
+.db-th:hover .db-sort-ind {
+  opacity: 0.9;
+  color: var(--accent-purple);
+}
+.db-null {
+  color: var(--text-muted);
+  font-style: italic;
+}
+.table-scroll {
+  max-height: 70vh;
+  overflow: auto;
+}
+@media (max-width: 900px) {
+  .db-layout {
+    flex-direction: column;
+  }
+  .db-sidebar {
+    width: 100%;
+  }
+}
