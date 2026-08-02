@@ -59,14 +59,6 @@ function normalizeSql(sql: string): string {
   return sql.trim().replace(/;+\s*$/, "");
 }
 
-/** Strip a trailing LIMIT / OFFSET clause so the count reflects full rows. */
-function stripLimitOffset(sql: string): string {
-  let s = sql.trim();
-  s = s.replace(/\s+LIMIT\s+\d+(?:\s+OFFSET\s+\d+)?\s*$/i, "");
-  s = s.replace(/\s+OFFSET\s+\d+\s*$/i, "");
-  return s.trim();
-}
-
 function parsePaging(body: { page?: unknown; pageSize?: unknown }): {
   page: number;
   pageSize: number;
@@ -186,8 +178,9 @@ router.post("/query", async (req: Request, res: Response) => {
       throw new ApiError(400, `Invalid sort field: ${sortField}`);
     }
 
-    let baseSql: string; // data SELECT without LIMIT/OFFSET — used for the count
+    let baseSql: string; // data SELECT without the paging LIMIT/OFFSET
     let execSql: string; // final data SELECT with LIMIT/OFFSET
+    let countBaseSql: string; // SELECT whose full row count the pagination total reflects
 
     if (typeof body.table === "string" && body.table.trim() !== "") {
       // Table mode: trusted identifier + double-quoted identifiers.
@@ -200,6 +193,7 @@ router.post("/query", async (req: Request, res: Response) => {
         baseSql += ` ORDER BY "${sortField}" ${sortDir}`;
       }
       execSql = `${baseSql} LIMIT ${pageSize} OFFSET ${offset}`;
+      countBaseSql = `SELECT * FROM "${table}"`;
     } else if (typeof body.sql === "string" && body.sql.trim() !== "") {
       // Custom SQL mode: user-provided SELECT, validated read-only.
       const userSql = normalizeSql(body.sql);
@@ -213,12 +207,17 @@ router.post("/query", async (req: Request, res: Response) => {
       }
       const hasLimit = /\bLIMIT\b/i.test(stripCommentsAndStrings(baseSql));
       execSql = hasLimit ? baseSql : `${baseSql} LIMIT ${pageSize} OFFSET ${offset}`;
+      // Count from the user's un-paginated SQL so a LIMIT inside a subquery
+      // or literal is never mistaken for the outer paging LIMIT.
+      countBaseSql = userSql;
     } else {
       throw new ApiError(400, "Either 'table' or 'sql' is required");
     }
 
-    // Count over the same SELECT without LIMIT/OFFSET for pagination.
-    const countSql = `SELECT count(*)::bigint AS total FROM (${stripLimitOffset(baseSql)}) AS sub`;
+    // Count over a subquery wrapper of the un-paginated SELECT — never a regex
+    // that strips LIMIT/OFFSET (it can strip the wrong LIMIT when the SQL
+    // contains LIMIT inside a subquery or string literal).
+    const countSql = `SELECT count(*)::bigint AS total FROM (${countBaseSql}) AS sub`;
 
     const [dataRows, countRows] = await Promise.all([runQueryTool(execSql), runQueryTool(countSql)]);
 

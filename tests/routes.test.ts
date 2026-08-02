@@ -432,6 +432,32 @@ describe("OmniDashboard API Routes", () => {
     });
   });
 
+  // ── /api/db/query — error propagation (P2 #7) ──
+  describe("/api/db/query", () => {
+    it("surfaces a query-tool error as an HTTP error, not empty results", async () => {
+      try {
+        // A query that passes dashboard validation but fails inside the query
+        // tool must surface as a 4xx/5xx with an error message — NOT as
+        // HTTP 200 with {columns:[], rows:[], total:0}.
+        const { status, body } = await apiPost("/api/db/query", {
+          sql: "SELECT * FROM nonexistent_table_xyz_123",
+          page: 1,
+          pageSize: 25,
+        });
+        assert.ok(
+          status >= 400,
+          `expected 4xx/5xx when the query tool errors, got ${status}: ${JSON.stringify(body)}`,
+        );
+        assert.ok("error" in body, "error response should carry an error message");
+      } catch (e: any) {
+        if (e?.cause?.code === "ECONNREFUSED" || e?.message?.includes("fetch failed")) {
+          return;
+        }
+        throw e;
+      }
+    });
+  });
+
   // ── HTML page ──
   describe("Frontend (HTML)", () => {
     it("index page includes favicon link", async () => {
