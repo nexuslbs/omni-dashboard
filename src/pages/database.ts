@@ -140,17 +140,19 @@ function renderTableList(): void {
 }
 
 function selectTable(table: string): void {
-  state.currentTable = table;
+  const sql = `SELECT * FROM "${table}"`;
+  const textarea = el<HTMLTextAreaElement>("db-custom-sql");
+  textarea.value = sql;
+  state.customSql = sql;
+  state.currentTable = "";
   state.page = 1;
   state.sortField = "";
   state.sortDir = null;
-  state.customSql = "";
   state.columnTypes = {};
-  el<HTMLTextAreaElement>("db-custom-sql").value = "";
   el("db-title").textContent = `Table: ${table}`;
   renderTableList();
   void loadColumns(table);
-  void runQuery(currentBody());
+  runCustomSql();
 }
 
 async function loadColumns(table: string): Promise<void> {
@@ -260,14 +262,10 @@ function renderResult(res: QueryResponse): void {
   thead.innerHTML = res.columns
     .map((col) => {
       const type = state.columnTypes[col] ?? "";
-      const arrow =
-        state.sortField === col && state.sortDir === "asc"
-          ? " ▲"
-          : state.sortField === col && state.sortDir === "desc"
-            ? " ▼"
-            : "";
-      const hint = state.sortField === col ? "" : " ↕";
-      return `<th role="columnheader" class="db-th db-th-sortable" data-col="${escapeHtml(col)}" title="Sort by ${escapeHtml(col)}${type ? ` (${escapeHtml(type)})` : ""}"><span class="db-th-name">${escapeHtml(col)}</span><span class="db-sort-ind">${arrow || hint}</span></th>`;
+      const activeDir = state.sortField === col ? state.sortDir : null;
+      const upCls = activeDir === "asc" ? "db-sort-arrow active" : "db-sort-arrow";
+      const downCls = activeDir === "desc" ? "db-sort-arrow active" : "db-sort-arrow";
+      return `<th role="columnheader" class="db-th db-th-sortable" data-col="${escapeHtml(col)}" title="Sort by ${escapeHtml(col)}${type ? ` (${escapeHtml(type)})` : ""}"><span class="db-th-name">${escapeHtml(col)}</span><span class="db-sort-arrows" aria-hidden="true"><span class="${upCls}">▲</span><span class="${downCls}">▼</span></span></th>`;
     })
     .join("");
 

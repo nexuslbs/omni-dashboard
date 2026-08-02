@@ -5717,14 +5717,26 @@ a.thread-row {
   user-select: none;
   white-space: nowrap;
 }
-.db-th .db-sort-ind {
-  opacity: 0.45;
-  font-size: 0.7em;
-  margin-left: 0.15em;
+.db-sort-arrows {
+  display: inline-flex;
+  flex-direction: column;
+  vertical-align: middle;
+  margin-left: 0.35em;
+  line-height: 0.75;
+  font-size: 0.6em;
+  gap: 0;
 }
-.db-th:hover .db-sort-ind {
-  opacity: 0.9;
+.db-sort-arrow {
+  color: var(--text-muted);
+  opacity: 0.45;
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+.db-th-sortable:hover .db-sort-arrow {
+  opacity: 0.85;
+}
+.db-sort-arrow.active {
   color: var(--accent-purple);
+  opacity: 1;
 }
 .db-null {
   color: var(--text-muted);

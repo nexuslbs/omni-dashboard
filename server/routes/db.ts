@@ -82,6 +82,7 @@ function parsePaging(body: { page?: unknown; pageSize?: unknown }): {
 
 interface McpExecuteResult {
   success?: boolean;
+  is_error?: boolean;
   content?: unknown;
   error?: string;
 }
@@ -110,8 +111,8 @@ async function runQueryTool(sql: string): Promise<Record<string, unknown>[]> {
     throw new ApiError(502, `Query tool returned HTTP ${httpRes.status}`);
   }
   const body = (await httpRes.json().catch(() => ({}))) as McpExecuteResult;
-  if (body.success !== true) {
-    throw new ApiError(502, body.error || "Query tool failed");
+  if (body.success !== true || body.is_error === true) {
+    throw new ApiError(502, body.error || (typeof body.content === "string" ? body.content : "Query tool failed"));
   }
   if (typeof body.content !== "string") {
     return [];
