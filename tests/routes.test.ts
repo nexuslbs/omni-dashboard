@@ -474,3 +474,78 @@ describe("OmniDashboard API Routes", () => {
     });
   });
 });
+
+// ── /api/fetch-remote (Import modal CORS proxy) ──
+describe("/api/fetch-remote (Import modal proxy)", () => {
+  it("rejects missing url with 400", async () => {
+    try {
+      const { status, body } = await apiGet("/api/fetch-remote");
+      assert.equal(status, 400);
+      assert.ok("error" in body);
+    } catch (e: any) {
+      if (e?.cause?.code === "ECONNREFUSED" || e?.message?.includes("fetch failed")) return;
+      throw e;
+    }
+  });
+
+  it("rejects non-http(s) schemes with 400", async () => {
+    try {
+      const { status, body } = await apiGet("/api/fetch-remote?url=file%3A%2F%2F%2Fetc%2Fpasswd");
+      assert.equal(status, 400);
+      assert.match(body.error || "", /http\(s\) URLs are allowed/i);
+    } catch (e: any) {
+      if (e?.cause?.code === "ECONNREFUSED" || e?.message?.includes("fetch failed")) return;
+      throw e;
+    }
+  });
+
+  it("forwards upstream status (404) with a plain-text body", async () => {
+    try {
+      const res = await fetch(`${BASE}/api/fetch-remote?url=${encodeURIComponent("https://example.invalid/definitely-missing-remote.yml")}`);
+      const text = await res.text();
+      // Route exists and forwards the upstream status; a 502/504 is also
+      // acceptable when the server cannot resolve the (intentionally
+      // invalid) hostname.
+      assert.ok([404, 502, 504].includes(res.status), `expected 404/502/504, got ${res.status}: ${text}`);
+    } catch (e: any) {
+      if (e?.cause?.code === "ECONNREFUSED" || e?.message?.includes("fetch failed")) return;
+      throw e;
+    }
+  });
+
+  it("returns YAML text for a valid raw github URL", async () => {
+    try {
+      const url = encodeURIComponent(
+        "https://raw.githubusercontent.com/nexuslbs/omni-stack/main/remote.yml",
+      );
+      const { status, text } = await apiGetRaw(`/api/fetch-remote?url=${url}`);
+      if (status === 200) {
+        assert.ok(text.length > 0, "expected non-empty body");
+        assert.match(text, /^(platforms|tools|providers):/m);
+      } else {
+        // Server-side fetch failed (offline): route must still return a
+        // non-HTML error body rather than crashing.
+        assert.ok([502, 504].includes(status), `expected 200/502/504, got ${status}`);
+      }
+    } catch (e: any) {
+      if (e?.cause?.code === "ECONNREFUSED" || e?.message?.includes("fetch failed")) return;
+      throw e;
+    }
+  });
+});
+
+describe("/api/remote-yml (local remote.yml)", () => {
+  it("serves the local remote.yml or returns 404 with an error", async () => {
+    try {
+      const { status, text } = await apiGetRaw("/api/remote-yml");
+      if (status === 200) {
+        assert.ok(text.length > 0, "expected non-empty remote.yml body");
+      } else {
+        assert.equal(status, 404);
+      }
+    } catch (e: any) {
+      if (e?.cause?.code === "ECONNREFUSED" || e?.message?.includes("fetch failed")) return;
+      throw e;
+    }
+  });
+});

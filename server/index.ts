@@ -31,6 +31,62 @@ app.use("/api/git", gitRouter);
 app.use("/api/profiles", profilesRouter);
 app.use("/api/db", dbRouter);
 
+// GET /api/fetch-remote?url=<http(s) url>: fetch a remote text resource
+// (used by the plugin Import modal to bypass browser CORS restrictions).
+// Only http(s) URLs are allowed; the upstream status and body are forwarded
+// so the frontend can distinguish "HTTP 404" from "network error".
+app.get("/api/fetch-remote", async (req, res) => {
+  const target = String(req.query.url || "").trim();
+  if (!target) {
+    res.status(400).json({ error: "Missing required query parameter: url" });
+    return;
+  }
+  if (!/^https?:\/\//i.test(target)) {
+    res.status(400).json({ error: "Only http(s) URLs are allowed" });
+    return;
+  }
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 30000);
+    const response = await fetch(target, { redirect: "follow", signal: controller.signal });
+    clearTimeout(timer);
+    const text = await response.text();
+    res.status(response.status).type("text/plain").send(text);
+  } catch (err: unknown) {
+    const isTimeout =
+      (err instanceof DOMException && err.name === "AbortError") ||
+      (err instanceof Error &&
+        (err.name === "AbortError" || err.message?.includes("abort") || err.message?.includes("timeout")));
+    if (isTimeout) {
+      res.status(504).json({ error: "Timed out fetching URL (30s)" });
+    } else {
+      res.status(502).json({ error: "Network error: " + (err instanceof Error ? err.message : String(err)) });
+    }
+  }
+});
+
+// GET /api/remote-yml: serve the local remote.yml (host data dir) as text/plain.
+// The plugin Import modal compares fetched entries against this file's section.
+app.get("/api/remote-yml", (_req, res) => {
+  const candidates = [
+    process.env.OMNI_DIR ? join(process.env.OMNI_DIR, "remote.yml") : "",
+    "/opt/omni/remote.yml",
+    "/opt/workspace/omni-stack/remote.yml",
+  ].filter(Boolean);
+  for (const candidate of candidates) {
+    try {
+      if (existsSync(candidate)) {
+        const text = readFileSync(candidate, "utf-8");
+        res.status(200).type("text/plain").send(text);
+        return;
+      }
+    } catch {
+      // try next candidate
+    }
+  }
+  res.status(404).json({ error: "remote.yml not found on server" });
+});
+
 // ────────────────────────────────────────────────────────────────────────────
 // Proxy to OmniAgent (Rust backend): endpoints with irregular path mapping
 // ────────────────────────────────────────────────────────────────────────────
