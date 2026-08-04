@@ -81,7 +81,6 @@ export function renderDatabase(container: HTMLElement): void {
             </div>
             <div id="db-error" class="error-state" hidden></div>
             <div id="db-loading" class="loading" hidden>Loading…</div>
-            <pre id="db-executed-sql" class="code-block" hidden></pre>
             <div id="db-pagination-top" class="events-nav db-pagination" hidden></div>
             <div id="db-table-wrap" class="table-scroll" hidden>
               <table class="data-table" role="grid">
@@ -236,15 +235,11 @@ function showError(message: string): void {
   errorEl.innerHTML = escapeHtml(message);
   el("db-table-wrap").hidden = true;
   el("db-empty").hidden = true;
-  el("db-executed-sql").hidden = true;
   el("db-pagination-top").hidden = true;
   el("db-pagination-bottom").hidden = true;
 }
 
 function renderResult(res: QueryResponse): void {
-  const sqlEl = el("db-executed-sql");
-  sqlEl.hidden = false;
-  sqlEl.textContent = res.sql;
 
   const thead = el("db-thead");
   const tbody = el("db-tbody");

@@ -5623,23 +5623,52 @@ a.thread-row {
 
 /* ── Database page ── */
 .db-layout {
-  display: flex;
+  display: grid;
+  grid-template-columns: 280px 1fr;
   gap: 1rem;
-  align-items: flex-start;
+  height: calc(100vh - 9rem);
+  min-height: 420px;
+  overflow: hidden;
 }
 .db-sidebar {
-  width: 280px;
-  flex-shrink: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.db-sidebar .card-body {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 .db-main {
-  flex: 1;
   min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.db-main > .card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.db-main .card-body {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 .db-table-list {
   display: flex;
   flex-direction: column;
   gap: 0.25rem;
-  max-height: 70vh;
+  flex: 1;
+  min-height: 0;
   overflow-y: auto;
 }
 .db-table-item {
@@ -5743,14 +5772,26 @@ a.thread-row {
   font-style: italic;
 }
 .table-scroll {
-  max-height: 70vh;
+  flex: 1;
+  min-height: 0;
   overflow: auto;
 }
 @media (max-width: 900px) {
   .db-layout {
-    flex-direction: column;
+    grid-template-columns: 1fr;
+    height: auto;
+    overflow: visible;
   }
   .db-sidebar {
     width: 100%;
+  }
+  .db-main {
+    overflow: visible;
+  }
+  .db-main .card-body {
+    overflow: visible;
+  }
+  .table-scroll {
+    flex: none;
   }
 }
