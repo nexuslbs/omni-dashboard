@@ -1,0 +1,955 @@
+== import
+TAP version 13
+# Subtest: Import button wiring (plugin-list.ts)
+    # Subtest: adds an Import button next to the Add button
+    ok 1 - adds an Import button next to the Add button
+      ---
+      duration_ms: 1.393709
+      type: 'test'
+      ...
+    # Subtest: wires the Import button to showImportModal with a page reload
+    ok 2 - wires the Import button to showImportModal with a page reload
+      ---
+      duration_ms: 0.181501
+      type: 'test'
+      ...
+    # Subtest: imports showImportModal from ./plugin-import
+    ok 3 - imports showImportModal from ./plugin-import
+      ---
+      duration_ms: 5.338934
+      type: 'test'
+      ...
+    1..3
+ok 1 - Import button wiring (plugin-list.ts)
+  ---
+  duration_ms: 8.832457
+  type: 'suite'
+  ...
+# Subtest: server proxy route (server/index.ts)
+    # Subtest: registers GET /api/fetch-remote before the generic proxy
+    ok 1 - registers GET /api/fetch-remote before the generic proxy
+      ---
+      duration_ms: 2.009113
+      type: 'test'
+      ...
+    # Subtest: only allows http(s) URLs
+    ok 2 - only allows http(s) URLs
+      ---
+      duration_ms: 0.230801
+      type: 'test'
+      ...
+    # Subtest: registers GET /api/remote-yml for the local remote.yml
+    ok 3 - registers GET /api/remote-yml for the local remote.yml
+      ---
+      duration_ms: 0.243602
+      type: 'test'
+      ...
+    1..3
+ok 2 - server proxy route (server/index.ts)
+  ---
+  duration_ms: 2.750317
+  type: 'suite'
+  ...
+# Subtest: parseRemoteYml
+    # Subtest: parses sections, entries, url/path/ref and skips comments
+    ok 1 - parses sections, entries, url/path/ref and skips comments
+      ---
+      duration_ms: 61.299291
+      type: 'test'
+      ...
+    # Subtest: returns empty objects for missing sections
+    ok 2 - returns empty objects for missing sections
+      ---
+      duration_ms: 0.379702
+      type: 'test'
+      ...
+    # Subtest: ignores unknown top-level sections and git_ref alias
+    ok 3 - ignores unknown top-level sections and git_ref alias
+      ---
+      duration_ms: 0.327702
+      type: 'test'
+      ...
+    # Subtest: throws Invalid YAML for malformed content
+    ok 4 - throws Invalid YAML for malformed content
+      ---
+      duration_ms: 0.438703
+      type: 'test'
+      ...
+    # Subtest: throws Invalid YAML for an entry missing url
+    ok 5 - throws Invalid YAML for an entry missing url
+      ---
+      duration_ms: 0.250201
+      type: 'test'
+      ...
+    # Subtest: throws Invalid YAML for empty documents
+    ok 6 - throws Invalid YAML for empty documents
+      ---
+      duration_ms: 0.224101
+      type: 'test'
+      ...
+    1..6
+ok 3 - parseRemoteYml
+  ---
+  duration_ms: 63.401404
+  type: 'suite'
+  ...
+# Subtest: determineAction
+    # Subtest: returns add when no local plugin and no local remote.yml entry exist
+    ok 1 - returns add when no local plugin and no local remote.yml entry exist
+      ---
+      duration_ms: 0.254302
+      type: 'test'
+      ...
+    # Subtest: returns remove when the local plugin has the SAME url+path+ref
+    ok 2 - returns remove when the local plugin has the SAME url+path+ref
+      ---
+      duration_ms: 0.394402
+      type: 'test'
+      ...
+    # Subtest: returns override when url differs
+    ok 3 - returns override when url differs
+      ---
+      duration_ms: 0.227002
+      type: 'test'
+      ...
+    # Subtest: returns override when path differs
+    ok 4 - returns override when path differs
+      ---
+      duration_ms: 0.204101
+      type: 'test'
+      ...
+    # Subtest: returns override when ref differs (including missing ref)
+    ok 5 - returns override when ref differs (including missing ref)
+      ---
+      duration_ms: 0.325403
+      type: 'test'
+      ...
+    # Subtest: falls back to the local remote.yml entry when the plugin is not installed
+    ok 6 - falls back to the local remote.yml entry when the plugin is not installed
+      ---
+      duration_ms: 0.203901
+      type: 'test'
+      ...
+    1..6
+ok 4 - determineAction
+  ---
+  duration_ms: 1.804511
+  type: 'suite'
+  ...
+# Subtest: planImportActions
+    # Subtest: maps entries to planned actions using local plugins + local remote.yml
+    ok 1 - maps entries to planned actions using local plugins + local remote.yml
+      ---
+      duration_ms: 0.236401
+      type: 'test'
+      ...
+    1..1
+ok 5 - planImportActions
+  ---
+  duration_ms: 0.328902
+  type: 'suite'
+  ...
+# Subtest: fetchRemoteYml error handling
+    # Subtest: returns ok with text on a successful direct fetch
+    ok 1 - returns ok with text on a successful direct fetch
+      ---
+      duration_ms: 0.251502
+      type: 'test'
+      ...
+    # Subtest: reports HTTP 404 without proxying
+    ok 2 - reports HTTP 404 without proxying
+      ---
+      duration_ms: 0.195501
+      type: 'test'
+      ...
+    # Subtest: reports network errors and falls back to the server proxy
+    ok 3 - reports network errors and falls back to the server proxy
+      ---
+      duration_ms: 4.61513
+      type: 'test'
+      ...
+    # Subtest: surfaces the proxy error when both direct fetch and proxy fail
+    ok 4 - surfaces the proxy error when both direct fetch and proxy fail
+      ---
+      duration_ms: 0.278602
+      type: 'test'
+      ...
+    # Subtest: reports an empty response body
+    ok 5 - reports an empty response body
+      ---
+      duration_ms: 0.218901
+      type: 'test'
+      ...
+    1..5
+ok 6 - fetchRemoteYml error handling
+  ---
+  duration_ms: 5.756137
+  type: 'suite'
+  ...
+# Subtest: executeImportBatch
+    # Subtest: executes marked actions sequentially in list order and continues on failure
+    ok 1 - executes marked actions sequentially in list order and continues on failure
+      ---
+      duration_ms: 1.269408
+      type: 'test'
+      ...
+    # Subtest: routes remove actions to executor.remove with the type dir
+    ok 2 - routes remove actions to executor.remove with the type dir
+      ---
+      duration_ms: 0.197102
+      type: 'test'
+      ...
+    # Subtest: uses the default executor against /plugins/install-git and DELETE
+    ok 3 - uses the default executor against /plugins/install-git and DELETE
+      ---
+      duration_ms: 0.216801
+      type: 'test'
+      ...
+    1..3
+ok 7 - executeImportBatch
+  ---
+  duration_ms: 1.804311
+  type: 'suite'
+  ...
+1..7
+# tests 27
+# suites 7
+# pass 27
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 467.902585
+== lib
+TAP version 13
+# Subtest: src/lib/api.ts
+    # Subtest: API_BASE constant equals /api
+    ok 1 - API_BASE constant equals /api
+      ---
+      duration_ms: 1.851212
+      type: 'test'
+      ...
+    # Subtest: exports apiGet, apiPost, apiDelete functions
+    ok 2 - exports apiGet, apiPost, apiDelete functions
+      ---
+      duration_ms: 0.467903
+      type: 'test'
+      ...
+    # Subtest: all API functions throw on non-ok response
+    ok 3 - all API functions throw on non-ok response
+      ---
+      duration_ms: 0.301802
+      type: 'test'
+      ...
+    # Subtest: defines all expected TypeScript interfaces
+    ok 4 - defines all expected TypeScript interfaces
+      ---
+      duration_ms: 0.904405
+      type: 'test'
+      ...
+    # Subtest: apiGet uses fetch with API_BASE prefix
+    ok 5 - apiGet uses fetch with API_BASE prefix
+      ---
+      duration_ms: 0.417902
+      type: 'test'
+      ...
+    # Subtest: apiPost uses POST method and JSON content-type
+    ok 6 - apiPost uses POST method and JSON content-type
+      ---
+      duration_ms: 1.57211
+      type: 'test'
+      ...
+    # Subtest: apiDelete uses DELETE method
+    ok 7 - apiDelete uses DELETE method
+      ---
+      duration_ms: 0.480703
+      type: 'test'
+      ...
+    # Subtest: module can be imported and exports expected symbols
+    ok 8 - module can be imported and exports expected symbols
+      ---
+      duration_ms: 22.04754
+      type: 'test'
+      ...
+    1..8
+ok 1 - src/lib/api.ts
+  ---
+  duration_ms: 30.134092
+  type: 'suite'
+  ...
+# Subtest: src/lib/router.ts
+    # Subtest: exports router with go method
+    ok 1 - exports router with go method
+      ---
+      duration_ms: 0.719705
+      type: 'test'
+      ...
+    # Subtest: defines all expected page routes
+    ok 2 - defines all expected page routes
+      ---
+      duration_ms: 0.614804
+      type: 'test'
+      ...
+    # Subtest: defines parameterized routes for detail pages
+    ok 3 - defines parameterized routes for detail pages
+      ---
+      duration_ms: 0.290102
+      type: 'test'
+      ...
+    # Subtest: param route handlers extract parameter correctly
+    ok 4 - param route handlers extract parameter correctly
+      ---
+      duration_ms: 0.188502
+      type: 'test'
+      ...
+    # Subtest: 404 fallback renders error state
+    ok 5 - 404 fallback renders error state
+      ---
+      duration_ms: 0.213701
+      type: 'test'
+      ...
+    # Subtest: routes use dynamically imported page renderers
+    ok 6 - routes use dynamically imported page renderers
+      ---
+      duration_ms: 0.183101
+      type: 'test'
+      ...
+    # Subtest: router.go iterates param routes before exact routes
+    ok 7 - router.go iterates param routes before exact routes
+      ---
+      duration_ms: 0.180701
+      type: 'test'
+      ...
+    1..7
+ok 2 - src/lib/router.ts
+  ---
+  duration_ms: 2.743618
+  type: 'suite'
+  ...
+# Subtest: src/lib/plugin-ui.ts
+    # Subtest: renderPluginCard includes card-body with renderPluginConfig call
+    ok 1 - renderPluginCard includes card-body with renderPluginConfig call
+      ---
+      duration_ms: 0.394203
+      type: 'test'
+      ...
+    # Subtest: renderPluginCard includes tool names in card body when pluginTools provided
+    ok 2 - renderPluginCard includes tool names in card body when pluginTools provided
+      ---
+      duration_ms: 0.399902
+      type: 'test'
+      ...
+    # Subtest: renderPluginConfig function generates config fields from configSchema
+    ok 3 - renderPluginConfig function generates config fields from configSchema
+      ---
+      duration_ms: 0.313702
+      type: 'test'
+      ...
+    # Subtest: exports renderPluginCard, renderActionButtons, wirePluginButtons, showInstallModal
+    ok 4 - exports renderPluginCard, renderActionButtons, wirePluginButtons, showInstallModal
+      ---
+      duration_ms: 0.636504
+      type: 'test'
+      ...
+    1..4
+ok 3 - src/lib/plugin-ui.ts
+  ---
+  duration_ms: 2.075613
+  type: 'suite'
+  ...
+1..3
+# tests 19
+# suites 3
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 348.988824
+== pages
+TAP version 13
+# Subtest: Page modules exist and export render functions
+    # Subtest: kanban.ts exports renderKanban, renderKanbanDetail
+    ok 1 - kanban.ts exports renderKanban, renderKanbanDetail
+      ---
+      duration_ms: 2.083913
+      type: 'test'
+      ...
+    # Subtest: schedule.ts exports renderSchedule, renderScheduleDetail
+    ok 2 - schedule.ts exports renderSchedule, renderScheduleDetail
+      ---
+      duration_ms: 0.572403
+      type: 'test'
+      ...
+    # Subtest: channels.ts exports renderChannels
+    ok 3 - channels.ts exports renderChannels
+      ---
+      duration_ms: 0.327702
+      type: 'test'
+      ...
+    # Subtest: database.ts exports renderDatabase
+    ok 4 - database.ts exports renderDatabase
+      ---
+      duration_ms: 1.426609
+      type: 'test'
+      ...
+    # Subtest: kanban.ts is under 350 lines
+    ok 5 - kanban.ts is under 350 lines
+      ---
+      duration_ms: 0.571104
+      type: 'test'
+      ...
+    # Subtest: schedule.ts is under 350 lines
+    ok 6 - schedule.ts is under 350 lines
+      ---
+      duration_ms: 1.645211
+      type: 'test'
+      ...
+    # Subtest: channels.ts is under 350 lines
+    ok 7 - channels.ts is under 350 lines
+      ---
+      duration_ms: 0.442703
+      type: 'test'
+      ...
+    1..7
+ok 1 - Page modules exist and export render functions
+  ---
+  duration_ms: 8.874657
+  type: 'suite'
+  ...
+# Subtest: New kanban lib modules
+    # Subtest: kanban-board.ts exports expected functions
+    ok 1 - kanban-board.ts exports expected functions
+      ---
+      duration_ms: 1.104607
+      type: 'test'
+      ...
+    # Subtest: kanban-detail.ts exports expected functions
+    ok 2 - kanban-detail.ts exports expected functions
+      ---
+      duration_ms: 0.936206
+      type: 'test'
+      ...
+    # Subtest: kanban-subtasks.ts exports expected functions
+    ok 3 - kanban-subtasks.ts exports expected functions
+      ---
+      duration_ms: 0.980706
+      type: 'test'
+      ...
+    1..3
+ok 2 - New kanban lib modules
+  ---
+  duration_ms: 3.566623
+  type: 'suite'
+  ...
+# Subtest: New schedule lib modules
+    # Subtest: schedule-list.ts exports expected functions
+    ok 1 - schedule-list.ts exports expected functions
+      ---
+      duration_ms: 0.415903
+      type: 'test'
+      ...
+    # Subtest: schedule-detail.ts exports expected functions
+    ok 2 - schedule-detail.ts exports expected functions
+      ---
+      duration_ms: 0.762405
+      type: 'test'
+      ...
+    1..2
+ok 3 - New schedule lib modules
+  ---
+  duration_ms: 1.295708
+  type: 'suite'
+  ...
+# Subtest: New channels lib modules
+    # Subtest: channel-config.ts exports expected functions
+    ok 1 - channel-config.ts exports expected functions
+      ---
+      duration_ms: 0.785205
+      type: 'test'
+      ...
+    # Subtest: channel-status.ts exports expected functions
+    ok 2 - channel-status.ts exports expected functions
+      ---
+      duration_ms: 0.670304
+      type: 'test'
+      ...
+    1..2
+ok 4 - New channels lib modules
+  ---
+  duration_ms: 1.559609
+  type: 'suite'
+  ...
+# Subtest: plugin-config library functions
+    # Subtest: plugin-config.ts exports renderConfigField
+    ok 1 - plugin-config.ts exports renderConfigField
+      ---
+      duration_ms: 0.416303
+      type: 'test'
+      ...
+    # Subtest: plugin-config.ts exports renderPluginConfig
+    ok 2 - plugin-config.ts exports renderPluginConfig
+      ---
+      duration_ms: 0.362403
+      type: 'test'
+      ...
+    # Subtest: plugin-config.ts exports getCurrentConfig
+    ok 3 - plugin-config.ts exports getCurrentConfig
+      ---
+      duration_ms: 1.097607
+      type: 'test'
+      ...
+    # Subtest: plugin-config.ts exports dirtyCheckSaveButton
+    ok 4 - plugin-config.ts exports dirtyCheckSaveButton
+      ---
+      duration_ms: 0.399003
+      type: 'test'
+      ...
+    # Subtest: plugin-config.ts exports renderBuiltinSection
+    ok 5 - plugin-config.ts exports renderBuiltinSection
+      ---
+      duration_ms: 0.389402
+      type: 'test'
+      ...
+    1..5
+ok 5 - plugin-config library functions
+  ---
+  duration_ms: 2.930818
+  type: 'suite'
+  ...
+1..5
+# tests 19
+# suites 5
+# pass 19
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 407.260695
+== routes
+TAP version 13
+# Subtest: OmniDashboard API Routes
+    # Subtest: /api/kanban
+        # Subtest: /board returns expected structure
+        ok 1 - /board returns expected structure
+          ---
+          duration_ms: 102.27615
+          type: 'test'
+          ...
+        # Subtest: /tasks/{id} returns 404 for non-existent task
+        ok 2 - /tasks/{id} returns 404 for non-existent task
+          ---
+          duration_ms: 3.654223
+          type: 'test'
+          ...
+        1..2
+    ok 1 - /api/kanban
+      ---
+      duration_ms: 107.280682
+      type: 'suite'
+      ...
+    # Subtest: /api/schedule
+        # Subtest: / returns expected structure
+        ok 1 - / returns expected structure
+          ---
+          duration_ms: 10.222265
+          type: 'test'
+          ...
+        # Subtest: /{id} returns 404 for non-existent job
+        ok 2 - /{id} returns 404 for non-existent job
+          ---
+          duration_ms: 11.668274
+          type: 'test'
+          ...
+        1..2
+    ok 2 - /api/schedule
+      ---
+      duration_ms: 22.374042
+      type: 'suite'
+      ...
+    # Subtest: /api/wiki-search
+        # Subtest: POST / returns expected structure or validation error
+        ok 1 - POST / returns expected structure or validation error
+          ---
+          duration_ms: 7.681349
+          type: 'test'
+          ...
+        # Subtest: POST / with query returns expected result shape
+        ok 2 - POST / with query returns expected result shape
+          ---
+          duration_ms: 7.83495
+          type: 'test'
+          ...
+        1..2
+    ok 3 - /api/wiki-search
+      ---
+      duration_ms: 16.249703
+      type: 'suite'
+      ...
+    # Subtest: /api/overview
+        # Subtest: / returns array with correct structure
+        ok 1 - / returns array with correct structure
+          ---
+          duration_ms: 4.60683
+          type: 'test'
+          ...
+        1..1
+    ok 4 - /api/overview
+      ---
+      duration_ms: 4.928131
+      type: 'suite'
+      ...
+    # Subtest: /api/messages/filters
+        # Subtest: returns filters with all expected arrays
+        ok 1 - returns filters with all expected arrays
+          ---
+          duration_ms: 6.612142
+          type: 'test'
+          ...
+        1..1
+    ok 5 - /api/messages/filters
+      ---
+      duration_ms: 6.798544
+      type: 'suite'
+      ...
+    # Subtest: /api/messages/events
+        # Subtest: basic query returns messages array with total
+        ok 1 - basic query returns messages array with total
+          ---
+          duration_ms: 11.068871
+          type: 'test'
+          ...
+        # Subtest: filter by role=user returns correct structure
+        ok 2 - filter by role=user returns correct structure
+          ---
+          duration_ms: 5.893138
+          type: 'test'
+          ...
+        # Subtest: filter by channel_id=all returns all (no filter)
+        ok 3 - filter by channel_id=all returns all (no filter)
+          ---
+          duration_ms: 6.849444
+          type: 'test'
+          ...
+        # Subtest: filter by type param returns correct structure
+        ok 4 - filter by type param returns correct structure
+          ---
+          duration_ms: 5.954638
+          type: 'test'
+          ...
+        # Subtest: filter by subtype param returns correct structure
+        ok 5 - filter by subtype param returns correct structure
+          ---
+          duration_ms: 3.16312
+          type: 'test'
+          ...
+        # Subtest: filter by status returns correct structure
+        ok 6 - filter by status returns correct structure
+          ---
+          duration_ms: 3.15402
+          type: 'test'
+          ...
+        # Subtest: filter by search (provider) returns correct structure
+        ok 7 - filter by search (provider) returns correct structure
+          ---
+          duration_ms: 3.252321
+          type: 'test'
+          ...
+        # Subtest: filter by model returns correct structure
+        ok 8 - filter by model returns correct structure
+          ---
+          duration_ms: 3.945525
+          type: 'test'
+          ...
+        # Subtest: pagination params (offset, limit) work
+        ok 9 - pagination params (offset, limit) work
+          ---
+          duration_ms: 5.279733
+          type: 'test'
+          ...
+        1..9
+    ok 6 - /api/messages/events
+      ---
+      duration_ms: 51.360427
+      type: 'suite'
+      ...
+    # Subtest: /api/uploads/list
+        # Subtest: returns array of upload entries
+        ok 1 - returns array of upload entries
+          ---
+          duration_ms: 4.773531
+          type: 'test'
+          ...
+        1..1
+    ok 7 - /api/uploads/list
+      ---
+      duration_ms: 4.908031
+      type: 'suite'
+      ...
+    # Subtest: /api/fs/list
+        # Subtest: /list?path=/ returns entries array
+        ok 1 - /list?path=/ returns entries array
+          ---
+          duration_ms: 8.154552
+          type: 'test'
+          ...
+        1..1
+    ok 8 - /api/fs/list
+      ---
+      duration_ms: 8.298052
+      type: 'suite'
+      ...
+    # Subtest: /api/db/query
+        # Subtest: surfaces a query-tool error as an HTTP error, not empty results
+        ok 1 - surfaces a query-tool error as an HTTP error, not empty results
+          ---
+          duration_ms: 5.548235
+          type: 'test'
+          ...
+        1..1
+    ok 9 - /api/db/query
+      ---
+      duration_ms: 5.693636
+      type: 'suite'
+      ...
+    # Subtest: Frontend (HTML)
+        # Subtest: index page includes favicon link
+        ok 1 - index page includes favicon link
+          ---
+          duration_ms: 8.308553
+          type: 'test'
+          ...
+        1..1
+    ok 10 - Frontend (HTML)
+      ---
+      duration_ms: 8.495254
+      type: 'suite'
+      ...
+    1..10
+ok 1 - OmniDashboard API Routes
+  ---
+  duration_ms: 238.142215
+  type: 'suite'
+  ...
+# Subtest: /api/fetch-remote (Import modal proxy)
+    # Subtest: rejects missing url with 400
+    ok 1 - rejects missing url with 400
+      ---
+      duration_ms: 11.03357
+      type: 'test'
+      ...
+    # Subtest: rejects non-http(s) schemes with 400
+    ok 2 - rejects non-http(s) schemes with 400
+      ---
+      duration_ms: 4.473329
+      type: 'test'
+      ...
+    # Subtest: forwards upstream status (404) with a plain-text body
+    ok 3 - forwards upstream status (404) with a plain-text body
+      ---
+      duration_ms: 3.329721
+      type: 'test'
+      ...
+    # Subtest: returns YAML text for a valid raw github URL
+    ok 4 - returns YAML text for a valid raw github URL
+      ---
+      duration_ms: 3.072019
+      type: 'test'
+      ...
+    1..4
+ok 2 - /api/fetch-remote (Import modal proxy)
+  ---
+  duration_ms: 22.226942
+  type: 'suite'
+  ...
+# Subtest: /api/remote-yml (local remote.yml)
+    # Subtest: serves the local remote.yml or returns 404 with an error
+    ok 1 - serves the local remote.yml or returns 404 with an error
+      ---
+      duration_ms: 4.359028
+      type: 'test'
+      ...
+    1..1
+ok 3 - /api/remote-yml (local remote.yml)
+  ---
+  duration_ms: 4.537029
+  type: 'suite'
+  ...
+1..3
+# tests 26
+# suites 13
+# pass 26
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 543.430258
+== api
+TAP version 13
+# Subtest: OmniDashboard API
+    # Subtest: /api/health returns ok status
+    not ok 1 - /api/health returns ok status
+      ---
+      duration_ms: 78.5298
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:19:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGet (file:///opt/repo/tests/api.test.ts:7:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:20:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Promise.all (index 0)
+        async Suite.run (node:internal/test_runner/test:1442:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: /api/overview returns array with correct structure
+    not ok 2 - /api/overview returns array with correct structure
+      ---
+      duration_ms: 5.683837
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:27:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGet (file:///opt/repo/tests/api.test.ts:7:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:28:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: /api/messages/events returns messages array with total
+    not ok 3 - /api/messages/events returns messages array with total
+      ---
+      duration_ms: 4.842731
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:42:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGet (file:///opt/repo/tests/api.test.ts:7:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:43:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: /api/messages/events?role=user filters correctly
+    not ok 4 - /api/messages/events?role=user filters correctly
+      ---
+      duration_ms: 14.112789
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:51:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGet (file:///opt/repo/tests/api.test.ts:7:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:52:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: /api/messages/events?channel_id=all returns all (no filter)
+    not ok 5 - /api/messages/events?channel_id=all returns all (no filter)
+      ---
+      duration_ms: 2.949419
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:61:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGet (file:///opt/repo/tests/api.test.ts:7:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:62:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: /api/messages/filters returns filters with channels
+    not ok 6 - /api/messages/filters returns filters with channels
+      ---
+      duration_ms: 7.431547
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:67:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGet (file:///opt/repo/tests/api.test.ts:7:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:68:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: /api/fs/list returns entries array
+    not ok 7 - /api/fs/list returns entries array
+      ---
+      duration_ms: 6.575842
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:76:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGet (file:///opt/repo/tests/api.test.ts:7:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:77:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: HTML page includes favicon link
+    not ok 8 - HTML page includes favicon link
+      ---
+      duration_ms: 4.767031
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:83:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGetRaw (file:///opt/repo/tests/api.test.ts:13:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:84:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    1..8
+not ok 1 - OmniDashboard API
+  ---
+  duration_ms: 127.955715
+  type: 'suite'
+  location: '/opt/repo/tests/api.test.ts:18:1'
+  failureType: 'subtestsFailed'
+  error: '8 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+1..1
+# tests 8
+# suites 1
+# pass 0
+# fail 8
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 319.614833
+ALL_DONE
