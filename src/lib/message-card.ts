@@ -111,7 +111,7 @@ export function renderMessageCard(msg: Message): string {
     <div class="event-row" data-msg-id="${msg.id}">
       <div class="event-row-header">
         <span class="ev-id-badge" title="Message ID">#${msg.id}</span>
-        ${msg.thread_id ? `<a href="/messages?thread_id=${encodeURIComponent(msg.thread_id)}" class="ev-thread-link" title="Thread ID">T${escapeHtml(truncateMiddle(msg.thread_id, 12))}</a>` : ""}
+        ${msg.thread_id ? `<a href="/messages?thread_id=${encodeURIComponent(msg.thread_id)}" class="ev-thread-link" data-thread-id="${escapeHtml(msg.thread_id)}" title="Thread ID">T${escapeHtml(truncateMiddle(msg.thread_id, 12))}</a>` : ""}
         ${msg.thread_sequence !== null && msg.thread_sequence !== undefined ? `<span class="ev-seq-badge" title="Sequence">#${msg.thread_sequence}</span>` : ""}
         ${msg.iteration_number !== null && msg.iteration_number !== undefined ? `<span class="ev-iter-badge" title="LLM Iteration">⟳ ${msg.iteration_number}</span>` : ""}
         ${channelStr ? `<span class="badge badge-neutral" title="Channel ID">${channelStr}</span>` : ""}
