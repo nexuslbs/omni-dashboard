@@ -272,13 +272,15 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
 
     // Load channels to resolve channel name
     let channelName = "";
+    let channelPlanningMode = "";
     try {
-      const channels = (await apiGet("/channels")) as { id: string; name?: string; platform?: string }[];
+      const channels = (await apiGet("/channels")) as { id: string; name?: string; platform?: string; planning_mode?: string }[];
       const match = channels.find(
         (ch: { id: string; platform?: string }) => String(ch.id) === String(task.channel_id),
       );
       if (match) {
         channelName = match.name || match.platform || "";
+        channelPlanningMode = match.planning_mode || "";
       }
     } catch {
       // Channel lookup failure: fall back to raw ID
@@ -314,7 +316,7 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
         </div>
         <div>
           <div class="detail-label">Planning Mode</div>
-          <div>${task.plan != null ? (task.plan ? "On" : "Off") : "<em>Default</em>"}</div>
+          <div>${task.planning_mode ? escapeHtml(task.planning_mode) : (channelPlanningMode ? escapeHtml(channelPlanningMode) : "<em>Default</em>")}</div>
         </div>
         <div>
           <div class="detail-label">Created</div>
@@ -390,6 +392,11 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
           planSelect.value = task.plan != null ? String(task.plan) : "";
           syncSelectDisplay("task-edit-plan");
         }
+        const planningModeSelect = document.getElementById("task-edit-planning-mode") as HTMLSelectElement | null;
+        if (planningModeSelect) {
+          planningModeSelect.value = task.planning_mode || "";
+          syncSelectDisplay("task-edit-planning-mode");
+        }
         await populateTemplatesSelect("task-edit-template", task.template || "");
 
         const modal = document.getElementById("edit-task-modal");
@@ -419,6 +426,8 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
       const template =
         (document.getElementById("task-edit-template") as HTMLSelectElement)?.value || undefined;
       const planVal = (document.getElementById("task-edit-plan") as HTMLSelectElement)?.value || undefined;
+      const planningModeVal =
+        (document.getElementById("task-edit-planning-mode") as HTMLSelectElement)?.value || undefined;
 
       try {
         const reqBody: Record<string, any> = {
@@ -432,6 +441,9 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
         };
         if (planVal !== undefined && planVal !== "") {
           reqBody.plan = planVal === "true";
+        }
+        if (planningModeVal !== undefined && planningModeVal !== "") {
+          reqBody.planning_mode = planningModeVal;
         }
         const res = await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId), {
           method: "PATCH",
@@ -688,6 +700,18 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
               <option value="">None</option>
             </select>
             <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">Structured guidance injected into the agent's prompt when this task runs.</div>
+          <div>
+            <label for="task-edit-planning-mode">Planning Mode</label>
+            <select id="task-edit-planning-mode" class="select">
+              <option value="">Default</option>
+              <option value="on">On</option>
+              <option value="off">Off</option>
+              <option value="auto_plan">Auto plan</option>
+              <option value="auto_subtasks">Auto subtasks</option>
+              <option value="always">Always</option>
+            </select>
+            <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">Task plan mode; falls back to the channel plan mode, then None.</div>
+          </div>
           </div>
         </div>
         <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1rem;">
@@ -719,4 +743,5 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
   void loadTaskDetail(taskId);
   enhanceSelect("task-edit-priority");
   enhanceSelect("task-edit-status");
+  enhanceSelect("task-edit-planning-mode");
 }

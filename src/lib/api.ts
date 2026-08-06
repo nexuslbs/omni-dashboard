@@ -234,6 +234,8 @@ export interface KanbanTask {
   position?: number;
   board_id?: string;
   archived?: boolean;
+  planning_mode?: string | null;
+  plan?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -342,6 +344,7 @@ export interface ChannelData {
   current_model: string | null;
   readonly: boolean;
   plan: boolean;
+  planning_mode?: string | null;
   template: string | null;
 }
 

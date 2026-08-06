@@ -58,6 +58,12 @@ function closeCreateModal(): void {
     planEl.value = "";
     syncSelectDisplay("task-create-plan");
   }
+  const planningModeEl = document.getElementById("task-create-planning-mode") as HTMLSelectElement;
+  if (planningModeEl) {
+    planningModeEl.value = "";
+    syncSelectDisplay("task-create-planning-mode");
+  }
+
   const template = document.getElementById("task-create-template") as HTMLSelectElement;
   if (template) {
     template.value = "";
@@ -223,6 +229,18 @@ export function renderKanban(container: HTMLElement): void {
               <option value="">None</option>
             </select>
             <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">Structured guidance injected into the agent's prompt. Create .md files in profiles/&lt;name&gt;/templates/</div>
+          <div>
+            <label for="task-create-planning-mode">Planning Mode</label>
+            <select id="task-create-planning-mode" class="select">
+              <option value="">Default</option>
+              <option value="on">On</option>
+              <option value="off">Off</option>
+              <option value="auto_plan">Auto plan</option>
+              <option value="auto_subtasks">Auto subtasks</option>
+              <option value="always">Always</option>
+            </select>
+            <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">Task plan mode; falls back to the channel plan mode, then None.</div>
+          </div>
           </div>
         </div>
         <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1rem;">
@@ -265,6 +283,8 @@ export function renderKanban(container: HTMLElement): void {
     const template =
       (document.getElementById("task-create-template") as HTMLSelectElement)?.value || undefined;
     const planVal = (document.getElementById("task-create-plan") as HTMLSelectElement)?.value || undefined;
+    const planningModeVal =
+      (document.getElementById("task-create-planning-mode") as HTMLSelectElement)?.value || undefined;
 
     try {
       const reqBody: Record<string, any> = {
@@ -278,6 +298,9 @@ export function renderKanban(container: HTMLElement): void {
       };
       if (planVal !== undefined && planVal !== "") {
         reqBody.plan = planVal === "true";
+      }
+      if (planningModeVal !== undefined && planningModeVal !== "") {
+        reqBody.planning_mode = planningModeVal;
       }
       await fetch("/api/kanban/tasks", {
         method: "POST",
@@ -293,6 +316,7 @@ export function renderKanban(container: HTMLElement): void {
 
   enhanceSelect("task-create-priority");
   enhanceSelect("task-create-status");
+  enhanceSelect("task-create-planning-mode");
 
   // Toggle archived button
   document.getElementById("toggle-archived-btn")!.addEventListener("click", () => {
