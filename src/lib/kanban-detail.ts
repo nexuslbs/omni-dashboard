@@ -675,11 +675,11 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
             <select id="task-edit-status" style="width:100%;padding:0.5rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.85rem;box-sizing:border-box;">
               <option value="backlog">Backlog</option>
               <option value="todo">Todo</option>
-              <option value="ready">Ready</option>
               <option value="running">In Progress</option>
+              <option value="testing">Testing</option>
               <option value="review">Review</option>
-              <option value="done">Done</option>
               <option value="blocked">Blocked</option>
+              <option value="done">Done</option>
             </select>
           </div>
           <div>

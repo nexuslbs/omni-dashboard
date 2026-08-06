@@ -9,8 +9,8 @@ import { formatApiError } from "../lib/helpers";
 export const STATUS_LABELS: Record<string, string> = {
   backlog: "Backlog",
   todo: "Todo",
-  ready: "Ready",
   running: "In Progress",
+  testing: "Testing",
   review: "Review",
   done: "Done",
   blocked: "Blocked",
@@ -21,8 +21,8 @@ function columnColorClass(id: string): string {
   const map: Record<string, string> = {
     backlog: "kanban-col-neutral",
     todo: "kanban-col-purple",
-    ready: "kanban-col-orange",
     running: "kanban-col-cyan",
+    testing: "kanban-col-orange",
     review: "kanban-col-sky",
     done: "kanban-col-emerald",
     blocked: "kanban-col-rose",
@@ -35,8 +35,8 @@ export function statusBadge(status: string): string {
   const map: Record<string, string> = {
     backlog: "badge-neutral",
     todo: "badge-purple",
-    ready: "badge-warning",
     running: "badge-cyan",
+    testing: "badge-warning",
     review: "badge-blue",
     done: "badge-success",
     blocked: "badge-error",
@@ -145,8 +145,8 @@ export async function loadBoard(showArchived: boolean): Promise<void> {
     const KANBAN_COLUMNS: { id: string; title: string }[] = [
       { id: "backlog", title: "Backlog" },
       { id: "todo", title: "Todo" },
-      { id: "ready", title: "Ready" },
       { id: "running", title: "In Progress" },
+      { id: "testing", title: "Testing" },
       { id: "review", title: "Review" },
       { id: "blocked", title: "Blocked" },
       { id: "done", title: "Done" },

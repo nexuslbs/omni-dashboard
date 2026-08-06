@@ -548,7 +548,7 @@ function kanbanBadgeClass(statusId: string): string {
       return "badge-neutral";
     case "todo":
       return "badge-purple";
-    case "ready":
+    case "testing":
       return "badge-warning";
     case "running":
       return "badge-cyan";
