@@ -2,7 +2,7 @@
  * Kanban detail view overlay: task details, edit modal, threads.
  * Extracted from src/pages/kanban.ts
  */
-import { apiGet, type Message } from "./api";
+import { apiGet, apiPost, type Message, type ResetExecutionsResponse } from "./api";
 import { STATUS_LABELS, statusBadge, moveTask } from "./kanban-board";
 // ── Helper imports ──
 import { escapeHtml, formatApiError } from "./helpers";
@@ -586,6 +586,7 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
         <button id="task-archive-btn" style="background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:6px;padding:0.375rem 0.625rem;cursor:pointer;font-size:0.75rem;font-weight:500;">Archive</button>
         <button id="task-delete-btn" style="background:rgba(244,63,94,0.15);border:1px solid rgba(244,63,94,0.3);color:var(--accent-rose);border-radius:6px;padding:0.375rem 0.625rem;cursor:pointer;font-size:0.75rem;font-weight:500;">Delete</button>
         <button id="task-history-btn" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:var(--accent-blue);border-radius:6px;padding:0.375rem 0.625rem;cursor:pointer;font-size:0.75rem;font-weight:500;">History</button>
+        <button id="task-reset-workflow-btn" title="Clear workflow_state.executions for this task" style="background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.4);color:#e8b64c;border-radius:6px;padding:.375rem .625rem;cursor:pointer;font-size:.75rem;font-weight:500;">Reset Workflow Executions</button>
         <a href="/kanban" class="back-link" id="back-to-kanban">← Back to Board</a>
       </div>
     </div>
@@ -740,8 +741,33 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
     });
   }
 
+  const resetWfBtn = document.getElementById("task-reset-workflow-btn");
+  if (resetWfBtn) {
+    resetWfBtn.addEventListener("click", () => {
+      void handleResetWorkflowExecutions(taskId);
+    });
+  }
+
   void loadTaskDetail(taskId);
   enhanceSelect("task-edit-priority");
   enhanceSelect("task-edit-status");
   enhanceSelect("task-edit-planning-mode");
+}
+
+async function handleResetWorkflowExecutions(taskId: string): Promise<void> {
+  if (!confirm("Reset workflow execution counters for this task?")) return;
+  try {
+    const res = await apiPost<ResetExecutionsResponse>(
+      `/kanban/tasks/${encodeURIComponent(taskId)}/workflow/executions/reset`,
+      {},
+    );
+    if (res?.reset) {
+      showToast(res.message ?? "Workflow executions reset.");
+    } else {
+      showToast(res?.message ?? "No workflow executions to reset.");
+    }
+    void loadTaskDetail(taskId);
+  } catch (e) {
+    showToast(`Failed to reset workflow executions: ${formatApiError(e)}`, "error");
+  }
 }

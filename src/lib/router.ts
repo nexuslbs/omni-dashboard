@@ -16,6 +16,7 @@ import { renderChannels } from "../pages/channels";
 import { renderPlatforms } from "../pages/platforms";
 import { renderTools } from "../pages/tools";
 import { renderProviders } from "../pages/providers";
+import { renderWorkflows } from "../pages/workflows";
 
 type PageRenderer = (container: HTMLElement) => void;
 type ParamPageRenderer = (container: HTMLElement, param: string) => void;
@@ -37,6 +38,7 @@ const routes: Route[] = [
   { name: "memory", handler: renderMemory },
   { name: "kanban", handler: renderKanban },
   { name: "kanban-history", handler: renderKanbanHistory },
+  { name: "workflows", handler: renderWorkflows },
   { name: "schedule", handler: renderSchedule },
   { name: "secrets", handler: renderSecrets },
   { name: "settings", handler: renderSettings },
