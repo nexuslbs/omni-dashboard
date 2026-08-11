@@ -191,21 +191,39 @@ describe("Workflows page form (selects, checkboxes, tel, role sections)", () => 
     assert.ok(page.includes('class="wf-role-details" open'), "all role details open");
   });
 
+  it("aligns role hints on the text baseline (no superscript look)", () => {
+    assert.ok(
+      page.includes("display:flex;align-items:baseline;gap:.5rem;list-style:none"),
+      "role summary uses baseline alignment so the hint sits on the role name baseline",
+    );
+  });
+
   it("shows template texts only on demand, rendered as markdown", () => {
     assert.ok(page.includes("wf-show-templates"), "Show templates toggle button");
     assert.ok(
-      page.includes(
-        "background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);color:var(--text-secondary)",
-      ),
-      "Show templates has a dark neutral tint, never a white background",
+      page.includes("background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:#fbbf24"),
+      "Show templates is golden (matches the clear executions on review badge)",
     );
     assert.ok(page.includes("renderMarkdown"), "uses the shared markdown renderer");
     assert.ok(page.includes('class="markdown-content"'), "markdown content container");
     assert.ok(page.includes("/templates/content?profile="), "fetches template file content by profile+name");
   });
 
-  it("styles clear executions on review as a bordered badge", () => {
+  it("styles clear executions on review as a bordered badge, centered with the key", () => {
     assert.ok(page.includes('class="wf-badge"'), "bordered badge for clear executions on review");
+    assert.ok(
+      page.includes('style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;"'),
+      "key + badge wrapped in a flex row so the badge is vertically centered with the key text",
+    );
+  });
+
+  it("sizes up the roles box labels and role hints", () => {
+    assert.ok(page.includes('class="db-hint wf-role-hint"'), "role hints use the wf-role-hint class");
+    const labelMatches = page.match(/font-size:.88rem;color:#99a;/g) ?? [];
+    assert.ok(
+      labelMatches.length >= 12,
+      `role/workflow labels use the bigger .88rem font (found ${labelMatches.length})`,
+    );
   });
 
   it("renders each role on its own line with only defined fields", () => {

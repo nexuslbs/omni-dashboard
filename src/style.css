@@ -18,6 +18,7 @@
   --border-accent: rgba(139, 92, 246, 0.3);
 
   --accent-purple: #8b5cf6;
+  --accent: #8b5cf6;
   --accent-cyan: #06b6d4;
   --accent-amber: #f59e0b;
   --accent-rose: #f43f5e;
@@ -47,6 +48,12 @@
   box-sizing: border-box;
   margin: 0;
   padding: 0;
+}
+
+/* `hidden` must always win over display rules (e.g. .loading/.db-pagination
+   use display:flex, which would otherwise override the hidden attribute). */
+[hidden] {
+  display: none !important;
 }
 
 html {
@@ -1418,8 +1425,12 @@ a.thread-row {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .git-commit-area {
@@ -1510,8 +1521,8 @@ a.thread-row {
 .git-discard-btn:hover,
 .git-unstage-btn:hover {
   background: rgba(248, 81, 73, 0.1);
-  color: #F85149;
-  border-color: #F85149;
+  color: #f85149;
+  border-color: #f85149;
 }
 
 .git-discard-btn:disabled,
@@ -1608,7 +1619,7 @@ a.thread-row {
   padding: 0.375rem 0.5rem;
   border-radius: var(--radius-sm);
   background: rgba(248, 81, 73, 0.1);
-  color: #F85149;
+  color: #f85149;
   font-size: 0.75rem;
   border: 1px solid rgba(248, 81, 73, 0.2);
   display: flex;
@@ -1623,7 +1634,7 @@ a.thread-row {
 .git-error-close {
   background: none;
   border: none;
-  color: #F85149;
+  color: #f85149;
   cursor: pointer;
   font-size: 0.75rem;
   padding: 0.125rem 0.25rem;
@@ -3224,7 +3235,7 @@ a.thread-row {
 }
 
 .btn-secondary {
-  background: var(--glass-bg);
+  background: rgba(148, 163, 184, 0.1);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-sm);
   color: var(--text-secondary);
@@ -3236,7 +3247,7 @@ a.thread-row {
 }
 
 .btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(148, 163, 184, 0.2);
   color: var(--text-primary);
   border-color: var(--border-accent);
 }
@@ -3439,7 +3450,7 @@ a.thread-row {
 }
 
 .nav-btn {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(148, 163, 184, 0.1);
   border: 1px solid var(--glass-border);
   color: var(--text-secondary);
   border-radius: var(--radius-sm);
@@ -3458,7 +3469,7 @@ a.thread-row {
 
 /* Don't keep purple after click: reset focus to default */
 .nav-btn:focus:not(:focus-visible) {
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(148, 163, 184, 0.1);
   border-color: var(--glass-border);
   color: var(--text-secondary);
 }
@@ -3940,7 +3951,7 @@ a.thread-row {
 .toast-expand-btn {
   background: none;
   border: none;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   font-size: 0.75rem;
   padding: 0;
@@ -3954,7 +3965,7 @@ a.thread-row {
 .toast-close {
   background: none;
   border: none;
-  color: rgba(255,255,255,0.7);
+  color: rgba(255, 255, 255, 0.7);
   cursor: pointer;
   font-size: 1.1rem;
   line-height: 1;
@@ -5340,7 +5351,7 @@ a.thread-row {
   padding: 0.3rem 0.625rem;
   border-radius: var(--radius-sm);
   border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(148, 163, 184, 0.1);
   color: var(--text-primary);
   font-size: 0.75rem;
   cursor: pointer;
@@ -5613,13 +5624,27 @@ a.thread-row {
   border-color: var(--glass-border) !important;
   background: var(--bg-card-hover);
 }
-.task-id-link.badge-neutral-link:hover { border-color: #64748b !important; }
-.task-id-link.badge-purple-link:hover { border-color: #8b5cf6 !important; }
-.task-id-link.badge-warning-link:hover { border-color: #f59e0b !important; }
-.task-id-link.badge-cyan-link:hover { border-color: #06b6d4 !important; }
-.task-id-link.badge-blue-link:hover { border-color: #3b82f6 !important; }
-.task-id-link.badge-success-link:hover { border-color: #10b981 !important; }
-.task-id-link.badge-error-link:hover { border-color: #f43f5e !important; }
+.task-id-link.badge-neutral-link:hover {
+  border-color: #64748b !important;
+}
+.task-id-link.badge-purple-link:hover {
+  border-color: #8b5cf6 !important;
+}
+.task-id-link.badge-warning-link:hover {
+  border-color: #f59e0b !important;
+}
+.task-id-link.badge-cyan-link:hover {
+  border-color: #06b6d4 !important;
+}
+.task-id-link.badge-blue-link:hover {
+  border-color: #3b82f6 !important;
+}
+.task-id-link.badge-success-link:hover {
+  border-color: #10b981 !important;
+}
+.task-id-link.badge-error-link:hover {
+  border-color: #f43f5e !important;
+}
 
 /* ── Database page ── */
 .db-layout {
@@ -5730,6 +5755,14 @@ a.thread-row {
   font-size: 0.75rem;
   color: var(--text-muted);
 }
+
+/* Role hints in the workflow form ("required role" / "template required when
+   enabled"): slightly larger than generic hints so they read next to the role
+   name, and baseline-aligned (the summary uses align-items: baseline). */
+.wf-role-hint {
+  font-size: 0.8rem;
+  line-height: 1;
+}
 .db-pagination {
   display: flex;
   align-items: center;
@@ -5758,7 +5791,9 @@ a.thread-row {
 .db-sort-arrow {
   color: var(--text-muted);
   opacity: 0.45;
-  transition: opacity 0.15s ease, color 0.15s ease;
+  transition:
+    opacity 0.15s ease,
+    color 0.15s ease;
 }
 .db-th-sortable:hover .db-sort-arrow {
   opacity: 0.85;

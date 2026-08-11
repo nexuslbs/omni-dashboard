@@ -169,11 +169,13 @@ function renderWorkflowCard(entry: WorkflowEntry): string {
     <div class="card wf-card" style="margin-bottom:.75rem;">
       <div class="card-header" style="display:flex;justify-content:space-between;align-items:flex-start;gap:.75rem;">
         <div style="min-width:0;">
-          <span class="wf-key">${escapeHtml(entry.key)}</span> ${clearBadge}
+          <div style="display:flex;align-items:center;gap:.5rem;flex-wrap:wrap;">
+            <span class="wf-key">${escapeHtml(entry.key)}</span> ${clearBadge}
+          </div>
           ${summary ? `<div class="wf-sub" style="color:#99a;font-size:.82rem;">${escapeHtml(summary)}</div>` : ""}
         </div>
         <div style="display:flex;gap:.5rem;flex-shrink:0;">
-          ${hasTemplates ? `<button class="btn btn-sm wf-show-templates" data-key="${escapeHtml(entry.key)}" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);color:var(--text-secondary);">Show templates</button>` : ""}
+          ${hasTemplates ? `<button class="btn btn-sm wf-show-templates" data-key="${escapeHtml(entry.key)}" style="background:rgba(245,158,11,0.1);border:1px solid rgba(245,158,11,0.25);color:#fbbf24;">Show templates</button>` : ""}
           <button class="btn btn-sm wf-edit" data-key="${escapeHtml(entry.key)}" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);">Edit</button>
           <button class="btn btn-sm btn-danger wf-delete" data-key="${escapeHtml(entry.key)}">Delete</button>
         </div>
@@ -374,8 +376,8 @@ function renderForm(key: string, wf: Workflow, roles: Record<string, WorkflowRol
     const enabled = role === "executor" ? true : editingKey !== null ? !!roles[role] : true;
     const hint =
       role === "executor"
-        ? `<span class="db-hint">required role</span>`
-        : `<span class="db-hint">template required when enabled</span>`;
+        ? `<span class="db-hint wf-role-hint">required role</span>`
+        : `<span class="db-hint wf-role-hint">template required when enabled</span>`;
     const checkbox =
       role === "executor"
         ? ""
@@ -389,36 +391,36 @@ function renderForm(key: string, wf: Workflow, roles: Record<string, WorkflowRol
     const effProvider = provider || wfProvider;
     return `
       <details class="wf-role-details" open style="margin-bottom:.6rem;border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:.6rem .8rem;">
-        <summary style="cursor:pointer;font-weight:600;display:flex;align-items:center;gap:.5rem;list-style:none;">
+        <summary style="cursor:pointer;font-weight:600;display:flex;align-items:baseline;gap:.5rem;list-style:none;">
           ${checkbox}
           <span>${role}</span>
           ${hint}
         </summary>
         <div class="wf-role-fields ${enabled ? "" : "wf-role-fields-disabled"}" data-role="${role}" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.6rem;margin-top:.6rem;">
-          <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Template
+          <label style="display:flex;flex-direction:column;font-size:.88rem;color:#99a;">Template
             <select id="wf-${role}-template" class="filter-select wf-role-template" data-role="${role}">
               ${templateOptions(effProfile, cfg.template || "")}
             </select>
           </label>
-          <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Profile
+          <label style="display:flex;flex-direction:column;font-size:.88rem;color:#99a;">Profile
             <select id="wf-${role}-profile" class="filter-select wf-role-profile" data-role="${role}">
               ${profileOptions(profile)}
             </select>
           </label>
-          <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Provider
+          <label style="display:flex;flex-direction:column;font-size:.88rem;color:#99a;">Provider
             <select id="wf-${role}-provider" class="filter-select wf-role-provider" data-role="${role}">
               ${providerOptions(provider)}
             </select>
           </label>
-          <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Model
+          <label style="display:flex;flex-direction:column;font-size:.88rem;color:#99a;">Model
             <select id="wf-${role}-model" class="filter-select wf-role-model" data-role="${role}">
               ${modelOptions(effProvider, model)}
             </select>
           </label>
-          <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Retries
+          <label style="display:flex;flex-direction:column;font-size:.88rem;color:#99a;">Retries
             <input class="filter-input wf-role-retries" data-role="${role}" type="tel" inputmode="numeric" pattern="[0-9.-]*" placeholder="0" value="${v(retries)}">
           </label>
-          <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Plan mode
+          <label style="display:flex;flex-direction:column;font-size:.88rem;color:#99a;">Plan mode
             <select id="wf-${role}-plan-mode" class="filter-select wf-role-plan-mode" data-role="${role}">
               ${planOptions(planMode)}
             </select>
@@ -434,28 +436,28 @@ function renderForm(key: string, wf: Workflow, roles: Record<string, WorkflowRol
       </div>
       <div class="card-body">
         <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.6rem;margin-bottom:.75rem;">
-          <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Name (workflow key)
+          <label style="display:flex;flex-direction:column;font-size:.88rem;color:#99a;">Name (workflow key)
             <input id="wf-key" class="filter-input" placeholder="default" value="${v(key)}" ${editingKey ? "disabled" : ""}>
           </label>
-          <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Default profile
+          <label style="display:flex;flex-direction:column;font-size:.88rem;color:#99a;">Default profile
             <select id="wf-profile" class="filter-select">
               ${profileOptions(wfProfile)}
             </select>
           </label>
-          <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Default provider
+          <label style="display:flex;flex-direction:column;font-size:.88rem;color:#99a;">Default provider
             <select id="wf-provider" class="filter-select">
               ${providerOptions(wfProvider)}
             </select>
           </label>
-          <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Default model
+          <label style="display:flex;flex-direction:column;font-size:.88rem;color:#99a;">Default model
             <select id="wf-model" class="filter-select">
               ${modelOptions(wfProvider, wfModel)}
             </select>
           </label>
-          <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Default retries
+          <label style="display:flex;flex-direction:column;font-size:.88rem;color:#99a;">Default retries
             <input id="wf-retries" class="filter-input" type="tel" inputmode="numeric" pattern="[0-9.-]*" placeholder="0" value="${v(wfRetries)}">
           </label>
-          <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Default plan mode
+          <label style="display:flex;flex-direction:column;font-size:.88rem;color:#99a;">Default plan mode
             <select id="wf-plan-mode" class="filter-select">
               ${planOptions(wfPlan)}
             </select>

@@ -240,7 +240,6 @@ function showError(message: string): void {
 }
 
 function renderResult(res: QueryResponse): void {
-
   const thead = el("db-thead");
   const tbody = el("db-tbody");
   const wrap = el("db-table-wrap");
@@ -292,7 +291,10 @@ function renderResult(res: QueryResponse): void {
 
 function renderPagination(): void {
   const totalPages = Math.max(1, Math.ceil(state.total / state.pageSize));
-  const show = state.total > 0;
+  // renderPagination is only called after a query result (renderResult), so
+  // always show it — at the top AND bottom of the results area, even when a
+  // query returns 0 rows (the initial state stays hidden via the HTML).
+  const show = true;
   const markup = () => {
     const prevDisabled = state.page <= 1;
     const nextDisabled = state.page >= totalPages;
