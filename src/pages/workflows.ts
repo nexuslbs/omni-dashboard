@@ -28,18 +28,16 @@ export function renderWorkflows(container: HTMLElement): void {
     <div class="page-header">
       <div>
         <h1 class="page-title">Workflows</h1>
-        <p class="page-subtitle">Workflow definitions — stored in <code>workflows.yml</code> (OMNI_DIR); no database tables</p>
+        <p class="page-subtitle">Workflow definitions stored in <code>workflows.yml</code></p>
       </div>
     </div>
-    <div class="wf-precedence">
-      <strong>Field precedence:</strong> workflow role &gt; workflow field &gt; kanban task &gt; channel &gt; global.
-      A per-role <code>template</code> is a file name resolved against
-      <code>profiles/&lt;profile&gt;/templates/&lt;name&gt;.md</code> (e.g. profile <code>omni</code> + template
-      <code>dev-executor</code> &rarr; <code>profiles/omni/templates/dev-executor.md</code>).
+    <div class="wf-note">
+      <span class="wf-note-icon">ℹ️</span>
+      <span><strong>Field precedence:</strong> workflow role &gt; workflow field &gt; kanban task &gt; channel &gt; global.</span>
     </div>
-    <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
-      <button id="wf-new-btn" class="btn btn-primary">+ New Workflow</button>
-      <span class="db-hint">Changes are written to workflows.yml and apply on save.</span>
+    <div style="margin-bottom:1rem;">
+      <button id="wf-new-btn" class="btn-primary" style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ New Workflow</button>
+      <div class="db-hint" style="margin-top:.4rem;">Changes are written to workflows.yml and apply on save.</div>
     </div>
     <div id="workflow-form-wrap" style="display:none;"></div>
     <div id="workflows-content"><div class="loading" style="padding:3rem;text-align:center;">Loading workflows...</div></div>
@@ -176,7 +174,7 @@ function renderWorkflowCard(entry: WorkflowEntry): string {
         </div>
         <div style="display:flex;gap:.5rem;flex-shrink:0;">
           ${hasTemplates ? `<button class="btn btn-sm wf-show-templates" data-key="${escapeHtml(entry.key)}">Show templates</button>` : ""}
-          <button class="btn btn-sm wf-edit" data-key="${escapeHtml(entry.key)}">Edit</button>
+          <button class="btn btn-sm wf-edit" data-key="${escapeHtml(entry.key)}" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);">Edit</button>
           <button class="btn btn-sm btn-danger wf-delete" data-key="${escapeHtml(entry.key)}">Delete</button>
         </div>
       </div>
@@ -471,8 +469,8 @@ function renderForm(key: string, wf: Workflow, roles: Record<string, WorkflowRol
         ${roleSections}
         <div id="wf-form-error" style="display:none;color:#e55;font-size:.85rem;margin:.5rem 0;"></div>
         <div style="margin-top:1rem;display:flex;gap:.5rem;">
-          <button id="wf-save-btn" class="btn btn-primary">Save Workflow</button>
-          <button id="wf-cancel-btn" class="btn">Cancel</button>
+          <button id="wf-save-btn" class="btn btn-primary" style="background:rgba(16,185,129,0.1);color:#34d399;border:1px solid rgba(16,185,129,0.2);">Save Workflow</button>
+          <button id="wf-cancel-btn" class="btn btn-danger">Cancel</button>
         </div>
       </div>
     </div>`;

@@ -103,9 +103,23 @@ describe("Phase 5 Workflows page (src/pages/workflows.ts)", () => {
     assert.ok(page.includes("upsertWorkflow"), "saves via upsertWorkflow");
     assert.ok(page.includes("deleteWorkflow"), "deletes via deleteWorkflow");
   });
-  it("notes that workflows are stored in workflows.yml, not the DB", () => {
+  it("notes that workflows are stored in workflows.yml", () => {
     assert.ok(page.includes("workflows.yml"), "mentions workflows.yml");
-    assert.ok(page.includes("no database tables"), "no DB tables note");
+    assert.ok(page.includes("Workflow definitions stored in"), "subtitle: no emdash, no OMNI_DIR");
+    assert.ok(!page.includes("no database tables"), "removed 'no database tables'");
+    assert.ok(!page.includes("OMNI_DIR);"), "removed OMNI_DIR from subtitle");
+  });
+  it("renders field precedence as an actual note (callout box)", () => {
+    assert.ok(page.includes('class="wf-note"'), "note callout box");
+    assert.ok(page.includes("Field precedence:"), "precedence line kept");
+    assert.ok(!page.includes("falls back to the kanban task template"), "removed template fallback sentence");
+  });
+  it("places the save hint below the + New Workflow button", () => {
+    assert.ok(page.includes("wf-new-btn"), "new workflow button");
+    assert.ok(page.includes("Changes are written to workflows.yml and apply on save."), "save hint text");
+    const btnIdx = page.indexOf("wf-new-btn");
+    const hintIdx = page.indexOf("Changes are written to workflows.yml and apply on save.");
+    assert.ok(btnIdx !== -1 && hintIdx !== -1 && btnIdx < hintIdx, "hint comes after the button");
   });
   it("validates: executor role required, tester/reviewer template required when enabled", () => {
     assert.ok(page.includes("executor role is required"), "executor required");
@@ -177,6 +191,26 @@ describe("Workflows page form (selects, checkboxes, tel, role sections)", () => 
     assert.ok(page.includes("wf-role-line"), "role line container");
     assert.ok(page.includes("${role}</strong> - "), "role - template separator");
     assert.ok(page.includes("plan_mode"), "plan mode shown when defined");
+  });
+
+  it("styles the action buttons: purple Edit, cyan New, green Save, red Cancel", () => {
+    assert.ok(page.includes('class="btn btn-sm wf-edit"'), "edit keeps btn-sm size (same as Delete)");
+    assert.ok(
+      page.includes(
+        "background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple)",
+      ),
+      "edit is purple (Create Schedule / + Add style)",
+    );
+    assert.ok(page.includes('id="wf-new-btn" class="btn-primary"'), "new workflow button");
+    assert.ok(
+      page.includes("background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee"),
+      "new workflow is cyan (Import style)",
+    );
+    assert.ok(
+      page.includes("background:rgba(16,185,129,0.1);color:#34d399;border:1px solid rgba(16,185,129,0.2)"),
+      "save is green (Enabled label style)",
+    );
+    assert.ok(page.includes('id="wf-cancel-btn" class="btn btn-danger"'), "cancel is red (Delete style)");
   });
 });
 

@@ -5893,3 +5893,28 @@ a.thread-row {
   overflow-x: auto;
   border-radius: var(--radius-sm, 6px);
 }
+
+/* Field precedence note (workflows page) — styled as an actual note/callout */
+.wf-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.6rem 0.85rem;
+  margin-bottom: 1rem;
+  background: rgba(139, 92, 246, 0.06);
+  border: 1px solid rgba(139, 92, 246, 0.18);
+  border-left: 3px solid var(--accent-purple, #8b5cf6);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+.wf-note strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.wf-note-icon {
+  flex-shrink: 0;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
