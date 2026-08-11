@@ -173,7 +173,7 @@ function renderWorkflowCard(entry: WorkflowEntry): string {
           ${summary ? `<div class="wf-sub" style="color:#99a;font-size:.82rem;">${escapeHtml(summary)}</div>` : ""}
         </div>
         <div style="display:flex;gap:.5rem;flex-shrink:0;">
-          ${hasTemplates ? `<button class="btn btn-sm wf-show-templates" data-key="${escapeHtml(entry.key)}">Show templates</button>` : ""}
+          ${hasTemplates ? `<button class="btn btn-sm wf-show-templates" data-key="${escapeHtml(entry.key)}" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);color:var(--text-secondary);">Show templates</button>` : ""}
           <button class="btn btn-sm wf-edit" data-key="${escapeHtml(entry.key)}" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);">Edit</button>
           <button class="btn btn-sm btn-danger wf-delete" data-key="${escapeHtml(entry.key)}">Delete</button>
         </div>
@@ -416,7 +416,7 @@ function renderForm(key: string, wf: Workflow, roles: Record<string, WorkflowRol
             </select>
           </label>
           <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Retries
-            <input class="filter-input wf-role-retries" data-role="${role}" type="tel" inputmode="numeric" pattern="[0-9.-]*" placeholder="2" value="${v(retries)}">
+            <input class="filter-input wf-role-retries" data-role="${role}" type="tel" inputmode="numeric" pattern="[0-9.-]*" placeholder="0" value="${v(retries)}">
           </label>
           <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Plan mode
             <select id="wf-${role}-plan-mode" class="filter-select wf-role-plan-mode" data-role="${role}">
@@ -453,7 +453,7 @@ function renderForm(key: string, wf: Workflow, roles: Record<string, WorkflowRol
             </select>
           </label>
           <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Default retries
-            <input id="wf-retries" class="filter-input" type="tel" inputmode="numeric" pattern="[0-9.-]*" placeholder="2" value="${v(wfRetries)}">
+            <input id="wf-retries" class="filter-input" type="tel" inputmode="numeric" pattern="[0-9.-]*" placeholder="0" value="${v(wfRetries)}">
           </label>
           <label style="display:flex;flex-direction:column;font-size:.82rem;color:#99a;">Default plan mode
             <select id="wf-plan-mode" class="filter-select">
@@ -463,7 +463,7 @@ function renderForm(key: string, wf: Workflow, roles: Record<string, WorkflowRol
         </div>
         <label style="display:flex;align-items:center;gap:.5rem;margin-bottom:.9rem;font-size:.88rem;">
           <input id="wf-clear-exec" type="checkbox" ${wf.clear_executions_on_review ? "checked" : ""}>
-          Clear workflow executions when the task moves to review (<code>clear_executions_on_review</code>, default off)
+          <span>Clear workflow execution counters when the task moves to review (<code>clear_executions_on_review</code>, default off)</span>
         </label>
         <div style="margin-bottom:.5rem;font-weight:600;">Roles</div>
         ${roleSections}

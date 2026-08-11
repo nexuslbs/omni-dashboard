@@ -92,7 +92,14 @@ describe("Phase 5 Workflows page (src/pages/workflows.ts)", () => {
   });
   it("form includes top-level clear_executions_on_review checkbox (outside roles)", () => {
     assert.ok(page.includes('id="wf-clear-exec"'), "checkbox id");
-    assert.ok(page.includes("Clear workflow executions when the task moves to review"), "checkbox label");
+    assert.ok(
+      page.includes("Clear workflow execution counters when the task moves to review"),
+      "checkbox label mentions execution counters",
+    );
+    assert.ok(
+      page.includes("<span>Clear workflow execution counters"),
+      "label text wrapped in a span so the flex gap does not split around the code element",
+    );
   });
   it("shows field precedence hints", () => {
     assert.ok(page.includes("Field precedence:"), "precedence hint box");
@@ -166,6 +173,14 @@ describe("Workflows page form (selects, checkboxes, tel, role sections)", () => 
     );
   });
 
+  it("retries placeholders default to 0 (default value when omitted)", () => {
+    assert.ok(page.includes('id="wf-retries"'), "workflow-level Default retries input");
+    assert.ok(page.includes('class="filter-input wf-role-retries"'), "role-level Retries inputs");
+    const zeros = page.match(/placeholder="0"/g) ?? [];
+    assert.ok(zeros.length >= 2, `all retries inputs use placeholder 0 (found ${zeros.length})`);
+    assert.ok(!page.includes('placeholder="2"'), "no retries input still shows placeholder 2");
+  });
+
   it("has enable checkboxes for tester/reviewer, checked by default on create", () => {
     assert.ok(page.includes('class="wf-role-enabled"'), "enable checkbox class");
     assert.ok(page.includes("editingKey !== null ? !!roles[role] : true"), "checked by default on create");
@@ -178,6 +193,12 @@ describe("Workflows page form (selects, checkboxes, tel, role sections)", () => 
 
   it("shows template texts only on demand, rendered as markdown", () => {
     assert.ok(page.includes("wf-show-templates"), "Show templates toggle button");
+    assert.ok(
+      page.includes(
+        "background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);color:var(--text-secondary)",
+      ),
+      "Show templates has a dark neutral tint, never a white background",
+    );
     assert.ok(page.includes("renderMarkdown"), "uses the shared markdown renderer");
     assert.ok(page.includes('class="markdown-content"'), "markdown content container");
     assert.ok(page.includes("/templates/content?profile="), "fetches template file content by profile+name");
