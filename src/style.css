@@ -5795,3 +5795,101 @@ a.thread-row {
     flex: none;
   }
 }
+
+/* ── Workflows page (workflows.ts) ── */
+
+/* "clear executions on review" bordered label (like thread/plugin status badges) */
+.wf-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  background: rgba(245, 158, 11, 0.1);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  vertical-align: middle;
+}
+
+/* One role per line in workflow cards: `role - template · field · field` */
+.wf-role-line {
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.wf-role-line strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+.wf-role-line em {
+  color: var(--text-muted);
+}
+
+/* Disabled role section (tester/reviewer enable checkbox unmarked) */
+.wf-role-fields-disabled {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* Template content toggle area inside workflow cards */
+.wf-templates {
+  border-top: 1px solid var(--border-primary, rgba(255, 255, 255, 0.08));
+}
+.wf-template-block {
+  padding: 0.75rem 1.25rem 0.25rem;
+}
+.wf-template-block + .wf-template-block {
+  border-top: 1px dashed rgba(255, 255, 255, 0.08);
+  margin-top: 0.75rem;
+}
+.wf-template-head {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.4rem;
+  font-size: 0.85rem;
+}
+.wf-template-head code {
+  font-size: 0.78rem;
+}
+.wf-template-head .db-hint {
+  font-size: 0.72rem;
+}
+.wf-template-block .markdown-content {
+  padding: 0.75rem 1rem;
+  background: rgba(0, 0, 0, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+.wf-template-block .markdown-content p {
+  margin-bottom: 0.5rem;
+}
+.wf-template-block .markdown-content h1,
+.wf-template-block .markdown-content h2,
+.wf-template-block .markdown-content h3,
+.wf-template-block .markdown-content h4,
+.wf-template-block .markdown-content h5,
+.wf-template-block .markdown-content h6 {
+  margin-top: 1em;
+  margin-bottom: 0.4em;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.wf-template-block .markdown-content blockquote {
+  border-left: 3px solid var(--accent-purple);
+  padding: 0.35rem 0.75rem;
+  margin: 0.5rem 0;
+  background: rgba(139, 92, 246, 0.06);
+  border-radius: 0 var(--radius-sm, 6px) var(--radius-sm, 6px) 0;
+  color: var(--text-secondary);
+}
+.wf-template-block .markdown-content pre {
+  position: relative;
+  overflow-x: auto;
+  border-radius: var(--radius-sm, 6px);
+}

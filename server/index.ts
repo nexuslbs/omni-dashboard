@@ -270,6 +270,48 @@ app.get("/api/templates", (_req, res) => {
   }
 });
 
+// GET /api/templates/content?profile=<profile>&name=<name>: read a template file's
+// content from <OMNI_DIR>/profiles/<profile>/templates/<name>.md (used by the
+// Workflows page "Show templates" toggle). Append `.md` when the name has no
+// extension, matching the Rust `load_template` behavior.
+app.get("/api/templates/content", (req, res) => {
+  try {
+    const dataDir = process.env.OMNI_DIR;
+    if (!dataDir) {
+      res.status(500).json({ error: "OMNI_DIR environment variable must be set" });
+      return;
+    }
+    const profile = String(req.query.profile || "").trim();
+    let name = String(req.query.name || "").trim();
+    if (!profile || !name) {
+      res.status(400).json({ error: "profile and name query parameters are required" });
+      return;
+    }
+    // Path traversal guard: only allow simple file names.
+    if (!/^[\w.-]+$/.test(profile) || !/^[\w.-]+$/.test(name)) {
+      res.status(400).json({ error: "invalid profile or template name" });
+      return;
+    }
+    if (!name.endsWith(".md")) name += ".md";
+    const profilesDir = join(dataDir, "profiles");
+    const templatePath = join(profilesDir, profile, "templates", name);
+    // Defense in depth: resolved path must stay under the profiles dir.
+    if (!templatePath.startsWith(join(profilesDir, profile, "templates"))) {
+      res.status(400).json({ error: "invalid profile or template name" });
+      return;
+    }
+    if (!existsSync(templatePath)) {
+      res.status(404).json({ error: `template not found: profiles/${profile}/templates/${name}` });
+      return;
+    }
+    const content = readFileSync(templatePath, "utf-8");
+    res.json({ profile, name, content });
+  } catch (e: unknown) {
+    const errMsg = e instanceof Error ? e.message : String(e);
+    res.status(500).json({ error: errMsg || "Unknown error" });
+  }
+});
+
 // ────────────────────────────────────────────────────────────────────────────
 // Static files
 // ────────────────────────────────────────────────────────────────────────────

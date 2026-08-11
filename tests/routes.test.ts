@@ -501,7 +501,9 @@ describe("/api/fetch-remote (Import modal proxy)", () => {
 
   it("forwards upstream status (404) with a plain-text body", async () => {
     try {
-      const res = await fetch(`${BASE}/api/fetch-remote?url=${encodeURIComponent("https://example.invalid/definitely-missing-remote.yml")}`);
+      const res = await fetch(
+        `${BASE}/api/fetch-remote?url=${encodeURIComponent("https://example.invalid/definitely-missing-remote.yml")}`,
+      );
       const text = await res.text();
       // Route exists and forwards the upstream status; a 502/504 is also
       // acceptable when the server cannot resolve the (intentionally
@@ -515,9 +517,7 @@ describe("/api/fetch-remote (Import modal proxy)", () => {
 
   it("returns YAML text for a valid raw github URL", async () => {
     try {
-      const url = encodeURIComponent(
-        "https://raw.githubusercontent.com/nexuslbs/omni-stack/main/remote.yml",
-      );
+      const url = encodeURIComponent("https://raw.githubusercontent.com/nexuslbs/omni-stack/main/remote.yml");
       const { status, text } = await apiGetRaw(`/api/fetch-remote?url=${url}`);
       if (status === 200) {
         assert.ok(text.length > 0, "expected non-empty body");
@@ -542,6 +542,57 @@ describe("/api/remote-yml (local remote.yml)", () => {
         assert.ok(text.length > 0, "expected non-empty remote.yml body");
       } else {
         assert.equal(status, 404);
+      }
+    } catch (e: any) {
+      if (e?.cause?.code === "ECONNREFUSED" || e?.message?.includes("fetch failed")) return;
+      throw e;
+    }
+  });
+});
+
+// ── /api/templates/content (Workflows page "Show templates") ──
+describe("/api/templates/content", () => {
+  it("rejects missing profile/name with 400", async () => {
+    try {
+      const { status } = await apiGet("/api/templates/content");
+      assert.equal(status, 400);
+    } catch (e: any) {
+      if (e?.cause?.code === "ECONNREFUSED" || e?.message?.includes("fetch failed")) return;
+      throw e;
+    }
+  });
+
+  it("rejects path traversal attempts with 400", async () => {
+    try {
+      const { status } = await apiGet("/api/templates/content?profile=..%2F..&name=evil");
+      assert.equal(status, 400);
+    } catch (e: any) {
+      if (e?.cause?.code === "ECONNREFUSED" || e?.message?.includes("fetch failed")) return;
+      throw e;
+    }
+  });
+
+  it("returns 404 for a missing template file", async () => {
+    try {
+      const { status } = await apiGet("/api/templates/content?profile=omni&name=definitely-not-a-template");
+      assert.equal(status, 404);
+    } catch (e: any) {
+      if (e?.cause?.code === "ECONNREFUSED" || e?.message?.includes("fetch failed")) return;
+      throw e;
+    }
+  });
+
+  it("returns the file content for an existing template", async () => {
+    try {
+      const { status, body } = await apiGet("/api/templates/content?profile=omni&name=dev-executor");
+      if (status === 200) {
+        assert.ok(typeof body.content === "string" && body.content.length > 0, "expected non-empty content");
+        assert.equal(body.profile, "omni");
+        assert.equal(body.name, "dev-executor.md");
+      } else {
+        // Profile/template may not exist on the deployed OMNI_DIR — the route
+        // itself must still respond with a well-formed error object.
+        assert.ok("error" in body, "error body expected");
       }
     } catch (e: any) {
       if (e?.cause?.code === "ECONNREFUSED" || e?.message?.includes("fetch failed")) return;
