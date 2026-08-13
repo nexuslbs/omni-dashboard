@@ -6,7 +6,7 @@ import { renderMarkdown } from "./markdown";
 // ── hljs kept for JSON formatting (configured in markdown.ts) ──
 
 // ── Shared message card rendering ──
-// Used by both /messages and /schedule/<id> pages
+// Used by both /messages and /schedules/<id> pages
 
 // ── Role badge colors ──
 const ROLE_COLORS: Record<string, string> = {

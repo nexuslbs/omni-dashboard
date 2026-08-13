@@ -75,7 +75,7 @@ export async function loadCronJobs(
                   <button class="cron-run-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">▶ Run</button>
                   <button class="cron-toggle-active" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;color:var(--text-secondary);">${j.active ? "Deactivate" : "Activate"}</button>
                   <button class="cron-edit-btn" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:var(--accent-purple);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">Edit</button>
-                  <a href="/schedule/${encodeURIComponent(j.id)}" class="cron-details-btn" data-cron-id="${encodeURIComponent(j.id)}" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);color:var(--accent-cyan);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;text-decoration:none;display:inline-block;">Details</a>
+                  <a href="/schedules/${encodeURIComponent(j.id)}" class="cron-details-btn" data-cron-id="${encodeURIComponent(j.id)}" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);color:var(--accent-cyan);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;text-decoration:none;display:inline-block;">Details</a>
                 </td>
               </tr>
             `,
@@ -100,8 +100,8 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
       if ((e as MouseEvent).button === 1) return;
       e.preventDefault();
       e.stopPropagation();
-      history.pushState({}, "", "/schedule/" + cronId);
-      router.go("schedule/" + cronId);
+      history.pushState({}, "", "/schedules/" + cronId);
+      router.go("schedules/" + cronId);
     });
   });
 

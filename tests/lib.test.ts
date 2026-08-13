@@ -128,7 +128,7 @@ describe("src/lib/router.ts", () => {
 
   it("defines all expected page routes", () => {
     const content = readFileSync(new URL("../src/lib/router.ts", import.meta.url), "utf-8");
-    const expectedRoutes = ["overview", "messages", "kanban", "schedule", "settings"];
+    const expectedRoutes = ["overview", "messages", "kanban", "schedules", "settings"];
     for (const route of expectedRoutes) {
       assert.ok(content.includes(`name: "${route}"`), `should define route: ${route}`);
     }
@@ -137,7 +137,7 @@ describe("src/lib/router.ts", () => {
   it("defines parameterized routes for detail pages", () => {
     const content = readFileSync(new URL("../src/lib/router.ts", import.meta.url), "utf-8");
     assert.ok(content.includes('prefix: "kanban/"'), "should define kanban/ param route");
-    assert.ok(content.includes('prefix: "schedule/"'), "should define schedule/ param route");
+    assert.ok(content.includes('prefix: "schedules/"'), "should define schedules/ param route");
   });
 
   it("param route handlers extract parameter correctly", () => {

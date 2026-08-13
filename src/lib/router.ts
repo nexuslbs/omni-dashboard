@@ -40,7 +40,7 @@ const routes: Route[] = [
   { name: "kanban", handler: renderKanban },
   { name: "kanban-history", handler: renderKanbanHistory },
   { name: "workflows", handler: renderWorkflows },
-  { name: "schedule", handler: renderSchedule },
+  { name: "schedules", handler: renderSchedule },
   { name: "hooks", handler: renderHooks },
   { name: "secrets", handler: renderSecrets },
   { name: "settings", handler: renderSettings },
@@ -57,7 +57,7 @@ const routes: Route[] = [
 
 const paramRoutes: ParamRoute[] = [
   { prefix: "kanban/", handler: renderKanbanDetail },
-  { prefix: "schedule/", handler: renderScheduleDetail },
+  { prefix: "schedules/", handler: renderScheduleDetail },
 ];
 
 function createRouter() {

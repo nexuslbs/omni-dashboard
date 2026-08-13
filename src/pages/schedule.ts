@@ -25,7 +25,7 @@ export function renderSchedule(container: HTMLElement): void {
   container.innerHTML = `
     <div class="page-header">
       <div>
-        <h1 class="page-title">Schedule</h1>
+        <h1 class="page-title">Schedules</h1>
         <p class="page-subtitle">Scheduled tasks and cron jobs</p>
       </div>
       <div style="display:flex;align-items:center;gap:0.75rem;">
