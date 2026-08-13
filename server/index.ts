@@ -67,8 +67,14 @@ app.get("/api/fetch-remote", async (req, res) => {
 
 // GET /api/remote-yml: serve the local remote.yml (host data dir) as text/plain.
 // The plugin Import modal compares fetched entries against this file's section.
+// Since the config/ move, remote.yml lives at {data_dir}/config/remote.yml —
+// try the new locations first, then legacy root-level fallbacks.
 app.get("/api/remote-yml", (_req, res) => {
   const candidates = [
+    process.env.OMNI_DIR ? join(process.env.OMNI_DIR, "config", "remote.yml") : "",
+    "/opt/omni/config/remote.yml",
+    "/opt/workspace/omni-stack/config/remote.yml",
+    // Legacy fallbacks (pre-config/ move): keep for old deployments.
     process.env.OMNI_DIR ? join(process.env.OMNI_DIR, "remote.yml") : "",
     "/opt/omni/remote.yml",
     "/opt/workspace/omni-stack/remote.yml",
