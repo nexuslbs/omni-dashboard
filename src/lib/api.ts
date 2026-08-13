@@ -359,24 +359,10 @@ export interface PlatformResourceId {
   profile: string | null;
 }
 
-export interface PlatformSubscriptionChannel {
-  id: number;
-  name: string;
-  platform: string;
-  resource_identifier: string;
-}
-
-export interface PlatformSubscription {
-  id: number;
-  subscriber_resource: string;
-  channels: PlatformSubscriptionChannel[];
-}
-
 export interface PlatformData {
   name: string;
   active: boolean;
   resource_identifiers: PlatformResourceId[];
-  subscriptions: PlatformSubscription[];
   all_channels: { id: number; name: string; platform: string; resource_identifier: string }[];
 }
 
