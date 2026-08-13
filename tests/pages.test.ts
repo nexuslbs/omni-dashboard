@@ -190,3 +190,54 @@ describe("plugin-config library functions", () => {
     assert.ok(/export\s+function\s+renderBuiltinSection\b/.test(content));
   });
 });
+
+// ── Hooks page + lib module smoke tests ──
+
+describe("Hooks page and lib modules", () => {
+  it("hooks.ts page exports renderHooks", () => {
+    const content = readFileSync(new URL("../src/pages/hooks.ts", import.meta.url), "utf-8");
+    assert.ok(/export\s+(function|const|async\s+function)\s+renderHooks\b/.test(content));
+  });
+
+  it("hooks.ts is under 350 lines", () => {
+    const content = readFileSync(new URL("../src/pages/hooks.ts", import.meta.url), "utf-8");
+    assert.ok(content.split("\n").length <= 350);
+  });
+
+  it("hooks.ts lib exports helpers", () => {
+    const content = readFileSync(new URL("../src/lib/hooks.ts", import.meta.url), "utf-8");
+    for (const exp of [
+      "hookField",
+      "hookName",
+      "formatHookCounter",
+      "formatHookCounterJson",
+      "parseHookCounter",
+      "eventBadgeClass",
+      "scopeBadgeClass",
+      "modeBadgeClass",
+      "fetchHooks",
+      "fetchHook",
+    ]) {
+      assert.ok(
+        new RegExp(`export\\s+(const|function|async\\s+function)\\s+${exp}\\b`).test(content),
+        `hooks.ts should export ${exp}`,
+      );
+    }
+  });
+
+  it("hooks-list.ts exports loadHooks", () => {
+    const content = readFileSync(new URL("../src/lib/hooks-list.ts", import.meta.url), "utf-8");
+    assert.ok(/export\s+async\s+function\s+loadHooks\b/.test(content));
+  });
+
+  it("hooks-detail.ts exports showHookModal", () => {
+    const content = readFileSync(new URL("../src/lib/hooks-detail.ts", import.meta.url), "utf-8");
+    assert.ok(/export\s+async\s+function\s+showHookModal\b/.test(content));
+  });
+
+  it("router.ts registers the hooks route", () => {
+    const content = readFileSync(new URL("../src/lib/router.ts", import.meta.url), "utf-8");
+    assert.ok(/name:\s*"hooks"/.test(content));
+    assert.ok(/import\s*\{[^}]*renderHooks[^}]*\}\s*from\s*"\.\.\/pages\/hooks"/.test(content));
+  });
+});

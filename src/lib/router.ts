@@ -5,6 +5,7 @@ import { renderMessages } from "../pages/messages";
 import { renderKanban, renderKanbanDetail } from "../pages/kanban";
 import { renderKanbanHistory } from "../pages/kanban-history";
 import { renderSchedule, renderScheduleDetail } from "../pages/schedule";
+import { renderHooks } from "../pages/hooks";
 import { renderSecrets } from "../pages/secrets";
 import { renderExplorer } from "../pages/explorer";
 import { renderDatabase } from "../pages/database";
@@ -40,6 +41,7 @@ const routes: Route[] = [
   { name: "kanban-history", handler: renderKanbanHistory },
   { name: "workflows", handler: renderWorkflows },
   { name: "schedule", handler: renderSchedule },
+  { name: "hooks", handler: renderHooks },
   { name: "secrets", handler: renderSecrets },
   { name: "settings", handler: renderSettings },
   { name: "explorer", handler: renderExplorer },
