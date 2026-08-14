@@ -32,7 +32,7 @@ export function getModelsForProvider(provider: string): string[] {
 
 // ── Render functions ──
 
-export function renderNameInput(channelId: number, currentName: string, readonly: boolean): string {
+export function renderNameInput(channelId: string, currentName: string, readonly: boolean): string {
   if (readonly) {
     return `
       <div class="channel-field-group">
@@ -56,7 +56,7 @@ export function renderNameInput(channelId: number, currentName: string, readonly
   `;
 }
 
-export function renderProfileSelect(channelId: number, current: string): string {
+export function renderProfileSelect(channelId: string, current: string): string {
   const selectId = `ch-${channelId}-profile`;
   return `
     <div class="channel-field-group">
@@ -79,7 +79,7 @@ export function renderProfileSelect(channelId: number, current: string): string 
   `;
 }
 
-export function renderProviderSelect(channelId: number, currentProvider: string): string {
+export function renderProviderSelect(channelId: string, currentProvider: string): string {
   const selectId = `ch-${channelId}-provider`;
   const currentInList = currentProvider && (_providers as string[]).includes(currentProvider);
   return `
@@ -104,7 +104,7 @@ export function renderProviderSelect(channelId: number, currentProvider: string)
   `;
 }
 
-export function renderModelSelect(channelId: number, currentProvider: string, currentModel: string): string {
+export function renderModelSelect(channelId: string, currentProvider: string, currentModel: string): string {
   const selectId = `ch-${channelId}-model`;
   const refreshId = `ch-${channelId}-refresh`;
   const models = getModelsForProvider(currentProvider);
@@ -143,7 +143,7 @@ export function planBadge(plan: boolean): string {
   return `<span class="channel-status-badge" style="--type-color:${color};background:${color}22;border-color:${color}44;color:${color};font-size:0.7rem;padding:0.125rem 0.5rem;">${label}</span>`;
 }
 
-export function renderPlanSelect(channelId: number, current: boolean): string {
+export function renderPlanSelect(channelId: string, current: boolean): string {
   const selectId = `ch-${channelId}-plan`;
   const selectedVal = current ? "true" : "false";
   const options = [
@@ -173,7 +173,7 @@ export function renderPlanSelect(channelId: number, current: boolean): string {
 }
 
 export function renderTemplateInput(
-  channelId: number,
+  channelId: string,
   current: string,
   readonly: boolean,
   templates?: { profile: string; name: string; label: string }[],

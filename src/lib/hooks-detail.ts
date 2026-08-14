@@ -13,7 +13,6 @@ import {
   EVENT_LABELS,
   SCOPE_LABELS,
   MODE_LABELS,
-  PLANNING_MODE_LABELS,
 } from "./hooks";
 
 interface ChannelOption {
@@ -82,8 +81,7 @@ export async function showHookModal(
     prompt: hook ? String(hookField<string>(hook, "prompt", "prompt") ?? "") : "",
     action_id: hook ? String(hookField<string>(hook, "action_id", "actionId") ?? "") : "",
     profile: hook ? String(hookField<string>(hook, "profile", "profile") ?? "") : "",
-    channel_id: hook ? Number(hookField<number>(hook, "channel_id", "channelId") ?? 0) || 0 : 0,
-    planning_mode: hook ? String(hookField<string>(hook, "planning_mode", "planningMode") ?? "") : "",
+    channel_id: hook ? String(hookField<string>(hook, "channel_id", "channelId") ?? "") : "",
     plan: hook ? Boolean(hookField<boolean>(hook, "plan", "plan") ?? false) : false,
     template: hook ? String(hookField<string>(hook, "template", "template") ?? "") : "",
     enabled: hook ? Boolean(hookField<boolean>(hook, "enabled", "enabled") ?? true) : true,
@@ -208,7 +206,7 @@ export async function showHookModal(
               ${channels
                 .map(
                   (ch) =>
-                    `<option value="${ch.id}" ${cur.channel_id === Number(ch.id) ? "selected" : ""}>${escapeHtml(ch.name)}${ch.platform ? ` (${escapeHtml(ch.platform)})` : ""}</option>`,
+                    `<option value="${ch.id}" ${String(cur.channel_id) === String(ch.id) ? "selected" : ""}>${escapeHtml(ch.name)}${ch.platform ? ` (${escapeHtml(ch.platform)})` : ""}</option>`,
                 )
                 .join("")}
             </select>
@@ -216,17 +214,6 @@ export async function showHookModal(
         </div>
 
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:0 1rem;margin-bottom:1rem;">
-          <div>
-            <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Planning Mode</label>
-            <select id="hook-planning" class="filter-select" style="width:100%;">
-              ${Object.entries(PLANNING_MODE_LABELS)
-                .map(
-                  ([value, label]) =>
-                    `<option value="${value}" ${cur.planning_mode === value || (cur.planning_mode === "" && value === "") ? "selected" : ""}>${label}</option>`,
-                )
-                .join("")}
-            </select>
-          </div>
           <div>
             <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Template</label>
             <input id="hook-template" type="text" class="filter-input" value="${isEdit ? escapeHtml(cur.template) : ""}" placeholder="e.g. tasks/triage.md" style="width:100%;" />
@@ -268,7 +255,6 @@ export async function showHookModal(
     "hook-action",
     "hook-profile",
     "hook-channel",
-    "hook-planning",
   ].forEach((id) => {
     enhanceSelectElement(modal.querySelector(`#${id}`) as HTMLSelectElement);
   });
@@ -332,7 +318,6 @@ export async function showHookModal(
     const prompt = (modal.querySelector("#hook-prompt") as HTMLTextAreaElement).value.trim();
     const profile = (modal.querySelector("#hook-profile") as HTMLSelectElement).value;
     const channelVal = (modal.querySelector("#hook-channel") as HTMLSelectElement).value;
-    const planning_mode = (modal.querySelector("#hook-planning") as HTMLSelectElement).value;
     const plan = (modal.querySelector("#hook-plan") as HTMLInputElement).checked;
     const template = (modal.querySelector("#hook-template") as HTMLInputElement).value.trim();
     const enabled = (modal.querySelector("#hook-enabled") as HTMLInputElement).checked;
@@ -386,8 +371,7 @@ export async function showHookModal(
       prompt,
       action_id,
       profile,
-      channel_id: channelVal ? Number(channelVal) : null,
-      planning_mode,
+      channel_id: channelVal || null,
       plan,
       template,
       enabled,

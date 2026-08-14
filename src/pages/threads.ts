@@ -8,7 +8,7 @@ interface ThreadRow {
   id: string;
   status: string;
   cause: string;
-  channel_id: number;
+  channel_id: string;
   profile: string;
   provider: string | null;
   model: string | null;

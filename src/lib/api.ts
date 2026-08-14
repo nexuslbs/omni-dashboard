@@ -17,7 +17,7 @@ export interface SystemStats {
 export interface Message {
   [key: string]: unknown;
   id: number;
-  channel_id: number | null;
+  channel_id: string | null;
   role: string;
   content: string | null;
   status: string;
@@ -115,7 +115,7 @@ export interface DashboardData {
 }
 
 export interface Channel {
-  id: number;
+  id: string;
   name: string;
   platform: string;
 }
@@ -128,7 +128,7 @@ export interface MessagesResponse {
 }
 
 export interface MessagesFilters {
-  channels: { id: number; name: string; count: number }[];
+  channels: { id: string; name: string; count: number }[];
   roles: string[];
   providers: string[];
   models: string[];
@@ -234,7 +234,6 @@ export interface KanbanTask {
   position?: number;
   board_id?: string;
   archived?: boolean;
-  planning_mode?: string | null;
   plan?: boolean;
   created_at: string;
   updated_at: string;
@@ -273,7 +272,7 @@ export interface CronJob {
   mode?: string;
   direct_task_type?: string;
   active?: boolean;
-  channel_id?: number;
+  channel_id?: string;
   last_run: string | null;
   next_run: string | null;
   last_run_at: string | null;
@@ -314,7 +313,7 @@ export interface SettingCategory {
 // ── Profile Types ──
 
 export interface ProfileChannel {
-  id: number;
+  id: string;
   name: string;
   platform: string;
   resource_identifier: string;
@@ -334,7 +333,7 @@ export interface ProfileData {
 
 export interface ChannelData {
   [key: string]: unknown;
-  id: number;
+  id: string;
   name: string;
   platform: string | null;
   resource_identifier: string | null;
@@ -344,15 +343,14 @@ export interface ChannelData {
   current_model: string | null;
   readonly: boolean;
   plan: boolean;
-  planning_mode?: string | null;
   template: string | null;
 }
 
 // ── Platform Types ──
 
 export interface PlatformResourceId {
-  id: number;
-  channel_id: number;
+  id: string;
+  channel_id: string;
   channel_name: string;
   resource_identifier: string | null;
   closed: boolean;
@@ -363,7 +361,7 @@ export interface PlatformData {
   name: string;
   active: boolean;
   resource_identifiers: PlatformResourceId[];
-  all_channels: { id: number; name: string; platform: string; resource_identifier: string }[];
+  all_channels: { id: string; name: string; platform: string; resource_identifier: string }[];
 }
 
 // ── Plugin Types ──

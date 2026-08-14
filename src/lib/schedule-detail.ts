@@ -554,7 +554,7 @@ export async function showCronModal(job: Record<string, unknown>, onReload: () =
     const active = (modal.querySelector("#cron-active") as HTMLInputElement).checked;
     const silent = (document.getElementById("cron-silent") as HTMLInputElement).checked;
     const template = (modal.querySelector("#cron-instruction-file") as HTMLSelectElement).value;
-    const channel_id = channelVal ? parseInt(channelVal, 10) : null;
+    const channel_id = channelVal || null;
 
     if (!display_name) {
       showToast("Display Name is required", "error");

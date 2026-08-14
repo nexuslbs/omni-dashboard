@@ -23,8 +23,7 @@ export interface Hook {
   prompt: string | null;
   action_id: string | null;
   profile: string | null;
-  channel_id: number | null;
-  planning_mode: string | null;
+  channel_id: string | null;
   plan: boolean;
   template: string | null;
   enabled: boolean;
@@ -65,13 +64,6 @@ export const SCOPE_LABELS: Record<string, string> = {
 export const MODE_LABELS: Record<string, string> = {
   agentic: "Agentic",
   action: "Action",
-};
-
-export const PLANNING_MODE_LABELS: Record<string, string> = {
-  "": "Default",
-  default: "Default",
-  on: "On",
-  off: "Off",
 };
 
 // ── Badge classes (match the dashboard design system) ──
