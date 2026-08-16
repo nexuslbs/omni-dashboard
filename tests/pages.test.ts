@@ -270,7 +270,7 @@ describe("Kanban boards lib", () => {
 
   it("kanban-board.ts loadBoard accepts a board filter", () => {
     const content = readFileSync(new URL("../src/lib/kanban-board.ts", import.meta.url), "utf-8");
-    assert.ok(/loadBoard\(showArchived: boolean, board: string \| null = null\)/.test(content));
+    assert.ok(/loadBoard\(showArchived: boolean, boardKey: string \| null = null\)/.test(content));
     assert.ok(/\/kanban\/tasks\?board=/.test(content));
   });
 

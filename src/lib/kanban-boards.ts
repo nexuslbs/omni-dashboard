@@ -88,7 +88,7 @@ const labelStyle = "display:block;font-size:0.8rem;color:var(--text-muted);margi
 
 function fieldRow(id: string, label: string, inputHtml: string, hint?: string): string {
   return `<div>
-    <label style="${labelStyle}">${label}</label>
+    <label for="${id}" style="${labelStyle}">${label}</label>
     ${inputHtml}
     ${hint ? `<div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">${hint}</div>` : ""}
   </div>`;

@@ -137,14 +137,14 @@ export async function moveTask(taskId: string, status: string): Promise<void> {
  * Load and render the full kanban board into the DOM.
  * Handles column layout, card rendering, drag-and-drop, and touch drag.
  */
-export async function loadBoard(showArchived: boolean, board: string | null = null): Promise<void> {
+export async function loadBoard(showArchived: boolean, boardKey: string | null = null): Promise<void> {
   const boardEl = document.getElementById("kanban-board")!;
   const summaryEl = document.getElementById("kanban-summary")!;
   const countEl = document.getElementById("kanban-count")!;
   try {
     // No board selected but boards exist (boards.yml present): show a prompt
     // to choose or create one instead of the board view.
-    if (!board) {
+    if (!boardKey) {
       const boards = await fetchBoards();
       if (boards.length > 0) {
         summaryEl.style.display = "flex";
@@ -175,7 +175,7 @@ export async function loadBoard(showArchived: boolean, board: string | null = nu
       }
     }
     const tasks = await apiGet<KanbanTask[]>(
-      board ? `/kanban/tasks?board=${encodeURIComponent(board)}` : "/kanban/tasks",
+      boardKey ? `/kanban/tasks?board=${encodeURIComponent(boardKey)}` : "/kanban/tasks",
     );
     const KANBAN_COLUMNS: { id: string; title: string }[] = [
       { id: "backlog", title: "Backlog" },
