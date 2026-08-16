@@ -6,3 +6,6 @@ server-dist/
 .DS_Store
 .build.log
 .test.log
+
+# taskj patch artifacts (kanban task tool)
+.taskj-*.patch
