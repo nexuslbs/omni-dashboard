@@ -241,3 +241,59 @@ describe("Hooks page and lib modules", () => {
     assert.ok(/import\s*\{[^}]*renderHooks[^}]*\}\s*from\s*"\.\.\/pages\/hooks"/.test(content));
   });
 });
+
+// ── Kanban Boards (config/boards.yml) ──
+
+describe("Kanban boards lib", () => {
+  it("kanban-boards.ts exports expected helpers", () => {
+    const content = readFileSync(new URL("../src/lib/kanban-boards.ts", import.meta.url), "utf-8");
+    const expected = [
+      "KANBAN_BOARD_LS_KEY",
+      "getStoredBoard",
+      "setStoredBoard",
+      "nextBoardOptions",
+      "boardMoveEnabled",
+      "fetchBoards",
+      "upsertBoard",
+      "deleteBoard",
+      "openBoardModal",
+      "populateBoardSelect",
+      "wireBoardControls",
+    ];
+    for (const exp of expected) {
+      assert.ok(
+        new RegExp(`export\\s+(const|async\\s+function|function)\\s+${exp}\\b`).test(content),
+        `kanban-boards.ts should export ${exp}`,
+      );
+    }
+  });
+
+  it("kanban-board.ts loadBoard accepts a board filter", () => {
+    const content = readFileSync(new URL("../src/lib/kanban-board.ts", import.meta.url), "utf-8");
+    assert.ok(/loadBoard\(showArchived: boolean, board: string \| null = null\)/.test(content));
+    assert.ok(/\/kanban\/tasks\?board=/.test(content));
+  });
+
+  it("pages/kanban.ts wires board controls + localStorage", () => {
+    const content = readFileSync(new URL("../src/pages/kanban.ts", import.meta.url), "utf-8");
+    assert.ok(/kanban-board-controls/.test(content));
+    assert.ok(/wireBoardControls/.test(content));
+    assert.ok(/getStoredBoard/.test(content));
+    assert.ok(/setStoredBoard/.test(content));
+    assert.ok(/\?board=/.test(content));
+  });
+
+  it("kanban-detail.ts has move-to-another-board", () => {
+    const content = readFileSync(new URL("../src/lib/kanban-detail.ts", import.meta.url), "utf-8");
+    assert.ok(/task-move-board/.test(content));
+    assert.ok(/boardMoveEnabled/.test(content));
+    assert.ok(/nextBoardOptions/.test(content));
+  });
+
+  it("api.ts declares board types + task.board", () => {
+    const content = readFileSync(new URL("../src/lib/api.ts", import.meta.url), "utf-8");
+    assert.ok(/interface BoardConfig/.test(content));
+    assert.ok(/interface BoardEntry/.test(content));
+    assert.ok(/board\?: string;/.test(content));
+  });
+});

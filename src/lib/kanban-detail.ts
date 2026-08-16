@@ -3,6 +3,7 @@
  * Extracted from src/pages/kanban.ts
  */
 import { apiGet, apiPost, type Message, type ResetExecutionsResponse } from "./api";
+import { boardMoveEnabled, fetchBoards, nextBoardOptions } from "./kanban-boards";
 import { STATUS_LABELS, statusBadge, moveTask } from "./kanban-board";
 // ── Helper imports ──
 import { escapeHtml, formatApiError } from "./helpers";
@@ -313,6 +314,10 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
           <div>${task.profile ? escapeHtml(task.profile) : "<em>None</em>"}</div>
         </div>
         <div>
+          <div class="detail-label">Board</div>
+          <div>${task.board ? escapeHtml(task.board) : "<em>None</em>"}</div>
+        </div>
+        <div>
           <div class="detail-label">Created</div>
           <div>${new Date(task.created_at).toLocaleString()}</div>
         </div>
@@ -345,7 +350,59 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
             .join("")}
         </div>
       </div>
+      <div style="margin-top:1.5rem;" id="task-move-board-wrap">
+        <div class="detail-label" style="margin-bottom:0.5rem;">Move to another board</div>
+        <div style="display:flex;gap:0.5rem;">
+          <select id="task-move-board" style="flex:1;padding:0.375rem 0.625rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.8rem;box-sizing:border-box;">
+            <option value="">Select a board...</option>
+          </select>
+          <button id="task-move-board-btn" disabled style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:var(--accent-blue);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;white-space:nowrap;">Move</button>
+        </div>
+      </div>
     `;
+
+    // Wire up move-to-another-board control (hidden when boards are absent)
+    const moveBoardWrap = document.getElementById("task-move-board-wrap");
+    if (moveBoardWrap) {
+      const boards = await fetchBoards();
+      const sel = document.getElementById("task-move-board") as HTMLSelectElement | null;
+      const btn = document.getElementById("task-move-board-btn") as HTMLButtonElement | null;
+      if (!sel || !btn || boards.length === 0) {
+        moveBoardWrap.style.display = "none";
+      } else {
+        sel.innerHTML =
+          '<option value="">Select a board...</option>' +
+          nextBoardOptions(boards, task.board || null)
+            .map((k) => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`)
+            .join("");
+        const update = () => {
+          btn.disabled = !boardMoveEnabled(sel.value);
+        };
+        sel.addEventListener("change", update);
+        update();
+        btn.addEventListener("click", async () => {
+          const target = sel.value;
+          if (!boardMoveEnabled(target)) return;
+          btn.disabled = true;
+          try {
+            const res = await fetch("/api/kanban/tasks/" + encodeURIComponent(taskId), {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ board: target }),
+            });
+            if (!res.ok) {
+              const text = await res.text().catch(() => "Unknown error");
+              throw new Error(text);
+            }
+            showToast(`Task moved to board "${target}"`, "success");
+            void loadTaskDetail(taskId);
+          } catch (e) {
+            alert("Failed to move task: " + formatApiError(e));
+            btn.disabled = false;
+          }
+        });
+      }
+    }
 
     // Wire up detail move buttons
     el.querySelectorAll(".detail-move-btn").forEach((btn) => {

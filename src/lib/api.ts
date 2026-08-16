@@ -233,6 +233,8 @@ export interface KanbanTask {
   priority: number;
   position?: number;
   board_id?: string;
+  /** Board this task belongs to (config/boards.yml key; NULL = no board). */
+  board?: string;
   archived?: boolean;
   plan?: boolean;
   created_at: string;
@@ -248,6 +250,25 @@ export interface KanbanColumn {
 export interface KanbanBoardResponse {
   columns: KanbanColumn[];
   total: number;
+}
+
+// ── Board Types (kanban boards — config/boards.yml) ──
+
+/** A board's default execution options (task fallback per field). */
+export interface BoardConfig {
+  channel?: string;
+  profile?: string;
+  workflow?: string;
+  plan?: boolean;
+  template?: string;
+  priority?: number;
+  [key: string]: unknown;
+}
+
+/** One entry of the boards list: key + its option dict. */
+export interface BoardEntry {
+  key: string;
+  board: BoardConfig;
 }
 
 // ── Cron/Schedule Types ──

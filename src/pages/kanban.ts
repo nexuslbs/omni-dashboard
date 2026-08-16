@@ -4,11 +4,13 @@
  */
 import { apiGet } from "../lib/api";
 import { loadBoard } from "../lib/kanban-board";
+import { getStoredBoard, setStoredBoard, wireBoardControls } from "../lib/kanban-boards";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 import { formatApiError } from "../lib/helpers";
 
 // ── State ──
 let showArchived = false;
+let currentBoard: string | null = null;
 
 // ── URL sync ──
 
@@ -156,6 +158,16 @@ export function renderKanban(container: HTMLElement): void {
   if (p.get("show_archived") === "true") {
     showArchived = true;
   }
+  // Board selection: URL ?board= wins; else restore last visited (localStorage).
+  const urlBoard = p.get("board");
+  const storedBoard = getStoredBoard();
+  if (urlBoard && urlBoard !== "") {
+    currentBoard = urlBoard;
+    setStoredBoard(urlBoard);
+  } else if (storedBoard) {
+    currentBoard = storedBoard;
+    history.replaceState(null, "", `/kanban?board=${encodeURIComponent(storedBoard)}`);
+  } else currentBoard = null;
   container.innerHTML = `
     <div class="page-header">
       <div>
@@ -164,6 +176,7 @@ export function renderKanban(container: HTMLElement): void {
       </div>
       <div class="kanban-summary" id="kanban-summary" style="display:flex;align-items:center;gap:0.75rem;">
         <span id="kanban-count" style="font-size:0.85rem;color:var(--text-muted);margin-right:auto;"></span>
+        <span id="kanban-board-controls" style="display:inline-flex;align-items:center;gap:0.5rem;"></span>
         <button id="toggle-archived-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">Show archived</button>
         <button id="kanban-history-btn" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:var(--accent-blue);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">History</button>
         <button id="create-task-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ Create Task</button>
@@ -282,7 +295,7 @@ export function renderKanban(container: HTMLElement): void {
         body: JSON.stringify(reqBody),
       });
       closeCreateModal();
-      void loadBoard(showArchived);
+      void loadBoard(showArchived, currentBoard);
     } catch (e) {
       alert("Failed to create task: " + formatApiError(e));
     }
@@ -296,7 +309,7 @@ export function renderKanban(container: HTMLElement): void {
     showArchived = !showArchived;
     updateKanbanUrl();
     updateArchivedButton();
-    void loadBoard(showArchived);
+    void loadBoard(showArchived, currentBoard);
   });
 
   // History button
@@ -309,7 +322,25 @@ export function renderKanban(container: HTMLElement): void {
   updateArchivedButton();
   updateKanbanUrl();
 
-  void loadBoard(showArchived);
+  void wireBoardControls({
+    currentBoard,
+    onBoardChange: (board) => {
+      currentBoard = board;
+      setStoredBoard(board);
+      const params = new URLSearchParams(window.location.search);
+      if (board) params.set("board", board);
+      else params.delete("board");
+      const qs = params.toString();
+      history.replaceState(null, "", qs ? `/kanban?${qs}` : "/kanban");
+      updateArchivedButton();
+      void loadBoard(showArchived, board);
+    },
+    onBoardsChanged: () => {
+      void loadBoard(showArchived, currentBoard);
+    },
+  });
+
+  void loadBoard(showArchived, currentBoard);
 }
 
 // Re-export for router

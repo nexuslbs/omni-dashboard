@@ -3,6 +3,7 @@
  * Extracted from src/pages/kanban.ts
  */
 import { apiGet, type KanbanBoardResponse, type KanbanTask } from "./api";
+import { fetchBoards, setStoredBoard } from "./kanban-boards";
 import { formatApiError } from "../lib/helpers";
 
 // ── Status labels used across kanban modules ──
@@ -136,12 +137,46 @@ export async function moveTask(taskId: string, status: string): Promise<void> {
  * Load and render the full kanban board into the DOM.
  * Handles column layout, card rendering, drag-and-drop, and touch drag.
  */
-export async function loadBoard(showArchived: boolean): Promise<void> {
+export async function loadBoard(showArchived: boolean, board: string | null = null): Promise<void> {
   const boardEl = document.getElementById("kanban-board")!;
   const summaryEl = document.getElementById("kanban-summary")!;
   const countEl = document.getElementById("kanban-count")!;
   try {
-    const tasks = await apiGet<KanbanTask[]>("/kanban/tasks");
+    // No board selected but boards exist (boards.yml present): show a prompt
+    // to choose or create one instead of the board view.
+    if (!board) {
+      const boards = await fetchBoards();
+      if (boards.length > 0) {
+        summaryEl.style.display = "flex";
+        countEl.textContent = "";
+        boardEl.innerHTML = `
+          <div class="empty-state" style="text-align:center;padding:2.5rem;">
+            <div style="font-size:1.05rem;margin-bottom:0.75rem;color:var(--text-primary);">Select a board to view its tasks</div>
+            <div style="display:flex;flex-wrap:wrap;gap:0.5rem;justify-content:center;">
+              ${boards
+                .map(
+                  (b) =>
+                    `<button class="board-choice-btn" data-board="${escapeHtml(b.key)}" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.5rem 1rem;cursor:pointer;font-size:0.85rem;">${escapeHtml(b.key)}</button>`,
+                )
+                .join("")}
+            </div>
+            <div style="color:var(--text-muted);font-size:0.8rem;margin-top:0.75rem;">…or create a new board with the “+ New Board” button above.</div>
+          </div>`;
+        boardEl.querySelectorAll(".board-choice-btn").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            const b = (btn as HTMLElement).getAttribute("data-board");
+            if (!b) return;
+            setStoredBoard(b);
+            history.replaceState(null, "", `/kanban?board=${encodeURIComponent(b)}`);
+            void loadBoard(showArchived, b);
+          });
+        });
+        return;
+      }
+    }
+    const tasks = await apiGet<KanbanTask[]>(
+      board ? `/kanban/tasks?board=${encodeURIComponent(board)}` : "/kanban/tasks",
+    );
     const KANBAN_COLUMNS: { id: string; title: string }[] = [
       { id: "backlog", title: "Backlog" },
       { id: "todo", title: "Todo" },
