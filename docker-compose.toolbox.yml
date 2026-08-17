@@ -1,0 +1,15 @@
+services:
+  toolbox:
+    image: omniagent-dev:latest
+    entrypoint: ["python3"]
+    command: ["-c", "import time; time.sleep(86400)"]
+    volumes:
+      - /opt/workspace:/workspace
+    working_dir: /workspace
+  node:
+    image: node:20-alpine
+    entrypoint: ["sh", "-c"]
+    command: ["sleep 86400"]
+    volumes:
+      - /opt/workspace:/workspace
+    working_dir: /workspace

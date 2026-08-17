@@ -548,6 +548,10 @@ export interface WorkflowRoleConfig {
   model?: string;
   plan_mode?: string;
   retries?: number;
+  /** Role execution mode: 'agent' (default, LLM loop) | 'action' (runs an actions.yml tool). */
+  mode?: string;
+  /** actions.yml action id; required when mode === 'action'. */
+  action_id?: string;
 }
 
 export interface Workflow {
@@ -558,6 +562,10 @@ export interface Workflow {
   retries?: number;
   /** Top-level (outside roles): clear `workflow_state.executions` when the task moves to review. Default: false. */
   clear_executions_on_review?: boolean;
+  /** Top-level: no reviewer — review-bound tasks go straight to done; review_on_fail forced false. Default: false. */
+  auto_approve?: boolean;
+  /** Top-level: failed steps go to review instead of blocked (ignored when auto_approve). Default: false. */
+  review_on_fail?: boolean;
   roles?: Record<string, WorkflowRoleConfig>;
 }
 
