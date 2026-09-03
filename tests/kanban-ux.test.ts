@@ -107,6 +107,22 @@ describe("Kanban detail reuses the shared task modal", () => {
     assert.ok(!/<div id="edit-task-modal"/.test(src), "inline edit-task-modal container must be gone");
     assert.ok(!/task-edit-title/.test(src), "inline edit title input must be gone");
   });
+
+  it("task details always renders the effective workflow from task.workflow (resolved), not the DB column name workflow_id", () => {
+    // The API GET /kanban/tasks/{id} serializes the resolved effective workflow
+    // (task explicit -> board default) under the JSON key `workflow` (serde
+    // KanbanTaskEntry), NEVER as `workflow_id`. Reading task.workflow_id was
+    // always falsy, so an explicitly-set workflow (e.g. dev-executor) never
+    // rendered on the details page.
+    assert.ok(!/task\.workflow_id/.test(src), "must not read the legacy workflow_id field");
+    assert.match(
+      src,
+      /detail-label" style="font-size:0\.68rem;">Workflow<\/span>/,
+      "details grid must show a clearly labeled Workflow entry",
+    );
+    assert.match(src, /task\.workflow\s*\?/, "workflow chip renders when the task has an effective workflow");
+    assert.match(src, /None<\/em>"/, "tasks without any workflow show a muted None state");
+  });
 });
 
 describe("Reusable message box used by message-rendering pages", () => {

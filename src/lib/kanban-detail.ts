@@ -230,11 +230,14 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
         <div>
           <div class="detail-label">Board</div>
           <div>${task.board ? escapeHtml(task.board) : "<em>None</em>"}</div>
-          ${
-            task.workflow_id
-              ? `<div style="margin-top:0.35rem;"><span class="detail-label" style="font-size:0.68rem;">Workflow</span><br><code style="font-size:0.8rem;color:var(--accent-cyan);background:var(--bg-card);padding:0.15rem 0.4rem;border-radius:4px;">${escapeHtml(task.workflow_id)}</code></div>`
-              : ""
-          }
+          <div style="margin-top:0.4rem;">
+            <span class="detail-label" style="font-size:0.68rem;">Workflow</span><br>
+            ${
+              task.workflow
+                ? `<code style="font-size:0.8rem;color:var(--accent-cyan);background:var(--bg-card);padding:0.15rem 0.4rem;border-radius:4px;">${escapeHtml(String(task.workflow))}</code>`
+                : '<em style="font-size:0.8rem;color:var(--text-muted);">None</em>'
+            }
+          </div>
         </div>
         ${
           task.tags && Array.isArray(task.tags) && task.tags.length > 0

@@ -499,12 +499,18 @@ describe("Threads page 'Show details' toggle + workflow details (dashboard UI po
     assert.ok(/function\s+threadTaskLink\(row: ThreadRow\): string/.test(content));
   });
 
-  it("kanban-detail.ts shows the task workflow right below the board name", () => {
+  it("kanban-detail.ts always shows the effective workflow below the board name", () => {
     const content = readFileSync(new URL("../src/lib/kanban-detail.ts", import.meta.url), "utf-8");
-    // Workflow chip rendered in the Board cell, only when the task has a workflow.
-    assert.ok(/Workflow<\/span><br><code/.test(content));
-    assert.ok(/escapeHtml\(task\.workflow_id\)/.test(content));
-    assert.ok(/task\.workflow_id\s*\?/.test(content));
+    // The API serializes the RESOLVED effective workflow as `workflow` (task
+    // explicit -> board default), never as `workflow_id`; reading workflow_id
+    // was always falsy so an explicit workflow (e.g. dev-executor) never
+    // rendered. The Workflow entry must be always present, chip or muted None.
+    assert.ok(/detail-label" style="font-size:0\.68rem;">Workflow<\/span>/.test(content));
+    assert.ok(/escapeHtml\(String\(task\.workflow\)\)/.test(content));
+    assert.ok(
+      !/task\.workflow_id/.test(content),
+      "must read the resolved task.workflow, not the DB column name",
+    );
   });
 
   it("kanban/schedule/hook pages emphasize their titles with .emphasized-title", () => {
