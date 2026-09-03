@@ -102,3 +102,66 @@ describe("Database page layout (db-center-area, item 4)", () => {
     assert.ok(css.includes("margin: auto;"), "centered between the top and bottom paginators");
   });
 });
+
+describe("Database page: Show full texts checkbox", () => {
+  it("renders the Show full texts checkbox unchecked by default", () => {
+    assert.ok(
+      page.includes('<label class="checkbox-label db-full-texts-label">'),
+      "checkbox is wrapped in a styled checkbox-label",
+    );
+    assert.ok(
+      page.includes('<input type="checkbox" id="db-show-full-texts" />'),
+      "checkbox input exists in the page markup",
+    );
+    assert.ok(
+      !/<input type="checkbox" id="db-show-full-texts"[^>]*\bchecked\b/.test(page),
+      "default state is unchecked (no checked attribute)",
+    );
+    assert.ok(page.includes("Show full texts"), "checkbox label text is present");
+  });
+
+  it("keeps the toggle on the DOM checkbox, not in the persistent module state", () => {
+    assert.ok(
+      page.includes('const showFullTexts = el<HTMLInputElement>("db-show-full-texts").checked;'),
+      "renderResult reads the checkbox state from the DOM at render time",
+    );
+    assert.ok(
+      !/^\s*showFullTexts\s*:/m.test(page),
+      "showFullTexts is not a field of the module-level state object, so a page remount resets it",
+    );
+    assert.ok(
+      page.includes("and back remounts the page which resets it to the default unchecked"),
+      "the comment documents the reset-on-remount semantics",
+    );
+  });
+
+  it("unchecked keeps shortened cells with the full text as title; checked shows the whole text inline", () => {
+    assert.ok(
+      page.includes("const isLong = text.length > CELL_MAX;"),
+      "long-text detection is factored out for both branches",
+    );
+    assert.ok(
+      page.includes("const body = showFullTexts || !isLong ? text : `${text.slice(0, CELL_MAX)}…`;"),
+      "the ellipsized form is only produced when full texts are off (or the text is short)",
+    );
+    assert.ok(
+      page.includes('const title = !showFullTexts && isLong ? ` title="${escapeHtml(text)}"` : "";'),
+      "the full-text title attribute is only attached while the shortened form is displayed",
+    );
+    assert.ok(
+      page.includes("${escapeHtml(body)}"),
+      "the cell body escapes the displayed text (full text inline when checked)",
+    );
+  });
+
+  it("styles the full-texts checkbox with the purple accent", () => {
+    assert.ok(
+      css.includes('.db-full-texts-label input[type="checkbox"] {\n  accent-color: var(--accent-purple);'),
+      "checkbox uses the accent color",
+    );
+    assert.ok(
+      css.includes(".db-full-texts-label {\n  margin-top: 0.75rem;"),
+      "label has spacing below the SQL box",
+    );
+  });
+});

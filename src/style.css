@@ -5849,6 +5849,12 @@ a.thread-row {
   gap: 0.75rem;
   margin: 0.6rem 0;
 }
+.db-full-texts-label {
+  margin-top: 0.75rem;
+}
+.db-full-texts-label input[type="checkbox"] {
+  accent-color: var(--accent-purple);
+}
 .db-page-info {
   font-size: 0.8rem;
   color: var(--text-secondary);
@@ -6089,7 +6095,10 @@ a.thread-row {
 /* ── Threads page: grid layout + expandable "Show details" box ── */
 .data-table.threads-table {
   display: grid;
-  grid-template-columns: 72px 108px 128px minmax(90px, 0.9fr) 108px minmax(100px, 1fr) 56px 76px minmax(140px, 1.6fr) 68px 78px;
+  grid-template-columns: 72px 108px 128px minmax(90px, 0.9fr) 108px minmax(100px, 1fr) 56px 76px minmax(
+      140px,
+      1.6fr
+    ) 68px 78px;
 }
 .threads-table [role="rowgroup"],
 .threads-table [role="row"],

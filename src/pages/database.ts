@@ -44,6 +44,12 @@ const state = {
   columnTypes: {} as Record<string, string>,
 };
 
+// Latest rendered query result. Needed only to re-render the current
+// table in place when the Show full texts checkbox toggles (no server
+// round-trip). Reset to null on every page mount so a previous session
+// result is never reused after navigating away and back.
+let lastResult: QueryResponse | null = null;
+
 function el<T extends HTMLElement>(id: string): T {
   return document.getElementById(id) as T;
 }
@@ -79,6 +85,10 @@ export function renderDatabase(container: HTMLElement): void {
                 <span class="db-hint">Ctrl+Enter to run</span>
               </div>
             </div>
+            <label class="checkbox-label db-full-texts-label">
+              <input type="checkbox" id="db-show-full-texts" />
+              Show full texts
+            </label>
             <div id="db-error" class="error-state" hidden></div>
             <div id="db-pagination-top" class="events-nav db-pagination" hidden></div>
             <div class="db-center-area" id="db-center-area">
@@ -98,6 +108,7 @@ export function renderDatabase(container: HTMLElement): void {
     </div>
   `;
 
+  lastResult = null; // a fresh mount never reuses a previous session result
   const textarea = el<HTMLTextAreaElement>("db-custom-sql");
   textarea.addEventListener("input", () => {
     state.customSql = textarea.value.trim();
@@ -108,6 +119,15 @@ export function renderDatabase(container: HTMLElement): void {
     }
   });
   el("db-run-sql").addEventListener("click", () => runCustomSql());
+
+  const fullTextsCheckbox = el<HTMLInputElement>("db-show-full-texts");
+  // Toggling Show full texts re-renders the current result in place.
+  // The checkbox itself is never touched by pagination or SQL re-runs.
+  fullTextsCheckbox.addEventListener("change", () => {
+    if (lastResult !== null && !el("db-table-wrap").hidden) {
+      renderResult(lastResult);
+    }
+  });
 
   void loadTables();
 }
@@ -242,9 +262,14 @@ function showError(message: string): void {
 }
 
 function renderResult(res: QueryResponse): void {
+  lastResult = res;
   const thead = el("db-thead");
   const tbody = el("db-tbody");
   const wrap = el("db-table-wrap");
+  // Show full texts state lives on the DOM checkbox: pagination and SQL
+  // re-runs only rewrite thead/tbody so it persists, and navigating away
+  // and back remounts the page which resets it to the default unchecked.
+  const showFullTexts = el<HTMLInputElement>("db-show-full-texts").checked;
 
   if (res.columns.length === 0) {
     wrap.hidden = true;
@@ -273,9 +298,12 @@ function renderResult(res: QueryResponse): void {
           const text =
             v === null || v === undefined ? "NULL" : typeof v === "object" ? JSON.stringify(v) : String(v);
           const isNull = v === null || v === undefined;
-          const short = text.length > CELL_MAX ? `${text.slice(0, CELL_MAX)}…` : text;
-          const title = text.length > CELL_MAX ? ` title="${escapeHtml(text)}"` : "";
-          return `<td role="gridcell" class="${isNull ? "db-null" : ""}"${title}>${escapeHtml(short)}</td>`;
+          const isLong = text.length > CELL_MAX;
+          // Unchecked (default): shortened cell text, full text on the cell title.
+          // Checked: the whole text is shown inline instead.
+          const body = showFullTexts || !isLong ? text : `${text.slice(0, CELL_MAX)}…`;
+          const title = !showFullTexts && isLong ? ` title="${escapeHtml(text)}"` : "";
+          return `<td role="gridcell" class="${isNull ? "db-null" : ""}"${title}>${escapeHtml(body)}</td>`;
         })
         .join("");
       return `<tr role="row">${tds}</tr>`;
