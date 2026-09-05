@@ -696,8 +696,10 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
     runBtn.disabled = true;
     runBtn.textContent = "Running...";
 
-    if (!job.active) {
-      if (!confirm(`Job "${job.name || job.id}" is inactive. Run anyway?`)) {
+    const inactive = !job.active;
+    if (inactive) {
+      const jobName = job.name || job.id || cronId;
+      if (!confirm(`Job "${jobName}" is inactive. Run anyway?`)) {
         runBtn.disabled = false;
         runBtn.textContent = originalText;
         return;
@@ -705,10 +707,10 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
     }
 
     try {
-      const res = await fetch(`/api/schedule/${encodeURIComponent(job.id)}/run`, {
+      const runUrl = `/api/schedule/${encodeURIComponent(job.id)}/run${inactive ? "?force=true" : ""}`;
+      const res = await fetch(runUrl, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ force: true }),
       });
       if (!res.ok) {
         const errData = await res.text();

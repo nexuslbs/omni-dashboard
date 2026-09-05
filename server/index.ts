@@ -167,7 +167,12 @@ app.get("/api/memory/context/:channelName", (req, res) => {
 // Schedule run (manual cron trigger)
 app.post("/api/schedule/:id/run", (req, res) => {
   const { id } = req.params;
-  void fetchAndForward(req, res, `${OMNIAGENT}/run-cron/${encodeURIComponent(id)}`);
+  // /run-cron only honors force as a query parameter (?force=true), so
+  // translate any force=true from the request (query string or JSON body)
+  // into ?force=true on the proxied URL.
+  const force = req.query?.force === "true" || (req.body && req.body.force === true);
+  const query = force ? "?force=true" : "";
+  void fetchAndForward(req, res, `${OMNIAGENT}/run-cron/${encodeURIComponent(id)}${query}`);
 });
 
 // Prompt preview

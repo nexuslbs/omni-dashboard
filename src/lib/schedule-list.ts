@@ -132,12 +132,15 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
       runBtn.disabled = true;
       runBtn.textContent = "Running...";
 
-      // Check if job is inactive: ask for confirmation with force
-      const jobRes = await fetch(`/api/schedule/${encodeURIComponent(cronId)}`);
-      const job = jobRes.ok ? await jobRes.json() : null;
+      // Check if job is inactive: ask for confirmation, then force the run.
+      // apiGet unwraps the {success, data} envelope the backend returns, so
+      // job.active / job.name / job.id are the real job fields.
+      const job = await apiGet<any>("/schedule/" + encodeURIComponent(cronId)).catch(() => null);
+      const inactive = !!(job && !job.active);
 
-      if (job && !job.active) {
-        if (!confirm(`Job "${job.name || job.id}" is inactive. Run anyway?`)) {
+      if (inactive) {
+        const jobName = job.name || job.id || cronId;
+        if (!confirm(`Job "${jobName}" is inactive. Run anyway?`)) {
           runBtn.disabled = false;
           runBtn.textContent = originalText;
           return;
@@ -145,10 +148,10 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
       }
 
       try {
-        const res = await fetch(`/api/schedule/${encodeURIComponent(cronId)}/run`, {
+        const runUrl = `/api/schedule/${encodeURIComponent(cronId)}/run${inactive ? "?force=true" : ""}`;
+        const res = await fetch(runUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ force: true }),
         });
         if (!res.ok) {
           const errData = await res.text();
