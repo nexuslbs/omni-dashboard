@@ -24,6 +24,10 @@ FROM node:22-alpine
 
 RUN apk add --no-cache git
 
+# node:22-alpine ships Yarn classic at /opt/yarn-v1.22.22 (unused - dashboard
+# installs with npm only). Remove it so /opt stays clean on image build.
+RUN rm -rf /opt/yarn-v1.22.22 /usr/local/bin/yarn /usr/local/bin/yarnpkg
+
 # Trust the omni-stack repo (owned by host uid 10000, not root)
 RUN git config --global --add safe.directory /opt/omni
 
@@ -43,4 +47,3 @@ COPY --from=builder /build/package-lock.json /app/package-lock.json
 RUN npm pkg delete scripts.prepare && npm ci --omit=dev
 
 EXPOSE 3001
-
