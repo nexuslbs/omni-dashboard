@@ -684,3 +684,56 @@ describe("Kanban drag micro-move click suppression (drag keeps the selected boar
     assert.ok(/if \(isTouchDragging \|\| touchMoved\) armClickSuppression\(\);/.test(content));
   });
 });
+
+// ── Regression coverage: plugin boolean config (allow_omni_dir bug, 2026-09-07) ──
+// The docker plugin's allow_omni_dir toggle arrives over the API as the string
+// "on"/"off"/"true"/"false" (or a JSON boolean) depending on the config path,
+// and the dashboard checkbox historically rendered from / saved the raw HTML
+// value ("on"), so a truthy "on" string stayed checked and unchecking could not
+// persist. These asserts pin the fix: the boolean renderer, the checkbox
+// save/restart/discard paths and the side label must all derive state from a
+// real truthiness parse of the config value, never from raw string truthiness.
+describe("plugin boolean config truthiness (allow_omni_dir fix)", () => {
+  const cfgSrc = readFileSync(new URL("../src/lib/plugin-config.ts", import.meta.url), "utf-8");
+  const uiSrc = readFileSync(new URL("../src/lib/plugin-ui.ts", import.meta.url), "utf-8");
+  const listSrc = readFileSync(new URL("../src/lib/plugin-list.ts", import.meta.url), "utf-8");
+
+  it("plugin-config.ts renders boolean fields from configValueIsTrue + booleanStatusText", () => {
+    assert.ok(
+      cfgSrc.includes("const isTrue = configValueIsTrue(value);"),
+      "checked state derives from configValueIsTrue(value)",
+    );
+    assert.ok(
+      cfgSrc.includes("${booleanStatusText(value)}"),
+      "side label text derives from booleanStatusText(value)",
+    );
+    assert.ok(cfgSrc.includes("data-boolean-status"), "label span is marked for status sync");
+  });
+
+  it("plugin-config.ts exports the truthiness/status helpers", () => {
+    assert.ok(cfgSrc.includes("export function configValueIsTrue("), "configValueIsTrue exported");
+    assert.ok(cfgSrc.includes("export function booleanStatusText("), "booleanStatusText exported");
+    assert.ok(cfgSrc.includes("export function syncBooleanStatusSpans("), "syncBooleanStatusSpans exported");
+    assert.ok(cfgSrc.includes("export function wireBooleanStatusSpans("), "wireBooleanStatusSpans exported");
+  });
+
+  it("plugin-ui.ts save/restart collect form values via getCurrentConfig (unchecked => false)", () => {
+    assert.ok(
+      uiSrc.includes("const config: Record<string, any> = formEl ? getCurrentConfig(formEl) : {};"),
+      "save handler posts getCurrentConfig(formEl) so an unchecked toggle persists as false",
+    );
+    assert.ok(
+      uiSrc.includes("config: getCurrentConfig(formEl),"),
+      "restart handler persists pending edits via getCurrentConfig",
+    );
+  });
+
+  it("plugin-list.ts wires status spans and restores checkbox state from the parsed boolean", () => {
+    assert.ok(listSrc.includes("wireBooleanStatusSpans()"), "wirePage wires boolean status spans");
+    assert.ok(
+      listSrc.includes("el.checked = configValueIsTrue(saved[key]);"),
+      "discard restores checkboxes via configValueIsTrue",
+    );
+    assert.ok(listSrc.includes("syncBooleanStatusSpans(formEl)"), "discard re-syncs boolean side labels");
+  });
+});
