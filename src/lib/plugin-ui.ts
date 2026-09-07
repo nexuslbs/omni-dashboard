@@ -3,7 +3,13 @@ import { showToast } from "./utils";
 
 import { apiDelete, apiPost, type PluginData } from "./api";
 import { escapeHtml, formatApiError } from "./helpers";
-import { renderConfigField as renderConfigFieldV2, dirtyCheckSaveButton } from "./plugin-config";
+import {
+  renderConfigField as renderConfigFieldV2,
+  dirtyCheckSaveButton,
+  getCurrentConfig,
+  configValueIsTrue,
+  syncBooleanStatusSpans,
+} from "./plugin-config";
 import { syncSelectDisplayEl } from "./dropdown";
 import type { ConfigField } from "./api";
 
@@ -360,15 +366,14 @@ export function wirePluginButtons(
         // restart re-reads the plugin config from disk, so unsaved form
         // changes would be lost and the plugin would keep running with the
         // previously saved (stale) config. Saving first makes Restart behave
-        // like "save + restart" for all plugin types.
-        const configInputs = card?.querySelectorAll(".plugin-config-input");
-        if (configInputs && configInputs.length > 0) {
-          const config: Record<string, string> = {};
-          configInputs.forEach((input) => {
-            const el = input as HTMLInputElement;
-            config[el.getAttribute("data-key") || el.name] = el.value;
+        // like "save + restart" for all plugin types. getCurrentConfig maps
+        // boolean checkboxes to real booleans (unchecked => false), so an
+        // unchecked toggle persists as off instead of the missing key.
+        const formEl = card?.querySelector(".plugin-config-form") as HTMLElement | null;
+        if (formEl) {
+          await apiPost(`/plugins/${typeDir}/${encodedSource}/${encodedName}/config`, {
+            config: getCurrentConfig(formEl),
           });
-          await apiPost(`/plugins/${typeDir}/${encodedSource}/${encodedName}/config`, { config });
         }
         await apiPost(`/plugins/${typeDir}/${encodedSource}/${encodedName}/restart`, {});
         showToast(`${pluginName} restarted`, "success");
@@ -405,11 +410,10 @@ export function wirePluginButtons(
       if (!pluginName) return;
 
       try {
-        const config: Record<string, string> = {};
-        card?.querySelectorAll(".plugin-config-input").forEach((input) => {
-          const el = input as HTMLInputElement;
-          config[el.getAttribute("data-key") || el.name] = el.value;
-        });
+        const formEl = card?.querySelector(".plugin-config-form") as HTMLElement | null;
+        // getCurrentConfig maps boolean checkboxes to real booleans
+        // (unchecked => false), so unmarking a toggle persists as off.
+        const config: Record<string, any> = formEl ? getCurrentConfig(formEl) : {};
         const typeDir = pType + "s";
         const encodedName = encodeURIComponent(pluginName);
         const encodedSource = encodeURIComponent(source);
@@ -436,7 +440,11 @@ export function wirePluginButtons(
           const el = input as HTMLInputElement;
           const key = el.getAttribute("data-key") || el.name;
           if (key && saved[key] !== undefined) {
-            el.value = String(saved[key]);
+            if (el.type === "checkbox") {
+              el.checked = configValueIsTrue(saved[key]);
+            } else {
+              el.value = String(saved[key]);
+            }
           }
         });
         // Reset ref-toggle containers to match saved values
@@ -480,6 +488,8 @@ export function wirePluginButtons(
           const refNameSelect = container.querySelector(".ref-name-select") as HTMLSelectElement | null;
           if (refNameSelect) syncSelectDisplayEl(refNameSelect);
         });
+        // Restore boolean side labels from the restored checkbox state
+        syncBooleanStatusSpans(card);
         // Update dirty check
         dirtyCheckSaveButton(card, pluginName, savedConfigs!);
       });

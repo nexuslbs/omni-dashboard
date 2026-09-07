@@ -77,14 +77,16 @@ export function renderConfigField(
       `;
       break;
     }
-    case "boolean":
+    case "boolean": {
+      const isTrue = configValueIsTrue(value);
       inputHtml = `
         <label class="checkbox-label" style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
-          <input type="checkbox" id="${fieldId}" class="plugin-config-input" data-key="${escapeHtml(field.key)}" ${value ? "checked" : ""} />
-          <span>${value ? "Enabled" : "Disabled"}</span>
+          <input type="checkbox" id="${fieldId}" class="plugin-config-input" data-key="${escapeHtml(field.key)}" data-boolean-status-of="${fieldId}" ${isTrue ? "checked" : ""} />
+          <span id="${fieldId}-status" data-boolean-status>${booleanStatusText(value)}</span>
         </label>
       `;
       break;
+    }
     case "integer": {
       const strVal = String(value ?? "");
       const isSecretRef = strVal.startsWith("$secret:");
@@ -333,6 +335,55 @@ export function renderBuiltinSection(items: string[], heading?: string): string 
 /**
  * Collect current form values from a plugin config form, matching save logic.
  */
+
+/**
+ * Interpret a plugin boolean config value as true. Accepts JSON booleans,
+ * non-zero numbers and every truthy string spelling a form/API/config path can
+ * produce ("true"/"on"/"yes"/"1", case-insensitive). Everything else is false.
+ * The dashboard checkbox historically sent the raw HTML value ("on"), and the
+ * server may return "true"/"false" strings, so the same helper drives both the
+ * checkbox state and its side label.
+ */
+export function configValueIsTrue(value: unknown): boolean {
+  if (typeof value === "boolean") return value;
+  if (typeof value === "number") return value !== 0;
+  if (typeof value === "string") {
+    return ["true", "on", "yes", "1"].includes(value.trim().toLowerCase());
+  }
+  return false;
+}
+
+/** Side label for a boolean config checkbox: marked => Enabled, unmarked => Disabled. */
+export function booleanStatusText(value: unknown): string {
+  return configValueIsTrue(value) ? "Enabled" : "Disabled";
+}
+
+/**
+ * Sync every boolean checkbox side label to the checkbox state (marked =>
+ * Enabled, unmarked => Disabled). Call after rendering config forms and after
+ * any discard/reset restores checkbox state.
+ */
+export function syncBooleanStatusSpans(scope: ParentNode = document): void {
+  scope
+    .querySelectorAll<HTMLInputElement>('input[type="checkbox"][data-boolean-status-of]')
+    .forEach((input) => {
+      const span = input.closest("label")?.querySelector<HTMLElement>("span[data-boolean-status]");
+      if (span) span.textContent = booleanStatusText(input.checked);
+    });
+}
+
+/**
+ * Keep boolean checkbox side labels in sync with the checkbox state from now on.
+ * Call once after the config forms are in the DOM.
+ */
+export function wireBooleanStatusSpans(scope: ParentNode = document): void {
+  syncBooleanStatusSpans(scope);
+  scope
+    .querySelectorAll<HTMLInputElement>('input[type="checkbox"][data-boolean-status-of]')
+    .forEach((input) => {
+      input.addEventListener("change", () => syncBooleanStatusSpans(scope));
+    });
+}
 export function getCurrentConfig(formEl: HTMLElement): Record<string, any> {
   const config: Record<string, unknown> = {};
   formEl.querySelectorAll(".plugin-config-input:not(.plugin-multi-select)").forEach((input) => {

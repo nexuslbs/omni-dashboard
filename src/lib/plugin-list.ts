@@ -1,7 +1,14 @@
 import { apiGet, toCamelCase, type PluginData } from "./api";
 import { enhanceSelectElement, enhanceSelect, syncSelectDisplay, syncSelectDisplayEl } from "./dropdown";
 import { formatApiError } from "./helpers";
-import { getCurrentConfig, dirtyCheckSaveButton, wireRefToggles } from "./plugin-config";
+import {
+  getCurrentConfig,
+  dirtyCheckSaveButton,
+  wireRefToggles,
+  wireBooleanStatusSpans,
+  syncBooleanStatusSpans,
+  configValueIsTrue,
+} from "./plugin-config";
 import { renderPluginCard, wirePluginButtons, showInstallModal } from "./plugin-ui";
 import { showImportModal } from "./plugin-import";
 import { wireCopyButtons, wireToggleButtons } from "./secret-buttons";
@@ -372,6 +379,8 @@ function wirePage(type: PluginPageType): void {
   wireFilterEvents(type);
 
   wireRefToggles();
+  // Boolean checkboxes: the side label (Enabled/Disabled) mirrors the checkbox.
+  wireBooleanStatusSpans();
 
   wirePluginButtons(type, () => void loadPage(type, PAGE_CONFIGS[type], true), savedConfigs);
 
@@ -421,7 +430,7 @@ function wirePage(type: PluginPageType): void {
         const key = el.getAttribute("data-key");
         if (!key) return;
         if (el.type === "checkbox") {
-          el.checked = !!saved[key];
+          el.checked = configValueIsTrue(saved[key]);
         } else {
           el.value = saved[key] !== undefined ? String(saved[key]) : "";
         }
@@ -433,6 +442,8 @@ function wirePage(type: PluginPageType): void {
         .forEach((el) => {
           if (el.tagName === "SELECT") syncSelectDisplayEl(el as HTMLSelectElement);
         });
+      // Restore boolean side labels from the restored checkbox state
+      syncBooleanStatusSpans(formEl);
       // Re-evaluate dirty state
       dirtyCheckSaveButton(formEl, pluginName, savedConfigs);
     });
