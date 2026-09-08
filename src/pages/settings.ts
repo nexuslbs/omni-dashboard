@@ -353,10 +353,7 @@ function wireSettings(): void {
       if (!name) return;
       changedValues.delete(name);
       const input = document.querySelector(`.setting-input[data-name="${name}"]`) as
-        | HTMLInputElement
-        | HTMLSelectElement
-        | HTMLTextAreaElement
-        | null;
+        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
       if (input) {
         const original = input.getAttribute("data-original") || "";
         input.value = original;
@@ -377,10 +374,7 @@ function wireSettings(): void {
       const defaultVal = btn.getAttribute("data-default");
       if (!name || defaultVal === null) return;
       const input = document.querySelector(`.setting-input[data-name="${name}"]`) as
-        | HTMLInputElement
-        | HTMLSelectElement
-        | HTMLTextAreaElement
-        | null;
+        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
       if (!input) return;
       const original = input.getAttribute("data-original") || "";
       if (original === defaultVal) return; // already at default
@@ -630,10 +624,7 @@ async function saveSetting(name: string, value: string): Promise<void> {
     const safeName = CSS.escape(name);
     // Update original value on the input
     const input = document.querySelector(`.setting-input[data-name="${safeName}"]`) as
-      | HTMLInputElement
-      | HTMLSelectElement
-      | HTMLTextAreaElement
-      | null;
+      HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement | null;
     if (input) {
       input.setAttribute("data-original", value);
     }

@@ -421,9 +421,7 @@ function wireProfiles(): void {
       const field = btn.getAttribute("data-field");
       if (!profileName || !field) return;
       const input = document.querySelector(`[data-profile-name="${profileName}"][data-field="${field}"]`) as
-        | HTMLSelectElement
-        | HTMLInputElement
-        | null;
+        HTMLSelectElement | HTMLInputElement | null;
       if (!input) return;
       const value = input.value;
       const body: Record<string, string> = {};
@@ -458,9 +456,7 @@ function wireProfiles(): void {
       const field = btn.getAttribute("data-field");
       if (!profileName || !field) return;
       const input = document.querySelector(`[data-profile-name="${profileName}"][data-field="${field}"]`) as
-        | HTMLSelectElement
-        | HTMLInputElement
-        | null;
+        HTMLSelectElement | HTMLInputElement | null;
       if (!input) return;
       input.value = input.getAttribute("data-original") || "";
       (btn as HTMLElement).style.display = "none";
