@@ -1,2 +1,5 @@
 # Pre-commit: format, lint, and unit tests
 npm run format:check && npm run lint && npm run test:unit
+
+# Never-commit secret guardrail (code-plan C9): blocks commits staging secrets
+python3 scripts/secret-scan.py --staged
