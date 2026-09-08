@@ -677,6 +677,11 @@ export function renderKanbanDetail(container: HTMLElement, taskId: string): void
     ${taskModalHTML("edit")}
   `;
 
+  // Wire the shared edit-task modal (Cancel closes, Submit PATCHes) at render
+  // so it works on the FIRST visit, before any dependency add. Idempotent,
+  // safe to call on every render (see the create page in kanban.ts).
+  wireTaskModal({ mode: "edit" });
+
   const backLink = document.getElementById("back-to-kanban");
   if (backLink) {
     backLink.addEventListener("click", (e) => {
