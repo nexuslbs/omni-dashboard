@@ -402,6 +402,10 @@ export function wireTaskModal(opts: {
   // Static selects (priority/status) are enhanced once at wire time.
   enhanceSelect(`${p}-priority`);
   enhanceSelect(`${p}-status`);
+  // Tag registry select (the add-tag picker) uses the same custom styled dropdown
+  // component as priority/status/board/workflow/etc., never the native
+  // <select> (its options render invisible on the modal background).
+  enhanceSelect(`${p}-tag-registry`);
 
   // Tag UI wiring: remove chips (delegated click on the chip box), add from
   // the registry select. Elements are recreated per render, so no re-wire
@@ -561,6 +565,10 @@ function refreshTagUI(mode: TaskModalMode): void {
       '<option value="">(add existing tag)</option>' +
       available.map((r) => `<option value="${attrEsc(r.name)}">${escapeHtml(r.name)}</option>`).join("");
     sel.value = "";
+    // Options changed: rebuild the custom dropdown wrapper (same styled
+    // component as the modal selects) so trigger text and open dropdown stay
+    // in sync with the freshly populated options.
+    refreshEnhancedSelect(prefix(mode) + "-tag-registry");
   }
 }
 
