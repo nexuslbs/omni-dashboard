@@ -7,6 +7,7 @@
  * here also removes it from every task that uses it. Colors are primed into
  * kanban-board.ts so card chips render with the registry color everywhere.
  */
+import { apiGet } from "./api";
 import { primeTagColors } from "./kanban-board";
 import { escapeHtml } from "./helpers";
 
@@ -63,26 +64,22 @@ function ktmErr(e: unknown): string {
 /** Fetch the registry once and prime chip colors (board renders with them). */
 export async function primeRegistryColors(): Promise<void> {
   try {
-    const res = await fetch("/api/kanban/tags");
-    if (res.ok) {
-      const arr: unknown = await res.json();
-      if (Array.isArray(arr)) primeTagColors(arr as KtmTag[]);
-    }
+    const arr = await apiGet<KtmTag[]>("/kanban/tags");
+    if (Array.isArray(arr)) primeTagColors(arr);
   } catch {
     /* fallback: hash hues */
   }
 }
 
 async function ktmLoadList(): Promise<void> {
-  let list: KtmTag[] = [];
+  let list: KtmTag[];
   try {
-    const res = await fetch("/api/kanban/tags");
-    if (!res.ok) throw new Error((await res.text().catch(() => "")) || "HTTP " + res.status);
-    const arr: unknown = await res.json();
-    list = Array.isArray(arr) ? (arr as KtmTag[]) : [];
+    const arr = await apiGet<KtmTag[]>("/kanban/tags");
+    list = Array.isArray(arr) ? arr : [];
   } catch (e) {
     const box = document.getElementById("ktm-list");
-    if (box) box.innerHTML = `<div style="color:#f87171;font-size:0.85rem;">Failed to load tags: ${escapeHtml(ktmErr(e))}</div>`;
+    if (box)
+      box.innerHTML = `<div style="color:#f87171;font-size:0.85rem;">Failed to load tags: ${escapeHtml(ktmErr(e))}</div>`;
     return;
   }
   _ktmTags = list;
@@ -90,12 +87,15 @@ async function ktmLoadList(): Promise<void> {
   const box = document.getElementById("ktm-list");
   if (!box) return;
   if (list.length === 0) {
-    box.innerHTML = '<div style="font-size:0.8rem;color:var(--text-muted);">No tags yet. Add one above.</div>';
+    box.innerHTML =
+      '<div style="font-size:0.8rem;color:var(--text-muted);">No tags yet. Add one above.</div>';
     return;
   }
   box.innerHTML = list
     .map(
-      (t) => `<div style="display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0.1rem;border-bottom:1px solid var(--glass-border);">
+      (
+        t,
+      ) => `<div style="display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0.1rem;border-bottom:1px solid var(--glass-border);">
         ${_ktmSwatch(t.color)}
         <span style="flex:1;font-size:0.85rem;">${escapeHtml(t.name)}</span>
         <button type="button" data-ktm-edit="${escapeHtml(t.name)}" style="${_ktmBtn}">Edit</button>

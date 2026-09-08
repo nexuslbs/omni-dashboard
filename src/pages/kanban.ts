@@ -8,11 +8,7 @@ import { getStoredBoard, setStoredBoard, wireBoardControls } from "../lib/kanban
 import { taskModalHTML, wireTaskModal } from "../lib/kanban-create";
 import { prefetch } from "../lib/refcache";
 import { enhanceSelect } from "../lib/dropdown";
-import {
-  tagsManagerModalHTML,
-  wireTagsManager,
-  primeRegistryColors,
-} from "../lib/kanban-tags";
+import { tagsManagerModalHTML, wireTagsManager, primeRegistryColors } from "../lib/kanban-tags";
 
 // ── State ──
 let showArchived = false;

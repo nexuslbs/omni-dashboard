@@ -10,7 +10,7 @@
  *   populates the selects in the background from the refcache (prefetched on
  *   page load), so a click never waits on the network.
  */
-import { type BoardEntry, type WorkflowEntry } from "./api";
+import { apiGet, type BoardEntry, type WorkflowEntry } from "./api";
 import { workflowSelectOptions } from "./kanban-boards";
 import { primeTagColors, tagHue } from "./kanban-board";
 import { enhanceSelect, syncSelectDisplay } from "./dropdown";
@@ -28,7 +28,10 @@ let _editTaskId: string | null = null;
 let _activeSave: (() => void) | null = null;
 
 // ── Modal tag state (registry-backed tag add/remove on a task) ──
-interface RegTag { name: string; color?: string | null; }
+interface RegTag {
+  name: string;
+  color?: string | null;
+}
 let _regTags: RegTag[] = [];
 let _regTagsPromise: Promise<RegTag[]> | null = null;
 const _selTags: Record<TaskModalMode, string[]> = { create: [], edit: [] };
@@ -523,10 +526,9 @@ function attrEsc(s: string): string {
 
 function fetchRegTags(): Promise<RegTag[]> {
   if (!_regTagsPromise) {
-    _regTagsPromise = fetch("/api/kanban/tags")
-      .then((r) => (r.ok ? r.json() : []))
-      .then((arr: unknown) => {
-        _regTags = Array.isArray(arr) ? (arr as RegTag[]) : [];
+    _regTagsPromise = apiGet<RegTag[]>("/kanban/tags")
+      .then((arr) => {
+        _regTags = Array.isArray(arr) ? arr : [];
         primeTagColors(_regTags);
         return _regTags;
       })
