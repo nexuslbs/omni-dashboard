@@ -78,10 +78,72 @@ function escapeHtml(str: string): string {
   return div.innerHTML;
 }
 
+// ── Collapsible status panels: per-column collapse state (session) ──
+// Collapsed panels hide their task-list area, leaving the header (chevron,
+// title, count). State lives in a module Set so every loadBoard re-render
+// keeps it, and is mirrored to sessionStorage so it also survives same-tab
+// reloads; each panel toggles independently.
+const COLLAPSE_LS_KEY = "kanban-col-collapsed";
+let collapsedCols: Set<string> | null = null;
+
+function collapseState(): Set<string> {
+  if (collapsedCols) return collapsedCols;
+  collapsedCols = new Set<string>();
+  try {
+    const raw = window.sessionStorage.getItem(COLLAPSE_LS_KEY);
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        for (const id of parsed) if (typeof id === "string") collapsedCols.add(id);
+      }
+    }
+  } catch {
+    /* storage unavailable: keep the in-memory set */
+  }
+  return collapsedCols;
+}
+
+function persistCollapseState(): void {
+  try {
+    window.sessionStorage.setItem(COLLAPSE_LS_KEY, JSON.stringify([...collapseState()]));
+  } catch {
+    /* ignore */
+  }
+}
+
+/** Flip one panel's collapsed state and mirror it into the live DOM. */
+export function toggleColumnCollapsed(id: string): void {
+  const state = collapseState();
+  const col = document.querySelector(`.kanban-column[data-col="${CSS.escape(id)}"]`);
+  if (!col) return;
+  const header = col.querySelector(".kanban-col-header");
+  const btn = header?.querySelector(".kanban-col-toggle");
+  const label = col.querySelector(".kanban-col-title")?.textContent || id;
+  if (col.classList.contains("collapsed")) {
+    state.delete(id);
+    col.classList.remove("collapsed");
+    btn?.setAttribute("aria-expanded", "true");
+    btn?.setAttribute("aria-label", `Collapse ${label}`);
+  } else {
+    state.add(id);
+    col.classList.add("collapsed");
+    btn?.setAttribute("aria-expanded", "false");
+    btn?.setAttribute("aria-label", `Expand ${label}`);
+  }
+  persistCollapseState();
+}
+
+// FontAwesome classic solid chevron-down (viewBox 0 0 512 512); a collapsed
+// panel rotates it 180deg via CSS so it reads as chevron-up.
+const CHEVRON_DOWN_SVG = `<svg viewBox="0 0 512 512" aria-hidden="true"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>`;
 export function renderColumn(id: string, title: string, tasks: KanbanTask[]): string {
+  const collapsed = collapseState().has(id);
   return `
-    <div class="kanban-column ${columnColorClass(id)}">
+    <div class="kanban-column ${columnColorClass(id)}${collapsed ? " collapsed" : ""}" data-col="${id}">
       <div class="kanban-col-header">
+        <button type="button" class="kanban-col-toggle" aria-expanded="${!collapsed}" aria-label="${collapsed ? `Expand ${escapeHtml(title)}` : `Collapse ${escapeHtml(title)}`}" title="${collapsed ? "Expand panel" : "Collapse panel"}">
+          ${CHEVRON_DOWN_SVG}
+        </button>
         <span class="kanban-col-title">${title}</span>
         <span class="kanban-col-count">${tasks.length}</span>
       </div>
@@ -344,6 +406,17 @@ export async function loadBoard(
       </div>
     `;
 
+    // Collapse/expand chevrons: each panel toggles independently; state is
+    // kept in the module set + sessionStorage, so it survives re-renders.
+    boardEl.querySelectorAll(".kanban-col-toggle").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const colEl = (e.currentTarget as HTMLElement).closest(".kanban-column");
+        const colId = colEl?.getAttribute("data-col");
+        if (colId) toggleColumnCollapsed(colId);
+      });
+    });
     // Wire up card click handlers for navigation
     document.querySelectorAll(".kanban-card").forEach((card) => {
       (card as HTMLElement).draggable = true;

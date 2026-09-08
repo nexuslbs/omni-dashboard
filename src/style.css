@@ -6180,3 +6180,47 @@ a.thread-task-link {
     justify-content: flex-start;
   }
 }
+
+/* ── Kanban collapsible status panels: chevron toggle ── */
+.kanban-col-header .kanban-col-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.4rem;
+  height: 1.4rem;
+  margin: 0 0.4rem 0 0;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.kanban-col-header .kanban-col-toggle:hover {
+  color: var(--text-primary);
+  background: rgba(148, 163, 184, 0.15);
+}
+.kanban-col-toggle svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: currentColor;
+  display: block;
+  transition: transform 0.2s ease;
+}
+/* Keep title grouped right after the chevron, count pushed to the far right */
+.kanban-col-header .kanban-col-toggle + .kanban-col-title {
+  margin-right: auto;
+}
+/* Collapsed panel: chevron rotates to up, task list hidden */
+.kanban-column.collapsed .kanban-col-toggle svg {
+  transform: rotate(180deg);
+}
+.kanban-column.collapsed .kanban-col-body {
+  display: none;
+}
+.kanban-column.collapsed .kanban-col-header {
+  border-bottom: none;
+  border-radius: var(--radius-md);
+}

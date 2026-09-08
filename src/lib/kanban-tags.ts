@@ -8,7 +8,7 @@
  * kanban-board.ts so card chips render with the registry color everywhere.
  */
 import { apiGet } from "./api";
-import { primeTagColors } from "./kanban-board";
+import { primeTagColors, tagHue } from "./kanban-board";
 import { escapeHtml } from "./helpers";
 
 interface KtmTag {
@@ -38,7 +38,7 @@ export function tagsManagerModalHTML(): string {
         <p style="margin:0 0 1rem 0;font-size:0.75rem;color:var(--text-muted);">Colors apply everywhere a tag is shown. Deleting a tag removes it from every task that uses it.</p>
         <div style="display:flex;gap:0.5rem;flex-wrap:wrap;margin-bottom:1rem;align-items:center;">
           <input id="ktm-name" type="text" placeholder="Tag name" autocomplete="off" spellcheck="false" style="flex:1;min-width:8rem;${_ktmInput}" />
-          <input id="ktm-color" type="color" value="#8b5cf6" title="Tag color" style="width:2.6rem;height:2.1rem;padding:0.15rem;border:1px solid var(--glass-border);border-radius:6px;background:rgba(255,255,255,0.04);cursor:pointer;" />
+          <input id="ktm-color" type="color" value="#8b5cf6" title="Tag color" style="width:2.6rem;height:2.1rem;padding:0.35rem;border:1px solid var(--glass-border);border-radius:6px;background:rgba(255,255,255,0.04);cursor:pointer;" />
           <button id="ktm-save" type="button" style="${_ktmSaveBtn}">Add tag</button>
           <button id="ktm-cancel-edit" type="button" style="display:none;${_ktmBtn}">Cancel edit</button>
         </div>
@@ -50,9 +50,16 @@ export function tagsManagerModalHTML(): string {
     </div>`;
 }
 
-function _ktmSwatch(color?: string | null): string {
+function _ktmSwatch(color?: string | null, name?: string): string {
   if (color && /^#[0-9a-fA-F]{6}$/.test(color)) {
-    return `<span style="display:inline-block;width:0.8rem;height:0.8rem;border-radius:50%;background:${color};vertical-align:middle;"></span>`;
+    return `<span style="display:inline-block;width:0.8rem;height:0.8rem;border-radius:50%;background:${color};box-shadow:inset 0 0 0 1px rgba(255,255,255,0.25);vertical-align:middle;"></span>`;
+  }
+  // Tags created via task tagging (POST /kanban/tasks/{id}/tags) have a NULL
+  // registry color. Task cards render such tags from a deterministic hash
+  // hue (tagHue in kanban-board.ts); mirror it here so the modal circle
+  // always matches the card chips instead of showing a grey placeholder.
+  if (name) {
+    return `<span style="display:inline-block;width:0.8rem;height:0.8rem;border-radius:50%;background:hsl(${tagHue(name)},65%,50%);box-shadow:inset 0 0 0 1px rgba(255,255,255,0.25);vertical-align:middle;"></span>`;
   }
   return `<span style="display:inline-block;width:0.8rem;height:0.8rem;border-radius:50%;background:repeating-conic-gradient(#64748b 0% 25%, #334155 0% 50%);vertical-align:middle;"></span>`;
 }
@@ -96,7 +103,7 @@ async function ktmLoadList(): Promise<void> {
       (
         t,
       ) => `<div style="display:flex;align-items:center;gap:0.6rem;padding:0.45rem 0.1rem;border-bottom:1px solid var(--glass-border);">
-        ${_ktmSwatch(t.color)}
+        ${_ktmSwatch(t.color, t.name)}
         <span style="flex:1;font-size:0.85rem;">${escapeHtml(t.name)}</span>
         <button type="button" data-ktm-edit="${escapeHtml(t.name)}" style="${_ktmBtn}">Edit</button>
         <button type="button" data-ktm-del="${escapeHtml(t.name)}" style="${_ktmDangerBtn}">Delete</button>
