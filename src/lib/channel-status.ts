@@ -65,6 +65,9 @@ export function renderStatusControl(ch: ChannelData): string {
       <button type="button" class="channel-action-btn channel-stop-btn" data-channel-id="${ch.id}" title="Stop all pending/processing threads">
         Stop
       </button>
+      <button type="button" class="channel-action-btn channel-delete-btn" data-channel-id="${ch.id}" title="Delete this channel (removes it from channels.yml)">
+        Delete
+      </button>
     </div>
   `;
 }
@@ -265,6 +268,36 @@ export function wireChannelToggleButtons(onReload: () => void): void {
           throw new Error(err);
         }
         showToast("Channel threads stopped", "success");
+        onReload();
+      } catch (e) {
+        showToast("Failed: " + formatApiError(e), "error");
+      } finally {
+        btnEl.disabled = false;
+        btnEl.textContent = originalText;
+      }
+    });
+  });
+
+  // Wire delete buttons: confirm, then DELETE /api/channels/{id}. The backend
+  // removes the channel from channels.yml (definition + runtime state).
+  document.querySelectorAll(".channel-delete-btn").forEach((btn) => {
+    btn.addEventListener("click", async () => {
+      const channelId = btn.getAttribute("data-channel-id");
+      if (!channelId) return;
+      if (!confirm(`Delete channel "${channelId}"? This removes it from channels.yml.`)) return;
+      const btnEl = btn as HTMLButtonElement;
+      const originalText = btnEl.textContent;
+      btnEl.disabled = true;
+      btnEl.textContent = "Deleting...";
+      try {
+        const res = await fetch(`/api/channels/${encodeURIComponent(channelId)}`, {
+          method: "DELETE",
+        });
+        if (!res.ok) {
+          const err = await res.text();
+          throw new Error(err);
+        }
+        showToast("Channel deleted", "success");
         onReload();
       } catch (e) {
         showToast("Failed: " + formatApiError(e), "error");

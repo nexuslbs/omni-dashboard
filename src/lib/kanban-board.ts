@@ -98,7 +98,44 @@ export function renderColumn(id: string, title: string, tasks: KanbanTask[]): st
 
 // ── Tag colors (deterministic per tag name) ──
 /** Stable hue [0,360) derived from the tag name (djb2 hash). */
-export function tagColor(tag: string): string {
+const TAG_REGISTRY: Record<string, string> = {};
+
+/** Prime the tag->color map from the tag registry (GET /api/kanban/tags). */
+export function primeTagColors(registry: { name: string; color?: string | null }[]): void {
+  const next: Record<string, string> = {};
+  for (const t of Array.isArray(registry) ? registry : []) {
+    if (t && t.name) next[String(t.name)] = typeof t.color === "string" ? t.color : "";
+  }
+  for (const k of Object.keys(TAG_REGISTRY)) if (!(k in next)) delete TAG_REGISTRY[k];
+  for (const k of Object.keys(next)) TAG_REGISTRY[k] = next[k];
+}
+
+function hexToHue(hex: string): string | null {
+  if (!/^#[0-9a-fA-F]{6}$/.test(hex)) return null;
+  const r = parseInt(hex.slice(1, 3), 16) / 255;
+  const g = parseInt(hex.slice(3, 5), 16) / 255;
+  const b = parseInt(hex.slice(5, 7), 16) / 255;
+  const max = Math.max(r, g, b);
+  const min = Math.min(r, g, b);
+  let h = 0;
+  if (max !== min) {
+    const d = max - min;
+    if (max === r) h = ((g - b) / d) % 6;
+    else if (max === g) h = (b - r) / d + 2;
+    else h = (r - g) / d + 4;
+    h *= 60;
+    if (h < 0) h += 360;
+  }
+  return String(Math.round(h));
+}
+
+/** Hue [0,360) for a tag: registry color when set, else deterministic hash. */
+export function tagHue(tag: string): string {
+  const hex = TAG_REGISTRY[tag];
+  if (hex) {
+    const fromHex = hexToHue(hex);
+    if (fromHex !== null) return fromHex;
+  }
   let h = 5381;
   for (let i = 0; i < tag.length; i++) {
     h = ((h << 5) + h + tag.charCodeAt(i)) | 0;
@@ -106,12 +143,17 @@ export function tagColor(tag: string): string {
   return String(Math.abs(h) % 360);
 }
 
+/** Backwards-compatible alias (hash hue). */
+export function tagColor(tag: string): string {
+  return tagHue(tag);
+}
+
 export function renderTagChips(tags: string[]): string {
   const list = Array.isArray(tags) ? tags : [];
   if (list.length === 0) return "";
   return `<div class="kanban-card-tags" style="margin-top:0.3rem;display:flex;flex-wrap:wrap;gap:0.2rem;">${list
     .map((t) => {
-      const hue = tagColor(t);
+      const hue = tagHue(t);
       return `<span class="kanban-tag" style="display:inline-block;background:hsl(${hue},55%,24%);color:hsl(${hue},95%,80%);border:1px solid hsl(${hue},60%,42%);border-radius:10px;padding:0.05rem 0.5rem;font-size:0.68rem;font-weight:600;line-height:1.4;">${escapeHtml(t)}</span>`;
     })
     .join("")}</div>`;

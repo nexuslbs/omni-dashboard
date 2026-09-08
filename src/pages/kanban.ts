@@ -8,6 +8,11 @@ import { getStoredBoard, setStoredBoard, wireBoardControls } from "../lib/kanban
 import { taskModalHTML, wireTaskModal } from "../lib/kanban-create";
 import { prefetch } from "../lib/refcache";
 import { enhanceSelect } from "../lib/dropdown";
+import {
+  tagsManagerModalHTML,
+  wireTagsManager,
+  primeRegistryColors,
+} from "../lib/kanban-tags";
 
 // ── State ──
 let showArchived = false;
@@ -88,6 +93,7 @@ export function renderKanban(container: HTMLElement): void {
         <button id="kanban-tag-clear" type="button" title="Clear tag filter" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:6px;padding:0.375rem 0.55rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;display:none;">Clear tag</button>
         <button id="toggle-archived-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">Show archived</button>
         <button id="kanban-history-btn" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:var(--accent-blue);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">History</button>
+        <button id="kanban-tags-btn" style="background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.35);color:#34d399;border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ Tags</button>
         <button id="create-task-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ Create Task</button>
       </div>
     </div>
@@ -95,6 +101,7 @@ export function renderKanban(container: HTMLElement): void {
       <div class="loading">Loading board</div>
     </div>
     ${taskModalHTML("create")}
+    ${tagsManagerModalHTML()}
   `;
 
   // Wire the shared create-task modal (also used for Edit on the detail page).
@@ -161,6 +168,12 @@ export function renderKanban(container: HTMLElement): void {
     void import("../lib/router").then(({ router }) => router.go("kanban-history"));
   });
 
+  // "+ Tags" manager modal (elements recreated per render): wire the open
+  // button, close/save/cancel-edit and the list's edit/delete delegation.
+  wireTagsManager(() => {
+    void loadBoard(showArchived, currentBoard);
+  });
+
   // Apply initial URL state to button and URL
   updateArchivedButton();
   updateKanbanUrl();
@@ -195,7 +208,11 @@ export function renderKanban(container: HTMLElement): void {
   // dropdown.ts) and keeps the enhancement explicit on the page path.
   const selectId = "kanban-board-select";
   enhanceSelect(selectId);
-  void loadBoard(showArchived, currentBoard);
+  // Prime chip colors from the tag registry, then render the board so chips
+  // show the registry colors (fallback: deterministic hash hues).
+  void primeRegistryColors().then(() => {
+    void loadBoard(showArchived, currentBoard);
+  });
 }
 
 // Re-export for router

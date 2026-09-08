@@ -12,8 +12,9 @@
  */
 import { type BoardEntry, type WorkflowEntry } from "./api";
 import { workflowSelectOptions } from "./kanban-boards";
+import { primeTagColors, tagHue } from "./kanban-board";
 import { enhanceSelect, syncSelectDisplay } from "./dropdown";
-import { formatApiError } from "./helpers";
+import { escapeHtml, formatApiError } from "./helpers";
 import { cachedGet } from "./refcache";
 
 export type TaskModalMode = "create" | "edit";
@@ -25,6 +26,13 @@ const modalId = (mode: TaskModalMode): string => (mode === "edit" ? "edit-task-m
 // ── Modal open state (what the wired submit button acts on) ──
 let _editTaskId: string | null = null;
 let _activeSave: (() => void) | null = null;
+
+// ── Modal tag state (registry-backed tag add/remove on a task) ──
+interface RegTag { name: string; color?: string | null; }
+let _regTags: RegTag[] = [];
+let _regTagsPromise: Promise<RegTag[]> | null = null;
+const _selTags: Record<TaskModalMode, string[]> = { create: [], edit: [] };
+const _initialTags: Record<TaskModalMode, string[]> = { create: [], edit: [] };
 
 // ── Select population helpers (all cached + enhanced) ──
 
@@ -252,6 +260,14 @@ export function taskModalHTML(mode: TaskModalMode): string {
                 </select>
                 <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">Structured guidance injected into the agent's prompt. Create .md files in profiles/&lt;name&gt;/templates/</div>
               </div>
+              <div>
+                <label style="${labelStyle}">Tags</label>
+                <div id="${p}-tags-chips"></div>
+                <div style="display:flex;gap:0.4rem;margin-top:0.35rem;align-items:center;">
+                  <select id="${p}-tag-registry" style="flex:1;${inputStyle}"></select>
+                  <button type="button" id="${p}-tag-add" style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:var(--accent-blue);border-radius:6px;padding:0.375rem 0.6rem;cursor:pointer;font-size:0.78rem;font-weight:500;white-space:nowrap;">+ Add</button>
+                </div>
+              </div>
             </div>
             <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1rem;">
               <button id="${p}-cancel" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;">Cancel</button>
@@ -281,6 +297,12 @@ export function closeTaskModal(mode: TaskModalMode): void {
   syncSelectDisplay(`${p}-channel`);
   syncSelectDisplay(`${p}-profile`);
   syncSelectDisplay(`${p}-template`);
+  _selTags[mode] = [];
+  _initialTags[mode] = [];
+  const chips = document.getElementById(`${p}-tags-chips`);
+  if (chips) chips.innerHTML = "";
+  const reg = document.getElementById(`${p}-tag-registry`) as HTMLSelectElement | null;
+  if (reg) reg.innerHTML = "";
 }
 
 /** Backwards-compatible alias (kanban page used closeCreateModal). */
@@ -323,10 +345,16 @@ export function openTaskModal(opts: OpenTaskModalOpts): void {
   const status = document.getElementById(`${p}-status`) as HTMLSelectElement | null;
   if (status) status.value = task?.status ? String(task.status) : "backlog";
 
+  // Tag prefill: edit mode starts from the task's existing tags; create from none.
+  const taskTags = Array.isArray(task?.tags) ? (task!.tags as unknown[]).map(String) : [];
+  _selTags[mode] = taskTags;
+  _initialTags[mode] = [...taskTags];
+
   // Show first, populate in background.
   modal.style.display = "flex";
   const board = opts.getBoard ? opts.getBoard() : null;
   void populateTaskModalSelects(mode, board, task);
+  void loadRegTags(mode);
 }
 
 // ── Wiring (idempotent) ──
@@ -371,6 +399,33 @@ export function wireTaskModal(opts: {
   // Static selects (priority/status) are enhanced once at wire time.
   enhanceSelect(`${p}-priority`);
   enhanceSelect(`${p}-status`);
+
+  // Tag UI wiring: remove chips (delegated click on the chip box), add from
+  // the registry select. Elements are recreated per render, so no re-wire
+  // guard is needed beyond the dataset flag on the chip box.
+  const chipsBox = document.getElementById(`${p}-tags-chips`);
+  if (chipsBox && !(chipsBox as HTMLElement).dataset._wired) {
+    (chipsBox as HTMLElement).dataset._wired = "1";
+    chipsBox.addEventListener("click", (ev) => {
+      const btn = (ev.target as HTMLElement).closest("[data-tag-remove]");
+      if (!btn) return;
+      const tag = (btn as HTMLElement).getAttribute("data-tag-remove") || "";
+      if (!tag) return;
+      _selTags[mode] = _selTags[mode].filter((t) => t !== tag);
+      refreshTagUI(mode);
+    });
+  }
+  const addBtn = document.getElementById(`${p}-tag-add`);
+  if (addBtn && !(addBtn as HTMLElement).dataset._wired) {
+    (addBtn as HTMLElement).dataset._wired = "1";
+    addBtn.addEventListener("click", () => {
+      const sel = document.getElementById(`${p}-tag-registry`) as HTMLSelectElement | null;
+      const name = sel?.value?.trim() || "";
+      if (!name) return;
+      if (!_selTags[mode].includes(name)) _selTags[mode].push(name);
+      refreshTagUI(mode);
+    });
+  }
 }
 
 // ── Submit ──
@@ -395,6 +450,7 @@ async function submitTaskModal(mode: TaskModalMode): Promise<void> {
   // Keep "" so the "(none)"/board-default option sends an empty workflow
   // (PATCH workflow:"" clears the task workflow back to the board default).
   const workflow = (document.getElementById(`${p}-workflow`) as HTMLSelectElement | null)?.value ?? undefined;
+  const selTags = [..._selTags[mode]];
 
   const reqBody: Record<string, unknown> = {
     title,
@@ -407,6 +463,10 @@ async function submitTaskModal(mode: TaskModalMode): Promise<void> {
     board,
     workflow,
   };
+  // Create sends the selected tags in one shot (CreateTaskRequest carries a
+  // `tags` field; the backend auto-creates registry rows). Edit applies
+  // add/remove diffs after the PATCH (below).
+  if (mode === "create" && selTags.length > 0) reqBody.tags = selTags;
 
   try {
     let res: Response;
@@ -427,6 +487,25 @@ async function submitTaskModal(mode: TaskModalMode): Promise<void> {
       const text = await res.text().catch(() => "Unknown error");
       throw new Error(`${res.status}: ${text}`);
     }
+    // Edit: persist tag add/remove diffs through the task tag endpoints
+    // (PATCH ignores tags). Best-effort per endpoint; onSaved reload shows
+    // the authoritative state.
+    if (mode === "edit" && _editTaskId) {
+      const tid = _editTaskId;
+      const initial = _initialTags.edit;
+      for (const t of initial.filter((x) => !selTags.includes(x))) {
+        await fetch(`/api/kanban/tasks/${encodeURIComponent(tid)}/tags/${encodeURIComponent(t)}`, {
+          method: "DELETE",
+        }).catch(() => undefined);
+      }
+      for (const t of selTags.filter((x) => !initial.includes(x))) {
+        await fetch(`/api/kanban/tasks/${encodeURIComponent(tid)}/tags`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tag: t }),
+        }).catch(() => undefined);
+      }
+    }
     closeTaskModal(mode);
     const cb = _activeSave;
     _activeSave = null;
@@ -434,4 +513,61 @@ async function submitTaskModal(mode: TaskModalMode): Promise<void> {
   } catch (e) {
     alert("Failed to " + (mode === "edit" ? "update" : "create") + " task: " + formatApiError(e));
   }
+}
+
+// ── Modal tag helpers (registry-backed) ──
+
+function attrEsc(s: string): string {
+  return escapeHtml(s);
+}
+
+function fetchRegTags(): Promise<RegTag[]> {
+  if (!_regTagsPromise) {
+    _regTagsPromise = fetch("/api/kanban/tags")
+      .then((r) => (r.ok ? r.json() : []))
+      .then((arr: unknown) => {
+        _regTags = Array.isArray(arr) ? (arr as RegTag[]) : [];
+        primeTagColors(_regTags);
+        return _regTags;
+      })
+      .catch(() => {
+        _regTags = [];
+        return _regTags;
+      });
+  }
+  return _regTagsPromise;
+}
+
+function chipHTML(tag: string): string {
+  const hue = tagHue(tag);
+  return `<span style="display:inline-flex;align-items:center;gap:0.3rem;background:hsl(${hue},55%,24%);color:hsl(${hue},95%,80%);border:1px solid hsl(${hue},60%,42%);border-radius:10px;padding:0.05rem 0.5rem;font-size:0.72rem;font-weight:600;line-height:1.5;">${escapeHtml(tag)}<button type="button" data-tag-remove="${attrEsc(tag)}" title="Remove tag" style="background:none;border:none;color:inherit;cursor:pointer;font-size:0.85rem;line-height:1;padding:0 0 0 0.15rem;">&times;</button></span>`;
+}
+
+function refreshTagUI(mode: TaskModalMode): void {
+  const chips = document.getElementById(prefix(mode) + "-tags-chips");
+  if (chips) {
+    const list = _selTags[mode];
+    chips.innerHTML =
+      list.length === 0
+        ? '<span style="font-size:0.75rem;color:var(--text-muted);">No tags</span>'
+        : `<div style="display:flex;flex-wrap:wrap;gap:0.3rem;">${list.map(chipHTML).join("")}</div>`;
+  }
+  const sel = document.getElementById(prefix(mode) + "-tag-registry") as HTMLSelectElement | null;
+  if (sel) {
+    const available = _regTags.filter((r) => !_selTags[mode].includes(r.name));
+    sel.innerHTML =
+      '<option value="">(add existing tag)</option>' +
+      available.map((r) => `<option value="${attrEsc(r.name)}">${escapeHtml(r.name)}</option>`).join("");
+    sel.value = "";
+  }
+}
+
+async function loadRegTags(mode: TaskModalMode): Promise<void> {
+  const tags = await fetchRegTags();
+  if (tags.length === 0) {
+    // Registry empty: retry once live (a tag may have been added since).
+    _regTagsPromise = null;
+    await fetchRegTags();
+  }
+  refreshTagUI(mode);
 }

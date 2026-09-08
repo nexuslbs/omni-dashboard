@@ -438,6 +438,10 @@ function renderRow(row: ThreadRow): string {
     new Date(row.created_at.endsWith("Z") ? row.created_at : row.created_at + "Z"),
   );
   const tokens = (row.input_tokens || 0) + (row.output_tokens || 0);
+  const cachePct =
+    (row.input_tokens || 0) > 0 && (row.cached_tokens || 0) > 0
+      ? Math.min(100, Math.round(((row.cached_tokens || 0) / (row.input_tokens || 0)) * 100))
+      : null;
   const parentIdStr = row.parent_id
     ? `<span class="event-type-badge" title="Parent ID: ${escapeHtml(String(row.parent_id))}" style="--type-color:#64748b;background:rgba(100,116,139,0.12);border-color:rgba(100,116,139,0.25);color:#94a3b8;font-size:0.7rem;display:inline-flex;flex-direction:column;align-items:center;line-height:1.3;"><span style="font-size:0.65rem;opacity:0.7;">Parent:</span><span style="font-weight:600;">#${escapeHtml(String(row.parent_id))}</span></span>`
     : "";
@@ -463,7 +467,7 @@ function renderRow(row: ThreadRow): string {
         <div role="cell" class="cell-num">${row.iterations}</div>
         <div role="cell" class="cell-preview">${preview}</div>
         <div role="cell" class="cell-num">${row.duration_ms !== null ? row.duration_ms.toFixed(0) : "-"}</div>
-        <div role="cell" class="cell-num">${tokens > 0 ? tokens.toLocaleString() : "-"}</div>
+        <div role="cell" class="cell-num">${tokens > 0 ? tokens.toLocaleString() + (cachePct !== null ? ` (${cachePct}%)` : "") : "-"}</div>
       </a>
       <div class="thread-details">
         <div class="thread-details-box">${threadDetailsContent(row)}</div>
@@ -496,6 +500,10 @@ function threadDetailsContent(row: ThreadRow): string {
     <div class="thread-detail-item"><span class="thread-detail-label">Type</span><span class="thread-detail-value">${typeStr === "-" ? typeStr : `<span class="event-type-badge" title="Type: ${typeStr}" style="--type-color:${seq0TypeColor(row.cause_msg_type || "")};background:${seq0TypeColor(row.cause_msg_type || "")}22;border-color:${seq0TypeColor(row.cause_msg_type || "")}44;color:${seq0TypeColor(row.cause_msg_type || "")}">${typeStr}</span>`}</span></div>
     <div class="thread-detail-item"><span class="thread-detail-label">Subtype</span><span class="thread-detail-value">${subtypeStr}</span></div>
     <div class="thread-detail-item"><span class="thread-detail-label">Plan Mode</span><span class="thread-detail-value"><span class="badge" style="--type-color:${pmCol};background:${pmCol}22;border-color:${pmCol}44;color:${pmCol}">${row.plan ? "On" : "Off"}</span></span></div>
+    <div class="thread-detail-item"><span class="thread-detail-label">Tokens (total input)</span><span class="thread-detail-value"><code style="font-size:0.8rem;">${fmtTokens(row.input_tokens)}</code></span></div>
+    <div class="thread-detail-item"><span class="thread-detail-label">Cache hit (cached input)</span><span class="thread-detail-value"><code style="font-size:0.8rem;">${fmtTokens(row.cached_tokens)}</code></span></div>
+    <div class="thread-detail-item"><span class="thread-detail-label">Cache miss (non-cached input)</span><span class="thread-detail-value"><code style="font-size:0.8rem;">${fmtTokens(Math.max((row.input_tokens || 0) - (row.cached_tokens || 0), 0))}</code></span></div>
+    <div class="thread-detail-item"><span class="thread-detail-label">Output tokens</span><span class="thread-detail-value"><code style="font-size:0.8rem;">${fmtTokens(row.output_tokens)}</code></span></div>
     ${kanbanExtra}
     ${taskLink ? `<div class="thread-detail-item"><span class="thread-detail-label">Task</span><span class="thread-detail-value">${taskLink}</span></div>` : ""}
   `;
@@ -554,6 +562,11 @@ function seq0TypeColor(type: string): string {
 }
 
 // ── Utilities ──
+
+function fmtTokens(n: number | null | undefined): string {
+  const v = typeof n === "number" && n > 0 ? n : 0;
+  return v > 0 ? v.toLocaleString() : "-";
+}
 
 function formatRelativeTime(date: Date): string {
   const now = new Date();
