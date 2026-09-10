@@ -6224,3 +6224,81 @@ a.thread-task-link {
   border-bottom: none;
   border-radius: var(--radius-md);
 }
+
+/* ── Shared modal scroll contract (wired by src/lib/modal.ts) ──
+   Every dashboard modal is a full-screen overlay + a panel inside it.
+   `initModalScrollLock()` tags those overlays with `.omni-modal` and their
+   panel with `.omni-modal-panel`, so ONE definition gives every modal
+   (kanban create/edit, Manage Tags, secrets, hooks, boards, imports, ...):
+   - an overlay that is itself the scroll container with scroll chaining
+     contained (`overscroll-behavior: contain`), so the page behind never moves;
+   - a panel capped to the dynamic viewport height (`dvh`, `vh` fallback) minus
+     the overlay padding, scrolling internally, so a tall modal on a small or
+     mobile viewport keeps its footer (Confirm/Cancel) reachable.
+   `!important` is required because most modals carry inline layout styles. */
+.modal-backdrop,
+.modal-overlay,
+.upload-modal-backdrop,
+.omni-modal {
+  align-items: flex-start;
+  justify-content: center;
+  padding: 16px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.omni-modal {
+  position: fixed !important;
+  inset: 0 !important;
+  align-items: flex-start !important;
+  padding: 16px !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+}
+
+.modal,
+.upload-modal {
+  margin: auto;
+  max-height: calc(100vh - 32px);
+  max-height: calc(100dvh - 32px);
+}
+
+.modal {
+  /* header/footer stay pinned, only .modal-body scrolls */
+  overflow: hidden;
+}
+
+.omni-modal > .omni-modal-panel:not(.modal) {
+  margin: auto !important;
+  max-height: calc(100vh - 32px) !important;
+  max-height: calc(100dvh - 32px) !important;
+  overflow-y: auto !important;
+  overscroll-behavior: contain !important;
+  -webkit-overflow-scrolling: touch;
+}
+
+.modal-body,
+.modal-content {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* ── Page-behind scroll lock ──
+   The dashboard scrolls inside `.main-content` (body is already
+   overflow: hidden). While at least one modal is open the page behind it
+   must not scroll: `src/lib/modal.ts` toggles `.modal-open` on
+   <body>/<html> whenever an overlay is shown or hidden. */
+body.modal-open,
+html.modal-open,
+body.modal-open #app,
+body.modal-open .dashboard-layout {
+  overflow: hidden;
+}
+
+body.modal-open .main-content,
+body.modal-open .sidebar {
+  overflow: hidden !important;
+}

@@ -313,3 +313,7 @@ document.body.addEventListener("drop", async (e) => {
 (window as unknown as Record<string, unknown>).checkExistingFiles = checkExistingFiles;
 (window as unknown as Record<string, unknown>).showUploadModal = showUploadModal;
 (window as unknown as Record<string, unknown>).showToast = showToast;
+
+// Shared modal behavior: internal scrolling + page scroll lock (src/lib/modal.ts).
+// Dynamic import: the helper only needs the DOM and must not delay first paint.
+void import("./lib/modal").then(({ initModalScrollLock }) => initModalScrollLock());
