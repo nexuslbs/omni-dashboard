@@ -700,14 +700,37 @@ describe("plugin boolean config truthiness (allow_omni_dir fix)", () => {
 
   it("plugin-config.ts renders boolean fields from configValueIsTrue + booleanStatusText", () => {
     assert.ok(
-      cfgSrc.includes("const isTrue = configValueIsTrue(value);"),
-      "checked state derives from configValueIsTrue(value)",
+      cfgSrc.includes("const effective = resolveConfigValue(field, value);"),
+      "the rendered value resolves an absent value to the schema default",
     );
     assert.ok(
-      cfgSrc.includes("${booleanStatusText(value)}"),
-      "side label text derives from booleanStatusText(value)",
+      cfgSrc.includes("const isTrue = configValueIsTrue(effective);"),
+      "checked state derives from configValueIsTrue(effective)",
+    );
+    assert.ok(
+      cfgSrc.includes("${booleanStatusText(effective)}"),
+      "side label text derives from booleanStatusText(effective)",
     );
     assert.ok(cfgSrc.includes("data-boolean-status"), "label span is marked for status sync");
+  });
+
+  it("an ABSENT boolean value falls back to the schema default (checked when true)", () => {
+    assert.ok(
+      cfgSrc.includes("export function resolveConfigValue("),
+      "resolveConfigValue is exported (shared by every boolean widget)",
+    );
+    assert.ok(
+      /export function resolveConfigValue\(field: ConfigField, value: unknown\): unknown \{[\s\S]*?value === undefined \|\| value === null \|\| value === ""/.test(
+        cfgSrc,
+      ),
+      "an absent value (undefined/null/empty) is detected",
+    );
+    assert.ok(
+      /return field\.default !== undefined && field\.default !== null \? field\.default : value;/.test(
+        cfgSrc,
+      ),
+      "absent value returns the schema default (default true => checkbox checked)",
+    );
   });
 
   it("plugin-config.ts exports the truthiness/status helpers", () => {

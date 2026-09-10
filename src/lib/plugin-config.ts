@@ -78,11 +78,17 @@ export function renderConfigField(
       break;
     }
     case "boolean": {
-      const isTrue = configValueIsTrue(value);
+      // An ABSENT value falls back to the field's schema default (see
+      // resolveConfigValue): a boolean whose schema default is true must
+      // render CHECKED, matching the effective value the plugin runs with.
+      // An explicit false still renders unchecked, and unchecking the box
+      // saves an explicit false (getCurrentConfig maps it to a real boolean).
+      const effective = resolveConfigValue(field, value);
+      const isTrue = configValueIsTrue(effective);
       inputHtml = `
         <label class="checkbox-label" style="display:flex;align-items:center;gap:0.5rem;cursor:pointer;">
           <input type="checkbox" id="${fieldId}" class="plugin-config-input" data-key="${escapeHtml(field.key)}" data-boolean-status-of="${fieldId}" ${isTrue ? "checked" : ""} />
-          <span id="${fieldId}-status" data-boolean-status>${booleanStatusText(value)}</span>
+          <span id="${fieldId}-status" data-boolean-status>${booleanStatusText(effective)}</span>
         </label>
       `;
       break;
@@ -335,6 +341,23 @@ export function renderBuiltinSection(items: string[], heading?: string): string 
 /**
  * Collect current form values from a plugin config form, matching save logic.
  */
+
+/**
+ * Resolve the value a config field is rendered from. An ABSENT value
+ * (undefined / null / "") means "use the schema default" everywhere in
+ * omniagent, so the dashboard must render that same effective value:
+ * without this, a boolean whose schema default is true (e.g. the telegram
+ * polling_enabled / parent_by_chat / first_last_only boxes) would render
+ * UNCHECKED while the plugin actually runs with the default applied. An
+ * explicit false is never treated as absent: it renders unchecked and
+ * persists as false.
+ */
+export function resolveConfigValue(field: ConfigField, value: unknown): unknown {
+  if (value === undefined || value === null || value === "") {
+    return field.default !== undefined && field.default !== null ? field.default : value;
+  }
+  return value;
+}
 
 /**
  * Interpret a plugin boolean config value as true. Accepts JSON booleans,
