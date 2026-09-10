@@ -101,6 +101,83 @@ async function loadScheduleSubtasks(scheduleId: string): Promise<void> {
   }
 }
 
+// --- Schedule run outcome ---
+// Action-mode runs return 202 + run_id immediately (the action can take
+// minutes); the terminal outcome is recorded in schedule_runs and is polled
+// here so the UI reports success/failure instead of hanging or staying silent.
+export interface ScheduleRun {
+  run_id: string;
+  task_key: string;
+  trigger: string;
+  status: string;
+  started_at: string | null;
+  finished_at: string | null;
+  exit_code: number | null;
+  output: string | null;
+  thread_id: number | null;
+  error: string | null;
+}
+
+export interface FireOutcomeUi {
+  runId: string | null;
+  threadId: number | null;
+  run: ScheduleRun | null;
+  timedOut: boolean;
+}
+
+/**
+ * Fire a schedule and wait for its recorded outcome.
+ * Agentic schedules return a thread_id synchronously; action schedules return
+ * 202 + run_id and are polled until the run record reaches a terminal status.
+ */
+export async function fireScheduleRun(
+  scheduleId: string,
+  force: boolean,
+  timeoutMs = 10 * 60 * 1000,
+): Promise<FireOutcomeUi> {
+  const res = await fetch(
+    `/api/schedule/${encodeURIComponent(scheduleId)}/run${force ? "?force=true" : ""}`,
+    { method: "POST", headers: { "Content-Type": "application/json" } },
+  );
+  if (!res.ok) throw new Error((await res.text()) || `HTTP ${res.status}`);
+  const data = await res.json();
+  const runId: string | null = data.run_id ?? null;
+  const threadId: number | null = data.thread_id ?? null;
+  if (!runId) return { runId: null, threadId, run: null, timedOut: false };
+
+  const deadline = Date.now() + timeoutMs;
+  while (Date.now() < deadline) {
+    await new Promise((r) => setTimeout(r, 2000));
+    const runs = await apiGet<{ rows: ScheduleRun[] }>(
+      `/schedule/${encodeURIComponent(scheduleId)}/runs?limit=10`,
+    ).catch(() => null);
+    const run = runs?.rows?.find((r) => r.run_id === runId) ?? null;
+    if (run && run.status !== "running") {
+      return { runId, threadId: run.thread_id ?? threadId, run, timedOut: false };
+    }
+  }
+  return { runId, threadId, run: null, timedOut: true };
+}
+
+/** Toast text + severity for a fired run. */
+export function runOutcomeMessage(o: FireOutcomeUi): { text: string; isError: boolean } {
+  const where = o.threadId != null ? ` - thread #${o.threadId}` : "";
+  if (o.run) {
+    if (o.run.status === "success") {
+      return { text: `Run succeeded (exit ${o.run.exit_code ?? 0})${where}`, isError: false };
+    }
+    const detail = o.run.error ? `: ${o.run.error.split("\n")[0].slice(0, 160)}` : "";
+    return { text: `Run FAILED (exit ${o.run.exit_code ?? 1})${detail}${where}`, isError: true };
+  }
+  if (o.timedOut && o.runId) {
+    return { text: `Run ${o.runId} still running - check run history`, isError: false };
+  }
+  return {
+    text: o.threadId != null ? `Job fired: thread #${o.threadId}` : "Job fired (no thread created)",
+    isError: false,
+  };
+}
+
 // ── Load schedule detail ──
 export async function loadScheduleDetail(cronId: string): Promise<any> {
   const el = document.getElementById("schedule-detail")!;
@@ -152,7 +229,18 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
           </div>
           <div style="margin-bottom:0.75rem;">
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Last Run</div>
-            <div style="color:var(--text-primary);">${formatDate(job.last_run)}</div>
+            <div style="color:var(--text-primary);">${formatDate(job.last_run_at ?? job.last_run)}</div>
+            ${
+              job.mode === "action" && job.last_run_status
+                ? `<div style="margin-top:0.25rem;"><span style="display:inline-block;padding:0.05rem 0.4rem;border-radius:4px;font-size:0.7rem;${
+                    job.last_run_status === "success"
+                      ? "background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;"
+                      : job.last_run_status === "running"
+                        ? "background:rgba(148,163,184,0.15);border:1px solid rgba(148,163,184,0.3);color:#94a3b8;"
+                        : "background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;"
+                  }">${escapeHtml(String(job.last_run_status))}${job.last_run_exit_code != null ? ` (exit ${job.last_run_exit_code})` : ""}</span></div>`
+                : ""
+            }
           </div>
           <div style="margin-bottom:0.75rem;">
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Next Run</div>
@@ -707,20 +795,12 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
     }
 
     try {
-      const runUrl = `/api/schedule/${encodeURIComponent(job.id)}/run${inactive ? "?force=true" : ""}`;
-      const res = await fetch(runUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-      });
-      if (!res.ok) {
-        const errData = await res.text();
-        throw new Error(errData);
-      }
-      const data = await res.json();
-      showToast(
-        data.thread_id != null ? `Job fired: thread #${data.thread_id}` : "Job fired (no thread created)",
-        "success",
-      );
+      const outcome = await fireScheduleRun(job.id, inactive);
+      const msg = runOutcomeMessage(outcome);
+      showToast(msg.text, msg.isError ? "error" : "success");
+      // Refresh so the recorded run status + exit code show up immediately.
+      const fresh = await loadScheduleDetail(cronId);
+      if (fresh) void loadScheduleThreads(fresh.id);
     } catch (err) {
       showToast("Failed: " + (err instanceof Error ? err.message : "Unknown"), "error");
     } finally {

@@ -4,7 +4,7 @@
  */
 import { apiGet } from "./api";
 import { escapeHtml, formatApiError } from "./helpers";
-import { formatDate } from "./schedule-detail";
+import { fireScheduleRun, formatDate, runOutcomeMessage } from "./schedule-detail";
 import { router } from "./router";
 import { showToast } from "./utils";
 
@@ -65,7 +65,17 @@ export async function loadCronJobs(
                 </td>
                 <td style="font-size:0.8rem;color:var(--text-muted);">${j.channel ? escapeHtml(String(j.channel)) : "-"}</td>
                 <td style="font-size:0.8rem;color:var(--text-muted);">${j.profile ? escapeHtml(j.profile) : "-"}</td>
-                <td style="font-size:0.8rem;color:var(--text-muted);">${formatDate(j.last_run)}</td>
+                <td style="font-size:0.8rem;color:var(--text-muted);">${formatDate(j.last_run_at ?? j.last_run)}${
+                  j.mode === "action" && j.last_run_status
+                    ? `<div style="margin-top:0.15rem;"><span style="display:inline-block;padding:0.05rem 0.35rem;border-radius:4px;font-size:0.68rem;${
+                        j.last_run_status === "success"
+                          ? "background:rgba(16,185,129,0.15);border:1px solid rgba(16,185,129,0.3);color:#10b981;"
+                          : j.last_run_status === "running"
+                            ? "background:rgba(148,163,184,0.15);border:1px solid rgba(148,163,184,0.3);color:#94a3b8;"
+                            : "background:rgba(239,68,68,0.15);border:1px solid rgba(239,68,68,0.3);color:#ef4444;"
+                      }">${escapeHtml(String(j.last_run_status))}</span></div>`
+                    : ""
+                }</td>
                 <td>
                   <span class="badge ${j.active ? "badge-success" : "badge-neutral"}" style="cursor:pointer;" title="Click to toggle">
                     ${j.active ? "Active" : "Inactive"}
@@ -148,20 +158,10 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
       }
 
       try {
-        const runUrl = `/api/schedule/${encodeURIComponent(cronId)}/run${inactive ? "?force=true" : ""}`;
-        const res = await fetch(runUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-        });
-        if (!res.ok) {
-          const errData = await res.text();
-          throw new Error(errData);
-        }
-        const data = await res.json();
-        showToast(
-          data.thread_id != null ? `Job fired: thread #${data.thread_id}` : `Job fired (no thread created)`,
-          "success",
-        );
+        const outcome = await fireScheduleRun(cronId, inactive);
+        const msg = runOutcomeMessage(outcome);
+        showToast(msg.text, msg.isError ? "error" : "success");
+        void loadCronJobs(activeOnly, onStateChange);
       } catch (e) {
         showToast("Failed: " + formatApiError(e), "error");
       } finally {
