@@ -3,6 +3,7 @@
  * Delegates to lib/channel-config.ts and lib/channel-status.ts.
  */
 import { apiGet, toCamelCase, type ChannelData, type PluginData } from "../lib/api";
+import { allSettledOrNull } from "../lib/parallel";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 import { escapeHtml, fixMissingSelectOptions, formatApiError, getDefaultProfile } from "../lib/helpers";
 import { showChannelsImportModal } from "../lib/config-import";
@@ -74,17 +75,22 @@ async function loadChannels(): Promise<void> {
   const content = document.getElementById("channels-content")!;
   content.innerHTML = '<div class="loading">Loading channels...</div>';
   try {
-    const channels = await apiGet<ChannelData[]>("/channels");
-    try {
-      const p = (await apiGet("/profiles")) as Record<string, unknown>[];
-      _profiles.length = 0;
-      _profiles.push(...(p as any));
-    } catch {
-      _profiles.length = 0;
-    }
+    // /channels, /profiles, /plugins, /templates and /settings are INDEPENDENT:
+    // they are started in the SAME tick (allSettledOrNull) so the page pays the
+    // MAX call instead of the sum of five sequential round trips.
+    const [channels, profilesRes, pluginsRes, templatesRes, defaultProfileRes] = await allSettledOrNull([
+      apiGet<ChannelData[]>("/channels"),
+      apiGet("/profiles"),
+      apiGet<any>("/plugins"),
+      apiGet<any[]>("/templates"),
+      getDefaultProfile(),
+    ]);
+    if (!channels) throw new Error("Failed to load channels");
+    _profiles.length = 0;
+    if (Array.isArray(profilesRes)) _profiles.push(...(profilesRes as any));
     // Load provider names and their model lists
-    try {
-      const pluginResp = await apiGet<any>("/plugins");
+    if (pluginsRes) {
+      const pluginResp = pluginsRes;
       const allPlugins: PluginData[] = (pluginResp.data || pluginResp).map((p: Record<string, any>) =>
         toCamelCase<PluginData>(p),
       );
@@ -116,7 +122,7 @@ async function loadChannels(): Promise<void> {
       }
       Object.keys(_providerModels).forEach((k) => delete _providerModels[k]);
       Object.assign(_providerModels, modelMap);
-    } catch {
+    } else {
       _providers.length = 0;
       Object.keys(_providerModels).forEach((k) => delete _providerModels[k]);
     }
@@ -146,16 +152,10 @@ async function loadChannels(): Promise<void> {
     enhanceSelect("filter-platform");
     enhanceSelect("filter-channel-status");
 
-    // Load templates for template select
-    try {
-      const t = await apiGet<any[]>("/templates");
-      _templates.length = 0;
-      _templates.push(...t);
-    } catch {
-      _templates.length = 0;
-    }
+    _templates.length = 0;
+    if (Array.isArray(templatesRes)) _templates.push(...templatesRes);
 
-    const defaultProfile = await getDefaultProfile();
+    const defaultProfile = defaultProfileRes ?? (await getDefaultProfile());
     content.innerHTML = renderChannelsPage(channels, defaultProfile);
     wireChannels();
     // Enhance channel card selects

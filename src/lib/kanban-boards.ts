@@ -185,25 +185,19 @@ export async function openBoardModal(
   const existing = boards.find((b) => b.key === boardKey);
   const b = existing?.board ?? {};
   // Workflow options come from workflows.yml; empty file ⇒ single "(none)" option.
-  const workflows = await fetchWorkflows();
-  let channels: unknown[] = [];
-  let profiles: { name: string }[] = [];
-  let templates: { name: string }[] = [];
-  try {
-    channels = await apiGet<unknown[]>("/channels");
-  } catch {
-    /* ok */
-  }
-  try {
-    profiles = await apiGet<{ name: string }[]>("/profiles");
-  } catch {
-    /* ok */
-  }
-  try {
-    templates = await apiGet<{ name: string }[]>("/templates");
-  } catch {
-    /* ok */
-  }
+  // The four option sources are INDEPENDENT (no data dependency between them):
+  // start them all in the same tick so the modal pays max(call) instead of
+  // sum(call). Workflows keeps its original error semantics (a rejection still
+  // fails the open); the other three keep their per-source fallback.
+  const [workflows, channelsRes, profilesRes, templatesRes] = await Promise.all([
+    fetchWorkflows(),
+    apiGet<unknown[]>("/channels").catch(() => null),
+    apiGet<{ name: string }[]>("/profiles").catch(() => null),
+    apiGet<{ name: string }[]>("/templates").catch(() => null),
+  ]);
+  const channels: unknown[] = channelsRes || [];
+  const profiles: { name: string }[] = profilesRes || [];
+  const templates: { name: string }[] = templatesRes || [];
   const modal = document.createElement("div");
   modal.id = "board-modal";
   modal.style.cssText =

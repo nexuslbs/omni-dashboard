@@ -3,6 +3,7 @@ import { apiGet, apiPost } from "../lib/api";
 import { enhanceSelect, unenhanceSelect } from "../lib/dropdown";
 import { escapeHtml, formatApiError } from "../lib/helpers";
 import type { PluginBase, ProfileData } from "../lib/types";
+import { allSettledOrNull } from "../lib/parallel";
 
 // ── Cached provider/model data ──
 let _providers: string[] = [];
@@ -29,21 +30,22 @@ export function renderProfiles(container: HTMLElement): void {
 async function loadProfiles(): Promise<void> {
   const content = document.getElementById("profiles-content")!;
   try {
+    // /fs/config, /profiles and /plugins are INDEPENDENT: they are started in
+    // the SAME tick (allSettledOrNull) so the page pays the MAX call instead of
+    // the sum of three sequential round trips.
+    const [fsConfig, profilesRes, pluginResp] = await allSettledOrNull([
+      _explorerPrefix ? Promise.resolve(null) : apiGet<{ root: string; omniDir: string }>("/fs/config"),
+      apiGet<ProfileData[]>("/profiles"),
+      apiGet<{ data: PluginBase[] }>("/plugins"),
+    ]);
     // Load filesystem config to compute explorer URL prefix
-    if (!_explorerPrefix) {
-      try {
-        const fsConfig = await apiGet<{ root: string; omniDir: string }>("/fs/config");
-        if (fsConfig.omniDir.startsWith(fsConfig.root)) {
-          _explorerPrefix = fsConfig.omniDir.slice(fsConfig.root.length);
-        }
-      } catch {
-        /* keep default empty prefix */
-      }
+    if (fsConfig && fsConfig.omniDir.startsWith(fsConfig.root)) {
+      _explorerPrefix = fsConfig.omniDir.slice(fsConfig.root.length);
     }
-    const profiles = await apiGet<ProfileData[]>("/profiles");
+    if (!profilesRes) throw new Error("Failed to load profiles");
+    const profiles = profilesRes;
     // Load provider names and their model lists (same pattern as channels)
-    try {
-      const pluginResp = await apiGet<{ data: PluginBase[] }>("/plugins");
+    if (pluginResp) {
       const rawPlugins: Record<string, any>[] = ((pluginResp as any).data || pluginResp || []).map(
         (p: Record<string, any>) => {
           const r: Record<string, unknown> = {};
@@ -77,7 +79,7 @@ async function loadProfiles(): Promise<void> {
         }
       }
       _providerModels = modelMap;
-    } catch {
+    } else {
       _providers = [];
       _providerModels = {};
     }
@@ -421,7 +423,9 @@ function wireProfiles(): void {
       const field = btn.getAttribute("data-field");
       if (!profileName || !field) return;
       const input = document.querySelector(`[data-profile-name="${profileName}"][data-field="${field}"]`) as
-        HTMLSelectElement | HTMLInputElement | null;
+        | HTMLSelectElement
+        | HTMLInputElement
+        | null;
       if (!input) return;
       const value = input.value;
       const body: Record<string, string> = {};
@@ -456,7 +460,9 @@ function wireProfiles(): void {
       const field = btn.getAttribute("data-field");
       if (!profileName || !field) return;
       const input = document.querySelector(`[data-profile-name="${profileName}"][data-field="${field}"]`) as
-        HTMLSelectElement | HTMLInputElement | null;
+        | HTMLSelectElement
+        | HTMLInputElement
+        | null;
       if (!input) return;
       input.value = input.getAttribute("data-original") || "";
       (btn as HTMLElement).style.display = "none";

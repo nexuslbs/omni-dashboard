@@ -1,4 +1,5 @@
 import { showToast } from "../lib/utils";
+import { allSettledOrNull } from "../lib/parallel";
 import {
   apiGet,
   toCamelCase,
@@ -62,16 +63,22 @@ const _actions: { id: string; name: string }[] = [];
 
 // ── Data loading ──
 
-async function loadWorkflowData(): Promise<void> {
-  try {
-    const p = (await apiGet("/profiles")) as Record<string, unknown>[];
-    _profiles.length = 0;
-    _profiles.push(...(p as never[]));
-  } catch {
-    _profiles.length = 0;
-  }
-  try {
-    const pluginResp = await apiGet<any>("/plugins");
+// /profiles, /plugins, /templates, /actions and /settings are INDEPENDENT:
+// they are started in the SAME tick (allSettledOrNull) so the page pays the MAX
+// call instead of the sum of five sequential round trips. Failures keep the
+// previous behaviour (null result + empty fallback for that source).
+export async function loadWorkflowData(): Promise<void> {
+  const [profilesRes, pluginsRes, templatesRes, actionsRes, defaultProfileRes] = await allSettledOrNull([
+    apiGet("/profiles"),
+    apiGet<any>("/plugins"),
+    apiGet<{ profile: string; name: string; label: string }[]>("/templates"),
+    apiGet<{ id: string; name: string }[]>("/actions"),
+    getDefaultProfile(),
+  ]);
+  _profiles.length = 0;
+  if (Array.isArray(profilesRes)) _profiles.push(...(profilesRes as never[]));
+  if (pluginsRes) {
+    const pluginResp = pluginsRes;
     const allPlugins: PluginData[] = (pluginResp.data || pluginResp).map((p: Record<string, unknown>) =>
       toCamelCase<PluginData>(p),
     );
@@ -99,25 +106,15 @@ async function loadWorkflowData(): Promise<void> {
     }
     Object.keys(_providerModels).forEach((k) => delete _providerModels[k]);
     Object.assign(_providerModels, modelMap);
-  } catch {
+  } else {
     _providers.length = 0;
     Object.keys(_providerModels).forEach((k) => delete _providerModels[k]);
   }
-  try {
-    const t = await apiGet<{ profile: string; name: string; label: string }[]>("/templates");
-    _templates.length = 0;
-    _templates.push(...t);
-  } catch {
-    _templates.length = 0;
-  }
-  try {
-    const a = await apiGet<{ id: string; name: string }[]>("/actions");
-    _actions.length = 0;
-    _actions.push(...a);
-  } catch {
-    _actions.length = 0;
-  }
-  _defaultProfile = await getDefaultProfile();
+  _templates.length = 0;
+  if (Array.isArray(templatesRes)) _templates.push(...templatesRes);
+  _actions.length = 0;
+  if (Array.isArray(actionsRes)) _actions.push(...actionsRes);
+  if (defaultProfileRes) _defaultProfile = defaultProfileRes;
 }
 
 // ── List ──
@@ -126,8 +123,10 @@ async function loadWorkflows(): Promise<void> {
   const content = document.getElementById("workflows-content");
   if (!content) return;
   try {
-    currentWorkflows = await fetchWorkflows();
-    await loadWorkflowData();
+    // The workflow list and the option sources are independent: start both now
+    // (page pays max, not sum) instead of awaiting them one after the other.
+    const [workflows] = await Promise.all([fetchWorkflows(), loadWorkflowData()]);
+    currentWorkflows = workflows;
     content.innerHTML = renderWorkflowList(currentWorkflows);
     wireListActions(content);
   } catch (e) {
