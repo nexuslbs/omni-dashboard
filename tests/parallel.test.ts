@@ -55,8 +55,7 @@ describe("allSettledOrNull", () => {
 // other; they must hand every source to a SINGLE allSettledOrNull call so the
 // requests are started in the same tick (page load = max, not sum).
 describe("page loaders parallelize independent API calls", () => {
-  const read = (rel: string) =>
-    readFileSync(new URL(`../src/pages/${rel}`, import.meta.url), "utf8");
+  const read = (rel: string) => readFileSync(new URL(`../src/pages/${rel}`, import.meta.url), "utf8");
 
   function parallelCallBody(src: string): string {
     const start = src.indexOf("allSettledOrNull([");
@@ -78,5 +77,19 @@ describe("page loaders parallelize independent API calls", () => {
       assert.ok(body.includes(`"${path}"`), `channels loader must batch ${path}`);
     }
     assert.ok(body.includes("getDefaultProfile()"), "channels loader must batch /settings");
+  });
+});
+
+// The memory page issues profile select, channel select and the three data
+// blocks on initial load; none depends on another, so they must all be started
+// in the same tick (page load = max, not sum).
+describe("memory page load parallelizes independent API calls", () => {
+  it("batches /profiles, /channels and the data blocks in one Promise.all", () => {
+    const src = readFileSync(new URL("../src/pages/memory.ts", import.meta.url), "utf8");
+    assert.match(
+      src,
+      /await Promise\.all\(\[loadProfileSelect\(\), loadChannelSelect\(\), loadAllBlocks\(\)\]\)/,
+      "memory initial load must batch the three independent loaders",
+    );
   });
 });

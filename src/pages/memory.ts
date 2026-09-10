@@ -104,11 +104,10 @@ export async function renderMemory(container: HTMLElement): Promise<void> {
     </div>
   `;
 
-  // Load profile select
-  await loadProfileSelect();
-
-  // Load channel select
-  await loadChannelSelect();
+  // Initial load: profile select, channel select and the three data blocks
+  // are INDEPENDENT requests (distinct DOM targets, no shared state), so they
+  // are issued concurrently instead of one-after-another.
+  await Promise.all([loadProfileSelect(), loadChannelSelect(), loadAllBlocks()]);
 
   // Enhance dropdowns
   enhanceSelect("mem-profile-select");
@@ -158,8 +157,7 @@ export async function renderMemory(container: HTMLElement): Promise<void> {
     wikiDebounce = setTimeout(() => searchWiki(val), 350);
   });
 
-  // Initial load
-  await loadAllBlocks();
+  // (data blocks were loaded above, concurrently)
 }
 
 // ── Profile select ──
