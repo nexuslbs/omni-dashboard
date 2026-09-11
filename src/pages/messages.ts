@@ -13,6 +13,7 @@ interface FilterState {
   types: string[];
   subtype: string;
   seq0: boolean;
+  last: boolean;
 }
 
 let currentFilters: FilterState = {
@@ -24,6 +25,7 @@ let currentFilters: FilterState = {
   types: [],
   subtype: "",
   seq0: false,
+  last: false,
 };
 
 let allFilters: MessagesFilters | null = null;
@@ -48,6 +50,7 @@ function syncFiltersToUrl(): void {
   }
   if (currentFilters.subtype) params.set("subtype", currentFilters.subtype);
   if (currentFilters.seq0) params.set("seq0", "true");
+  if (currentFilters.last) params.set("last", "true");
   if (currentOffset > 0) params.set("offset", String(currentOffset));
   if (orderBy !== "desc") params.set("order", orderBy);
   const qs = params.toString();
@@ -73,6 +76,8 @@ function applyFiltersFromUrl(): void {
   if (subtype) currentFilters.subtype = subtype;
   const seq0 = p.get("seq0");
   if (seq0 === "true") currentFilters.seq0 = true;
+  const last = p.get("last");
+  if (last === "true") currentFilters.last = true;
   const offset = p.get("offset");
   if (offset) currentOffset = parseInt(offset, 10) || 0;
   const order = p.get("order");
@@ -118,6 +123,13 @@ export function renderMessages(container: HTMLElement): void {
         <label class="filter-checkbox-label">
           <input type="checkbox" id="filter-seq0" />
           <span>Seq-0 only</span>
+        </label>
+      </div>
+      <div class="filter-section">
+        <label class="filter-label">Last</label>
+        <label class="filter-checkbox-label">
+          <input type="checkbox" id="filter-last" />
+          <span>Last only</span>
         </label>
       </div>
       <div class="filter-section">
@@ -173,6 +185,7 @@ export function renderMessages(container: HTMLElement): void {
     types: [],
     subtype: "",
     seq0: false,
+    last: false,
   };
   currentOffset = 0;
   orderBy = "desc";
@@ -332,11 +345,32 @@ function wireFilterEvents(): void {
     }, 300);
   });
 
-  // Seq-0 only checkbox
+  // Seq-0 only checkbox (first message of each thread)
   const seq0Checkbox = document.getElementById("filter-seq0") as HTMLInputElement;
   if (seq0Checkbox) {
     seq0Checkbox.addEventListener("change", () => {
       currentFilters.seq0 = seq0Checkbox.checked;
+      // The first and the last message of a thread are mutually exclusive
+      // in the API, so enabling this one clears the other.
+      if (currentFilters.seq0) {
+        currentFilters.last = false;
+        const lastBox = document.getElementById("filter-last") as HTMLInputElement | null;
+        if (lastBox) lastBox.checked = false;
+      }
+      currentOffset = 0;
+      void loadMessages();
+    });
+  }
+
+  // Last-only checkbox (last message of each thread, inverse of seq0)
+  const lastCheckbox = document.getElementById("filter-last") as HTMLInputElement;
+  if (lastCheckbox) {
+    lastCheckbox.addEventListener("change", () => {
+      currentFilters.last = lastCheckbox.checked;
+      if (currentFilters.last) {
+        currentFilters.seq0 = false;
+        if (seq0Checkbox) seq0Checkbox.checked = false;
+      }
       currentOffset = 0;
       void loadMessages();
     });
@@ -358,6 +392,7 @@ function wireFilterEvents(): void {
       types: [],
       subtype: "",
       seq0: false,
+      last: false,
     };
     currentOffset = 0;
     syncFilterStateToControls();
@@ -417,6 +452,9 @@ function syncFilterStateToControls(): void {
   const seq0Checkbox = document.getElementById("filter-seq0") as HTMLInputElement | null;
   if (seq0Checkbox) seq0Checkbox.checked = currentFilters.seq0;
 
+  const lastCheckbox = document.getElementById("filter-last") as HTMLInputElement | null;
+  if (lastCheckbox) lastCheckbox.checked = currentFilters.last;
+
   // Sync subtype input
   const subtypeInput = document.getElementById("filter-subtype") as HTMLInputElement | null;
   if (subtypeInput) subtypeInput.value = currentFilters.subtype;
@@ -470,6 +508,7 @@ async function loadMessages(): Promise<void> {
     }
     if (currentFilters.subtype) params.set("subtype", currentFilters.subtype);
     if (currentFilters.seq0) params.set("seq0", "true");
+    if (currentFilters.last) params.set("last", "true");
     params.set("order", orderBy);
     const data = await apiGet<MessagesResponse>(`/messages/events?${params.toString()}`);
 
