@@ -60,6 +60,10 @@ let currentWorkflows: WorkflowEntry[] = [];
 let editingKey: string | null = null;
 let _defaultProfile = "omni";
 const _actions: { id: string; name: string }[] = [];
+// Tool catalogue + toolset (server_name) map for the per-role allowed_tools
+// selector, loaded from /profiles (same source the profiles page uses).
+let _wfAllTools: string[] = [];
+let _wfToolServerMap: Record<string, string> = {};
 
 // ── Data loading ──
 
@@ -77,6 +81,23 @@ export async function loadWorkflowData(): Promise<void> {
   ]);
   _profiles.length = 0;
   if (Array.isArray(profilesRes)) _profiles.push(...(profilesRes as never[]));
+  // Tool catalogue for the per-role allowed_tools selector: every /profiles
+  // entry carries all_tools + all_tool_details (name + server_name).
+  _wfAllTools = [];
+  _wfToolServerMap = {};
+  if (Array.isArray(profilesRes)) {
+    const tools = new Set<string>();
+    for (const p of profilesRes as Array<Record<string, unknown>>) {
+      const list = (p?.all_tools as string[] | undefined) ?? [];
+      for (const t of list) tools.add(t);
+      const details =
+        (p?.all_tool_details as Array<{ name?: string; server_name?: string | null }> | undefined) ?? [];
+      for (const d of details) {
+        if (d?.name) _wfToolServerMap[d.name] = d.server_name || "builtin";
+      }
+    }
+    _wfAllTools = [...tools].sort();
+  }
   if (pluginsRes) {
     const pluginResp = pluginsRes;
     const allPlugins: PluginData[] = (pluginResp.data || pluginResp).map((p: Record<string, unknown>) =>
@@ -183,6 +204,7 @@ function renderWorkflowCard(entry: WorkflowEntry): string {
       cfg.model ? `model ${escapeHtml(cfg.model)}` : null,
       cfg.retries !== undefined && cfg.retries !== null ? `retries ${cfg.retries}` : null,
       cfg.plan_mode ? `plan_mode ${escapeHtml(cfg.plan_mode)}` : null,
+      Array.isArray(cfg.allowed_tools) ? `allowed_tools ${cfg.allowed_tools.length}` : null,
     ]
       .filter(Boolean)
       .join(" · ");
@@ -478,6 +500,7 @@ function renderForm(key: string, wf: Workflow, roles: Record<string, WorkflowRol
             </select>
           </label>
         </div>
+        ${renderRoleTools(role, cfg.allowed_tools === undefined ? null : cfg.allowed_tools)}
       </details>`;
   }).join("");
 
@@ -646,7 +669,175 @@ function wireFormEvents(): void {
     }
   });
 
+  // ── Per-role allowed_tools (tri-state: all tools / explicit list) ──
+  document.querySelectorAll<HTMLInputElement>(".wf-role-all-cb").forEach((cb) => {
+    cb.addEventListener("change", () => setRoleAllTools(cb.dataset.role || "", cb.checked));
+  });
+  document.querySelectorAll<HTMLInputElement>(".wf-role-tool-cb").forEach((cb) => {
+    cb.addEventListener("change", () => {
+      const role = cb.dataset.role || "";
+      updateRoleToolChips(role);
+      refreshRoleToolsetChips(role);
+      updateRoleToolsSummary(role);
+    });
+  });
+  document.querySelectorAll<HTMLElement>(".wf-role-toolset-chip").forEach((chip) => {
+    chip.addEventListener("click", () => {
+      const role = chip.dataset.role || "";
+      const toolset = chip.dataset.toolset || "";
+      const state = chip.getAttribute("data-state");
+      if (!role || !toolset) return;
+      // Narrowing a toolset turns the explicit list on ("all tools" off).
+      if (roleAllTools(role)) setRoleAllTools(role, false);
+      document.querySelectorAll<HTMLInputElement>(`.wf-role-tool-cb[data-role="${role}"]`).forEach((cb) => {
+        if (wfToolsetOf(cb.value) === toolset) cb.checked = state === "none";
+      });
+      updateRoleToolChips(role);
+      refreshRoleToolsetChips(role);
+      updateRoleToolsSummary(role);
+    });
+  });
+
   for (const role of ROLE_KEYS) applyRoleMode(role);
+}
+
+// ── Per-role allowed_tools selector ──
+
+function wfToolsetOf(tool: string): string {
+  return _wfToolServerMap[tool] || "builtin";
+}
+
+function wfToolsetChipStyle(state: "full" | "partial" | "none"): string {
+  switch (state) {
+    case "full":
+      return "background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.35);color:var(--accent-purple);";
+    case "partial":
+      return "background:rgba(234,179,8,0.12);border:1px solid rgba(234,179,8,0.35);color:#eab308;";
+    default:
+      return "background:rgba(148,163,184,0.08);border:1px solid rgba(148,163,184,0.2);color:var(--text-muted);";
+  }
+}
+
+function wfComputeToolsetStates(
+  selected: string[],
+  allTools: string[],
+): Record<string, "full" | "partial" | "none"> {
+  const sets: Record<string, { total: number; allowed: number }> = {};
+  for (const t of allTools) {
+    const s = wfToolsetOf(t);
+    if (!sets[s]) sets[s] = { total: 0, allowed: 0 };
+    sets[s].total++;
+    if (selected.includes(t)) sets[s].allowed++;
+  }
+  const result: Record<string, "full" | "partial" | "none"> = {};
+  for (const [s, v] of Object.entries(sets)) {
+    if (v.allowed === 0) result[s] = "none";
+    else if (v.allowed === v.total) result[s] = "full";
+    else result[s] = "partial";
+  }
+  return result;
+}
+
+/** Role tool selector: tri-state (all tools / explicit list, possibly empty). */
+function renderRoleTools(role: string, selected: string[] | null): string {
+  const allMode = selected === null;
+  const effective = selected ?? _wfAllTools;
+  const states = wfComputeToolsetStates(effective, _wfAllTools);
+  const toolsetChips = Object.keys(states)
+    .sort()
+    .map(
+      (ts) =>
+        `<span class="toolset-chip wf-role-toolset-chip" data-role="${role}" data-toolset="${escapeHtml(ts)}" data-state="${states[ts]}" style="${wfToolsetChipStyle(states[ts])}">${escapeHtml(ts)}</span>`,
+    )
+    .join("");
+  const toolChips = [..._wfAllTools]
+    .sort()
+    .map(
+      (tool) =>
+        `<label class="tool-chip ${effective.includes(tool) ? "tool-chip-active" : ""}" data-tool="${escapeHtml(tool)}">
+          <input type="checkbox" class="tool-chip-cb wf-role-tool-cb" value="${escapeHtml(tool)}" data-role="${role}" ${effective.includes(tool) ? "checked" : ""} ${allMode ? "disabled" : ""} />
+          ${escapeHtml(tool)}
+        </label>`,
+    )
+    .join("");
+  return `
+    <div style="margin-top:.6rem;border-top:1px dashed rgba(255,255,255,.12);padding-top:.5rem;">
+      <label style="display:flex;align-items:center;gap:.4rem;font-size:.85rem;color:#99a;">
+        <input type="checkbox" class="wf-role-all-cb" data-role="${role}" ${allMode ? "checked" : ""} />
+        <span>Allowed tools: <strong>${allMode ? "all tools (no restriction)" : `${effective.length} selected`}</strong></span>
+      </label>
+      <div class="db-hint" style="margin:.2rem 0 .4rem;">Uncheck to restrict the role: the agent then gets these tools intersected with its profile tools. Nothing checked = NO tools for this role.</div>
+      <div class="toolset-chip-group" data-role="${role}">${toolsetChips}</div>
+      <div class="tool-chip-group wf-role-tool-group" data-role="${role}" data-all-mode="${allMode ? "1" : "0"}" style="margin-top:.4rem;">${toolChips}</div>
+    </div>`;
+}
+
+function roleToolGroup(role: string): HTMLElement | null {
+  return document.querySelector<HTMLElement>(`.wf-role-tool-group[data-role="${role}"]`);
+}
+
+function roleAllTools(role: string): boolean {
+  return roleToolGroup(role)?.getAttribute("data-all-mode") === "1";
+}
+
+function setRoleAllTools(role: string, on: boolean): void {
+  const group = roleToolGroup(role);
+  if (!group) return;
+  group.setAttribute("data-all-mode", on ? "1" : "0");
+  group.querySelectorAll<HTMLInputElement>(".wf-role-tool-cb").forEach((cb) => {
+    if (on) cb.checked = true;
+    cb.disabled = on;
+  });
+  const box = document.querySelector<HTMLInputElement>(`.wf-role-all-cb[data-role="${role}"]`);
+  if (box) box.checked = on;
+  updateRoleToolChips(role);
+  refreshRoleToolsetChips(role);
+  updateRoleToolsSummary(role);
+}
+
+function updateRoleToolChips(role: string): void {
+  const group = roleToolGroup(role);
+  if (!group) return;
+  group.querySelectorAll<HTMLElement>(".tool-chip").forEach((chip) => {
+    const cb = chip.querySelector<HTMLInputElement>(".wf-role-tool-cb");
+    if (cb) chip.classList.toggle("tool-chip-active", cb.checked);
+  });
+}
+
+function refreshRoleToolsetChips(role: string): void {
+  const group = roleToolGroup(role);
+  const container = document.querySelector<HTMLElement>(`.toolset-chip-group[data-role="${role}"]`);
+  if (!group || !container) return;
+  const selected: string[] = [];
+  const allTools: string[] = [];
+  group.querySelectorAll<HTMLInputElement>(".wf-role-tool-cb").forEach((cb) => {
+    allTools.push(cb.value);
+    if (cb.checked) selected.push(cb.value);
+  });
+  const states = wfComputeToolsetStates(selected, allTools);
+  container.querySelectorAll<HTMLElement>(".toolset-chip").forEach((chip) => {
+    const ts = chip.getAttribute("data-toolset");
+    if (!ts || !states[ts]) return;
+    chip.setAttribute("data-state", states[ts]);
+    chip.setAttribute("style", wfToolsetChipStyle(states[ts]));
+  });
+}
+
+function updateRoleToolsSummary(role: string): void {
+  const box = document.querySelector<HTMLInputElement>(`.wf-role-all-cb[data-role="${role}"]`);
+  const strong = box?.parentElement?.querySelector("strong");
+  if (!strong) return;
+  const all = roleAllTools(role);
+  const selected = document.querySelectorAll(`.wf-role-tool-cb[data-role="${role}"]:checked`).length;
+  strong.textContent = all ? "all tools (no restriction)" : `${selected} selected`;
+}
+
+function collectRoleTools(role: string): string[] {
+  const out: string[] = [];
+  document
+    .querySelectorAll<HTMLInputElement>(`.wf-role-tool-cb[data-role="${role}"]:checked`)
+    .forEach((cb) => out.push(cb.value));
+  return out;
 }
 
 // ── Collect & save ──
@@ -690,6 +881,14 @@ function collectRole(role: string): WorkflowRoleConfig {
     if (!Number.isNaN(n)) cfg.retries = n;
   }
   if (planMode) cfg.plan_mode = planMode;
+  // Tri-state role allow-list: "all tools" on = undefined (no restriction);
+  // off = explicit list (possibly empty = no tools for this role).
+  if (!roleAllTools(role)) {
+    const group = roleToolGroup(role);
+    const hasChips = !!group && group.querySelectorAll(".wf-role-tool-cb").length > 0;
+    // No catalogue loaded: keep the role unrestricted instead of wiping it to [].
+    cfg.allowed_tools = hasChips ? collectRoleTools(role) : null;
+  }
   return cfg;
 }
 
@@ -702,7 +901,8 @@ function isEmptyRole(cfg: WorkflowRoleConfig): boolean {
     cfg.retries === undefined &&
     !cfg.plan_mode &&
     !cfg.mode &&
-    !cfg.action_id
+    !cfg.action_id &&
+    (cfg.allowed_tools === undefined || cfg.allowed_tools === null || cfg.allowed_tools.length === 0)
   );
 }
 

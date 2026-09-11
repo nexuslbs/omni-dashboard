@@ -142,13 +142,13 @@ function renderProfilesPage(profiles: ProfileData[]): string {
         <div class="setting-row">
           <div class="setting-controls" style="max-width:none;">
             <div class="setting-name">Allowed Toolsets</div>
-            ${renderToolsetSelect(p.name, p.allowed_tools || [], p.all_tools || [])}
+            ${renderToolsetSelect(p.name, p.allowed_tools ?? null, p.all_tools || [])}
           </div>
         </div>
         <div class="setting-row">
           <div class="setting-controls" style="max-width:none;">
             <div class="setting-name">Allowed Tools</div>
-            ${renderToolSelect(p.name, p.allowed_tools || [], p.all_tools || [])}
+            ${renderToolSelect(p.name, p.allowed_tools ?? null, p.all_tools || [])}
           </div>
         </div>
         <div class="setting-row">
@@ -297,8 +297,10 @@ function computeToolsetStates(
   return result;
 }
 
-function renderToolsetSelect(profileName: string, selected: string[], allTools: string[]): string {
-  const states = computeToolsetStates(selected, allTools);
+function renderToolsetSelect(profileName: string, selected: string[] | null, allTools: string[]): string {
+  // `null` = no allow-list restriction (all tools): every toolset chip is "full".
+  const effective = selected ?? allTools;
+  const states = computeToolsetStates(effective, allTools);
   const toolsetNames = Object.keys(states).sort();
   const chips = toolsetNames
     .map(
@@ -310,16 +312,21 @@ function renderToolsetSelect(profileName: string, selected: string[], allTools: 
   return `<div class="toolset-chip-group" id="prof-toolsets-${escapeHtml(profileName)}" data-profile-name="${escapeHtml(profileName)}">${chips}</div>`;
 }
 
-function renderToolSelect(profileName: string, selected: string[], allTools: string[]): string {
+function renderToolSelect(profileName: string, selected: string[] | null, allTools: string[]): string {
   const id = `prof-tools-${escapeHtml(profileName)}`;
+  // `null` = no allow-list restriction (all tools). The states MUST stay
+  // distinguishable: `null` renders every tool checked AND remembers the
+  // "all tools" mode (data-all-mode="1"); `[]` renders everything unchecked.
+  const allMode = selected === null;
+  const effective = selected ?? allTools;
   const chips = [...allTools]
     .sort()
     .map(
       (tool) =>
-        `<label class="tool-chip ${selected.includes(tool) ? "tool-chip-active" : ""}" data-tool="${escapeHtml(tool)}">
+        `<label class="tool-chip ${effective.includes(tool) ? "tool-chip-active" : ""}" data-tool="${escapeHtml(tool)}">
         <input type="checkbox" class="tool-chip-cb" value="${escapeHtml(tool)}"
           data-profile-name="${escapeHtml(profileName)}"
-          ${selected.includes(tool) ? "checked" : ""} />
+          ${effective.includes(tool) ? "checked" : ""} ${allMode ? "disabled" : ""} />
         ${escapeHtml(tool)}
       </label>`,
     )
@@ -327,7 +334,11 @@ function renderToolSelect(profileName: string, selected: string[], allTools: str
 
   return `
     <div style="display:flex;flex-direction:column;gap:0.5rem;width:100%;">
-      <div class="tool-chip-group" id="${id}" data-profile-name="${escapeHtml(profileName)}">
+      <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;color:#99a;">
+        <input type="checkbox" class="prof-all-tools-cb" data-profile-name="${escapeHtml(profileName)}" ${allMode ? "checked" : ""} />
+        All tools (no allow-list restriction)
+      </label>
+      <div class="tool-chip-group" id="${id}" data-profile-name="${escapeHtml(profileName)}" data-all-mode="${allMode ? "1" : "0"}">
         ${chips}
       </div>
     </div>
@@ -484,6 +495,18 @@ function wireProfiles(): void {
     });
   });
 
+  // ── "All tools" tri-state checkbox: checked = `allowed_tools` undefined in
+  // profiles.yml (no restriction); unchecking stores an explicit list so
+  // `undefined` (all) and `[]` (none) stay distinguishable. ──
+  document.querySelectorAll(".prof-all-tools-cb").forEach((cb) => {
+    cb.addEventListener("change", () => {
+      const profileName = cb.getAttribute("data-profile-name");
+      if (!profileName) return;
+      setProfileAllMode(profileName, (cb as HTMLInputElement).checked);
+      void saveTools(profileName);
+    });
+  });
+
   // ── Toolset chips (click to toggle all tools in a toolset, auto-save) ──
   document.querySelectorAll(".toolset-chip").forEach((chip) => {
     chip.addEventListener("click", () => {
@@ -491,6 +514,8 @@ function wireProfiles(): void {
       const toolset = chip.getAttribute("data-toolset");
       const currentState = chip.getAttribute("data-state") as "full" | "partial" | "none" | null;
       if (!profileName || !toolset) return;
+      // Narrowing a toolset turns the explicit list on ("All tools" off).
+      if (profileAllMode(profileName)) setProfileAllMode(profileName, false);
       const allCbs = document.querySelectorAll(
         `.tool-chip-cb[data-profile-name="${profileName}"]`,
       ) as NodeListOf<HTMLInputElement>;
@@ -788,6 +813,30 @@ function showCreateProfileModal(): void {
 
 // ── Tool helpers ──
 
+/** True when the profile has NO allow-list (allowed_tools undefined = all tools). */
+function profileAllMode(profileName: string): boolean {
+  const group = document.querySelector(`.tool-chip-group[data-profile-name="${profileName}"]`);
+  return group?.getAttribute("data-all-mode") === "1";
+}
+
+/** Toggle a profile between "all tools" (undefined) and an explicit list. */
+function setProfileAllMode(profileName: string, on: boolean): void {
+  const group = document.querySelector(`.tool-chip-group[data-profile-name="${profileName}"]`);
+  if (!group) return;
+  group.setAttribute("data-all-mode", on ? "1" : "0");
+  group.querySelectorAll(".tool-chip-cb").forEach((el) => {
+    const cb = el as HTMLInputElement;
+    if (on) cb.checked = true;
+    cb.disabled = on;
+  });
+  const box = document.querySelector(
+    `.prof-all-tools-cb[data-profile-name="${profileName}"]`,
+  ) as HTMLInputElement | null;
+  if (box) box.checked = on;
+  updateToolChipClasses(profileName);
+  refreshToolsetChips(profileName);
+}
+
 function updateToolChipClasses(profileName: string): void {
   const group = document.querySelector(`.tool-chip-group[data-profile-name="${profileName}"]`);
   if (!group) return;
@@ -798,7 +847,9 @@ function updateToolChipClasses(profileName: string): void {
 }
 
 async function saveTools(profileName: string): Promise<void> {
-  const selected = getSelectedTools(profileName);
+  // `null` = no allow-list restriction (stored as an absent `allowed_tools`
+  // in profiles.yml); an explicit array (possibly empty) is stored verbatim.
+  const selected: string[] | null = profileAllMode(profileName) ? null : getSelectedTools(profileName);
   try {
     const res = await fetch(`/api/profiles/${encodeURIComponent(profileName)}`, {
       method: "PATCH",

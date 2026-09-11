@@ -366,7 +366,8 @@ export interface ProfileData {
   name: string;
   provider: string | null;
   model: string | null;
-  allowed_tools: string[]; // array of tool names
+  /** Explicit allow-list; `null` = no allow-list restriction (ALL tools). */
+  allowed_tools: string[] | null;
   skills: string[]; // filenames from filesystem
   all_tools: string[]; // available options for multi-select
 }
@@ -572,6 +573,12 @@ export interface WorkflowRoleConfig {
   mode?: string;
   /** actions.yml action id; required when mode === 'action'. */
   action_id?: string;
+  /**
+   * Role-scoped tool allow-list (same semantics as profiles.yml
+   * `allowed_tools`): undefined = no restriction (all profile tools),
+   * [] = no tools, non-empty = profile tools INTERSECT this list.
+   */
+  allowed_tools?: string[] | null;
 }
 
 export interface Workflow {

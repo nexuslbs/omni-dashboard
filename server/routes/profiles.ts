@@ -150,7 +150,10 @@ profilesRouter.get("/", async (_req, res) => {
       name: p.name,
       provider: p.provider ?? null,
       model: p.model ?? null,
-      allowed_tools: toDisplayNames((p.allowed_tools as string[] | null) ?? []),
+      // `null` (allowed_tools undefined in profiles.yml) = NO allow-list
+      // restriction (all tools); `[]` = explicit empty list (no tools).
+      // The two states must stay distinguishable for the UI.
+      allowed_tools: p.allowed_tools == null ? null : toDisplayNames(p.allowed_tools),
       skills: readProfileSkills(p.name),
       all_tools: allTools,
       all_tool_details: allToolDetails, // for toolset grouping in frontend
@@ -219,7 +222,7 @@ profilesRouter.post("/", async (req, res) => {
         name: trimmedName,
         provider: provider && typeof provider === "string" && provider.trim() ? provider.trim() : null,
         model: model && typeof model === "string" && model.trim() ? model.trim() : null,
-        allowed_tools: [],
+        allowed_tools: null,
         skills: [],
         all_tools: await getAllTools(),
       },
@@ -243,9 +246,11 @@ profilesRouter.patch("/:name", async (req, res) => {
     if (plan !== undefined) body.plan = plan;
     if (template !== undefined) body.template = template || null;
     if (allowed_tools !== undefined) {
-      // Convert display names to raw names for storage
+      // Tri-state: `null` clears the allow-list back to "undefined" (all
+      // tools); an array (including []) is stored as an explicit list.
+      // Display names are converted to raw names for storage.
       body.allowed_tools =
-        Array.isArray(allowed_tools) && allowed_tools.length > 0 ? toRawNames(allowed_tools) : [];
+        allowed_tools === null ? null : toRawNames(Array.isArray(allowed_tools) ? allowed_tools : []);
     }
 
     const fwd = await fetch(`${OMNIAGENT}/profiles/${encodeURIComponent(name)}`, {
