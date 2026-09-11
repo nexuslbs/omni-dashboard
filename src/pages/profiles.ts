@@ -9,6 +9,8 @@ import { allSettledOrNull } from "../lib/parallel";
 let _providers: string[] = [];
 let _providerModels: Record<string, string[]> = {};
 let _explorerPrefix = ""; // OMNI_DIR path relative to EXPLORER_DIR
+// Toolset ids defined in config/toolsets.yml (None = all tools allowed).
+let _toolsetIds: string[] = [];
 
 export function renderProfiles(container: HTMLElement): void {
   container.innerHTML = `
@@ -33,11 +35,13 @@ async function loadProfiles(): Promise<void> {
     // /fs/config, /profiles and /plugins are INDEPENDENT: they are started in
     // the SAME tick (allSettledOrNull) so the page pays the MAX call instead of
     // the sum of three sequential round trips.
-    const [fsConfig, profilesRes, pluginResp] = await allSettledOrNull([
+    const [fsConfig, profilesRes, pluginResp, toolsetsRes] = await allSettledOrNull([
       _explorerPrefix ? Promise.resolve(null) : apiGet<{ root: string; omniDir: string }>("/fs/config"),
       apiGet<ProfileData[]>("/profiles"),
       apiGet<{ data: PluginBase[] }>("/plugins"),
+      apiGet<{ toolsets?: Record<string, string[]> }>("/api/toolsets"),
     ]);
+    _toolsetIds = Object.keys(toolsetsRes?.toolsets ?? {}).sort();
     // Load filesystem config to compute explorer URL prefix
     if (fsConfig && fsConfig.omniDir.startsWith(fsConfig.root)) {
       _explorerPrefix = fsConfig.omniDir.slice(fsConfig.root.length);
@@ -141,14 +145,9 @@ function renderProfilesPage(profiles: ProfileData[]): string {
         </div>
         <div class="setting-row">
           <div class="setting-controls" style="max-width:none;">
-            <div class="setting-name">Allowed Toolsets</div>
-            ${renderToolsetSelect(p.name, p.allowed_tools ?? null, p.all_tools || [])}
-          </div>
-        </div>
-        <div class="setting-row">
-          <div class="setting-controls" style="max-width:none;">
-            <div class="setting-name">Allowed Tools</div>
-            ${renderToolSelect(p.name, p.allowed_tools ?? null, p.all_tools || [])}
+            <div class="setting-name">Toolset</div>
+            ${renderProfileToolsetField(p.name, typeof p.toolset === "string" ? p.toolset : null)}
+            <div class="text-muted" style="font-size:0.75rem;margin-top:0.25rem;">First match wins: workflow role &gt; workflow &gt; task &gt; channel &gt; profile. "None (All tools allowed)" leaves every tool available.</div>
           </div>
         </div>
         <div class="setting-row">
@@ -271,77 +270,26 @@ function toolsetOf(tool: string): string {
 // Lookup: full tool name → server_name (populated from profile data)
 let _toolServerMap: Record<string, string> = {};
 
-/**
- * Given allowed tools and all tools, compute each toolset's state:
- *   "full"  → all tools in that toolset are allowed (purple)
- *   "partial" → some, but not all (yellow)
- *   "none"  → none allowed (gray)
- */
-function computeToolsetStates(
-  selected: string[],
-  allTools: string[],
-): Record<string, "full" | "partial" | "none"> {
-  const sets: Record<string, { total: number; allowed: number }> = {};
-  for (const t of allTools) {
-    const s = toolsetOf(t);
-    if (!sets[s]) sets[s] = { total: 0, allowed: 0 };
-    sets[s].total++;
-    if (selected.includes(t)) sets[s].allowed++;
-  }
-  const result: Record<string, "full" | "partial" | "none"> = {};
-  for (const [s, v] of Object.entries(sets)) {
-    if (v.allowed === 0) result[s] = "none";
-    else if (v.allowed === v.total) result[s] = "full";
-    else result[s] = "partial";
-  }
-  return result;
-}
-
-function renderToolsetSelect(profileName: string, selected: string[] | null, allTools: string[]): string {
-  // `null` = no allow-list restriction (all tools): every toolset chip is "full".
-  const effective = selected ?? allTools;
-  const states = computeToolsetStates(effective, allTools);
-  const toolsetNames = Object.keys(states).sort();
-  const chips = toolsetNames
-    .map(
-      (ts) =>
-        `<span class="toolset-chip" data-toolset="${escapeHtml(ts)}" data-profile-name="${escapeHtml(profileName)}" data-state="${states[ts]}" style="${toolsetChipStyle(states[ts])}">${escapeHtml(ts)}</span>`,
-    )
-    .join("");
-
-  return `<div class="toolset-chip-group" id="prof-toolsets-${escapeHtml(profileName)}" data-profile-name="${escapeHtml(profileName)}">${chips}</div>`;
-}
-
-function renderToolSelect(profileName: string, selected: string[] | null, allTools: string[]): string {
-  const id = `prof-tools-${escapeHtml(profileName)}`;
-  // `null` = no allow-list restriction (all tools). The states MUST stay
-  // distinguishable: `null` renders every tool checked AND remembers the
-  // "all tools" mode (data-all-mode="1"); `[]` renders everything unchecked.
-  const allMode = selected === null;
-  const effective = selected ?? allTools;
-  const chips = [...allTools]
-    .sort()
-    .map(
-      (tool) =>
-        `<label class="tool-chip ${effective.includes(tool) ? "tool-chip-active" : ""}" data-tool="${escapeHtml(tool)}">
-        <input type="checkbox" class="tool-chip-cb" value="${escapeHtml(tool)}"
-          data-profile-name="${escapeHtml(profileName)}"
-          ${effective.includes(tool) ? "checked" : ""} ${allMode ? "disabled" : ""} />
-        ${escapeHtml(tool)}
-      </label>`,
-    )
-    .join("");
-
+function renderProfileToolsetField(profileName: string, current: string | null): string {
+  const selectId = `prof-toolset-${escapeHtml(profileName)}`;
+  const currentInList = !!current && _toolsetIds.includes(current);
+  const options =
+    '<option value=""' +
+    (!current ? " selected" : "") +
+    ">None (All tools allowed)</option>" +
+    (current && !currentInList
+      ? `<option value="${escapeHtml(current)}" selected>${escapeHtml(current)} (undefined)</option>`
+      : "") +
+    _toolsetIds
+      .map(
+        (id) =>
+          `<option value="${escapeHtml(id)}" ${id === current ? "selected" : ""}>${escapeHtml(id)}</option>`,
+      )
+      .join("");
   return `
-    <div style="display:flex;flex-direction:column;gap:0.5rem;width:100%;">
-      <label style="display:flex;align-items:center;gap:0.4rem;font-size:0.8rem;color:#99a;">
-        <input type="checkbox" class="prof-all-tools-cb" data-profile-name="${escapeHtml(profileName)}" ${allMode ? "checked" : ""} />
-        All tools (no allow-list restriction)
-      </label>
-      <div class="tool-chip-group" id="${id}" data-profile-name="${escapeHtml(profileName)}" data-all-mode="${allMode ? "1" : "0"}">
-        ${chips}
-      </div>
-    </div>
+    <select id="${selectId}" class="profile-toolset-select" data-profile-name="${escapeHtml(profileName)}" data-original="${escapeHtml(current || "")}">
+      ${options}
+    </select>
   `;
 }
 
@@ -424,6 +372,27 @@ function wireProfiles(): void {
       ) as HTMLElement | null;
       if (modelConfirmBtn) modelConfirmBtn.style.display = "none";
       if (modelCancelBtn) modelCancelBtn.style.display = "none";
+    });
+  });
+
+  // ── Toolset select (first-match toolset resolution; "" = all tools) ──
+  document.querySelectorAll(".profile-toolset-select").forEach((el) => {
+    const select = el as HTMLSelectElement;
+    select.addEventListener("change", async () => {
+      const profileName = select.getAttribute("data-profile-name");
+      if (!profileName) return;
+      try {
+        const res = await fetch(`/api/profiles/${encodeURIComponent(profileName)}`, {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ toolset: select.value }),
+        });
+        if (!res.ok) throw new Error(await res.text());
+        select.setAttribute("data-original", select.value);
+        showToast("Toolset updated", "success");
+      } catch (e) {
+        showToast("Failed: " + formatApiError(e), "error");
+      }
     });
   });
 
@@ -940,9 +909,4 @@ function toolsetChipColors(state: "full" | "partial" | "none"): {
         color: "var(--text-muted)",
       };
   }
-}
-
-function toolsetChipStyle(state: "full" | "partial" | "none"): string {
-  const c = toolsetChipColors(state);
-  return "background:" + c.background + ";border:" + c.border + ";color:" + c.color + ";";
 }

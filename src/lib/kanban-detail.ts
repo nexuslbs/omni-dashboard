@@ -228,6 +228,14 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
           <div>${task.profile ? escapeHtml(task.profile) : "<em>None</em>"}</div>
         </div>
         <div>
+          <div class="detail-label">Toolset</div>
+          <div>${
+            task.toolset
+              ? `<code style="font-size:0.8rem;color:var(--accent-purple);background:var(--bg-card);padding:0.15rem 0.4rem;border-radius:4px;">${escapeHtml(String(task.toolset))}</code>`
+              : '<em style="font-size:0.8rem;color:var(--text-muted);">All tools allowed</em>'
+          }</div>
+        </div>
+        <div>
           <div class="detail-label">Board</div>
           <div>${task.board ? escapeHtml(task.board) : "<em>None</em>"}</div>
           <div style="margin-top:0.4rem;">

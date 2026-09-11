@@ -202,6 +202,10 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
             <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Mode</div>
             <div style="color:var(--text-primary);">${job.mode ? escapeHtml(job.mode) : "-"}</div>
           </div>
+          <div style="margin-bottom:0.75rem;">
+            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Toolset</div>
+            <div style="color:var(--text-primary);">${job.toolset ? escapeHtml(String(job.toolset)) : "- (All tools allowed)"}</div>
+          </div>
           ${
             job.mode === "action"
               ? `
@@ -456,19 +460,24 @@ export async function showCronModal(
   let existingJobs: Record<string, unknown>[] = [];
   let actions: { id: string; name: string; tool_name: string; is_builtin: boolean }[] = [];
   let templates: { profile: string; name: string; label: string }[] = [];
+  let toolsets: string[] = [];
   try {
-    const [ch, pr, jobs, ac, tm] = await Promise.all([
+    const [ch, pr, jobs, ac, tm, ts] = await Promise.all([
       cachedGet("/channels"),
       cachedGet("/profiles"),
       cachedGet("/schedule?active=false"),
       cachedGet("/actions"),
       cachedGet("/templates"),
+      cachedGet("/api/toolsets"),
     ]);
     channels = ch as { id: string; name: string; platform: string }[];
     profiles = pr as { name: string }[];
     existingJobs = jobs as Record<string, unknown>[];
     actions = ac as { id: string; name: string; tool_name: string; is_builtin: boolean }[];
     templates = tm as { profile: string; name: string; label: string }[];
+    toolsets = Object.keys(
+      (ts as { toolsets?: Record<string, string[]> })?.toolsets ?? {},
+    ).sort();
   } catch {
     /* ok */
   }
@@ -541,6 +550,14 @@ export async function showCronModal(
           <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">Template file to inject into the agent's prompt when this job runs.</div>
         </div>
         <div style="margin-bottom:1rem;">
+          <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Toolset</label>
+          <select id="cron-toolset" class="filter-select" style="width:100%;">
+            <option value="">None (All tools allowed)</option>
+            ${toolsets.map((t: string) => `<option value="${escapeHtml(t)}" ${isEdit && job.toolset === t ? "selected" : ""}>${escapeHtml(t)}</option>`).join("")}
+          </select>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">First match wins: workflow role &gt; workflow &gt; task &gt; channel &gt; profile. Defined in config/toolsets.yml.</div>
+        </div>
+        <div style="margin-bottom:1rem;">
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Mode</label>
           <select id="cron-mode" class="filter-select" style="width:100%;">
             <option value="agentic" ${isEdit && job.mode === "agentic" ? "selected" : ""}>Agentic</option>
@@ -601,6 +618,7 @@ export async function showCronModal(
   enhanceSelectElement(document.getElementById("cron-channel") as HTMLSelectElement);
   enhanceSelectElement(document.getElementById("cron-profile") as HTMLSelectElement);
   enhanceSelectElement(document.getElementById("cron-instruction-file") as HTMLSelectElement);
+  enhanceSelectElement(document.getElementById("cron-toolset") as HTMLSelectElement);
   enhanceSelectElement(document.getElementById("cron-mode") as HTMLSelectElement);
   enhanceSelectElement(document.getElementById("cron-action") as HTMLSelectElement);
   enhanceSelectElement(document.getElementById("cron-plan") as HTMLSelectElement);
@@ -635,6 +653,7 @@ export async function showCronModal(
     const active = (modal.querySelector("#cron-active") as HTMLInputElement).checked;
     const silent = (document.getElementById("cron-silent") as HTMLInputElement).checked;
     const template = (modal.querySelector("#cron-instruction-file") as HTMLSelectElement).value;
+    const toolset = (modal.querySelector("#cron-toolset") as HTMLSelectElement).value;
     const channel = channelVal || null;
 
     if (!name) {
@@ -681,6 +700,7 @@ export async function showCronModal(
         mode,
         silent,
         template: template || null,
+        toolset: toolset || null,
       };
       if (planVal !== undefined && planVal !== "") {
         body.plan = planVal === "true";

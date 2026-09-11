@@ -14,6 +14,7 @@ import {
   renderModelSelect,
   renderPlanSelect,
   renderTemplateInput,
+  renderToolsetInput,
   _templates,
 } from "./channel-config";
 
@@ -161,6 +162,12 @@ export function renderChannelsPage(channels: ChannelData[], defaultProfile: stri
           <div class="setting-controls">
             <div class="setting-name">Template</div>
             ${renderTemplateInput(ch.id, ch.template || "", ch.readonly, _templates)}
+          </div>
+        </div>
+        <div class="setting-row">
+          <div class="setting-controls">
+            <div class="setting-name">Toolset</div>
+            ${renderToolsetInput(ch.id, ch.toolset || "", ch.readonly)}
           </div>
         </div>
       </div>

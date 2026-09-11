@@ -43,6 +43,13 @@ export async function showHookModal(
   let existingHooks: Record<string, unknown>[] = [];
   let actions: ActionOption[] = [];
   let templates: { profile: string; name: string; label: string }[] = [];
+  let hookToolsets: string[] = [];
+  try {
+    const ts = (await cachedGet("/api/toolsets")) as { toolsets?: Record<string, string[]> };
+    hookToolsets = Object.keys(ts?.toolsets ?? {}).sort();
+  } catch {
+    /* ok */
+  }
   try {
     const [ch, pr, hooks, ac, tm] = await Promise.all([
       cachedGet("/channels"),
@@ -75,6 +82,7 @@ export async function showHookModal(
     channel: hook ? String((hook as any).channel ?? "") : "",
     plan: hook ? Boolean(hookField<boolean>(hook, "plan", "plan") ?? false) : false,
     template: hook ? String(hookField<string>(hook, "template", "template") ?? "") : "",
+    toolset: hook ? String(hookField<string>(hook, "toolset", "toolset") ?? "") : "",
     enabled: hook ? Boolean(hookField<boolean>(hook, "enabled", "enabled") ?? true) : true,
     counter: hook ? hookField<unknown>(hook, "counter", "counter") : undefined,
   };
@@ -212,6 +220,14 @@ export async function showHookModal(
             </select>
             <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.25rem;">Template file injected into the agent prompt (agentic mode).</div>
           </div>
+          <div>
+            <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Toolset</label>
+            <select id="hook-toolset" class="filter-select" style="width:100%;">
+              <option value="">None (All tools allowed)</option>
+              ${hookToolsets.map((t) => `<option value="${escapeHtml(t)}" ${cur.toolset === t ? "selected" : ""}>${escapeHtml(t)}</option>`).join("")}
+            </select>
+            <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.25rem;">First match wins: workflow role &gt; workflow &gt; task &gt; channel &gt; profile.</div>
+          </div>
         </div>
 
         <div style="display:flex;align-items:center;gap:1.25rem;margin-bottom:1rem;">
@@ -249,6 +265,7 @@ export async function showHookModal(
     "hook-profile",
     "hook-channel",
     "hook-template",
+    "hook-toolset",
   ].forEach((id) => {
     enhanceSelectElement(modal.querySelector(`#${id}`) as HTMLSelectElement);
   });
@@ -333,6 +350,7 @@ export async function showHookModal(
     const channelVal = (modal.querySelector("#hook-channel") as HTMLSelectElement).value;
     const plan = (modal.querySelector("#hook-plan") as HTMLInputElement).checked;
     const template = (modal.querySelector("#hook-template") as HTMLInputElement).value.trim();
+    const toolset = (modal.querySelector("#hook-toolset") as HTMLSelectElement).value;
     const enabled = (modal.querySelector("#hook-enabled") as HTMLInputElement).checked;
 
     // ── Validation ──
@@ -383,6 +401,7 @@ export async function showHookModal(
       channel: channelVal || null,
       plan,
       template,
+      toolset: toolset || null,
       enabled,
     };
 

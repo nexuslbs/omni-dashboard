@@ -13,6 +13,8 @@ export let _profiles: ProfileData[] = [];
 export let _providers: string[] = [];
 export let _providerModels: Record<string, string[]> = {};
 export const _templates: { profile: string; name: string; label: string }[] = [];
+// Toolset ids (`config/toolsets.yml`) selectable for channels.
+export const _channelToolsets: string[] = [];
 
 export function setChannelData(
   profiles: ProfileData[],
@@ -400,4 +402,42 @@ export function wireChannelConfigEditing(): void {
       if (confirmBtn) confirmBtn.style.display = "none";
     });
   });
+}
+
+/**
+ * Channel-level toolset select (`config/toolsets.yml`). The channel defines the
+ * toolset only when no higher-priority level (workflow role / workflow / task)
+ * does; empty value = no channel-level toolset (all tools allowed when nothing
+ * else defines one).
+ */
+export function renderToolsetInput(channelId: string, current: string, readonly: boolean): string {
+  if (readonly) {
+    return `
+      <div class="channel-field-group">
+        <code class="setting-readonly-code">${current ? escapeHtml(current) : "-"}</code>
+      </div>
+    `;
+  }
+  const selectId = `ch-${channelId}-toolset`;
+  return `
+    <div class="channel-field-group">
+      <select id="${selectId}" class="filter-select channel-edit-input"
+        data-channel-id="${channelId}" data-field="toolset" data-original="${escapeHtml(current)}">
+        <option value="">None (All tools allowed)</option>
+        ${_channelToolsets
+          .slice()
+          .map(
+            (t: string) =>
+              `<option value="${escapeHtml(t)}" ${t === current ? "selected" : ""}>${escapeHtml(t)}</option>`,
+          )
+          .join("")}
+      </select>
+      <button type="button" class="channel-edit-btn save" data-channel-id="${channelId}" data-field="toolset" style="display:none;" title="Save">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      </button>
+      <button type="button" class="channel-edit-btn cancel" data-channel-id="${channelId}" data-field="toolset" style="display:none;" title="Cancel">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+  `;
 }

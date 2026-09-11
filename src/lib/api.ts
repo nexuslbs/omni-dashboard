@@ -368,6 +368,8 @@ export interface ProfileData {
   model: string | null;
   /** Explicit allow-list; `null` = no allow-list restriction (ALL tools). */
   allowed_tools: string[] | null;
+  /** Toolset id from config/toolsets.yml; null/undefined = all tools allowed. */
+  toolset?: string | null;
   skills: string[]; // filenames from filesystem
   all_tools: string[]; // available options for multi-select
 }
@@ -387,6 +389,8 @@ export interface ChannelData {
   readonly: boolean;
   plan: boolean;
   template: string | null;
+  /** Toolset id from config/toolsets.yml; null = all tools allowed. */
+  toolset?: string | null;
 }
 
 // ── Platform Types ──
@@ -579,6 +583,8 @@ export interface WorkflowRoleConfig {
    * [] = no tools, non-empty = profile tools INTERSECT this list.
    */
   allowed_tools?: string[] | null;
+  /** Toolset id (config/toolsets.yml); undefined = all tools allowed, [] toolset = no tools. */
+  toolset?: string | null;
 }
 
 export interface Workflow {
@@ -593,6 +599,8 @@ export interface Workflow {
   auto_approve?: boolean;
   /** Top-level: failed steps go to review instead of blocked (ignored when auto_approve). Default: false. */
   review_on_fail?: boolean;
+  /** Workflow-level toolset id; overridden by a role toolset, overrides task/channel/profile. */
+  toolset?: string | null;
   roles?: Record<string, WorkflowRoleConfig>;
 }
 
@@ -629,6 +637,23 @@ export async function upsertWorkflow(key: string, workflow: Workflow): Promise<W
 export async function deleteWorkflow(key: string): Promise<WorkflowEntry[]> {
   const res = await apiDelete<WorkflowListResponse>(`/workflows/${encodeURIComponent(key)}`);
   return res?.workflows ?? [];
+}
+
+// ── Toolsets API (config/toolsets.yml) ──
+
+export interface ToolsetsFile {
+  toolsets: Record<string, string[]>;
+}
+
+/** GET /api/toolsets: the parsed config/toolsets.yml document. */
+export async function fetchToolsets(): Promise<ToolsetsFile> {
+  const res = await apiGet<ToolsetsFile>("/api/toolsets");
+  return { toolsets: res?.toolsets ?? {} };
+}
+
+/** PUT /api/toolsets: validate + atomically write config/toolsets.yml. */
+export async function saveToolsetsFile(file: ToolsetsFile): Promise<void> {
+  await apiPut("/api/toolsets", file);
 }
 
 /** POST /kanban/tasks/{id}/workflow/executions/reset: clear a task's workflow execution counters. */

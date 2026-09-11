@@ -12,6 +12,7 @@ import {
   _providers,
   _providerModels,
   _templates,
+  _channelToolsets,
   wireChannelConfigEditing,
 } from "../lib/channel-config";
 import {
@@ -78,12 +79,13 @@ async function loadChannels(): Promise<void> {
     // /channels, /profiles, /plugins, /templates and /settings are INDEPENDENT:
     // they are started in the SAME tick (allSettledOrNull) so the page pays the
     // MAX call instead of the sum of five sequential round trips.
-    const [channels, profilesRes, pluginsRes, templatesRes, defaultProfileRes] = await allSettledOrNull([
+    const [channels, profilesRes, pluginsRes, templatesRes, defaultProfileRes, toolsetsRes] = await allSettledOrNull([
       apiGet<ChannelData[]>("/channels"),
       apiGet("/profiles"),
       apiGet<any>("/plugins"),
       apiGet<any[]>("/templates"),
       getDefaultProfile(),
+      apiGet<{ toolsets?: Record<string, string[]> }>("/api/toolsets"),
     ]);
     if (!channels) throw new Error("Failed to load channels");
     _profiles.length = 0;
@@ -154,6 +156,10 @@ async function loadChannels(): Promise<void> {
 
     _templates.length = 0;
     if (Array.isArray(templatesRes)) _templates.push(...templatesRes);
+    _channelToolsets.length = 0;
+    _channelToolsets.push(
+      ...Object.keys((toolsetsRes as { toolsets?: Record<string, string[]> } | null)?.toolsets ?? {}).sort(),
+    );
 
     const defaultProfile = defaultProfileRes ?? (await getDefaultProfile());
     content.innerHTML = renderChannelsPage(channels, defaultProfile);

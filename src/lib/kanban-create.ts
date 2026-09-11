@@ -142,6 +142,26 @@ async function populateBoardSelectCached(selectId: string, selected: string | nu
   }
 }
 
+async function populateToolsetSelect(selectId: string, selected: string | null): Promise<void> {
+  const select = document.getElementById(selectId) as HTMLSelectElement | null;
+  if (!select) return;
+  try {
+    const toolsets =
+      (await cachedGet<{ toolsets?: Record<string, string[]> }>("/api/toolsets"))?.toolsets || {};
+    select.innerHTML = '<option value="">None (All tools allowed)</option>';
+    for (const id of Object.keys(toolsets).sort()) {
+      const opt = document.createElement("option");
+      opt.value = id;
+      opt.textContent = id;
+      if (selected && id === selected) opt.selected = true;
+      select.appendChild(opt);
+    }
+    refreshEnhancedSelect(selectId);
+  } catch {
+    select.innerHTML = '<option value="">None (All tools allowed)</option>';
+  }
+}
+
 async function populateWorkflowSelectCached(selectId: string, selected: string | null): Promise<void> {
   const select = document.getElementById(selectId) as HTMLSelectElement | null;
   if (!select) return;
@@ -179,6 +199,7 @@ export async function populateTaskModalSelects(
     populateProfileSelect(`${p}-profile`, task?.profile ? String(task.profile) : null),
     populateTemplatesSelect(`${p}-template`, task?.template ? String(task.template) : null),
     populateBoardSelectCached(`${p}-board`, board),
+    populateToolsetSelect(`${p}-toolset`, task?.toolset ? String(task.toolset) : null),
   ]);
   // Workflow: explicit task.workflow wins, else the board's workflow.
   let wf: string | null = task?.workflow ? String(task.workflow) : null;
@@ -264,6 +285,13 @@ export function taskModalHTML(mode: TaskModalMode): string {
                 <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">Structured guidance injected into the agent's prompt. Create .md files in profiles/&lt;name&gt;/templates/</div>
               </div>
               <div>
+                <label style="${labelStyle}">Toolset</label>
+                <select id="${p}-toolset" style="${inputStyle}">
+                  <option value="">None (All tools allowed)</option>
+                </select>
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">First match wins: workflow role &gt; workflow &gt; task &gt; channel &gt; profile. Defined in config/toolsets.yml.</div>
+              </div>
+              <div>
                 <label style="${labelStyle}">Tags</label>
                 <div id="${p}-tags-chips"></div>
                 <div style="display:flex;gap:0.4rem;margin-top:0.35rem;align-items:center;">
@@ -300,6 +328,7 @@ export function closeTaskModal(mode: TaskModalMode): void {
   syncSelectDisplay(`${p}-channel`);
   syncSelectDisplay(`${p}-profile`);
   syncSelectDisplay(`${p}-template`);
+  syncSelectDisplay(`${p}-toolset`);
   _selTags[mode] = [];
   _initialTags[mode] = [];
   const chips = document.getElementById(`${p}-tags-chips`);
@@ -406,6 +435,8 @@ export function wireTaskModal(opts: {
   // component as priority/status/board/workflow/etc., never the native
   // <select> (its options render invisible on the modal background).
   enhanceSelect(`${p}-tag-registry`);
+  // Toolset select uses the same custom styled dropdown (never the native select).
+  enhanceSelect(`${p}-toolset`);
 
   // Tag UI wiring: remove chips (delegated click on the chip box), add from
   // the registry select. Elements are recreated per render, so no re-wire
@@ -453,6 +484,7 @@ async function submitTaskModal(mode: TaskModalMode): Promise<void> {
   const profile = (document.getElementById(`${p}-profile`) as HTMLSelectElement | null)?.value || undefined;
   const status = (document.getElementById(`${p}-status`) as HTMLSelectElement | null)?.value || "backlog";
   const template = (document.getElementById(`${p}-template`) as HTMLSelectElement | null)?.value || undefined;
+  const toolset = (document.getElementById(`${p}-toolset`) as HTMLSelectElement | null)?.value || undefined;
   const board = (document.getElementById(`${p}-board`) as HTMLSelectElement | null)?.value || undefined;
   // Keep "" so the "(none)"/board-default option sends an empty workflow
   // (PATCH workflow:"" clears the task workflow back to the board default).
@@ -469,6 +501,7 @@ async function submitTaskModal(mode: TaskModalMode): Promise<void> {
     template,
     board,
     workflow,
+    toolset,
   };
   // Create sends the selected tags in one shot (CreateTaskRequest carries a
   // `tags` field; the backend auto-creates registry rows). Edit applies
