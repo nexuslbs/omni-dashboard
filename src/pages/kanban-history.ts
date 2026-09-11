@@ -9,6 +9,7 @@ interface HistoryRow {
   initial_board: string | null;
   final_board: string | null;
   previous_values?: Record<string, unknown>;
+  comment?: string | null;
   created_at: string | null;
 }
 
@@ -64,6 +65,30 @@ function taskIdLink(taskId: string, status: string | null): string {
   return `<a href="/kanban/${encodeURIComponent(taskId)}" class="task-id-link ${cls}-link" style="display:inline-flex;align-items:center;gap:0.25rem;text-decoration:none;color:var(--text-primary);font-family:monospace;font-size:0.78rem;border:1px solid var(--glass-border);border-radius:4px;padding:0.125rem 0.4rem;transition:border-color 0.15s;" data-task-id="${escapeHtml(taskId)}">#${escapeHtml(taskId)}</a>`;
 }
 
+/** The tag set stored under the plural `tags` key of previous_values; legacy
+ * rows (pre-v0.2.3) used the singular `tag` key and are still tolerated. */
+function previousTags(prev: Record<string, unknown> | undefined): string[] {
+  if (!prev) return [];
+  const plural = prev.tags;
+  if (Array.isArray(plural)) {
+    return plural.filter((t): t is string => typeof t === "string");
+  }
+  if (typeof prev.tag === "string") return [prev.tag];
+  return [];
+}
+
+/** The tag that actually changed (carried in the row's `comment` column). */
+function changedTag(r: HistoryRow): string {
+  return typeof r.comment === "string" ? r.comment.trim() : "";
+}
+
+/** Readable fallback for an action without a specific rendering: never emit a
+ * bare action word (e.g. "workflow") as the whole event line. */
+function humanizeAction(action: string): string {
+  const words = action.replace(/_/g, " ").trim();
+  return words ? `was ${words.charAt(0).toUpperCase()}${words.slice(1)}` : "was Updated";
+}
+
 /** Build the Event description based on action + board fields. */
 function formatEvent(r: HistoryRow): string {
   const { action, initial_board: initial, final_board: final } = r;
@@ -87,28 +112,55 @@ function formatEvent(r: HistoryRow): string {
       return "was Moved";
     case "edited":
       return "was Edited";
+    case "workflow": {
+      // Workflow-driven transitions: a real status change renders as a move,
+      // a no-change row (thread created / skipped / merged / board rejected)
+      // renders its descriptive comment. Never the bare action word.
+      const moved =
+        initial && final && initial !== final
+          ? `was Moved from ${statusSpan(initial)} to ${statusSpan(final)}`
+          : "";
+      const detail = r.comment ? escapeHtml(r.comment) : "";
+      if (moved && detail) {
+        return `${moved} <span style="color:var(--text-muted);font-size:0.78rem;">(${detail})</span>`;
+      }
+      return moved || detail || "workflow step updated";
+    }
     case "tag_added": {
-      const tag = typeof r.previous_values?.tag === "string" ? r.previous_values.tag : "";
-      return `was Tagged ${tag ? tagBadge(tag) : ""}`;
+      const tag = changedTag(r);
+      const before = previousTags(r.previous_values);
+      const suffix = before.length
+        ? ` <span style="color:var(--text-muted);font-size:0.75rem;">(previous: ${before.map((t) => escapeHtml(t)).join(", ")})</span>`
+        : "";
+      return `was Tagged ${tag ? tagBadge(tag) : ""}${suffix}`;
     }
     case "tag_removed": {
-      const tag = typeof r.previous_values?.tag === "string" ? r.previous_values.tag : "";
-      return `had Tag Removed ${tag ? tagBadge(tag) : ""}`;
+      const tag = changedTag(r);
+      const before = previousTags(r.previous_values);
+      const suffix = before.length
+        ? ` <span style="color:var(--text-muted);font-size:0.75rem;">(previous: ${before.map((t) => escapeHtml(t)).join(", ")})</span>`
+        : "";
+      return `had tag ${tag ? tagBadge(tag) : ""} removed${suffix}`;
     }
     case "dependency_added": {
       const depId =
         typeof r.previous_values?.depends_on_id === "string" ? r.previous_values.depends_on_id : "";
-      const title = typeof r.previous_values?.title === "string" ? r.previous_values.title : "";
-      return `gained a dependency on ${depId ? `<code style="font-family:monospace;font-size:0.78rem;">${escapeHtml(depId)}</code>` : ""}${title ? ` (${escapeHtml(title)})` : ""}`;
+      const rawTitle = typeof r.previous_values?.title === "string" ? r.previous_values.title.trim() : "";
+      const title = rawTitle || "(deleted task)";
+      return `added ${depId ? `<code style="font-family:monospace;font-size:0.78rem;">${escapeHtml(depId)}</code>` : "a task"} (${escapeHtml(title)}) as a dependency`;
     }
     case "dependency_removed": {
       const depId =
         typeof r.previous_values?.depends_on_id === "string" ? r.previous_values.depends_on_id : "";
-      const title = typeof r.previous_values?.title === "string" ? r.previous_values.title : "";
-      return `lost a dependency on ${depId ? `<code style="font-family:monospace;font-size:0.78rem;">${escapeHtml(depId)}</code>` : ""}${title ? ` (${escapeHtml(title)})` : ""}`;
+      const rawTitle = typeof r.previous_values?.title === "string" ? r.previous_values.title.trim() : "";
+      const title = rawTitle || "(deleted task)";
+      return `removed ${depId ? `<code style="font-family:monospace;font-size:0.78rem;">${escapeHtml(depId)}</code>` : "a task"} (${escapeHtml(title)}) from its dependencies`;
     }
-    default:
-      return escapeHtml(action);
+    default: {
+      // Generic fallback: action + comment -> a human-readable sentence, never
+      // a dangling bare action word.
+      return r.comment ? escapeHtml(r.comment) : escapeHtml(humanizeAction(action));
+    }
   }
 }
 
@@ -202,6 +254,7 @@ export function renderKanbanHistory(container: HTMLElement): void {
           <option value="">All</option>
           <option value="created">Created</option>
           <option value="moved">Moved</option>
+          <option value="workflow">Workflow (step transitions)</option>
           <option value="edited">Edited</option>
           <option value="archived">Archived</option>
           <option value="unarchived">Unarchived</option>

@@ -82,6 +82,7 @@ export interface KanbanHistoryEntry {
   initial_board?: string;
   final_board?: string;
   previous_values?: Record<string, unknown>;
+  comment?: string | null;
   created_at?: string;
 }
 
