@@ -469,22 +469,19 @@ function wireDepRows(): void {
 
 /**
  * Load and render tasks that depend on this task (dependents).
- * The API has no reverse-lookup endpoint, so this scans the flat task list
- * and each task's dependency list in parallel. Best-effort: failures render
- * an empty state rather than breaking the page.
+ * One request: GET /kanban/tasks/{id}/depended-upon performs a single indexed
+ * reverse SQL lookup on the server. Best-effort: failures render an empty
+ * state rather than breaking the page.
  */
 async function loadDependents(taskId: string): Promise<void> {
   const tbody = document.getElementById("dependents-tbody");
   const countEl = document.getElementById("dependents-count");
   if (!tbody) return;
   try {
-    const tasks = (await apiGet<Record<string, unknown>[]>("/kanban/tasks")) || [];
-    const withDeps = await Promise.all(
-      tasks.map(async (t) => ({ task: t, deps: await fetchTaskDeps(String(t.id)) })),
-    );
-    const dependents = withDeps
-      .filter(({ deps }) => deps.some((d) => String(d.id) === String(taskId)))
-      .map(({ task }) => task);
+    const dependents =
+      (await apiGet<Record<string, unknown>[]>(
+        "/kanban/tasks/" + encodeURIComponent(taskId) + "/depended-upon",
+      )) || [];
     if (countEl) countEl.textContent = `${dependents.length} dependen${dependents.length === 1 ? "t" : "ts"}`;
     if (dependents.length === 0) {
       tbody.innerHTML =
