@@ -39,12 +39,13 @@ export function renderPluginCard(
   opts: {
     hasTools?: boolean;
     pluginTools?: string[];
+    invalidTools?: Array<{ tool: string; reason: string; exposed_name?: string }>;
     hasRemote?: boolean;
     hasCompilableSource?: boolean;
     isDuplicated?: boolean;
   },
 ): string {
-  const { hasTools, pluginTools, hasRemote, hasCompilableSource, isDuplicated } = opts;
+  const { hasTools, pluginTools, invalidTools, hasRemote, hasCompilableSource, isDuplicated } = opts;
 
   return `
     <div class="card settings-card${p.status === "disabled" ? " plugin-disabled-card" : ""}" data-plugin-name="${escapeHtml(p.name)}" data-source="${escapeHtml(p.source)}" data-plugin-type="${escapeHtml(p.pluginType)}" data-remote='${hasRemote ? escapeHtml(JSON.stringify(p.remote)) : ""}'>
@@ -72,6 +73,10 @@ export function renderPluginCard(
         ${p.manifest?.capabilities?.setup ? `<button type="button" class="plugin-setup-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);margin-bottom:0.5rem;">Setup</button>` : ""}
         ${renderPluginConfig(p)}
         ${hasTools && pluginTools && pluginTools.length > 0 ? `<div style="margin-top:0.5rem;display:flex;flex-wrap:wrap;gap:0.25rem;">${pluginTools.map((t: string) => `<span class="badge badge-neutral" style="font-size:0.8rem;padding:0.25rem 0.5rem;">${escapeHtml(t)}</span>`).join("")}</div>` : ""}
+        ${invalidTools && invalidTools.length > 0 ? `<div class="plugin-invalid-tools" style="margin-top:0.75rem;padding:0.5rem 0.625rem;border:1px solid rgba(245,158,11,0.35);border-radius:6px;background:rgba(245,158,11,0.08);font-size:0.8rem;color:var(--text-secondary);">
+          <div style="font-weight:600;color:#fbbf24;margin-bottom:0.25rem;">Invalid tool name: not exposed to the agent</div>
+          ${invalidTools.map((t: { tool: string; reason: string; exposed_name?: string }) => `<div><code>${escapeHtml(t.exposed_name || t.tool)}</code> - ${escapeHtml(t.reason)}</div>`).join("")}
+        </div>` : ""}
       </div>
     </div>`;
 }

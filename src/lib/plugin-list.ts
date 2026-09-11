@@ -269,7 +269,30 @@ async function loadPage(type: PluginPageType, cfg: PluginPageConfig, background?
       }
     }
 
-    content.innerHTML = renderPluginsPage(filteredPlugins, type, toolMap);
+    // Tools REJECTED by the exposed-name grammar ({plugin}__{tool}): they are
+    // never registered and never shown to the agent, so the expanded tool box
+    // must explain WHY they are missing.
+    const invalidMap: Record<string, Array<{ tool: string; reason: string; exposed_name?: string }>> = {};
+    if (showMcpTools) {
+      try {
+        const invalidResponse = (await apiGet("/mcp/tools/invalid")) as {
+          invalid?: Array<{ plugin?: string; tool?: string; reason?: string; exposed_name?: string }>;
+        };
+        for (const it of invalidResponse?.invalid || []) {
+          const plugin = it.plugin || "unknown";
+          if (!invalidMap[plugin]) invalidMap[plugin] = [];
+          invalidMap[plugin].push({
+            tool: it.tool || "?",
+            reason: it.reason || "invalid tool name",
+            exposed_name: it.exposed_name,
+          });
+        }
+      } catch {
+        // Older agents have no invalid-tools endpoint: continue without it.
+      }
+    }
+
+    content.innerHTML = renderPluginsPage(filteredPlugins, type, toolMap, invalidMap);
     wirePage(type);
   } catch (e) {
     content.innerHTML = `<div class="error-state" style="padding:3rem;text-align:center;">Failed to load ${type}s: ${formatApiError(e)}</div>`;
@@ -283,6 +306,17 @@ function filterPlugins(plugins: PluginData[]): PluginData[] {
     if (currentName && !p.name.toLowerCase().includes(currentName.toLowerCase())) return false;
     return true;
   });
+}
+
+function getInvalidTools(
+  p: PluginData,
+  invalidMap: Record<string, Array<{ tool: string; reason: string; exposed_name?: string }>>,
+): Array<{ tool: string; reason: string; exposed_name?: string }> {
+  const exact = invalidMap[p.name];
+  if (exact && exact.length > 0) return exact;
+  const altName = p.name.includes("_") ? p.name.replace(/_/g, "-") : p.name.replace(/-/g, "_");
+  if (altName !== p.name && invalidMap[altName]) return invalidMap[altName];
+  return [];
 }
 
 function getPluginTools(p: PluginData, toolMap: Record<string, string[]>): string[] {
@@ -300,6 +334,7 @@ function renderPluginsPage(
   plugins: PluginData[],
   type: PluginPageType,
   toolMap: Record<string, string[]>,
+  invalidMap: Record<string, Array<{ tool: string; reason: string; exposed_name?: string }>>,
 ): string {
   const filtered = filterPlugins(plugins);
 
@@ -326,6 +361,7 @@ function renderPluginsPage(
     .map((p) => {
       const pluginTools = showTools ? getPluginTools(p, toolMap) : [];
       const hasTools = pluginTools.length > 0;
+      const invalidTools = showTools ? getInvalidTools(p, invalidMap) : [];
       const isDuplicated = p.isDuplicated === true;
       const hasRemote = p.remote !== undefined;
       const hasCompilableSource = !p.isScript && !!p.hasSourceCode;
@@ -333,6 +369,7 @@ function renderPluginsPage(
       return renderPluginCard(p, {
         hasTools,
         pluginTools,
+        invalidTools,
         hasRemote,
         hasCompilableSource,
         isDuplicated,
