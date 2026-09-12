@@ -4,6 +4,7 @@
  */
 import { apiGet, apiPost, type Message, type ResetExecutionsResponse } from "./api";
 import { boardMoveEnabled, fetchBoards, nextBoardOptions } from "./kanban-boards";
+import { enhanceSelectElement, syncSelectDisplayEl } from "./dropdown";
 import { STATUS_LABELS, statusBadge, moveTask, renderTagChips } from "./kanban-board";
 // ── Helper imports ──
 import { escapeHtml, formatApiError } from "./helpers";
@@ -322,7 +323,7 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
       <div style="margin-top:1.5rem;" id="task-move-board-wrap">
         <div class="detail-label" style="margin-bottom:0.5rem;">Move to another board</div>
         <div style="display:flex;gap:0.5rem;">
-          <select id="task-move-board" style="flex:1;padding:0.375rem 0.625rem;border-radius:6px;border:1px solid var(--glass-border);background:rgba(255,255,255,0.04);color:inherit;font-size:0.8rem;box-sizing:border-box;">
+          <select id="task-move-board">
             <option value="">Select a board...</option>
           </select>
           <button id="task-move-board-btn" disabled style="background:rgba(59,130,246,0.15);border:1px solid rgba(59,130,246,0.3);color:var(--accent-blue);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;white-space:nowrap;">Move</button>
@@ -352,8 +353,17 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
           nextBoardOptions(boards, task.board || null)
             .map((k) => `<option value="${escapeHtml(k)}">${escapeHtml(k)}</option>`)
             .join("");
+        // Custom stylized select (.custom-select) with the dashboard's styled
+        // options panel, same component as the Priority / Status / Board selects
+        // of the task modal and the board selector in the kanban header.
+        // Enhanced AFTER the options are populated so the trigger reflects the
+        // current selection (enhanceSelectElement builds the trigger from the
+        // current options and hides the native <select>).
+        enhanceSelectElement(sel);
         const update = () => {
           btn.disabled = !boardMoveEnabled(sel.value);
+          // Keep the custom trigger/selected state in sync with the native value.
+          syncSelectDisplayEl(sel);
         };
         sel.addEventListener("change", update);
         update();
