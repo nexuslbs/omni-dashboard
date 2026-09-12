@@ -16,6 +16,31 @@ import { transformSync } from "esbuild";
 
 register("./ts-loader.mjs", import.meta.url);
 
+// Resolve extension-less relative imports ("../src/lib/plugin-ui" -> ".ts") so tests
+// can import ANY source module, not only the ones without relative imports.
+export async function resolve(specifier, context, nextResolve) {
+  const isRelative = specifier.startsWith("./") || specifier.startsWith("../");
+  if (isRelative) {
+    // "../src/lib/plugin-ui" -> "../src/lib/plugin-ui.ts"
+    if (!/\.[a-z]+$/.test(specifier)) {
+      try {
+        return await nextResolve(`${specifier}.ts`, context);
+      } catch {
+        /* fall through to the default resolution */
+      }
+    }
+    // "./helpers.js" (NodeNext-style) -> "./helpers.ts": TS sources ship as .ts
+    if (/\.js$/.test(specifier)) {
+      try {
+        return await nextResolve(`${specifier.slice(0, -3)}.ts`, context);
+      } catch {
+        /* fall through to the default resolution */
+      }
+    }
+  }
+  return nextResolve(specifier, context);
+}
+
 export async function load(url, context, nextLoad) {
   if (url.endsWith(".ts") || url.endsWith(".tsx") || url.endsWith(".mts")) {
     const source = readFileSync(new URL(url), "utf8");

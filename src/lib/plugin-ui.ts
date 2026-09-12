@@ -73,23 +73,40 @@ export function renderPluginCard(
         ${p.manifest?.capabilities?.setup ? `<button type="button" class="plugin-setup-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);margin-bottom:0.5rem;">Setup</button>` : ""}
         ${renderPluginConfig(p)}
         ${hasTools && pluginTools && pluginTools.length > 0 ? `<div style="margin-top:0.5rem;display:flex;flex-wrap:wrap;gap:0.25rem;">${pluginTools.map((t: string) => `<span class="badge badge-neutral" style="font-size:0.8rem;padding:0.25rem 0.5rem;">${escapeHtml(t)}</span>`).join("")}</div>` : ""}
-        ${invalidTools && invalidTools.length > 0 ? `<div class="plugin-invalid-tools" style="margin-top:0.75rem;padding:0.5rem 0.625rem;border:1px solid rgba(245,158,11,0.35);border-radius:6px;background:rgba(245,158,11,0.08);font-size:0.8rem;color:var(--text-secondary);">
+        ${
+          invalidTools && invalidTools.length > 0
+            ? `<div class="plugin-invalid-tools" style="margin-top:0.75rem;padding:0.5rem 0.625rem;border:1px solid rgba(245,158,11,0.35);border-radius:6px;background:rgba(245,158,11,0.08);font-size:0.8rem;color:var(--text-secondary);">
           <div style="font-weight:600;color:#fbbf24;margin-bottom:0.25rem;">Invalid tool name: not exposed to the agent</div>
           ${invalidTools.map((t: { tool: string; reason: string; exposed_name?: string }) => `<div><code>${escapeHtml(t.exposed_name || t.tool)}</code> - ${escapeHtml(t.reason)}</div>`).join("")}
-        </div>` : ""}
+        </div>`
+            : ""
+        }
       </div>
     </div>`;
 }
 
 // ── Action buttons ──
 
-export function renderActionButtons(
-  p: PluginData,
-  _hasRemote?: boolean,
-  _hasCompilableSource?: boolean,
-): string {
-  const isBuiltin = p.source === "built-in";
+/** Mutually exclusive Download/Update state of a plugin card. */
+export type PluginActionState = "download" | "update" | "none";
+
+/**
+ * Single source of truth for the Download/Update decision. The two states are
+ * MUTUALLY EXCLUSIVE by construction:
+ *  - "download": a remote plugin whose source has NOT been cloned yet. The
+ *    server reports `needs_download` (fallback: no source code on disk).
+ *    Update is meaningless before any source exists.
+ *  - "update": source present, installed, and refreshable (a compilable remote
+ *    crate pulls the latest from git; a script plugin re-copies its files).
+ *  - "none": built-in plugins and every other state.
+ */
+export function pluginActionState(p: PluginData): PluginActionState {
+  if (p.source === "built-in") return "none";
   const isRemote = p.source === "remote";
+  // The server field `needs_download` is authoritative; fall back to the
+  // source/hasSourceCode pair for payloads that predate it.
+  const needsDownload = isRemote && (p.needsDownload ?? !p.hasSourceCode);
+  if (needsDownload) return "download";
   const isBundled = p.source === "bundled";
   const isInstalled = !p.needsBuild;
   // A plugin is compilable (needs cargo build etc.) when it has source code
@@ -97,26 +114,38 @@ export function renderActionButtons(
   // installed by copying files : no compilation needed. The server determines
   // isScript based on build system files (Cargo.toml, package.json, pyproject.toml).
   const isCompilable = !p.isScript && !!p.hasSourceCode;
-  // Remote plugins that haven't been downloaded yet (no source code on disk)
-  const needsDownload = isRemote && !p.hasSourceCode;
+  // Compilable remote crates update from git; non-compilable, non-bundled
+  // installed plugins (scripts) update by re-copying their files.
+  const canUpdate = isInstalled && ((isRemote && isCompilable) || (!isCompilable && !isBundled));
+  return canUpdate ? "update" : "none";
+}
+
+export function renderActionButtons(
+  p: PluginData,
+  _hasRemote?: boolean,
+  _hasCompilableSource?: boolean,
+): string {
+  const isBuiltin = p.source === "built-in";
+  const isInstalled = !p.needsBuild;
+  const isCompilable = !p.isScript && !!p.hasSourceCode;
 
   if (isBuiltin) {
     return "";
   }
 
-  // Determine which buttons to show
-  const showInstall = !isBuiltin && isCompilable && !isInstalled;
-  const showReinstall = isCompilable && isInstalled;
-  const showUninstall = isCompilable && isInstalled;
+  // Download and Update come from ONE mutually exclusive state: a
+  // not-downloaded remote plugin offers ONLY Download, a downloaded one ONLY
+  // Update. See pluginActionState().
+  const actionState = pluginActionState(p);
+  const showDownload = actionState === "download";
+  const showUpdate = actionState === "update";
 
-  // Remote plugins that need their source cloned first
-  const showDownload = needsDownload;
-
-  // Non-compilable installed plugins (scripts): Update copies the files
-  const showScriptUpdate = !isCompilable && isInstalled && !isBuiltin && !isBundled;
-
-  // Remote compilable installed plugins: Update pulls latest from git
-  const showRemoteUpdate = isRemote && isCompilable && isInstalled;
+  // Determine which buttons to show (never Install/Reinstall/Uninstall while
+  // the source still has to be downloaded first).
+  const sourcePresent = actionState !== "download";
+  const showInstall = sourcePresent && isCompilable && !isInstalled;
+  const showReinstall = sourcePresent && isCompilable && isInstalled;
+  const showUninstall = sourcePresent && isCompilable && isInstalled;
 
   // Remove for everything non-builtin (hidden when Uninstall is shown instead)
   const showRemove = !isBuiltin;
@@ -148,7 +177,7 @@ export function renderActionButtons(
     );
   }
 
-  if (showScriptUpdate || showRemoteUpdate) {
+  if (showUpdate) {
     buttons.push(
       `<button type="button" class="plugin-update-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Update</button>`,
     );

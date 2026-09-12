@@ -479,6 +479,8 @@ export interface PluginData {
   isDuplicated?: boolean;
   /** True if the plugin has source code (Cargo.toml or entrypoint command) */
   hasSourceCode?: boolean;
+  /** True when a remote plugin's source has NOT been cloned yet (server `needs_download`) */
+  needsDownload?: boolean;
   /** True if this is a script-language MCP (no Cargo.toml, just entrypoint command) */
   isScript?: boolean;
   /** Remote plugin metadata (url, path, ref) */
