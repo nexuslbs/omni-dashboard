@@ -56,8 +56,8 @@ export function renderChannels(container: HTMLElement): void {
       </div>
       <div class="filter-actions" style="margin-left:auto;">
         <button id="channels-import-btn" class="btn" style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">Import</button>
-        <button id="refresh-channels-btn" class="btn btn-secondary">↻ Refresh</button>
-        <button id="reset-channels-filter" class="btn btn-secondary">✕ Reset</button>
+        <button id="refresh-channels-btn" class="btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#34d399;border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">↻ Refresh</button>
+        <button id="reset-channels-filter" class="btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:#fb7185;border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;font-weight:500;line-height:12px;white-space:nowrap;">✕ Reset</button>
       </div>
     </div>
     <div id="channels-content">
@@ -79,14 +79,15 @@ async function loadChannels(): Promise<void> {
     // /channels, /profiles, /plugins, /templates and /settings are INDEPENDENT:
     // they are started in the SAME tick (allSettledOrNull) so the page pays the
     // MAX call instead of the sum of five sequential round trips.
-    const [channels, profilesRes, pluginsRes, templatesRes, defaultProfileRes, toolsetsRes] = await allSettledOrNull([
-      apiGet<ChannelData[]>("/channels"),
-      apiGet("/profiles"),
-      apiGet<any>("/plugins"),
-      apiGet<any[]>("/templates"),
-      getDefaultProfile(),
-      apiGet<{ toolsets?: Record<string, string[]> }>("/api/toolsets"),
-    ]);
+    const [channels, profilesRes, pluginsRes, templatesRes, defaultProfileRes, toolsetsRes] =
+      await allSettledOrNull([
+        apiGet<ChannelData[]>("/channels"),
+        apiGet("/profiles"),
+        apiGet<any>("/plugins"),
+        apiGet<any[]>("/templates"),
+        getDefaultProfile(),
+        apiGet<{ toolsets?: Record<string, string[]> }>("/api/toolsets"),
+      ]);
     if (!channels) throw new Error("Failed to load channels");
     _profiles.length = 0;
     if (Array.isArray(profilesRes)) _profiles.push(...(profilesRes as any));
