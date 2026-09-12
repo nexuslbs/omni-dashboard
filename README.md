@@ -443,6 +443,10 @@ All endpoints are under `/api/`:
 | `/api/workflows`                            | PUT    | Update workflows.yml                                                     |
 | `/api/schedule`                             | GET    | List cron jobs                                                           |
 | `/api/schedule/:id`                         | GET    | Cron job detail                                                          |
+| `/api/schedule/:id`                         | DELETE | Delete cron job (removes the entry from tasks.yml)                       |
+| `/api/hooks`                                | GET    | List hooks (tasks.yml `hooks:` section)                                  |
+| `/api/hooks/:id`                            | DELETE | Delete hook (removes the entry from tasks.yml)                           |
+| `/api/hooks/:id/threads`                    | GET    | Threads spawned by a hook (`{rows,total}`, parity with /schedule)         |
 | `/api/settings`                             | GET    | All env settings (proxied to OmniAgent)                                  |
 | `/api/settings`                             | PUT    | Update settings (proxied to OmniAgent)                                   |
 | `/api/prompt-preview/:channelName`          | POST   | Preview assembled prompt (proxied to OmniAgent)                          |

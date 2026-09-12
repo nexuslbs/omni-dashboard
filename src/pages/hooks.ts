@@ -4,8 +4,11 @@
  * lib/hooks-detail.ts.
  */
 import { loadHooks } from "../lib/hooks-list";
+import { renderHookDetail } from "../lib/hook-detail-page";
 import { prefetch } from "../lib/refcache";
 import { showHooksImportModal } from "../lib/config-import";
+
+export { renderHookDetail };
 
 // ── Main render ──
 

@@ -3,6 +3,7 @@
  * Clone of src/lib/schedule-list.ts backed by the omniagent hooks REST API.
  */
 import { escapeHtml, formatApiError } from "./helpers";
+import { router } from "./router";
 import { showToast } from "./utils";
 import {
   fetchHook,
@@ -90,6 +91,7 @@ export async function loadHooks(onStateChange?: () => void): Promise<void> {
                   <button class="hook-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;color:var(--text-secondary);">${h.enabled ? "Disable" : "Enable"}</button>
                   <button class="hook-edit-btn" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:var(--accent-purple);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">Edit</button>
                   <button class="hook-delete-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:var(--accent-rose,#fb7185);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">Delete</button>
+                  <a href="/hooks/${encodeURIComponent(h.id)}" class="hook-details-btn" data-hook-id="${escapeHtml(h.id)}" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);color:var(--accent-cyan);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;text-decoration:none;display:inline-block;">Details</a>
                 </td>
               </tr>
             `,
@@ -107,6 +109,20 @@ export async function loadHooks(onStateChange?: () => void): Promise<void> {
 
 function wireHookButtons(onStateChange?: () => void): void {
   const reload = () => loadHooks(onStateChange);
+
+  // Details buttons (LAST button of each row): open the hook details page,
+  // mirroring .cron-details-btn on the schedules list.
+  document.querySelectorAll(".hook-details-btn").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const hookId = btn.getAttribute("data-hook-id");
+      if (!hookId) return;
+      if ((e as MouseEvent).button === 1) return;
+      e.preventDefault();
+      e.stopPropagation();
+      history.pushState({}, "", "/hooks/" + hookId);
+      router.go("hooks/" + hookId);
+    });
+  });
 
   // Edit buttons
   document.querySelectorAll(".hook-edit-btn").forEach((btn) => {

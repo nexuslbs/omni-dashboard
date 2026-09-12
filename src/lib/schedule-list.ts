@@ -84,6 +84,7 @@ export async function loadCronJobs(
                 <td style="text-align:right;white-space:nowrap;">
                   <button class="cron-run-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">▶ Run</button>
                   <button class="cron-toggle-active" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;color:var(--text-secondary);">${j.active ? "Deactivate" : "Activate"}</button>
+                  <button class="cron-delete-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:var(--accent-rose,#fb7185);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">Delete</button>
                   <button class="cron-edit-btn" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:var(--accent-purple);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">Edit</button>
                   <a href="/schedules/${encodeURIComponent(j.id)}" class="cron-details-btn" data-cron-id="${encodeURIComponent(j.id)}" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);color:var(--accent-cyan);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;text-decoration:none;display:inline-block;">Details</a>
                 </td>
@@ -190,6 +191,27 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
         void loadCronJobs(activeOnly, onStateChange);
       } catch (e) {
         showToast("Failed: " + formatApiError(e), "error");
+      }
+    });
+  });
+
+  // Delete buttons (with confirm): DELETE /api/schedule/{id} removes the
+  // entry from tasks.yml on the core (hot-reloaded, no omniagent restart).
+  document.querySelectorAll(".cron-delete-btn").forEach((btn) => {
+    btn.addEventListener("click", async (e) => {
+      e.stopPropagation();
+      const row = (btn as HTMLElement).closest("tr") as HTMLElement;
+      const cronId = row?.getAttribute("data-cron-id");
+      if (!cronId) return;
+      const name = row.querySelector("td")?.textContent?.trim() || cronId;
+      if (!confirm(`Delete schedule "${name}"? This cannot be undone.`)) return;
+      try {
+        const res = await fetch(`/api/schedule/${encodeURIComponent(cronId)}`, { method: "DELETE" });
+        if (!res.ok) throw new Error(await res.text());
+        showToast("Schedule deleted", "success");
+        void loadCronJobs(activeOnly, onStateChange);
+      } catch (err) {
+        showToast("Failed: " + formatApiError(err), "error");
       }
     });
   });

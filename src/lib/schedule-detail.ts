@@ -475,9 +475,7 @@ export async function showCronModal(
     existingJobs = jobs as Record<string, unknown>[];
     actions = ac as { id: string; name: string; tool_name: string; is_builtin: boolean }[];
     templates = tm as { profile: string; name: string; label: string }[];
-    toolsets = Object.keys(
-      (ts as { toolsets?: Record<string, string[]> })?.toolsets ?? {},
-    ).sort();
+    toolsets = Object.keys((ts as { toolsets?: Record<string, string[]> })?.toolsets ?? {}).sort();
   } catch {
     /* ok */
   }
@@ -746,6 +744,7 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
       <div id="detail-action-buttons" style="display:flex;gap:0.5rem;">
         <button id="detail-run-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;">▶ Run</button>
         <button id="detail-toggle-active" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;color:var(--text-secondary);">N/A</button>
+        <button id="detail-delete-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:var(--accent-rose,#fb7185);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;">Delete</button>
         <button id="detail-edit-btn" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:var(--accent-purple);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;">Edit</button>
         <a href="/schedules" class="back-link" id="back-to-schedule" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);color:var(--accent-cyan);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.85rem;text-decoration:none;">← Back to Schedules</a>
       </div>
@@ -849,6 +848,25 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
         btn.textContent = freshJob.active ? "Deactivate" : "Activate";
         void loadScheduleThreads(freshJob.id);
       }
+    } catch (err) {
+      showToast("Failed: " + (err instanceof Error ? err.message : "Unknown"), "error");
+    }
+  });
+
+  // ── Delete button (confirm, then DELETE /api/schedule/{id} which removes
+  // the entry from tasks.yml on the core and hot-reloads it) ──
+  document.getElementById("detail-delete-btn")?.addEventListener("click", async (e) => {
+    e.stopPropagation();
+    const jobName = (job && (job.name || job.id)) || cronId;
+    if (!confirm(`Delete schedule "${jobName}"? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`/api/schedule/${encodeURIComponent((job && job.id) || cronId)}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error(await res.text());
+      showToast("Schedule deleted", "success");
+      history.pushState({}, "", "/schedules");
+      router.go("schedules");
     } catch (err) {
       showToast("Failed: " + (err instanceof Error ? err.message : "Unknown"), "error");
     }
