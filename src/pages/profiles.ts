@@ -288,10 +288,15 @@ function renderProfileToolsetField(profileName: string, current: string | null):
           `<option value="${escapeHtml(id)}" ${id === current ? "selected" : ""}>${escapeHtml(id)}</option>`,
       )
       .join("");
+  // The toolset row keeps an uncapped .setting-controls (its help text spans the
+  // card), so the control needs its own cap: same flex box + max width as the
+  // provider/model selects, which .setting-controls { max-width: 420px } caps.
   return `
-    <select id="${selectId}" class="profile-toolset-select" data-profile-name="${escapeHtml(profileName)}" data-original="${escapeHtml(current || "")}">
-      ${options}
-    </select>
+    <div class="profile-toolset-control">
+      <select id="${selectId}" class="profile-toolset-select" data-profile-name="${escapeHtml(profileName)}" data-original="${escapeHtml(current || "")}">
+        ${options}
+      </select>
+    </div>
   `;
 }
 

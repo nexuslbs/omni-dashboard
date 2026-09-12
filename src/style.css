@@ -4942,6 +4942,23 @@ a.thread-row {
   min-width: 0;
 }
 
+/* Profiles: the Toolset row keeps an uncapped .setting-controls (its help text
+   spans the card), so the control box gets the same 420px cap the provider/model
+   selects inherit from .setting-controls, and the select fills that box exactly
+   like the enhanced provider/model selects do (`.custom-select { width: 100% }`). */
+.profile-toolset-control {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-width: 0;
+  width: 100%;
+  max-width: 420px;
+}
+.profile-toolset-control > .profile-toolset-select {
+  width: 100%;
+  min-width: 0;
+}
+
 .setting-input-group .filter-input,
 .setting-input-group .filter-select {
   flex: 1;
