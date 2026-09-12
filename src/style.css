@@ -3817,6 +3817,25 @@ a.thread-row {
   word-break: break-word;
 }
 
+/* The rendered Markdown view must NOT inherit the `white-space: pre-wrap` of
+   .detail-body: the newline text nodes `marked` leaves between block tags
+   would then be painted as real line breaks, adding a blank line between every
+   heading / paragraph / list / code block. This mirrors the exact reset the
+   messages boxes apply to their markdown view
+   (.ev-content-text[data-view="md"] { white-space: normal; } plus a nested
+   .markdown-content { padding: 0; }). The raw/original view keeps pre-wrap. */
+#task-description-body[data-view="md"] {
+  white-space: normal;
+}
+
+#task-description-body[data-view="md"] .markdown-content {
+  padding: 0;
+}
+
+#task-description-body[data-view="raw"] {
+  white-space: pre-wrap;
+}
+
 .kanban-comment {
   background: var(--bg-card);
   border: 1px solid var(--glass-border);

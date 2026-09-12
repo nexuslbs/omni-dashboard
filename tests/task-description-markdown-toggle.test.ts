@@ -63,6 +63,17 @@ describe("createMarkdownToggle (markdown.ts)", () => {
     );
   });
 
+  it("marks the rendered view so CSS can scope it (data-view parity with the messages boxes)", () => {
+    assert.ok(
+      markdownSrc.includes('contentEl.dataset.view = "md";'),
+      'rendered view must set data-view="md" (same contract as .ev-content-text[data-view="md"])',
+    );
+    assert.ok(
+      markdownSrc.includes('contentEl.dataset.view = "raw";'),
+      'original view must set data-view="raw"',
+    );
+  });
+
   it("renders Markdown by default and offers the way back to the original text", () => {
     assert.ok(markdownSrc.includes('btn.textContent = "View original";'), "rendered state label");
     assert.ok(markdownSrc.includes('btn.textContent = "See as Markdown";'), "raw state label");
@@ -88,5 +99,24 @@ describe("Description toggle layout (style.css)", () => {
     assert.ok(styleSrc.includes("#task-description-body {"));
     assert.ok(styleSrc.includes("overflow-wrap: anywhere;"));
     assert.ok(styleSrc.includes("word-break: break-word;"));
+  });
+
+  it("resets white-space for the rendered Markdown view (no blank line per block)", () => {
+    // .detail-body carries `white-space: pre-wrap`; the markdown view must reset
+    // it (like .ev-content-text[data-view="md"]) or every block gets an extra
+    // blank line from the preserved newlines marked emits between blocks.
+    const mdSelector = '#task-description-body[data-view="md"] {';
+    const mdNested = '#task-description-body[data-view="md"] .markdown-content {';
+    assert.ok(styleSrc.includes(mdSelector), 'rendered markdown view must be scoped by data-view="md"');
+    const mdRule = styleSrc.slice(styleSrc.indexOf(mdSelector), styleSrc.indexOf(mdNested));
+    assert.ok(mdRule.includes("white-space: normal;"), "rendered view must not inherit pre-wrap");
+    assert.ok(
+      new RegExp(mdNested.replace(/[{[]/g, "\\$&") + "\\s*padding: 0;").test(styleSrc),
+      "nested .markdown-content padding must be zeroed like the messages boxes",
+    );
+    assert.ok(
+      /#task-description-body\[data-view="raw"\] \{\s*white-space: pre-wrap;/.test(styleSrc),
+      "raw/original view must keep pre-wrap (newlines preserved)",
+    );
   });
 });

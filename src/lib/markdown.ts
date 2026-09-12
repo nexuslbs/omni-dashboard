@@ -98,6 +98,10 @@ export function createMarkdownToggle(raw: string, contentEl: HTMLElement): HTMLB
     wrapper.innerHTML = renderMarkdown(raw);
     enhanceCodeBlocks(wrapper);
     contentEl.innerHTML = `<div class="markdown-content">${wrapper.innerHTML}</div>`;
+    // Same view marker contract as the messages boxes
+    // (.ev-content-text[data-view="md"]): it lets CSS scope the rendered view
+    // (white-space: normal, no nested padding) without a second class name.
+    contentEl.dataset.view = "md";
     showingMarkdown = true;
     btn.textContent = "View original";
     btn.title = "Show the original (raw) text";
@@ -105,6 +109,7 @@ export function createMarkdownToggle(raw: string, contentEl: HTMLElement): HTMLB
 
   const showOriginal = (): void => {
     contentEl.textContent = raw;
+    contentEl.dataset.view = "raw";
     showingMarkdown = false;
     btn.textContent = "See as Markdown";
     btn.title = "Render the text as Markdown";
