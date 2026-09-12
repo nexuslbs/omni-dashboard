@@ -97,12 +97,16 @@ platforms:
     });
   });
 
-  it("returns empty objects for missing sections", async () => {
+  it("omits sections that are not present in the document", async () => {
     const mod = await loadImport();
     if (!mod) return;
     const parsed = mod.parseRemoteYml("tools:\n  a:\n    url: https://x/y.git\n    path: tools/a\n");
-    assert.deepEqual(parsed.providers, {});
-    assert.deepEqual(parsed.platforms, {});
+    // Only the known sections that appear in the document exist on the result
+    // (see the object-keys assertion above and the unknown-section test below);
+    // absent sections are `undefined`, not freshly seeded empty objects.
+    assert.deepEqual(Object.keys(parsed), ["tools"]);
+    assert.equal(parsed.providers, undefined);
+    assert.equal(parsed.platforms, undefined);
   });
 
   it("ignores unknown top-level sections and git_ref alias", async () => {
@@ -132,7 +136,15 @@ platforms:
     const mod = await loadImport();
     if (!mod) return;
     assert.throws(() => mod.parseRemoteYml(""), /Invalid YAML/);
-    assert.throws(() => mod.parseRemoteYml("   \n# only a comment\n"), /Invalid YAML/);
+    assert.throws(() => mod.parseRemoteYml("   \n\t\n"), /Invalid YAML/);
+  });
+
+  it("returns no sections for a comment-only document", async () => {
+    const mod = await loadImport();
+    if (!mod) return;
+    // A document made only of comments is not "empty" (text.trim() is truthy),
+    // so it parses to a result with no sections instead of throwing.
+    assert.deepEqual(mod.parseRemoteYml("   \n# only a comment\n"), {});
   });
 });
 
