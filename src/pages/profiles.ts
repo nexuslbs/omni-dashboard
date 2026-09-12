@@ -192,11 +192,11 @@ function renderProviderSelect(profileName: string, currentProvider: string): str
         data-profile-name="${escapeHtml(profileName)}" data-field="provider" data-original="${escapeHtml(currentProvider)}">
         ${options}
       </select>
-      <button type="button" class="profile-edit-confirm" data-profile-name="${escapeHtml(profileName)}" data-field="provider" style="display:none;width:24px;height:24px;border-radius:4px;border:1px solid var(--glass-border);background:rgba(0,0,0,0.3);cursor:pointer;color:#10b981;padding:0;" title="Save">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      <button type="button" class="setting-action-btn setting-confirm-btn profile-edit-confirm" data-profile-name="${escapeHtml(profileName)}" data-field="provider" style="display:none;" title="Save">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </button>
-      <button type="button" class="profile-edit-cancel" data-profile-name="${escapeHtml(profileName)}" data-field="provider" style="display:none;width:24px;height:24px;border-radius:4px;border:1px solid var(--glass-border);background:rgba(0,0,0,0.3);cursor:pointer;color:#f43f5e;padding:0;" title="Cancel">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <button type="button" class="setting-action-btn setting-cancel-btn profile-edit-cancel" data-profile-name="${escapeHtml(profileName)}" data-field="provider" style="display:none;" title="Cancel">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
   `;
@@ -229,11 +229,11 @@ function renderModelSelect(profileName: string, currentProvider: string, current
         ${options}
       </select>
       <button type="button" class="channel-refresh-btn" id="prof-model-refresh-${escapeHtml(profileName)}" data-profile-name="${escapeHtml(profileName)}" title="Refresh model list from provider">⟳</button>
-      <button type="button" class="profile-edit-confirm" data-profile-name="${escapeHtml(profileName)}" data-field="model" style="display:none;width:24px;height:24px;border-radius:4px;border:1px solid var(--glass-border);background:rgba(0,0,0,0.3);cursor:pointer;color:#10b981;padding:0;" title="Save">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      <button type="button" class="setting-action-btn setting-confirm-btn profile-edit-confirm" data-profile-name="${escapeHtml(profileName)}" data-field="model" style="display:none;" title="Save">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
       </button>
-      <button type="button" class="profile-edit-cancel" data-profile-name="${escapeHtml(profileName)}" data-field="model" style="display:none;width:24px;height:24px;border-radius:4px;border:1px solid var(--glass-border);background:rgba(0,0,0,0.3);cursor:pointer;color:#f43f5e;padding:0;" title="Cancel">
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      <button type="button" class="setting-action-btn setting-cancel-btn profile-edit-cancel" data-profile-name="${escapeHtml(profileName)}" data-field="model" style="display:none;" title="Cancel">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
   `;
@@ -245,10 +245,16 @@ function renderSkillsList(profileName: string, skills: string[]): string {
   }
   return `<div class="channel-tag-list">${skills
     .map((s) => {
-      // Strip extension if present, then add .md
+      // Skills live on disk in a per-skill DIRECTORY holding SKILL.md
+      // (profiles/<name>/skills/<skill>/SKILL.md). A listed entry may arrive
+      // with a .md extension: normalise it to the directory form.
       const skillName = s.endsWith(".md") ? s.slice(0, -3) : s;
-      const prefix = _explorerPrefix ? "/" + encodeURIComponent(_explorerPrefix.slice(1)) : "";
-      return `<a class="channel-tag skill-link" href="/explorer?file=${prefix}%2Fprofiles%2F${encodeURIComponent(profileName)}%2Fskills%2F${encodeURIComponent(skillName)}.md" style="text-decoration:none;cursor:pointer;">${escapeHtml(s)}</a>`;
+      // The explorer resolves `file` relative to EXPLORER_DIR, so the prefix
+      // (leading slash included) is encoded as one path segment sequence.
+      const prefix = _explorerPrefix
+        ? encodeURIComponent(_explorerPrefix.startsWith("/") ? _explorerPrefix : "/" + _explorerPrefix)
+        : "";
+      return `<a class="channel-tag skill-link" href="/explorer?file=${prefix}%2Fprofiles%2F${encodeURIComponent(profileName)}%2Fskills%2F${encodeURIComponent(skillName)}%2FSKILL.md" style="text-decoration:none;cursor:pointer;">${escapeHtml(s)}</a>`;
     })
     .join("")}</div>`;
 }
