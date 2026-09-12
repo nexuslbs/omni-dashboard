@@ -34,6 +34,48 @@ let _toolsets: Record<string, string[]> = {};
 /** Every exposed tool grouped by plugin (server_name), sorted. */
 let _plugins: PluginGroup[] = [];
 
+// ── Collapsible toolset boxes: per-box collapse state (session) ──
+// Collapsed boxes hide their whole body, leaving the header (chevron, title,
+// counts, Edit/Delete). State lives in a module Set so every re-render keeps
+// it, and is mirrored to sessionStorage so it also survives same-tab reloads;
+// each box toggles independently (same pattern as the kanban status panels).
+const COLLAPSE_LS_KEY = "toolsets-card-collapsed";
+let collapsedCards: Set<string> | null = null;
+
+function collapseState(): Set<string> {
+  if (collapsedCards) return collapsedCards;
+  collapsedCards = new Set<string>();
+  try {
+    const raw = window.sessionStorage.getItem(COLLAPSE_LS_KEY);
+    if (raw) {
+      const parsed: unknown = JSON.parse(raw);
+      if (Array.isArray(parsed)) {
+        for (const id of parsed) if (typeof id === "string") collapsedCards.add(id);
+      }
+    }
+  } catch {
+    /* storage unavailable: keep the in-memory set */
+  }
+  return collapsedCards;
+}
+
+function persistCollapseState(): void {
+  try {
+    window.sessionStorage.setItem(COLLAPSE_LS_KEY, JSON.stringify([...collapseState()]));
+  } catch {
+    /* ignore */
+  }
+}
+
+// FontAwesome classic solid chevron-down (viewBox 0 0 512 512); a collapsed
+// box rotates it 180deg via CSS so it reads as chevron-up (kanban parity).
+const CHEVRON_DOWN_SVG = `<svg viewBox="0 0 512 512" aria-hidden="true"><path d="M233.4 406.6c12.5 12.5 32.8 12.5 45.3 0l192-192c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L256 338.7 86.6 169.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l192 192z"/></svg>`;
+
+/** The catalogue `total`: every tool the plugin registry exposes. */
+function totalToolCount(): number {
+  return _plugins.reduce((n, pl) => n + pl.tools.length, 0);
+}
+
 export function renderToolsets(container: HTMLElement): void {
   container.innerHTML = `
     <div class="page-header">
@@ -127,14 +169,20 @@ function renderToolsetCard(id: string, selected: string[]): string {
     _plugins.length > 0
       ? `<div class="ts-plugin-grid">${plugins}</div>`
       : '<span class="text-muted" style="font-size:0.85rem;">No tools discovered from the plugin registry.</span>';
+  const collapsed = collapseState().has(id);
+  const current = selected.length;
+  const total = totalToolCount();
   return `
-    <div class="card settings-card" data-toolset-id="${escapeHtml(id)}">
+    <div class="card settings-card toolsets-card${collapsed ? " collapsed" : ""}" data-toolset-id="${escapeHtml(id)}">
       <div class="card-header">
+        <button type="button" class="ts-collapse-toggle" data-toolset="${escapeHtml(id)}" aria-expanded="${!collapsed}" aria-label="${collapsed ? `Expand ${escapeHtml(id)}` : `Collapse ${escapeHtml(id)}`}" title="${collapsed ? "Expand toolset" : "Collapse toolset"}">
+          ${CHEVRON_DOWN_SVG}
+        </button>
         <span class="card-title">${escapeHtml(id)}</span>
-        <span class="db-hint" style="margin-left:0.5rem;">${selected.length} tool${selected.length === 1 ? "" : "s"}${selected.length === 0 ? " (none allowed)" : ""}</span>
-        <div style="margin-left:auto;display:flex;gap:0.375rem;">
-          <button type="button" class="btn btn-sm ts-edit" data-toolset="${escapeHtml(id)}" title="Rename toolset">Edit</button>
-          <button type="button" class="btn btn-sm ts-delete" data-toolset="${escapeHtml(id)}" title="Delete toolset" style="color:#f43f5e;border-color:rgba(244,63,94,0.4);">Delete</button>
+        <span class="db-hint ts-tool-count" style="margin-left:0.5rem;">${current} tool${current === 1 ? "" : "s"} / ${total} total${current === 0 ? " (none allowed)" : ""}</span>
+        <div class="ts-card-actions">
+          <button type="button" class="btn btn-sm btn-action ts-edit" data-toolset="${escapeHtml(id)}" title="Rename toolset">✎ Edit</button>
+          <button type="button" class="btn btn-sm btn-danger ts-delete" data-toolset="${escapeHtml(id)}" title="Delete toolset">✕ Delete</button>
         </div>
       </div>
       <div class="card-body">
@@ -183,6 +231,25 @@ function wireToolsets(): void {
       }
       rerender();
       void saveToolsets("Toolset updated");
+    });
+  });
+
+  // Collapse/expand chevrons: each box toggles independently; state is kept
+  // in the module set + sessionStorage, so it survives re-renders (kanban parity).
+  content.querySelectorAll<HTMLButtonElement>(".ts-collapse-toggle").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const id = btn.dataset.toolset || "";
+      const card = btn.closest<HTMLElement>(".toolsets-card");
+      if (!id || !card) return;
+      const state = collapseState();
+      const nowCollapsed = !card.classList.contains("collapsed");
+      card.classList.toggle("collapsed", nowCollapsed);
+      if (nowCollapsed) state.add(id);
+      else state.delete(id);
+      btn.setAttribute("aria-expanded", String(!nowCollapsed));
+      btn.setAttribute("aria-label", `${nowCollapsed ? "Expand" : "Collapse"} ${id}`);
+      btn.setAttribute("title", nowCollapsed ? "Expand toolset" : "Collapse toolset");
+      persistCollapseState();
     });
   });
 

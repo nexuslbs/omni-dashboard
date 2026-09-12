@@ -4816,6 +4816,28 @@ a.thread-row {
   opacity: 0.5;
   cursor: not-allowed;
 }
+/* Small action button: compact size for row/card actions (Actions table,
+   Models provider rows, Toolsets cards). Pair with .btn-action / .btn-danger. */
+.btn-sm {
+  border-radius: 4px;
+  padding: 0.2rem 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+/* Neutral purple "edit" action variant: the shared class behind the purple
+   row buttons (Actions page Edit, Toolsets Edit). */
+.btn-action {
+  background: rgba(139, 92, 246, 0.15);
+  border: 1px solid rgba(139, 92, 246, 0.3);
+  color: var(--accent-purple);
+}
+.btn-action:hover:not(:disabled) {
+  filter: brightness(1.15);
+}
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .preview-pre {
   background: var(--bg-card);
   border: 1px solid var(--border-primary);
@@ -6415,6 +6437,53 @@ body.modal-open .sidebar {
 .ts-plugin-toggle:hover {
   color: var(--text-primary);
   background: rgba(255, 255, 255, 0.08);
+}
+
+/* Toolsets page: collapsible card (header-only when collapsed) - same
+   interaction/pattern as the kanban status panels. */
+.toolsets-card .ts-collapse-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 1.4rem;
+  height: 1.4rem;
+  margin: 0 0.4rem 0 0;
+  padding: 0;
+  background: none;
+  border: none;
+  border-radius: 6px;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: color 0.15s ease, background 0.15s ease;
+}
+.toolsets-card .ts-collapse-toggle:hover {
+  color: var(--text-primary);
+  background: rgba(148, 163, 184, 0.15);
+}
+.toolsets-card .ts-collapse-toggle svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: currentColor;
+  display: block;
+  transition: transform 0.2s ease;
+}
+/* Collapsed box: chevron rotates to up, body hidden, header keeps its actions. */
+.toolsets-card.collapsed .ts-collapse-toggle svg {
+  transform: rotate(180deg);
+}
+.toolsets-card.collapsed .card-body {
+  display: none;
+}
+
+/* Toolsets card header: right-aligned compact action group (Edit/Delete).
+   The buttons themselves are the shared .btn-sm + .btn-action/.btn-danger, so
+   they are geometrically identical to the Actions-page row buttons. */
+.toolsets-card .ts-card-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
 }
 
 /* ── Messages page: subtasks ─────────────────────────────────── */
