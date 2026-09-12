@@ -644,10 +644,10 @@ async function renderSubtasks(threadId: string): Promise<string> {
       .map((st: SubtaskRow) => {
         const emoji = subtaskStatusEmoji(st.status);
         const color = subtaskStatusColor(st.status);
-        return `<div style="display:flex;align-items:center;gap:0.5rem;padding:0.35rem 0.5rem;border-radius:4px;background:rgba(255,255,255,0.03);">
-        <span>${emoji}</span>
-        <span style="flex:1;font-size:0.85rem;">${escapeHtml(st.description)}</span>
-        <span class="badge" style="--type-color:${color};background:${color}22;border-color:${color}44;color:${color};font-size:0.7rem;padding:0.125rem 0.375rem;">${st.status}</span>
+        return `<div class="msg-subtask-row">
+        <span class="msg-subtask-status">${emoji}</span>
+        <span class="msg-subtask-desc">${escapeHtml(st.description)}</span>
+        <span class="badge msg-subtask-badge" style="--type-color:${color};background:${color}22;border-color:${color}44;color:${color};">${st.status}</span>
       </div>`;
       })
       .join("");
@@ -657,10 +657,10 @@ async function renderSubtasks(threadId: string): Promise<string> {
       (st: SubtaskRow) => st.status === "completed" || st.status === "cancelled",
     ).length;
 
-    return `<div style="margin:0.75rem;padding:0.75rem;border-radius:8px;background:var(--bg-card,rgba(255,255,255,0.04));border:1px solid var(--glass-border,rgba(255,255,255,0.08));">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:0.5rem;">
-        <span style="font-size:0.85rem;font-weight:600;color:var(--text-primary);">📋 Subtasks</span>
-        <span style="font-size:0.75rem;color:var(--text-muted);">${done}/${total} done</span>
+    return `<div class="msg-subtasks">
+      <div class="msg-subtasks-header">
+        <span class="msg-subtasks-title">📋 Subtasks</span>
+        <span class="msg-subtasks-count">${done}/${total} done</span>
       </div>
       ${rows}
     </div>`;

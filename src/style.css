@@ -6358,3 +6358,52 @@ body.modal-open .sidebar {
   color: var(--text-primary);
   background: rgba(255, 255, 255, 0.08);
 }
+
+/* ── Messages page: subtasks ─────────────────────────────────── */
+.msg-subtasks {
+  margin: 0.75rem;
+  padding: 0.75rem;
+  border-radius: 8px;
+  background: var(--bg-card, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
+  min-width: 0;
+}
+.msg-subtasks-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+}
+.msg-subtasks-title {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.msg-subtasks-count {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+.msg-subtask-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.03);
+  min-width: 0;
+}
+.msg-subtask-status {
+  flex-shrink: 0;
+}
+.msg-subtask-desc {
+  flex: 1 1 0%;
+  min-width: 0;
+  font-size: 0.85rem;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.msg-subtask-badge {
+  flex-shrink: 0;
+  font-size: 0.7rem;
+  padding: 0.125rem 0.375rem;
+}
