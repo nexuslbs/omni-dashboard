@@ -2,142 +2,31 @@
  * Kanban detail view overlay: task details, edit modal, threads.
  * Extracted from src/pages/kanban.ts
  */
-import { apiGet, apiPost, type Message, type ResetExecutionsResponse } from "./api";
+import { apiGet, apiPost, type ResetExecutionsResponse } from "./api";
+import { apiThreadsLoader, createThreadsList, threadsListIds } from "./threads-list";
 import { boardMoveEnabled, fetchBoards, nextBoardOptions } from "./kanban-boards";
 import { enhanceSelectElement, syncSelectDisplayEl } from "./dropdown";
 import { STATUS_LABELS, statusBadge, moveTask, renderTagChips } from "./kanban-board";
 // ── Helper imports ──
 import { escapeHtml, formatApiError } from "./helpers";
 import { taskModalHTML, wireTaskModal, openTaskModal } from "./kanban-create";
-import { renderMessageCard, wireMessageCardToggles } from "./message-card";
 import { createMarkdownToggle } from "./markdown";
 import { showToast } from "./utils";
 
-// ── Pagination state for kanban activity ──
-let kanbanActivityOffset = 0;
-const kanbanActivityLimit = 10;
-let kanbanActivityOrder: "desc" | "asc" = "desc";
+// ── Activity: shared threads list (last message per thread, apiGet-safe) ──
+let kanbanThreadsTaskId: string | null = null;
+const kanbanThreads = createThreadsList({
+  ids: threadsListIds("kanban"),
+  emptyText: "No activity from this task yet.",
+  scrollIntoViewId: "kanban-activity-card",
+  fetchPage: (q) =>
+    apiThreadsLoader(`/kanban/tasks/${encodeURIComponent(kanbanThreadsTaskId ?? "")}/threads`)(q),
+});
 
 async function loadKanbanActivity(taskId: string): Promise<void> {
-  const el = document.getElementById("kanban-threads");
-  if (!el) return;
-  try {
-    const data = await apiGet<{ rows: Message[]; total: number }>(
-      `/kanban/tasks/${encodeURIComponent(taskId)}/threads?offset=${kanbanActivityOffset}&limit=${kanbanActivityLimit}&order=${kanbanActivityOrder}`,
-    );
-    const total = parseInt(String(data.total)) || 0;
-    const rows = data.rows || [];
-
-    if (rows.length === 0) {
-      el.innerHTML =
-        '<div style="color:var(--text-muted);font-size:0.8rem;padding:1rem 0;">No activity from this task yet.</div>';
-      return;
-    }
-
-    el.innerHTML =
-      '<div class="events-scroll">' + rows.map((row: Message) => renderMessageCard(row)).join("") + "</div>";
-    wireMessageCardToggles(el);
-
-    // Wire thread links
-    // ── Thread link wrapping removed: native href in message-card.ts handles navigation ──
-
-    // Update pagination
-    const currentPage = Math.floor(kanbanActivityOffset / kanbanActivityLimit) + 1;
-    const pageInfo = document.getElementById("kanban-threads-page-info");
-    const prevBtn = document.getElementById("kanban-threads-prev-page") as HTMLButtonElement;
-    const nextBtn = document.getElementById("kanban-threads-next-page") as HTMLButtonElement;
-    if (pageInfo) pageInfo.textContent = `Page ${currentPage} (${total} total)`;
-    if (prevBtn) prevBtn.disabled = kanbanActivityOffset <= 0;
-    if (nextBtn) nextBtn.disabled = kanbanActivityOffset + kanbanActivityLimit >= total;
-
-    // Update order button text
-    const orderBtn = document.getElementById("kanban-threads-order-btn");
-    const orderBtnBottom = document.getElementById("kanban-threads-order-btn-bottom");
-    const arrowChar = kanbanActivityOrder === "desc" ? "↓" : "↑";
-    const label = kanbanActivityOrder === "desc" ? "Recent" : "Oldest";
-    if (orderBtn) {
-      orderBtn.querySelector(".arrow")!.textContent = arrowChar;
-      orderBtn.childNodes[1].textContent = " " + label;
-    }
-    if (orderBtnBottom) {
-      orderBtnBottom.querySelector(".arrow")!.textContent = arrowChar;
-      orderBtnBottom.childNodes[1].textContent = " " + label;
-    }
-
-    // Wire pagination buttons (clone to remove old listeners)
-    const prevClone = prevBtn?.cloneNode(true) as HTMLButtonElement;
-    const nextClone = nextBtn?.cloneNode(true) as HTMLButtonElement;
-    if (prevBtn && prevBtn.parentNode) {
-      prevBtn.parentNode.replaceChild(prevClone, prevBtn);
-      prevClone.addEventListener("click", () => {
-        kanbanActivityOffset = Math.max(0, kanbanActivityOffset - kanbanActivityLimit);
-        void loadKanbanActivity(taskId);
-      });
-    }
-    if (nextBtn && nextBtn.parentNode) {
-      nextBtn.parentNode.replaceChild(nextClone, nextBtn);
-      nextClone.addEventListener("click", () => {
-        kanbanActivityOffset += kanbanActivityLimit;
-        void loadKanbanActivity(taskId);
-      });
-    }
-
-    // Bottom pagination
-    const prevBottom = document.getElementById("kanban-threads-prev-page-bottom") as HTMLButtonElement;
-    const nextBottom = document.getElementById("kanban-threads-next-page-bottom") as HTMLButtonElement;
-    const pageInfoBottom = document.getElementById("kanban-threads-page-info-bottom");
-    const countEl = document.getElementById("kanban-threads-count");
-    if (countEl) {
-      const start = total > 0 ? kanbanActivityOffset + 1 : 0;
-      const end = Math.min(kanbanActivityOffset + rows.length, total);
-      countEl.textContent = total > 0 ? `Showing ${start}–${end} of ${total}` : "No activity found";
-    }
-    if (pageInfoBottom) pageInfoBottom.textContent = `Page ${currentPage} (${total} total)`;
-    if (prevBottom) prevBottom.disabled = kanbanActivityOffset <= 0;
-    if (nextBottom) nextBottom.disabled = kanbanActivityOffset + kanbanActivityLimit >= total;
-
-    const prevBottomClone = prevBottom?.cloneNode(true) as HTMLButtonElement;
-    const nextBottomClone = nextBottom?.cloneNode(true) as HTMLButtonElement;
-    if (prevBottom && prevBottom.parentNode) {
-      prevBottom.parentNode.replaceChild(prevBottomClone, prevBottom);
-      prevBottomClone.addEventListener("click", () => {
-        kanbanActivityOffset = Math.max(0, kanbanActivityOffset - kanbanActivityLimit);
-        void loadKanbanActivity(taskId);
-        document
-          .getElementById("kanban-activity-card")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
-    if (nextBottom && nextBottom.parentNode) {
-      nextBottom.parentNode.replaceChild(nextBottomClone, nextBottom);
-      nextBottomClone.addEventListener("click", () => {
-        kanbanActivityOffset += kanbanActivityLimit;
-        void loadKanbanActivity(taskId);
-        document
-          .getElementById("kanban-activity-card")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
-
-    // Wire order toggle buttons (clone to remove old listeners)
-    const orderBtnClone = orderBtn?.cloneNode(true) as HTMLButtonElement;
-    const orderBtnBottomClone = orderBtnBottom?.cloneNode(true) as HTMLButtonElement;
-    const toggleOrder = () => {
-      kanbanActivityOrder = kanbanActivityOrder === "desc" ? "asc" : "desc";
-      kanbanActivityOffset = 0;
-      void loadKanbanActivity(taskId);
-    };
-    if (orderBtn && orderBtn.parentNode) {
-      orderBtn.parentNode.replaceChild(orderBtnClone, orderBtn);
-      orderBtnClone.addEventListener("click", toggleOrder);
-    }
-    if (orderBtnBottom && orderBtnBottom.parentNode) {
-      orderBtnBottom.parentNode.replaceChild(orderBtnBottomClone, orderBtnBottom);
-      orderBtnBottomClone.addEventListener("click", toggleOrder);
-    }
-  } catch {
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;">Failed to load activity.</div>';
-  }
+  if (kanbanThreadsTaskId !== taskId) kanbanThreads.reset();
+  kanbanThreadsTaskId = taskId;
+  await kanbanThreads.reload();
 }
 
 // ── Detail view ──

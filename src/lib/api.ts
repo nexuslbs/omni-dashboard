@@ -489,18 +489,26 @@ export interface PluginData {
   language?: string;
 }
 
+/**
+ * Unwrap omniagent's {"success":true,"data":...} response envelope.
+ * Every core handler wraps its payload (src/server/mod.rs ok_json); a caller
+ * that reads fields off the raw body sees undefined and silently renders an
+ * empty state. Returns the body unchanged when it is not enveloped.
+ */
+export function unwrapEnvelope<T>(json: unknown): T {
+  if (json && typeof json === "object" && "success" in json && "data" in json) {
+    return (json as { data: T }).data;
+  }
+  return json as T;
+}
+
 export async function apiGet<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`);
   if (!res.ok) {
     const text = await res.text().catch(() => "Unknown error");
     throw new Error(`${res.status}: ${text}`);
   }
-  const json = await res.json();
-  // Unwrap {"success": true, "data": ...} → just the data
-  if (json && typeof json === "object" && "success" in json && "data" in json) {
-    return json.data as T;
-  }
-  return json as T;
+  return unwrapEnvelope<T>(await res.json());
 }
 
 /** Convert all snake_case keys in an object to camelCase (shallow). */
@@ -523,14 +531,8 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
     const text = await res.text().catch(() => "Unknown error");
     throw new Error(`${res.status}: ${text}`);
   }
-  const json = await res.json();
-  if (json && typeof json === "object" && "success" in json && "data" in json) {
-    return json.data as T;
-  }
-  return json as T;
+  return unwrapEnvelope<T>(await res.json());
 }
-
-/** Convert all snake_case keys in an object to camelCase (shallow). */
 
 export async function apiPut<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, {
@@ -542,14 +544,8 @@ export async function apiPut<T>(path: string, body: unknown): Promise<T> {
     const text = await res.text().catch(() => "Unknown error");
     throw new Error(`${res.status}: ${text}`);
   }
-  const json = await res.json();
-  if (json && typeof json === "object" && "success" in json && "data" in json) {
-    return json.data as T;
-  }
-  return json as T;
+  return unwrapEnvelope<T>(await res.json());
 }
-
-/** Convert all snake_case keys in an object to camelCase (shallow). */
 
 export async function apiDelete<T>(path: string): Promise<T> {
   const res = await fetch(`${API_BASE}${path}`, { method: "DELETE" });
@@ -557,11 +553,7 @@ export async function apiDelete<T>(path: string): Promise<T> {
     const text = await res.text().catch(() => "Unknown error");
     throw new Error(`${res.status}: ${text}`);
   }
-  const json = await res.json();
-  if (json && typeof json === "object" && "success" in json && "data" in json) {
-    return json.data as T;
-  }
-  return json as T;
+  return unwrapEnvelope<T>(await res.json());
 }
 
 /** Convert all snake_case keys in an object to camelCase (shallow). */

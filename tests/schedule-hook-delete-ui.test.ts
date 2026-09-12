@@ -187,8 +187,8 @@ describe("Hook details page", () => {
     assert.ok(/id="hook-counters"/.test(hookDetailSrc), "must render a hook counters block");
     assert.ok(/Counters/.test(hookDetailSrc), "the counters block must be labelled Counters");
     assert.ok(
-      /\/api\/hooks\/\$\{encodeURIComponent\(hookId\)\}\/threads/.test(hookDetailSrc),
-      "must fetch the hook's threads from GET /hooks/{id}/threads",
+      /apiThreadsLoader\(`\/hooks\/\$\{encodeURIComponent\([^)]*\)\}\/threads`\)/.test(hookDetailSrc),
+      "must fetch the hook's threads from GET /hooks/{id}/threads via the shared, envelope-safe loader",
     );
     for (const id of [
       "hook-detail-fire-btn",

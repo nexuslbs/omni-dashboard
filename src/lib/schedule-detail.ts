@@ -2,21 +2,33 @@
  * Schedule job detail view and create/edit modal.
  * Extracted from src/pages/schedule.ts
  */
-import { apiGet, type Message } from "./api";
+import { apiGet, unwrapEnvelope } from "./api";
 import { cachedGet } from "./refcache";
 import { escapeHtml, formatApiError } from "./helpers";
 import { enhanceSelectElement } from "./dropdown";
-import { renderMessageCard, wireMessageCardToggles } from "./message-card";
+import { apiThreadsLoader, createThreadsList, threadsListIds } from "./threads-list";
 import { router } from "./router";
 import { fixMissingSelectOptions } from "./helpers";
 import { showToast } from "./utils";
 
-// ── Pagination state for schedule threads ──
-let threadsOffset = 0;
-const threadsLimit = 10;
+// ── Activity: shared threads list (envelope-safe apiGet, last message per thread) ──
+// The job id is dynamic (the details page is rendered per job), so the loader
+// reads it here; switching jobs resets pagination/order to page 1, Recent.
+let scheduleThreadsJobId: string | null = null;
+const scheduleThreads = createThreadsList({
+  ids: threadsListIds("schedule"),
+  emptyText: "No activity from this task yet.",
+  scrollIntoViewId: "recent-activity-card",
+  fetchPage: (q) =>
+    apiThreadsLoader(`/schedule/${encodeURIComponent(scheduleThreadsJobId ?? "")}/threads`)(q),
+});
 
-// ── Ordering state for schedule threads ──
-let threadsOrder: "desc" | "asc" = "desc";
+/** Load the threads (last message of each) a schedule job generated. */
+export async function loadScheduleThreads(scheduleId: string): Promise<void> {
+  if (scheduleThreadsJobId !== scheduleId) scheduleThreads.reset();
+  scheduleThreadsJobId = scheduleId;
+  await scheduleThreads.reload();
+}
 
 // ── Date formatting ──
 export function formatDate(dateStr: string | null): string {
@@ -30,74 +42,6 @@ export function formatDate(dateStr: string | null): string {
     });
   } catch {
     return dateStr;
-  }
-}
-
-// ── Subtask helpers ──
-function scheduleSubtaskEmoji(status: string): string {
-  switch (status) {
-    case "completed":
-      return "✅";
-    case "cancelled":
-      return "❌";
-    case "error":
-      return "💥";
-    case "in_progress":
-      return "🔄";
-    case "pending":
-      return "⏳";
-    default:
-      return "⏳";
-  }
-}
-
-function scheduleSubtaskBadgeStyle(status: string): string {
-  const s = status.toLowerCase();
-  const color =
-    s === "completed"
-      ? "#10b981"
-      : s === "cancelled"
-        ? "#64748b"
-        : s === "error"
-          ? "#ef4444"
-          : s === "in_progress"
-            ? "#06b6d4"
-            : s === "pending"
-              ? "#f59e0b"
-              : "#64748b";
-  return `--type-color:${color};background:${color}22;border-color:${color}44;color:${color}`;
-}
-
-// ── Load subtasks for a schedule job ──
-async function loadScheduleSubtasks(scheduleId: string): Promise<void> {
-  const el = document.getElementById("schedule-subtasks");
-  if (!el) return;
-  try {
-    const res = await fetch(`/api/schedule/${encodeURIComponent(scheduleId)}/subtasks`);
-    if (!res.ok) throw new Error("Failed to load subtasks");
-    const data = await res.json();
-    if (!data.subtasks || data.subtasks.length === 0) {
-      el.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;">No subtasks.</div>';
-      return;
-    }
-    el.innerHTML = data.subtasks
-      .map(
-        (st: Record<string, string>) => `
-      <div style="display:flex;align-items:flex-start;gap:0.5rem;padding:0.3rem 0;border-bottom:1px solid var(--glass-border,rgba(255,255,255,0.08));font-size:0.8rem;">
-        <span style="flex-shrink:0;font-size:1rem;">${scheduleSubtaskEmoji(st.status)}</span>
-        <div style="flex:1;">
-          <div style="color:var(--text-primary);">${escapeHtml(st.description)}</div>
-          <div style="display:flex;gap:0.5rem;margin-top:0.2rem;">
-            <span class="badge" style="font-size:0.65rem;${scheduleSubtaskBadgeStyle(st.status)}">${escapeHtml(st.status)}</span>
-            <span style="color:var(--text-muted);font-size:0.75rem;">thread #${st.thread_id}</span>
-          </div>
-        </div>
-      </div>
-    `,
-      )
-      .join("");
-  } catch {
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;">Failed to load subtasks.</div>';
   }
 }
 
@@ -140,7 +84,9 @@ export async function fireScheduleRun(
     { method: "POST", headers: { "Content-Type": "application/json" } },
   );
   if (!res.ok) throw new Error((await res.text()) || `HTTP ${res.status}`);
-  const data = await res.json();
+  // Unwrap the {"success":true,"data":...} envelope: reading run_id/thread_id
+  // off the raw body yielded undefined (same bug class as the Activity list).
+  const data = unwrapEnvelope<{ run_id?: string; thread_id?: number }>(await res.json());
   const runId: string | null = data.run_id ?? null;
   const threadId: number | null = data.thread_id ?? null;
   if (!runId) return { runId: null, threadId, run: null, timedOut: false };
@@ -308,141 +254,11 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
           : ""
       }
 
-      <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem;">Subtasks</div>
-        <div id="schedule-subtasks" style="font-size:0.85rem;color:var(--text-muted);">Loading subtasks...</div>
-      </div>
     `;
-    void loadScheduleSubtasks(job.id);
     return job;
   } catch (e) {
     el.innerHTML = `<div class="error-state">Failed to load job details: ${formatApiError(e)}</div>`;
     return null;
-  }
-}
-
-// ── Load schedule threads (paginated) ──
-export async function loadScheduleThreads(scheduleId: string): Promise<void> {
-  const el = document.getElementById("schedule-threads");
-  if (!el) return;
-  try {
-    const res = await fetch(
-      `/api/schedule/${encodeURIComponent(scheduleId)}/threads?offset=${threadsOffset}&limit=${threadsLimit}&order=${threadsOrder}`,
-    );
-    if (!res.ok) throw new Error("Failed to load thread activity");
-    const data = await res.json();
-    const total = parseInt(data.total) || 0;
-    const rows = data.rows || [];
-
-    if (rows.length === 0) {
-      el.innerHTML =
-        '<div style="color:var(--text-muted);font-size:0.8rem;padding:1rem 0;">No activity from this task yet.</div>';
-      return;
-    }
-
-    el.innerHTML =
-      '<div class="events-scroll">' + rows.map((row: Message) => renderMessageCard(row)).join("") + "</div>";
-    wireMessageCardToggles(el);
-
-    // Wire thread links
-    // ── Thread link wrapping removed: native href in message-card.ts handles navigation ──
-
-    // Update pagination
-    const currentPage = Math.floor(threadsOffset / threadsLimit) + 1;
-    const pageInfo = document.getElementById("threads-page-info");
-    const prevBtn = document.getElementById("threads-prev-page") as HTMLButtonElement;
-    const nextBtn = document.getElementById("threads-next-page") as HTMLButtonElement;
-    if (pageInfo) pageInfo.textContent = `Page ${currentPage} (${total} total)`;
-    if (prevBtn) prevBtn.disabled = threadsOffset <= 0;
-    if (nextBtn) nextBtn.disabled = threadsOffset + threadsLimit >= total;
-
-    // Update order button text
-    const orderBtn = document.getElementById("threads-order-btn");
-    const orderBtnBottom = document.getElementById("threads-order-btn-bottom");
-    const arrowChar = threadsOrder === "desc" ? "↓" : "↑";
-    const label = threadsOrder === "desc" ? "Recent" : "Oldest";
-    if (orderBtn) {
-      orderBtn.querySelector(".arrow")!.textContent = arrowChar;
-      orderBtn.childNodes[1].textContent = " " + label;
-    }
-    if (orderBtnBottom) {
-      orderBtnBottom.querySelector(".arrow")!.textContent = arrowChar;
-      orderBtnBottom.childNodes[1].textContent = " " + label;
-    }
-
-    // Wire pagination buttons (clone to remove old listeners)
-    const prevClone = prevBtn?.cloneNode(true) as HTMLButtonElement;
-    const nextClone = nextBtn?.cloneNode(true) as HTMLButtonElement;
-    if (prevBtn && prevBtn.parentNode) {
-      prevBtn.parentNode.replaceChild(prevClone, prevBtn);
-      prevClone.addEventListener("click", () => {
-        threadsOffset = Math.max(0, threadsOffset - threadsLimit);
-        void loadScheduleThreads(scheduleId);
-      });
-    }
-    if (nextBtn && nextBtn.parentNode) {
-      nextBtn.parentNode.replaceChild(nextClone, nextBtn);
-      nextClone.addEventListener("click", () => {
-        threadsOffset += threadsLimit;
-        void loadScheduleThreads(scheduleId);
-      });
-    }
-
-    // Bottom pagination
-    const prevBottom = document.getElementById("threads-prev-page-bottom") as HTMLButtonElement;
-    const nextBottom = document.getElementById("threads-next-page-bottom") as HTMLButtonElement;
-    const pageInfoBottom = document.getElementById("threads-page-info-bottom");
-    const countEl = document.getElementById("schedule-threads-count");
-    if (countEl) {
-      const start = total > 0 ? threadsOffset + 1 : 0;
-      const end = Math.min(threadsOffset + rows.length, total);
-      countEl.textContent = total > 0 ? `Showing ${start}–${end} of ${total}` : "No activity found";
-    }
-    if (pageInfoBottom) pageInfoBottom.textContent = `Page ${currentPage} (${total} total)`;
-    if (prevBottom) prevBottom.disabled = threadsOffset <= 0;
-    if (nextBottom) nextBottom.disabled = threadsOffset + threadsLimit >= total;
-
-    const prevBottomClone = prevBottom?.cloneNode(true) as HTMLButtonElement;
-    const nextBottomClone = nextBottom?.cloneNode(true) as HTMLButtonElement;
-    if (prevBottom && prevBottom.parentNode) {
-      prevBottom.parentNode.replaceChild(prevBottomClone, prevBottom);
-      prevBottomClone.addEventListener("click", () => {
-        threadsOffset = Math.max(0, threadsOffset - threadsLimit);
-        void loadScheduleThreads(scheduleId);
-        document
-          .getElementById("recent-activity-card")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
-    if (nextBottom && nextBottom.parentNode) {
-      nextBottom.parentNode.replaceChild(nextBottomClone, nextBottom);
-      nextBottomClone.addEventListener("click", () => {
-        threadsOffset += threadsLimit;
-        void loadScheduleThreads(scheduleId);
-        document
-          .getElementById("recent-activity-card")
-          ?.scrollIntoView({ behavior: "smooth", block: "start" });
-      });
-    }
-
-    // Wire order toggle buttons (clone to remove old listeners)
-    const orderBtnClone = orderBtn?.cloneNode(true) as HTMLButtonElement;
-    const orderBtnBottomClone = orderBtnBottom?.cloneNode(true) as HTMLButtonElement;
-    const toggleOrder = () => {
-      threadsOrder = threadsOrder === "desc" ? "asc" : "desc";
-      threadsOffset = 0;
-      void loadScheduleThreads(scheduleId);
-    };
-    if (orderBtn && orderBtn.parentNode) {
-      orderBtn.parentNode.replaceChild(orderBtnClone, orderBtn);
-      orderBtnClone.addEventListener("click", toggleOrder);
-    }
-    if (orderBtnBottom && orderBtnBottom.parentNode) {
-      orderBtnBottom.parentNode.replaceChild(orderBtnBottomClone, orderBtnBottom);
-      orderBtnBottomClone.addEventListener("click", toggleOrder);
-    }
-  } catch {
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;">Failed to load activity.</div>';
   }
 }
 
@@ -732,8 +548,7 @@ export async function showCronModal(
 
 // ── Schedule detail page export ──
 export async function renderScheduleDetail(container: HTMLElement, cronId: string): Promise<void> {
-  threadsOffset = 0;
-  threadsOrder = "desc";
+  scheduleThreads.reset();
 
   container.innerHTML = `
     <div class="page-header">
@@ -759,22 +574,22 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
       <div class="card-header">
         <span class="card-title">Activity</span>
         <span class="events-nav" id="schedule-threads-nav">
-          <button class="nav-btn" id="threads-prev-page" disabled>← Prev</button>
-          <span id="threads-page-info">Page 1</span>
-          <button class="nav-btn" id="threads-next-page" disabled>Next →</button>
-          <button class="nav-btn order-btn" id="threads-order-btn"><span class="arrow">↓</span> Recent</button>
+          <button class="nav-btn" id="schedule-threads-prev-page" disabled>← Prev</button>
+          <span id="schedule-threads-page-info">Page 1</span>
+          <button class="nav-btn" id="schedule-threads-next-page" disabled>Next →</button>
+          <button class="nav-btn order-btn" id="schedule-threads-order-btn"><span class="arrow">↓</span> Recent</button>
         </span>
       </div>
       <div class="card-body" id="schedule-threads">
         <div class="loading">Loading activity...</div>
       </div>
-      <div class="card-footer" id="threads-bottom-nav" style="padding:0.75rem 1.25rem;border-top:1px solid var(--border-primary);display:flex;align-items:center;justify-content:space-between;">
+      <div class="card-footer" id="schedule-threads-bottom-nav" style="padding:0.75rem 1.25rem;border-top:1px solid var(--border-primary);display:flex;align-items:center;justify-content:space-between;">
         <span class="events-count" id="schedule-threads-count"></span>
         <span class="events-nav">
-          <button class="nav-btn" id="threads-prev-page-bottom" disabled>← Prev</button>
-          <span id="threads-page-info-bottom">Page 1</span>
-          <button class="nav-btn" id="threads-next-page-bottom" disabled>Next →</button>
-          <button class="nav-btn order-btn" id="threads-order-btn-bottom"><span class="arrow">↓</span> Recent</button>
+          <button class="nav-btn" id="schedule-threads-prev-page-bottom" disabled>← Prev</button>
+          <span id="schedule-threads-page-info-bottom">Page 1</span>
+          <button class="nav-btn" id="schedule-threads-next-page-bottom" disabled>Next →</button>
+          <button class="nav-btn order-btn" id="schedule-threads-order-btn-bottom"><span class="arrow">↓</span> Recent</button>
         </span>
       </div>
     </div>

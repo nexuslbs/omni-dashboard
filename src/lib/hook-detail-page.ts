@@ -23,12 +23,7 @@ import {
   scopeBadgeClass,
   modeBadgeClass,
 } from "./hooks";
-import { renderMessageCard, wireMessageCardToggles } from "./message-card";
-
-// ── Pagination state (one details page at a time) ──
-let threadsOffset = 0;
-const threadsLimit = 10;
-let threadsOrder: "desc" | "asc" = "desc";
+import { apiThreadsLoader, createThreadsList, threadsListIds } from "./threads-list";
 
 /** Shared red/hue danger button style (same look as the hooks list Delete). */
 const DANGER_STYLE =
@@ -101,98 +96,24 @@ async function loadHookInfo(hookId: string): Promise<Record<string, any> | null>
   }
 }
 
-// ── Threads spawned by the hook ──
+// ── Threads spawned by the hook (shared list: last message per thread) ──
+let hookThreadsHookId: string | null = null;
+const hookThreads = createThreadsList({
+  ids: threadsListIds("hook"),
+  emptyText: "No threads from this hook yet.",
+  scrollIntoViewId: "hook-activity-card",
+  fetchPage: (q) => apiThreadsLoader(`/hooks/${encodeURIComponent(hookThreadsHookId ?? "")}/threads`)(q),
+});
+
 async function loadHookThreads(hookId: string): Promise<void> {
-  const el = document.getElementById("hook-threads");
-  if (!el) return;
-  try {
-    const res = await fetch(
-      `/api/hooks/${encodeURIComponent(hookId)}/threads?offset=${threadsOffset}&limit=${threadsLimit}&order=${threadsOrder}`,
-    );
-    if (!res.ok) throw new Error("Failed to load thread activity");
-    const data = await res.json();
-    const total = parseInt(data.total) || 0;
-    const rows = data.rows || [];
-
-    if (rows.length === 0) {
-      el.innerHTML =
-        '<div style="color:var(--text-muted);font-size:0.8rem;padding:1rem 0;">No threads from this hook yet.</div>';
-    } else {
-      el.innerHTML =
-        '<div class="events-scroll">' + rows.map((row: any) => renderMessageCard(row)).join("") + "</div>";
-      wireMessageCardToggles(el);
-    }
-
-    const currentPage = Math.floor(threadsOffset / threadsLimit) + 1;
-    const pageInfo = document.getElementById("hook-threads-page-info");
-    const prevBtn = document.getElementById("hook-threads-prev-page") as HTMLButtonElement | null;
-    const nextBtn = document.getElementById("hook-threads-next-page") as HTMLButtonElement | null;
-    if (pageInfo) pageInfo.textContent = `Page ${currentPage} (${total} total)`;
-    if (prevBtn) prevBtn.disabled = threadsOffset <= 0;
-    if (nextBtn) nextBtn.disabled = threadsOffset + threadsLimit >= total;
-
-    const countEl = document.getElementById("hook-threads-count");
-    if (countEl) {
-      const start = total > 0 ? threadsOffset + 1 : 0;
-      const end = Math.min(threadsOffset + rows.length, total);
-      countEl.textContent = total > 0 ? `Showing ${start}-${end} of ${total}` : "No activity found";
-    }
-    const pageInfoBottom = document.getElementById("hook-threads-page-info-bottom");
-    const prevBottom = document.getElementById("hook-threads-prev-page-bottom") as HTMLButtonElement | null;
-    const nextBottom = document.getElementById("hook-threads-next-page-bottom") as HTMLButtonElement | null;
-    if (pageInfoBottom) pageInfoBottom.textContent = `Page ${currentPage} (${total} total)`;
-    if (prevBottom) prevBottom.disabled = threadsOffset <= 0;
-    if (nextBottom) nextBottom.disabled = threadsOffset + threadsLimit >= total;
-
-    // Rebind (clone removes old listeners)
-    const rebind = (btn: HTMLButtonElement | null, fn: () => void) => {
-      if (!btn || !btn.parentNode) return;
-      const clone = btn.cloneNode(true) as HTMLButtonElement;
-      btn.parentNode.replaceChild(clone, btn);
-      clone.addEventListener("click", fn);
-    };
-    rebind(prevBtn, () => {
-      threadsOffset = Math.max(0, threadsOffset - threadsLimit);
-      void loadHookThreads(hookId);
-    });
-    rebind(nextBtn, () => {
-      threadsOffset += threadsLimit;
-      void loadHookThreads(hookId);
-    });
-    rebind(prevBottom, () => {
-      threadsOffset = Math.max(0, threadsOffset - threadsLimit);
-      void loadHookThreads(hookId);
-    });
-    rebind(nextBottom, () => {
-      threadsOffset += threadsLimit;
-      void loadHookThreads(hookId);
-    });
-
-    const orderBtn = document.getElementById("hook-threads-order-btn");
-    const orderBtnBottom = document.getElementById("hook-threads-order-btn-bottom");
-    const arrow = threadsOrder === "desc" ? "\u2193" : "\u2191";
-    const label = threadsOrder === "desc" ? "Recent" : "Oldest";
-    for (const b of [orderBtn, orderBtnBottom]) {
-      if (!b) continue;
-      b.querySelector(".arrow")!.textContent = arrow;
-      b.childNodes[1].textContent = " " + label;
-    }
-    const toggleOrder = () => {
-      threadsOrder = threadsOrder === "desc" ? "asc" : "desc";
-      threadsOffset = 0;
-      void loadHookThreads(hookId);
-    };
-    rebind(orderBtn as HTMLButtonElement | null, toggleOrder);
-    rebind(orderBtnBottom as HTMLButtonElement | null, toggleOrder);
-  } catch {
-    el.innerHTML = '<div style="color:var(--text-muted);font-size:0.8rem;">Failed to load activity.</div>';
-  }
+  if (hookThreadsHookId !== hookId) hookThreads.reset();
+  hookThreadsHookId = hookId;
+  await hookThreads.reload();
 }
 
 // ── Details page ──
 export async function renderHookDetail(container: HTMLElement, hookId: string): Promise<void> {
-  threadsOffset = 0;
-  threadsOrder = "desc";
+  hookThreads.reset();
 
   container.innerHTML = `
     <div class="page-header">
@@ -257,7 +178,7 @@ export async function renderHookDetail(container: HTMLElement, hookId: string): 
       const res = await fetch(`/api/hooks/${encodeURIComponent(hookId)}/fire`, { method: "POST" });
       if (!res.ok) throw new Error(await res.text());
       showToast("Hook fired", "success");
-      threadsOffset = 0;
+      hookThreads.reset();
       void loadHookThreads(hookId);
     } catch (e) {
       showToast("Failed: " + formatApiError(e), "error");

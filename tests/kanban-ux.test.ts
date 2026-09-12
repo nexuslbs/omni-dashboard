@@ -129,8 +129,22 @@ describe("Reusable message box used by message-rendering pages", () => {
   it("Messages page, kanban detail and schedule detail all use renderMessageCard", () => {
     for (const f of ["pages/messages.ts", "lib/kanban-detail.ts", "lib/schedule-detail.ts"]) {
       const src = readFileSync(new URL(`../src/${f}`, import.meta.url), "utf-8");
-      assert.ok(/renderMessageCard/.test(src), `${f} must use the shared renderMessageCard message box`);
+      // The detail pages delegate message rendering to the shared threads list
+      // (src/lib/threads-list.ts), which renders every row with renderMessageCard.
+      assert.ok(
+        /renderMessageCard|createThreadsList/.test(src),
+        `${f} must render messages via renderMessageCard or the shared threads list`,
+      );
     }
+  });
+
+  it("the shared threads list renders every message card with renderMessageCard", () => {
+    const src = readFileSync(new URL("../src/lib/threads-list.ts", import.meta.url), "utf-8");
+    assert.ok(
+      /renderMessageCard/.test(src),
+      "threads-list.ts must use the shared renderMessageCard message box",
+    );
+    assert.ok(/wireMessageCardToggles/.test(src), "threads-list.ts must wire the message card toggles");
   });
 });
 
