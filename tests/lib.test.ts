@@ -199,6 +199,21 @@ describe("src/lib/plugin-ui.ts", () => {
     );
   });
 
+  it("renderPluginCard renders a uniform 'source: <value>' badge for every source", () => {
+    const content = readFileSync(new URL("../src/lib/plugin-ui.ts", import.meta.url), "utf-8");
+    // ONE uniform badge template for all sources (built-in, bundled, remote, ...):
+    // the registry `source` value is shared by tools, providers and platforms alike.
+    assert.ok(
+      /source:\s*\$\{escapeHtml\(p\.source\)\}/.test(content),
+      "card header should render the uniform `source: ${escapeHtml(p.source)}` badge",
+    );
+    // The old kind-specific label was wrong for providers/platforms (their source is
+    // also "built-in"), so it must not come back.
+    assert.ok(!/built-in tool/i.test(content), 'card must not render a "built-in tool" label');
+    // No source-conditional badge wording in the card renderer.
+    assert.ok(!/p\.source === "built-in"\s*\?/.test(content), "no source-conditional badge wording");
+  });
+
   it("renderPluginConfig function generates config fields from configSchema", () => {
     const content = readFileSync(new URL("../src/lib/plugin-ui.ts", import.meta.url), "utf-8");
     // renderPluginConfig should check configSchema and render fields + save button
