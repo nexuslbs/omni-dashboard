@@ -3794,6 +3794,28 @@ a.thread-row {
   line-height: 1.6;
   white-space: pre-wrap;
 }
+/* Section header with a title on the left and an action (e.g. the Markdown
+   toggle) on the right, keeping title and button on the same row. */
+.task-section-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.25rem;
+}
+
+.task-section-head .detail-label {
+  margin-bottom: 0;
+}
+
+/* Long descriptions must not overflow horizontally (the original view uses
+   white-space: pre-wrap, so a single long token needs an explicit break). */
+#task-description-body {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
 
 .kanban-comment {
   background: var(--bg-card);

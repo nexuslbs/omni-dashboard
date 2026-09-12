@@ -9,6 +9,7 @@ import { STATUS_LABELS, statusBadge, moveTask, renderTagChips } from "./kanban-b
 import { escapeHtml, formatApiError } from "./helpers";
 import { taskModalHTML, wireTaskModal, openTaskModal } from "./kanban-create";
 import { renderMessageCard, wireMessageCardToggles } from "./message-card";
+import { createMarkdownToggle } from "./markdown";
 import { showToast } from "./utils";
 
 // ── Pagination state for kanban activity ──
@@ -296,8 +297,11 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
         task.body
           ? `
         <div style="margin-top:1.5rem;">
-          <div class="detail-label">Description</div>
-          <div class="detail-body">${escapeHtml(task.body)}</div>
+          <div class="task-section-head">
+            <div class="detail-label" style="margin-bottom:0;">Description</div>
+            <span id="task-desc-toggle-slot"></span>
+          </div>
+          <div class="detail-body" id="task-description-body"></div>
         </div>
       `
           : ""
@@ -325,6 +329,14 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
         </div>
       </div>
     `;
+
+    // Description: rendered as Markdown by default, with a small messages-box
+    // style toggle ("View original") to the right of the section title.
+    const descBody = document.getElementById("task-description-body");
+    const descToggleSlot = document.getElementById("task-desc-toggle-slot");
+    if (descBody && descToggleSlot && task.body) {
+      descToggleSlot.appendChild(createMarkdownToggle(String(task.body), descBody));
+    }
 
     // Wire up move-to-another-board control (hidden when boards are absent)
     const moveBoardWrap = document.getElementById("task-move-board-wrap");
