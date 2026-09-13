@@ -539,6 +539,15 @@ tr:hover td {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
+/* Long unbroken tokens (JSON blobs, URIs, hashes) must never invade a
+   neighbouring cell. Grid/flex items only shrink below their min-content
+   width with min-width:0, and overflow-wrap:anywhere lets the token break,
+   so it can neither widen the track nor paint over the adjacent column. */
+.data-table [role="cell"],
+.data-table [role="columnheader"] {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 a.thread-row {
   display: table-row;
   color: inherit;
