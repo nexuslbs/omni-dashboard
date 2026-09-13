@@ -30,6 +30,7 @@ export default tseslint.config(
         projectService: {
           allowDefaultProject: [
             "server/*.ts",
+            "server/lib/*.ts",
             "server/routes/*.ts",
             "server/__tests__/*.ts",
             "tests/*.ts",

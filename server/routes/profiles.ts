@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { existsSync, readdirSync } from "fs";
 import { join } from "path";
+import { buildProfilePatchBody } from "../lib/profile-patch.js";
 
 const OMNI_DIR = process.env.OMNI_DIR;
 if (!OMNI_DIR) {
@@ -124,6 +125,8 @@ interface OmniProfile {
   model?: string | null;
   plan?: boolean | null;
   template?: string | null;
+  /** Named toolset id from config/toolsets.yml (omniagent field name). */
+  toolset?: string | null;
   allowed_tools?: string[] | null;
   skills?: string[];
 }
@@ -150,6 +153,12 @@ profilesRouter.get("/", async (_req, res) => {
       name: p.name,
       provider: p.provider ?? null,
       model: p.model ?? null,
+      plan: p.plan ?? null,
+      template: p.template ?? null,
+      // The profiles page renders its Toolset select from this field; the core
+      // entry serializes it as `toolset`, so it must be forwarded here or the
+      // select silently shows "Default" for a profile that has a toolset.
+      toolset: p.toolset ?? null,
       // `null` (allowed_tools undefined in profiles.yml) = NO allow-list
       // restriction (all tools); `[]` = explicit empty list (no tools).
       // The two states must stay distinguishable for the UI.
@@ -238,13 +247,14 @@ profilesRouter.post("/", async (req, res) => {
 profilesRouter.patch("/:name", async (req, res) => {
   try {
     const { name } = req.params;
-    const { provider, model, allowed_tools, plan, template } = req.body as any;
+    const { allowed_tools } = (req.body ?? {}) as any;
 
-    const body: Record<string, unknown> = {};
-    if (provider !== undefined) body.provider = provider || null;
-    if (model !== undefined) body.model = model || null;
-    if (plan !== undefined) body.plan = plan;
-    if (template !== undefined) body.template = template || null;
+    // Tri-state forwarding: absent = leave unchanged, `null` (or the empty
+    // string the selects use for "Default / None") = clear, a value = set.
+    // Never normalize with `value || null`: that collapsed an empty-string
+    // clear into `null`, which the core PATCH then ignored as an "absent key",
+    // so "set this field back to Default" was not persisted.
+    const body = buildProfilePatchBody((req.body ?? {}) as any);
     if (allowed_tools !== undefined) {
       // Tri-state: `null` clears the allow-list back to "undefined" (all
       // tools); an array (including []) is stored as an explicit list.

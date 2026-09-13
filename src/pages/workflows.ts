@@ -71,14 +71,15 @@ let _wfToolsets: string[] = [];
 // call instead of the sum of five sequential round trips. Failures keep the
 // previous behaviour (null result + empty fallback for that source).
 export async function loadWorkflowData(): Promise<void> {
-  const [profilesRes, pluginsRes, templatesRes, actionsRes, defaultProfileRes, toolsetsRes] = await allSettledOrNull([
-    apiGet("/profiles"),
-    apiGet<any>("/plugins"),
-    apiGet<{ profile: string; name: string; label: string }[]>("/templates"),
-    apiGet<{ id: string; name: string }[]>("/actions"),
-    getDefaultProfile(),
-    apiGet<{ toolsets?: Record<string, string[]> }>("/api/toolsets"),
-  ]);
+  const [profilesRes, pluginsRes, templatesRes, actionsRes, defaultProfileRes, toolsetsRes] =
+    await allSettledOrNull([
+      apiGet("/profiles"),
+      apiGet<any>("/plugins"),
+      apiGet<{ profile: string; name: string; label: string }[]>("/templates"),
+      apiGet<{ id: string; name: string }[]>("/actions"),
+      getDefaultProfile(),
+      apiGet<{ toolsets?: Record<string, string[]> }>("/api/toolsets"),
+    ]);
   _wfToolsets.length = 0;
   _wfToolsets.push(
     ...Object.keys((toolsetsRes as { toolsets?: Record<string, string[]> } | null)?.toolsets ?? {}).sort(),
@@ -679,12 +680,6 @@ function wireFormEvents(): void {
 }
 
 // ── Per-role allowed_tools selector ──
-
-
-
-
-
-
 
 // ── Collect & save ──
 
