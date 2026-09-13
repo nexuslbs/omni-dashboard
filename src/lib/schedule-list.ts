@@ -54,7 +54,7 @@ export async function loadCronJobs(
               .map(
                 (j: Record<string, any>) => `
               <tr data-cron-id="${escapeHtml(j.id)}">
-                <td><span class="emphasized-title">${escapeHtml(j.name || j.id)}</span></td>
+                <td><span class="emphasized-title emphasized-title--compact">${escapeHtml(j.name || j.id)}</span></td>
                 <td><code style="background:var(--bg-card);padding:0.125rem 0.375rem;border-radius:3px;font-size:0.75rem;">${escapeHtml(j.cron)}</code></td>
                 <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted);font-size:0.8rem;">
                   ${

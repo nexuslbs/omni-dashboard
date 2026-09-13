@@ -519,9 +519,35 @@ describe("Threads page 'Show details' toggle + workflow details (dashboard UI po
     const scheduleList = readFileSync(new URL("../src/lib/schedule-list.ts", import.meta.url), "utf-8");
     const hooksList = readFileSync(new URL("../src/lib/hooks-list.ts", import.meta.url), "utf-8");
     assert.ok(/<span class="emphasized-title">\${escapeHtml\(task\.title\)}<\/span>/.test(kanban));
-    assert.ok(/Job: <span class="emphasized-title">/.test(scheduleDetail));
-    assert.ok(/<span class="emphasized-title">\$\{escapeHtml\(j\.name \|\| j\.id\)\}/.test(scheduleList));
-    assert.ok(/<span class="emphasized-title">\$\{escapeHtml\(hookName\(h\)\)\}/.test(hooksList));
+    assert.ok(/Job: <span class="emphasized-title emphasized-title--compact">/.test(scheduleDetail));
+    assert.ok(
+      /<span class="emphasized-title emphasized-title--compact">\$\{escapeHtml\(j\.name \|\| j\.id\)\}/.test(
+        scheduleList,
+      ),
+    );
+    assert.ok(
+      /<span class="emphasized-title emphasized-title--compact">\$\{escapeHtml\(hookName\(h\)\)\}/.test(
+        hooksList,
+      ),
+    );
+  });
+
+  it("hooks/schedules item titles are compact (.875rem) while the kanban title keeps the 1.1rem base", () => {
+    const css = readFileSync(new URL("../src/style.css", import.meta.url), "utf-8");
+    const kanban = readFileSync(new URL("../src/lib/kanban-detail.ts", import.meta.url), "utf-8");
+    assert.ok(
+      /\.emphasized-title--compact \{\s*font-size:\s*\.875rem;/.test(css),
+      "the compact modifier must set font-size .875rem",
+    );
+    // The base (1.1rem) rule stays the default so the kanban task title is untouched.
+    assert.ok(
+      /\.emphasized-title \{\s*font-size:\s*1\.1rem;/.test(css),
+      "the shared base rule must keep 1.1rem",
+    );
+    assert.ok(
+      /<span class="emphasized-title">\$\{escapeHtml\(task\.title\)\}/.test(kanban),
+      "kanban must NOT get the compact modifier",
+    );
   });
 
   it("style.css provides the threads grid, details box and emphasized-title styles", () => {

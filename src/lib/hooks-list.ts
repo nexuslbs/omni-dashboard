@@ -69,7 +69,7 @@ export async function loadHooks(onStateChange?: () => void): Promise<void> {
                 (h: Record<string, any>) => `
               <tr data-hook-id="${escapeHtml(h.id)}">
                 <td>
-                  <div><span class="emphasized-title">${escapeHtml(hookName(h))}</span></div>
+                  <div><span class="emphasized-title emphasized-title--compact">${escapeHtml(hookName(h))}</span></div>
                   <div style="font-size:0.7rem;color:var(--text-muted);font-weight:400;">${escapeHtml(h.id)}</div>
                 </td>
                 <td><span class="badge ${eventBadgeClass(String(h.event || ""))}">${escapeHtml(EVENT_LABELS[h.event] || h.event || "-")}</span></td>
