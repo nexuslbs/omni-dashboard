@@ -3,7 +3,13 @@
  * Extracted from src/pages/kanban.ts
  */
 import { apiGet, type KanbanBoardResponse, type KanbanTask } from "./api";
-import { boardMetaLabel, fetchBoards, getStoredBoard, setStoredBoard } from "./kanban-boards";
+import {
+  boardMetaLabel,
+  fetchBoards,
+  getStoredBoard,
+  selectBoardInControls,
+  setStoredBoard,
+} from "./kanban-boards";
 import { formatApiError } from "../lib/helpers";
 import { showToast } from "./utils";
 
@@ -351,8 +357,16 @@ export async function loadBoard(
             const b = (btn as HTMLElement).getAttribute("data-board");
             if (!b) return;
             setStoredBoard(b);
-            history.replaceState(null, "", `/kanban?board=${encodeURIComponent(b)}`);
-            void loadBoard(showArchived, b);
+            // Single source of truth: reflect the click in the header board
+            // select, whose change handler updates the board state, the URL
+            // and the controls together (the select must never keep showing
+            // "No board" while this board's page is rendered). Fallback for
+            // the no-select case (board controls not rendered): update the
+            // URL and reload the board directly.
+            if (!selectBoardInControls(b)) {
+              history.replaceState(null, "", `/kanban?board=${encodeURIComponent(b)}`);
+              void loadBoard(showArchived, b);
+            }
           });
         });
         return;

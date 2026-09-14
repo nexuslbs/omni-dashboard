@@ -17,7 +17,7 @@ import {
   type WorkflowEntry,
 } from "./api";
 import { escapeHtml } from "./helpers";
-import { enhanceSelectElement } from "./dropdown";
+import { enhanceSelectElement, syncSelectDisplayEl } from "./dropdown";
 
 // ── localStorage persistence ──
 
@@ -301,6 +301,26 @@ export async function populateBoardSelect(selectId: string, selected: string | n
     if (b.key === selected) opt.selected = true;
     select.appendChild(opt);
   }
+}
+
+/**
+ * Reflect a programmatically chosen board (e.g. a click on a board panel of
+ * the "select a board" prompt) in the header board select, so the select can
+ * never keep showing "No board" while the page shows that board's tasks.
+ *
+ * The select's own change handler is the single source of truth for board
+ * state, the URL and the board reload, so we set the value + sync the custom
+ * dropdown display and dispatch "change" instead of duplicating that logic.
+ * Returns false when the select is not rendered (no controls), so the caller
+ * can fall back to updating the stored board / URL / board view directly.
+ */
+export function selectBoardInControls(board: string): boolean {
+  const sel = document.getElementById("kanban-board-select") as HTMLSelectElement | null;
+  if (!sel) return false;
+  sel.value = board;
+  syncSelectDisplayEl(sel);
+  sel.dispatchEvent(new Event("change", { bubbles: true }));
+  return true;
 }
 
 /**
