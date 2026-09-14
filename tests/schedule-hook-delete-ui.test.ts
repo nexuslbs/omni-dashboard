@@ -57,15 +57,17 @@ function orderOf(src: string, needles: string[], what: string): void {
 }
 
 describe("Schedules main page: Delete button", () => {
-  it("renders Delete (rose danger) between Activate/Deactivate and Edit, all row buttons same size", () => {
+  it("renders Delete (rose danger) after Edit, all row buttons same size", () => {
     const row = block(listSrc, '<button class="cron-run-btn"', "</td>", "schedules actions cell");
+    // Canonical order (task_omnidev_dashboard_unify_item_action_buttons, 94e958c):
+    // Run | Disable/Enable | Edit | Delete | Details.
     orderOf(
       row,
       [
         'class="cron-run-btn"',
         'class="cron-toggle-active"',
-        'class="cron-delete-btn"',
         'class="cron-edit-btn"',
+        'class="cron-delete-btn"',
         'class="cron-details-btn"',
       ],
       "schedules action order",
@@ -104,10 +106,17 @@ describe("Schedules main page: Delete button", () => {
 });
 
 describe("Schedule details page: top Delete button", () => {
-  it("places a same-size red Delete button between Activate/Deactivate and Edit", () => {
+  it("places a same-size red Delete button after Disable/Enable and Edit", () => {
+    // Canonical order (94e958c): Run | Disable/Enable | Edit | Delete, then the
+    // terminal back-link.
     orderOf(
       detailSrc,
-      ['id="detail-toggle-active"', 'id="detail-delete-btn"', 'id="detail-edit-btn"'],
+      [
+        'id="detail-run-btn"',
+        'id="detail-toggle-active"',
+        'id="detail-edit-btn"',
+        'id="detail-delete-btn"',
+      ],
       "schedule details top buttons",
     );
     const del = block(detailSrc, 'id="detail-delete-btn"', "</button>", "detail delete button");

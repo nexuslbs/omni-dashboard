@@ -36,15 +36,19 @@ const cssRule = (selector: string): string => {
 };
 
 describe("Toolsets page: Edit/Delete buttons follow the Actions-page styling", () => {
-  it("Actions page keeps the reference markup (Edit purple / Delete danger)", () => {
-    // The Actions page is the reference and must NOT be changed by this task.
+  it("Actions page keeps the reference markup (purple Edit / danger Delete)", () => {
+    // The Actions page is the styling reference. Its button LABELS are owned by a
+    // different task: task_omnidev_dashboard_unify_item_action_buttons (94e958c)
+    // unified the item-action names across Schedule/Hooks/Actions to the bare
+    // canonical set Run | Disable | Edit | Delete (dropping the ▶/✎/✕/⏸ glyph
+    // prefixes); the shared classes and colours are unchanged.
     assert.ok(
-      /class="btn btn-sm action-btn-table"[^>]*>✎ Edit<\/button>/.test(actions),
-      "Actions Edit button intact",
+      /class="btn btn-sm action-btn-table"[^>]*>Edit<\/button>/.test(actions),
+      "Actions Edit button keeps the shared classes + canonical label",
     );
     assert.ok(
-      /class="btn btn-sm btn-danger"[^>]*>✕ Delete<\/button>/.test(actions),
-      "Actions Delete button intact",
+      /class="btn btn-sm btn-danger"[^>]*>Delete<\/button>/.test(actions),
+      "Actions Delete button keeps the shared classes + canonical label",
     );
   });
 
