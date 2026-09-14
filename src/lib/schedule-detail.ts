@@ -137,48 +137,48 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
       <div class="detail-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:1rem;">
         <div>
           <div style="margin-bottom:0.75rem;">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Name</div>
+            <div class="detail-label">Name</div>
             <div style="color:var(--text-primary);font-weight:500;">${escapeHtml(job.name || job.id)}</div>
           </div>
           <div style="margin-bottom:0.75rem;">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Schedule</div>
+            <div class="detail-label">Schedule</div>
             <code style="background:var(--bg-card);padding:0.25rem 0.5rem;border-radius:4px;font-size:0.8rem;color:var(--accent-cyan);">${escapeHtml(job.cron)}</code>
           </div>
           <div style="margin-bottom:0.75rem;">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Mode</div>
+            <div class="detail-label">Mode</div>
             <div style="color:var(--text-primary);">${job.mode ? escapeHtml(job.mode) : "-"}</div>
           </div>
           <div style="margin-bottom:0.75rem;">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Toolset</div>
+            <div class="detail-label">Toolset</div>
             <div style="color:var(--text-primary);">${job.toolset ? escapeHtml(String(job.toolset)) : "- (All tools allowed)"}</div>
           </div>
           ${
             job.mode === "action"
               ? `
           <div style="margin-bottom:0.75rem;">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Silent</div>
+            <div class="detail-label">Silent</div>
             <div><span class="badge ${job.silent ? "badge-warning" : "badge-neutral"}">${job.silent ? "Silent (thread only on error)" : "Not silent"}</span></div>
           </div>`
               : ""
           }
           <div style="margin-bottom:0.75rem;">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Status</div>
+            <div class="detail-label">Status</div>
             <div>
               <span class="badge ${job.active ? "badge-success" : "badge-neutral"}">${job.active ? "Active" : "Inactive"}</span>
             </div>
           </div>
           <div style="margin-bottom:0.75rem;">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Channel</div>
+            <div class="detail-label">Channel</div>
             <div style="color:var(--text-primary);">${job.channel ? escapeHtml(String(job.channel)) : "-"}</div>
           </div>
         </div>
         <div>
           <div style="margin-bottom:0.75rem;">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Profile</div>
+            <div class="detail-label">Profile</div>
             <div style="color:var(--text-primary);">${job.profile ? escapeHtml(job.profile) : "-"}</div>
           </div>
           <div style="margin-bottom:0.75rem;">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Last Run</div>
+            <div class="detail-label">Last Run</div>
             <div style="color:var(--text-primary);">${formatDate(job.last_run_at ?? job.last_run)}</div>
             ${
               job.mode === "action" && job.last_run_status
@@ -193,20 +193,20 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
             }
           </div>
           <div style="margin-bottom:0.75rem;">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Next Run</div>
+            <div class="detail-label">Next Run</div>
             <div style="color:var(--text-primary);">${formatDate(job.next_run)}</div>
           </div>
           ${
             job.mode === "action"
               ? `
           <div style="margin-bottom:0.75rem;">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Action</div>
+            <div class="detail-label">Action</div>
             <div style="color:var(--accent-cyan);font-weight:500;">${escapeHtml(job.action_name || job.action_id || "-")}</div>
           </div>`
               : ""
           }
           <div style="margin-bottom:0.75rem;">
-            <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Created</div>
+            <div class="detail-label">Created</div>
             <div style="color:var(--text-muted);font-size:0.8rem;">${formatDate(job.created_at)}</div>
           </div>
         </div>
@@ -216,7 +216,7 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
         job.mode === "agentic" && job.prompt
           ? `
       <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Prompt</div>
+        <div class="detail-label">Prompt</div>
         <pre style="background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:0.75rem;font-size:0.8rem;color:var(--text-secondary);white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;line-height:1.5;">${escapeHtml(job.prompt)}</pre>
       </div>`
           : ""
@@ -225,7 +225,7 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
         job.mode === "action" && job.action_id
           ? `
       <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Action</div>
+        <div class="detail-label">Action</div>
         <div style="background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:0.75rem;font-size:0.9rem;color:var(--accent-cyan);font-weight:500;">${escapeHtml(job.action_name || job.action_id || "")}</div>
         <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">This job runs without an agent: the scheduler executes the action directly.</div>
       </div>`
@@ -236,7 +236,7 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
         job.skills && job.skills.length > 0
           ? `
       <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.5rem;">Skills</div>
+        <div class="detail-label">Skills</div>
         <div style="display:flex;flex-wrap:wrap;gap:0.375rem;">
           ${job.skills.map((s: string) => `<span class="badge badge-info">${escapeHtml(s)}</span>`).join("")}
         </div>
@@ -248,7 +248,7 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
         job.workdir
           ? `
       <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
-        <div style="font-size:0.75rem;color:var(--text-muted);margin-bottom:0.25rem;">Work Directory</div>
+        <div class="detail-label">Work Directory</div>
         <code style="background:var(--bg-card);padding:0.25rem 0.5rem;border-radius:4px;font-size:0.8rem;color:var(--accent-cyan);">${escapeHtml(job.workdir)}</code>
       </div>`
           : ""
@@ -557,10 +557,11 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
         <p class="page-subtitle" id="detail-subtitle">Job: ${escapeHtml(cronId)}</p>
       </div>
       <div id="detail-action-buttons" style="display:flex;gap:0.5rem;">
-        <button id="detail-run-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;">▶ Run</button>
+        <!-- Fixed action order (same as the list pages): Run | Disable/Enable | Edit | Delete -->
+        <button id="detail-run-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;">Run</button>
         <button id="detail-toggle-active" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;color:var(--text-secondary);">N/A</button>
-        <button id="detail-delete-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:var(--accent-rose,#fb7185);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;">Delete</button>
         <button id="detail-edit-btn" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:var(--accent-purple);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;">Edit</button>
+        <button id="detail-delete-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:var(--accent-rose,#fb7185);border-radius:4px;padding:0.3rem 0.6rem;cursor:pointer;font-size:0.78rem;line-height:1.4;font-weight:500;">Delete</button>
         <a href="/schedules" class="back-link" id="back-to-schedule" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);color:var(--accent-cyan);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.85rem;text-decoration:none;">← Back to Schedules</a>
       </div>
     </div>
@@ -606,7 +607,7 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
   // Update the toggle button text once we know the job state
   const toggleBtn = document.getElementById("detail-toggle-active") as HTMLButtonElement | null;
   if (toggleBtn && job) {
-    toggleBtn.textContent = job.active ? "Deactivate" : "Activate";
+    toggleBtn.textContent = job.active ? "Disable" : "Enable";
   }
 
   // ── Run button ──
@@ -643,12 +644,13 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
     }
   });
 
-  // ── Activate / Deactivate button ──
+  // ── Disable / Enable button (position 2) ──
   document.getElementById("detail-toggle-active")?.addEventListener("click", async (e) => {
     e.stopPropagation();
     if (!job) return;
     const btn = e.currentTarget as HTMLButtonElement;
-    const isActive = btn.textContent === "Activate";
+    // Toggle is action #2 and reads Disable/Enable: "Enable" = currently inactive.
+    const isActive = btn.textContent === "Enable";
     try {
       const res = await fetch(`/api/schedule/${encodeURIComponent(job.id)}/toggle`, {
         method: "PATCH",
@@ -656,11 +658,11 @@ export async function renderScheduleDetail(container: HTMLElement, cronId: strin
         body: JSON.stringify({ active: isActive }),
       });
       if (!res.ok) throw new Error(await res.text());
-      showToast(isActive ? "Activated" : "Deactivated", "success");
+      showToast(isActive ? "Enabled" : "Disabled", "success");
       // Re-render the detail page with fresh data
       const freshJob = await loadScheduleDetail(cronId);
       if (freshJob) {
-        btn.textContent = freshJob.active ? "Deactivate" : "Activate";
+        btn.textContent = freshJob.active ? "Disable" : "Enable";
         void loadScheduleThreads(freshJob.id);
       }
     } catch (err) {

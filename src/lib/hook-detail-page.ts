@@ -5,7 +5,7 @@
  * hook's configuration, its counters (live counter + trigger count) and the
  * threads the hook spawned (GET /hooks/{id}/threads, parity with
  * GET /schedule/{id}/threads). Top action buttons mirror the schedule details
- * page: Fire, Activate/Deactivate, Delete (red hue), Edit, Back.
+ * page: Run, Disable/Enable (position 2), Edit, Delete, Back.
  */
 import { escapeHtml, formatApiError } from "./helpers";
 import { router } from "./router";
@@ -38,9 +38,11 @@ async function loadHookInfo(hookId: string): Promise<Record<string, any> | null>
   try {
     const hook = (await fetchHook(hookId)) as unknown as Record<string, any>;
     const scope = String(hook.scope || "global");
+    // Task-details fields: NO separator borders (same treatment as the
+    // Schedule task details page) and the shared kanban `.detail-label` style.
     const infoRow = (label: string, value: string) => `
-      <div style="padding:0.5rem 0;border-bottom:1px solid var(--border-primary);">
-        <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.2rem;">${label}</div>
+      <div style="padding:0.5rem 0;">
+        <div class="detail-label">${label}</div>
         <div style="font-size:0.85rem;color:var(--text-primary);word-break:break-word;">${value}</div>
       </div>`;
 
@@ -75,13 +77,13 @@ async function loadHookInfo(hookId: string): Promise<Record<string, any> | null>
       ${
         hook.prompt
           ? `<div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
-              <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.375rem;">Prompt</div>
+              <div class="detail-label">Prompt</div>
               <pre style="background:var(--bg-card);border:1px solid var(--border-primary);border-radius:6px;padding:0.625rem;font-size:0.78rem;color:var(--text-secondary);white-space:pre-wrap;word-break:break-word;margin:0;">${escapeHtml(String(hook.prompt))}</pre>
             </div>`
           : ""
       }
       <div id="hook-counters" style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
-        <div style="font-size:0.72rem;color:var(--text-muted);margin-bottom:0.375rem;">Counters</div>
+        <div class="detail-label">Counters</div>
         <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
           <div style="font-size:1.35rem;font-weight:600;color:var(--accent-cyan,#22d3ee);">${escapeHtml(formatHookCounter(hook.counter, scope))}</div>
           <div style="font-size:0.8rem;color:var(--text-muted);">trigger count: ${escapeHtml(String(hook.count ?? 1))}</div>
@@ -122,10 +124,11 @@ export async function renderHookDetail(container: HTMLElement, hookId: string): 
         <p class="page-subtitle" id="hook-detail-subtitle">Hook: ${escapeHtml(hookId)}</p>
       </div>
       <div id="hook-detail-action-buttons" style="display:flex;gap:0.5rem;">
-        <button id="hook-detail-fire-btn" style="${TOP_BTN_STYLE}background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);">&#9654; Fire</button>
+        <!-- Fixed action order (same as the hooks list): Run | Disable/Enable | Edit | Delete -->
+        <button id="hook-detail-fire-btn" style="${TOP_BTN_STYLE}background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);">Run</button>
         <button id="hook-detail-toggle-active" style="${TOP_BTN_STYLE}background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);color:var(--text-secondary);">N/A</button>
-        <button id="hook-detail-delete-btn" style="${DANGER_STYLE}">Delete</button>
         <button id="hook-detail-edit-btn" style="${TOP_BTN_STYLE}background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:var(--accent-purple);">Edit</button>
+        <button id="hook-detail-delete-btn" style="${DANGER_STYLE}">Delete</button>
         <a href="/hooks" class="back-link" id="back-to-hooks" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.25);color:var(--accent-cyan);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.85rem;text-decoration:none;">&#8592; Back to Hooks</a>
       </div>
     </div>
@@ -185,7 +188,7 @@ export async function renderHookDetail(container: HTMLElement, hookId: string): 
     }
   });
 
-  // ── Activate / Deactivate ──
+  // ── Disable / Enable ──
   toggleBtn?.addEventListener("click", async () => {
     try {
       const res = await fetch(`/api/hooks/${encodeURIComponent(hookId)}/toggle`, { method: "PATCH" });

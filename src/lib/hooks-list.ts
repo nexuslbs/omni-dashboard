@@ -87,7 +87,8 @@ export async function loadHooks(onStateChange?: () => void): Promise<void> {
                   </span>
                 </td>
                 <td style="text-align:right;white-space:nowrap;">
-                  <button class="hook-fire-btn" title="Manually trigger this hook" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">▶ Fire</button>
+                  <!-- Fixed action order (same as schedule/actions): Run | Disable/Enable | Edit | Delete | Details -->
+                  <button class="hook-fire-btn" title="Manually trigger this hook" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">Run</button>
                   <button class="hook-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;color:var(--text-secondary);">${h.enabled ? "Disable" : "Enable"}</button>
                   <button class="hook-edit-btn" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:var(--accent-purple);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">Edit</button>
                   <button class="hook-delete-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:var(--accent-rose,#fb7185);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">Delete</button>
@@ -147,7 +148,7 @@ function wireHookButtons(onStateChange?: () => void): void {
       const fireBtn = btn as HTMLButtonElement;
       const originalText = fireBtn.textContent;
       fireBtn.disabled = true;
-      fireBtn.textContent = "Firing...";
+      fireBtn.textContent = "Running...";
       try {
         const res = await fetch(`/api/hooks/${encodeURIComponent(hookId)}/fire`, {
           method: "POST",

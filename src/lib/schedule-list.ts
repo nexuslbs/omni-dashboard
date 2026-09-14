@@ -82,10 +82,11 @@ export async function loadCronJobs(
                   </span>
                 </td>
                 <td style="text-align:right;white-space:nowrap;">
-                  <button class="cron-run-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">▶ Run</button>
-                  <button class="cron-toggle-active" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;color:var(--text-secondary);">${j.active ? "Deactivate" : "Activate"}</button>
-                  <button class="cron-delete-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:var(--accent-rose,#fb7185);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">Delete</button>
+                  <!-- Fixed action order (same as hooks/actions): Run | Disable/Enable | Edit | Delete | Details -->
+                  <button class="cron-run-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:var(--accent-green,#10b981);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">Run</button>
+                  <button class="cron-toggle-active" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;color:var(--text-secondary);">${j.active ? "Disable" : "Enable"}</button>
                   <button class="cron-edit-btn" style="background:rgba(139,92,246,0.1);border:1px solid rgba(139,92,246,0.2);color:var(--accent-purple);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">Edit</button>
+                  <button class="cron-delete-btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:var(--accent-rose,#fb7185);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;">Delete</button>
                   <a href="/schedules/${encodeURIComponent(j.id)}" class="cron-details-btn" data-cron-id="${encodeURIComponent(j.id)}" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);color:var(--accent-cyan);border-radius:4px;padding:0.2rem 0.5rem;cursor:pointer;font-size:0.75rem;line-height:1.4;text-decoration:none;display:inline-block;">Details</a>
                 </td>
               </tr>
@@ -179,7 +180,9 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
       const row = (btn as HTMLElement).closest("tr") as HTMLElement;
       const cronId = row?.getAttribute("data-cron-id");
       if (!cronId) return;
-      const isActive = btn.textContent === "Activate";
+      // The toggle button is position 2 and reads Disable/Enable (see the
+      // row template): "Enable" means the job is currently inactive.
+      const isActive = btn.textContent === "Enable";
       try {
         const res = await fetch(`/api/schedule/${encodeURIComponent(cronId)}/toggle`, {
           method: "PATCH",
@@ -187,7 +190,7 @@ function wireCronButtons(activeOnly: boolean, onStateChange: (active: boolean) =
           body: JSON.stringify({ active: isActive }),
         });
         if (!res.ok) throw new Error(await res.text());
-        showToast(isActive ? "Activated" : "Deactivated", "success");
+        showToast(isActive ? "Enabled" : "Disabled", "success");
         void loadCronJobs(activeOnly, onStateChange);
       } catch (e) {
         showToast("Failed: " + formatApiError(e), "error");
