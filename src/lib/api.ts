@@ -258,8 +258,35 @@ export interface KanbanTask {
   archived?: boolean;
   plan?: boolean;
   tags?: string[];
+  /**
+   * Per-role workflow attempt counters. Present on `GET /kanban/tasks/{id}`
+   * (detail) only; the board list omits the key.
+   */
+  counters?: KanbanTaskCounters;
   created_at: string;
   updated_at: string;
+}
+
+/**
+ * Per-role workflow counters of one kanban task (task detail endpoint).
+ *
+ * Each role counter is the number of attempts (threads) DISPATCHED for that
+ * workflow role for this task - not "threads currently in that status" - so it
+ * stays correct while the task sits in any column. `executions` is the total
+ * executor attempts and `retries` is every executor attempt beyond the first
+ * (`executions - 1`).
+ */
+export interface KanbanTaskCounters {
+  /** Executor attempts: threads dispatched in the `running` step. */
+  executor: number;
+  /** Tester attempts: threads dispatched in the `testing` step. */
+  tester: number;
+  /** Reviewer attempts: threads dispatched in the `review` step. */
+  reviewer: number;
+  /** Total executor attempts for this task. */
+  executions: number;
+  /** Executor attempts beyond the first (`executions - 1`, 0 when none). */
+  retries: number;
 }
 
 export interface KanbanColumn {

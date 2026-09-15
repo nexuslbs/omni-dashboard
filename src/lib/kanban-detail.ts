@@ -2,7 +2,7 @@
  * Kanban detail view overlay: task details, edit modal, threads.
  * Extracted from src/pages/kanban.ts
  */
-import { apiGet, apiPost, type ResetExecutionsResponse } from "./api";
+import { apiGet, apiPost, type KanbanTaskCounters, type ResetExecutionsResponse } from "./api";
 import { apiThreadsLoader, createThreadsList, threadsListIds } from "./threads-list";
 import { boardMoveEnabled, fetchBoards, nextBoardOptions } from "./kanban-boards";
 import { enhanceSelectElement, syncSelectDisplayEl } from "./dropdown";
@@ -30,6 +30,50 @@ async function loadKanbanActivity(taskId: string): Promise<void> {
 }
 
 // ── Detail view ──
+
+/**
+ * Workflow counters block: how much work the task consumed per workflow role,
+ * plus the executor executions / retries counter.
+ *
+ * The numbers come from the task detail endpoint (`GET /kanban/tasks/{id}` ->
+ * `counters`), computed server-side in ONE aggregate over the task's threads -
+ * the dashboard issues no extra request. Each role counter is an ATTEMPT count
+ * (threads dispatched for that role), so it stays correct while the task sits
+ * in another column. Rendered only when the API returns `counters` (a dashboard
+ * talking to an older server degrades silently instead of showing zeros).
+ */
+function renderWorkflowCounters(task: { counters?: KanbanTaskCounters }): string {
+  const c = task.counters;
+  if (!c) return "";
+  const num = (v: unknown) => Math.max(0, Number(v ?? 0) || 0);
+
+  const chip = (label: string, value: number, title: string) =>
+    `<span class="badge badge-neutral" style="font-size:0.72rem;font-weight:400;" title="${escapeHtml(title)}">${escapeHtml(label)}: <strong>${value}</strong></span>`;
+
+  const executor = num(c.executor);
+  const tester = num(c.tester);
+  const reviewer = num(c.reviewer);
+  const executions = num(c.executions);
+  const retries = num(c.retries);
+
+  const rowTitle =
+    "Workflow counters: one attempt per thread dispatched for the task. " +
+    "Executor (running) = executor attempts, Tester (testing) = tester attempts, " +
+    "Reviewer (review) = reviewer attempts. Executions/retries = executor attempts " +
+    "(retries = executions - 1); reworks and re-tests add attempts. " +
+    "Counts are per attempt, not threads currently in that status.";
+
+  return `
+        <div style="grid-column:1 / -1;" id="task-workflow-counters">
+          <div class="detail-label">Workflow counters</div>
+          <div style="display:flex;flex-wrap:wrap;gap:0.4rem;" title="${escapeHtml(rowTitle)}">
+            ${chip("Executor (running)", executor, "Executor attempts: threads dispatched for the executor role, which works in the running column. Includes every attempt, also finished/failed ones.")}
+            ${chip("Tester (testing)", tester, "Tester attempts: threads dispatched for the tester role, which works in the testing column. Includes every attempt, also finished/failed ones.")}
+            ${chip("Reviewer (review)", reviewer, "Reviewer attempts: threads dispatched for the reviewer role, which works in the review column. Includes every attempt, also finished/failed ones.")}
+            <span class="badge badge-neutral" style="font-size:0.72rem;font-weight:400;" title="${escapeHtml("Executions/retries: total executor attempts for this task, and the attempts beyond the first (executions - 1). Reworks add executor attempts; re-tests and reviews add tester/reviewer attempts.")}">Executions/retries: <strong>${executions}</strong> <span style="opacity:0.7;">(retries: ${retries})</span></span>
+          </div>
+        </div>`;
+}
 
 export async function loadTaskDetail(taskId: string): Promise<void> {
   const el = document.getElementById("task-detail-card")?.querySelector(".card-body");
@@ -181,6 +225,7 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
           <div class="detail-label">Updated</div>
           <div>${new Date(task.updated_at).toLocaleString()}</div>
         </div>
+        ${renderWorkflowCounters(task as { counters?: KanbanTaskCounters })}
       </div>
 
       ${
