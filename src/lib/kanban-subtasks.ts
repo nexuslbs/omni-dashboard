@@ -12,6 +12,7 @@ export function subtaskStatusEmoji(status: string): string {
       return "✅";
     case "cancelled":
       return "❌";
+    case "processing":
     case "in_progress":
       return "🔄";
     case "pending":
@@ -27,6 +28,7 @@ export function subtaskStatusBadge(status: string): string {
       return "badge-success";
     case "cancelled":
       return "badge-neutral";
+    case "processing":
     case "in_progress":
       return "badge-cyan";
     case "pending":

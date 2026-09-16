@@ -611,12 +611,13 @@ interface SubtaskRow {
 
 function subtaskStatusEmoji(status: string): string {
   switch (status) {
+    case "processing":
+    case "in_progress":
+      return "🔄";
     case "completed":
       return "✅";
     case "cancelled":
       return "❌";
-    case "in_progress":
-      return "🔄";
     default:
       return "⏳";
   }
@@ -624,12 +625,13 @@ function subtaskStatusEmoji(status: string): string {
 
 function subtaskStatusColor(status: string): string {
   switch (status) {
+    case "processing":
+    case "in_progress":
+      return "#f59e0b";
     case "completed":
       return "#10b981";
     case "cancelled":
       return "#64748b";
-    case "in_progress":
-      return "#f59e0b";
     default:
       return "#3b82f6";
   }
