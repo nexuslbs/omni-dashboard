@@ -269,3 +269,72 @@ describe("Kanban drag+drop exact position (drop handler)", () => {
     );
   });
 });
+
+// ── Regression: the Kanban header control strip (#kanban-board-controls with
+//    the board selector + Create Board + Edit Board) must be rendered in EVERY
+//    state; the empty/failed boards path must never erase it (operator report,
+//    2026-09-15: "the Kanban page lost the selector of kanban board") ──
+describe("Kanban header board controls are always rendered", () => {
+  const boards = readFileSync(new URL("../src/lib/kanban-boards.ts", import.meta.url), "utf-8");
+  const controls = readFileSync(new URL("../src/lib/kanban-board-controls.ts", import.meta.url), "utf-8");
+
+  it("never wipes #kanban-board-controls when the boards list is empty", () => {
+    assert.ok(
+      !/container\.innerHTML\s*=\s*""/.test(boards),
+      "kanban-boards.ts must not clear the control strip",
+    );
+    assert.ok(
+      !/if\s*\(boards\.length === 0\)\s*\{\s*\n\s*container\.innerHTML/.test(boards),
+      "the empty boards path must not clear the container",
+    );
+  });
+
+  it("renders the strip through the pure boardControlsHTML helper", () => {
+    assert.match(
+      boards,
+      /import\s*\{[\s\S]*boardControlsHTML[\s\S]*\}\s*from\s*"\.\/kanban-board-controls"/,
+      "kanban-boards.ts imports boardControlsHTML from ./kanban-board-controls",
+    );
+    assert.match(boards, /container\.innerHTML\s*=\s*boardControlsHTML\(\{/);
+  });
+
+  it("boardControlsHTML always emits the selector, Create Board and Edit Board", () => {
+    assert.match(controls, /export const BOARD_SELECT_ID = "kanban-board-select"/);
+    assert.match(controls, /export const CREATE_BOARD_BTN_ID = "kanban-create-board-btn"/);
+    assert.match(controls, /export const EDIT_BOARD_BTN_ID = "kanban-edit-board-btn"/);
+    assert.match(controls, /id="\$\{BOARD_SELECT_ID\}"/, "selector always in the markup");
+    assert.match(controls, /id="\$\{CREATE_BOARD_BTN_ID\}"/, "Create Board button always in the markup");
+    assert.match(controls, /id="\$\{EDIT_BOARD_BTN_ID\}"/, "Edit Board button always in the markup");
+    assert.match(controls, /\+ New Board/, "Create Board label kept");
+    assert.match(controls, /Edit Board/, "Edit Board label kept");
+  });
+
+  it("keeps the selector options ('No board' + every board key) and the failure hint", () => {
+    assert.match(controls, /label: "No board"/);
+    assert.match(controls, /if \(state\.loadError\) return options;/, "failed fetch: only the No board option");
+    assert.match(controls, /No boards yet/, "explicit empty-boards hint");
+    assert.match(controls, /Could not load boards/, "explicit fetch-failure hint");
+  });
+
+  it("Edit Board visibility follows the selected board in every render", () => {
+    assert.match(controls, /export function editBoardButtonVisible/);
+    assert.match(controls, /display:\$\{showEdit \? "inline-block" : "none"\}/);
+    assert.match(
+      boards,
+      /editBtn\.style\.display = editBoardButtonVisible\(opts\.currentBoard\)/,
+      "wireBoardControls enforces Edit Board visibility after every render",
+    );
+  });
+
+  it("wireBoardControls keeps the board-change handler and the custom select", () => {
+    assert.match(boards, /if \(sel\) enhanceSelectElement\(sel\)/, "custom stylized select kept");
+    assert.match(boards, /sel\?\.addEventListener\("change"[\s\S]{0,200}opts\.onBoardChange\(v\)/);
+    assert.match(boards, /export function selectBoardInControls/, "board panel click sync kept");
+  });
+
+  it("re-loads the boards list with its failure reason (empty != failed)", () => {
+    assert.match(boards, /export async function fetchBoardsResult\(\): Promise<BoardsFetchResult>/);
+    assert.match(boards, /return \{ boards: \[\], error: e instanceof Error \? e\.message : String\(e\) \}/);
+    assert.match(boards, /const \{ boards, error \} = await fetchBoardsResult\(\)/);
+  });
+});

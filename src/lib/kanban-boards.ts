@@ -3,10 +3,19 @@
  * localStorage persistence, and pure helpers for board selection logic.
  *
  * Boards are file-defined (config/boards.yml, served by the omniagent
- * kanban API at /boards). When the file is absent (omnistable today) the
- * API returns an empty list and the kanban page shows no board controls.
- * byte-for-byte today's behavior.
+ * kanban API at /boards). The header control strip (selector + Create Board +
+ * Edit Board) is rendered in EVERY state: an absent boards.yml (empty list)
+ * or a failed /boards call shows an explicit hint instead of erasing the
+ * controls (regression 2026-09-15: the strip vanished and the operator lost
+ * the board selector).
  */
+import {
+  BOARD_SELECT_ID,
+  CREATE_BOARD_BTN_ID,
+  EDIT_BOARD_BTN_ID,
+  boardControlsHTML,
+  editBoardButtonVisible,
+} from "./kanban-board-controls";
 import {
   apiDelete,
   apiGet,
@@ -92,14 +101,26 @@ export function boardMetaLabel(board: BoardConfig): string {
 
 // ── API wrappers ──
 
-/** GET /boards: list boards from config/boards.yml ([] when file absent). */
-export async function fetchBoards(): Promise<BoardEntry[]> {
+/** Outcome of GET /boards: the list plus the failure reason when it failed. */
+export interface BoardsFetchResult {
+  boards: BoardEntry[];
+  /** Non-null when the API call failed (NOT when boards.yml is simply empty). */
+  error: string | null;
+}
+
+/** GET /boards keeping the failure reason (never throws, [] on failure). */
+export async function fetchBoardsResult(): Promise<BoardsFetchResult> {
   try {
     const res = await apiGet<{ boards: BoardEntry[] }>("/boards");
-    return res?.boards ?? [];
-  } catch {
-    return [];
+    return { boards: res?.boards ?? [], error: null };
+  } catch (e) {
+    return { boards: [], error: e instanceof Error ? e.message : String(e) };
   }
+}
+
+/** GET /boards: list boards from config/boards.yml ([] when file absent). */
+export async function fetchBoards(): Promise<BoardEntry[]> {
+  return (await fetchBoardsResult()).boards;
 }
 
 /** PUT /boards/{key}: create or update a board in boards.yml. */
@@ -179,7 +200,7 @@ export async function openBoardModal(
   mode: "create" | "edit",
   boardKey: string | null,
   boards: BoardEntry[],
-  onDone: () => void,
+  onDone: (savedKey?: string) => void,
 ): Promise<void> {
   document.getElementById("board-modal")?.remove();
   const existing = boards.find((b) => b.key === boardKey);
@@ -253,7 +274,7 @@ export async function openBoardModal(
     try {
       await upsertBoard(target, board);
       close();
-      onDone();
+      onDone(target);
     } catch (e) {
       alert("Failed to save board: " + (e instanceof Error ? e.message : String(e)));
     }
@@ -325,8 +346,12 @@ export function selectBoardInControls(board: string): boolean {
 
 /**
  * Wire the board selector + create/edit board buttons into the kanban
- * page header (#kanban-board-controls). Boards absent (boards.yml missing)
- * ⇒ no controls at all; the page renders exactly as before.
+ * page header (#kanban-board-controls).
+ *
+ * The strip is ALWAYS rendered: the board selector + the Create Board button
+ * always, the Edit Board button whenever a board is selected. An empty or
+ * failed boards list shows an explicit, non-blocking hint instead of erasing
+ * the controls (it must stay possible to create the first board).
  */
 export async function wireBoardControls(opts: {
   currentBoard: string | null;
@@ -335,33 +360,21 @@ export async function wireBoardControls(opts: {
 }): Promise<void> {
   const container = document.getElementById("kanban-board-controls");
   if (!container) return;
-  const boards = await fetchBoards();
-  if (boards.length === 0) {
-    container.innerHTML = "";
-    return;
-  }
+  const seq = ++boardControlsRenderSeq;
+  const { boards, error } = await fetchBoardsResult();
+  // A newer render started while this fetch was in flight: never let a stale
+  // response overwrite the newer one (rapid board switches / create + reload).
+  if (seq !== boardControlsRenderSeq) return;
   const currentMeta = opts.currentBoard ? boards.find((b) => b.key === opts.currentBoard)?.board : undefined;
   const metaLabel = currentMeta ? boardMetaLabel(currentMeta) : "";
-  container.innerHTML = `
-    <select id="kanban-board-select" title="Filter by board" style="background:rgba(255,255,255,0.04);border:1px solid var(--glass-border);color:inherit;border-radius:6px;padding:0.375rem 0.5rem;font-size:0.8rem;cursor:pointer;">
-      <option value="">No board</option>
-      ${boards
-        .map(
-          (b) =>
-            `<option value="${escapeHtml(b.key)}" ${b.key === opts.currentBoard ? "selected" : ""}>${escapeHtml(b.key)}</option>`,
-        )
-        .join("")}
-    </select>
-    ${
-      metaLabel
-        ? `<span id="kanban-board-meta" style="color:var(--text-muted);font-size:0.75rem;margin-left:0.5rem;">${escapeHtml(metaLabel)}</span>`
-        : ""
-    }
-    <button id="kanban-create-board-btn" title="Create a new board" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.625rem;cursor:pointer;font-size:0.78rem;font-weight:500;white-space:nowrap;">+ New Board</button>
-    <button id="kanban-edit-board-btn" title="Edit the current board" style="display:${opts.currentBoard ? "inline-block" : "none"};background:rgba(255,255,255,0.06);border:1px solid var(--glass-border);color:var(--text-secondary);border-radius:6px;padding:0.375rem 0.625rem;cursor:pointer;font-size:0.78rem;white-space:nowrap;">Edit Board</button>
-  `;
+  container.innerHTML = boardControlsHTML({
+    boards,
+    currentBoard: opts.currentBoard,
+    loadError: error,
+    metaLabel,
+  });
 
-  const sel = document.getElementById("kanban-board-select") as HTMLSelectElement | null;
+  const sel = document.getElementById(BOARD_SELECT_ID) as HTMLSelectElement | null;
   // Item 2: the board selector must use the custom stylized select (reference
   // the Create Task modal treatment) instead of a native <select>.
   if (sel) enhanceSelectElement(sel);
@@ -371,22 +384,35 @@ export async function wireBoardControls(opts: {
     opts.onBoardChange(v);
   });
 
-  document.getElementById("kanban-create-board-btn")?.addEventListener("click", () => {
-    void openBoardModal("create", null, boards, () => {
-      void wireBoardControls(opts);
-      opts.onBoardsChanged();
+  document.getElementById(CREATE_BOARD_BTN_ID)?.addEventListener("click", () => {
+    void openBoardModal("create", null, boards, (newKey) => {
+      if (newKey) {
+        // Select the freshly created board: the selector must show it and the
+        // Edit Board button must appear (creating the first board).
+        setStoredBoard(newKey);
+        opts.onBoardChange(newKey);
+      } else {
+        opts.onBoardsChanged();
+      }
     });
   });
 
-  const editBtn = document.getElementById("kanban-edit-board-btn");
+  // Edit Board: rendered above like every other control; its visibility is
+  // enforced here as well so no re-render can leave it missing while a board
+  // is selected (hidden only when no board is selected).
+  const editBtn = document.getElementById(EDIT_BOARD_BTN_ID) as HTMLButtonElement | null;
+  if (editBtn) editBtn.style.display = editBoardButtonVisible(opts.currentBoard) ? "inline-block" : "none";
   editBtn?.addEventListener("click", () => {
     if (!opts.currentBoard) return;
     void openBoardModal("edit", opts.currentBoard, boards, () => {
-      void wireBoardControls(opts);
       opts.onBoardsChanged();
     });
   });
 }
+
+// Board-controls render generation: a late /boards response must never
+// overwrite a newer render of the header control strip.
+let boardControlsRenderSeq = 0;
 
 /**
  * Populate a plain <select> with the workflows.yml keys (used by the
