@@ -361,7 +361,11 @@ export function wireChannelConfigEditing(): void {
       if (!input) return;
       const value = input.value;
       const body: Record<string, any> = {};
-      let key = field === "name" ? "name" : `current_${field}`;
+      // The API uses the bare yml property names (profile/provider/model/
+      // template/toolset); the legacy `current_*` prefix was dropped in the
+      // field-name unification and serde silently ignored it, so edits never
+      // stuck. Send the field name as-is.
+      let key = field;
       if (field === "plan") {
         // 3-way: empty = omit (use default), "true"/"false" = set value
         if (value === "") {

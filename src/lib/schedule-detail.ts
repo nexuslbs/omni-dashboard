@@ -506,7 +506,9 @@ export async function showCronModal(
     try {
       const body: Record<string, unknown> = {
         name: nameVal,
-        schedule,
+        // API field is `cron` (tasks.yml property name); `schedule` was the
+        // pre-rename key and serde silently dropped it, so edits never stuck.
+        cron: schedule,
         prompt,
         active,
         channel,
