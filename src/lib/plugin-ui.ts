@@ -64,13 +64,14 @@ export function renderPluginCard(
           <span class="badge badge-neutral" style="margin-left:0.125rem;">source: ${escapeHtml(p.source)}</span>
           ${hasTools ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">${pluginTools!.length} tool${pluginTools!.length > 1 ? "s" : ""}</span>` : ""}
           ${renderActionButtons(p, hasRemote, hasCompilableSource)}
-          ${!p.needsBuild && p.status === "enabled" ? `<button type="button" class="plugin-restart-btn" title="Restart this plugin (disable + enable cycle)" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;margin-right:0.25rem;">⟳</button><button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : !p.needsBuild && (p.status === "disabled" || p.status === "error") ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>` : ""}
+          ${p.source === "models.yml" ? `<button type="button" class="models-yml-info-btn" title="This provider is defined in models.yml, not by a plugin" aria-label="About this models.yml provider" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:50%;width:1.4rem;height:1.4rem;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);margin-right:0.25rem;">?</button>` : ""}
+          ${p.source !== "models.yml" && !p.needsBuild && p.status === "enabled" ? `<button type="button" class="plugin-restart-btn" title="Restart this plugin (disable + enable cycle)" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;margin-right:0.25rem;">⟳</button><button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : p.source !== "models.yml" && !p.needsBuild && (p.status === "disabled" || p.status === "error") ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>` : ""}
           <button type="button" class="plugin-expand-btn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0.25rem;font-size:1rem;" title="Toggle config">▶</button>
         </span>
       </div>
       <div class="card-body plugin-body" style="display:none;">
         ${p.manifest?.description ? `<div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:0.5rem;">${escapeHtml(p.manifest.description)}</div>` : ""}
-        ${p.manifest?.capabilities?.setup ? `<button type="button" class="plugin-setup-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);margin-bottom:0.5rem;">Setup</button>` : ""}
+        ${p.source !== "models.yml" && p.manifest?.capabilities?.setup ? `<button type="button" class="plugin-setup-btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--accent-purple);margin-bottom:0.5rem;">Setup</button>` : ""}
         ${renderPluginConfig(p)}
         ${hasTools && pluginTools && pluginTools.length > 0 ? `<div style="margin-top:0.5rem;display:flex;flex-wrap:wrap;gap:0.25rem;">${pluginTools.map((t: string) => `<span class="badge badge-neutral" style="font-size:0.8rem;padding:0.25rem 0.5rem;">${escapeHtml(t)}</span>`).join("")}</div>` : ""}
         ${
@@ -102,6 +103,10 @@ export type PluginActionState = "download" | "update" | "none";
  */
 export function pluginActionState(p: PluginData): PluginActionState {
   if (p.source === "built-in") return "none";
+  // A models.yml provider is not backed by a plugin: download/update do not
+  // apply to it (it is managed via config/models.yml on the Models page).
+  // Keep the invariant in this single source of truth.
+  if (p.source === "models.yml") return "none";
   const isRemote = p.source === "remote";
   // The server field `needs_download` is authoritative; fall back to the
   // source/hasSourceCode pair for payloads that predate it.
@@ -130,6 +135,14 @@ export function renderActionButtons(
   const isCompilable = !p.isScript && !!p.hasSourceCode;
 
   if (isBuiltin) {
+    return "";
+  }
+
+  // A provider defined in models.yml is NOT backed by a plugin: plugin actions
+  // (install/uninstall/reinstall/download/update/remove) do not apply to it.
+  // Such providers are managed on the Models page; a question-icon button on
+  // the card explains this (see wirePluginButtons -> showModelsYmlInfoModal).
+  if (p.source === "models.yml") {
     return "";
   }
 
@@ -530,6 +543,16 @@ export function wirePluginButtons(
     });
   }
 
+  // models.yml info modal: providers defined in models.yml have NO plugin
+  // actions; the question-icon button explains how to manage them instead.
+  document.querySelectorAll(".models-yml-info-btn").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const card = (btn as HTMLElement).closest(".card") as HTMLElement;
+      const providerName = card?.getAttribute("data-plugin-name") || "provider";
+      showModelsYmlInfoModal(providerName);
+    });
+  });
+
   // Setup buttons
   document.querySelectorAll(".plugin-setup-btn").forEach((btn) => {
     btn.addEventListener("click", async () => {
@@ -585,6 +608,55 @@ export function renderPluginConfig(p: PluginData): string {
 }
 
 // renderConfigField is now imported from ./plugin-config as renderConfigFieldV2
+
+// ── models.yml provider info modal ──
+
+/**
+ * Accessible modal explaining that a provider is defined in models.yml (not by
+ * a plugin) and how to manage it. Dismissible via close button, click-outside
+ * and the Escape key; role=dialog + aria-modal + aria-labelledby for a11y.
+ */
+export function showModelsYmlInfoModal(providerName: string): void {
+  const titleId = "models-yml-info-title";
+  const backdrop = document.createElement("div");
+  backdrop.setAttribute("role", "dialog");
+  backdrop.setAttribute("aria-modal", "true");
+  backdrop.setAttribute("aria-labelledby", titleId);
+  backdrop.style.cssText =
+    "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding-top:15vh;";
+
+  backdrop.innerHTML = `
+    <div style="background:var(--bg-card,#1e1e2e);border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:12px;padding:2rem;width:520px;max-width:90vw;">
+      <h2 id="${titleId}" style="margin:0 0 1rem;font-size:1.2rem;">"${escapeHtml(providerName)}" is defined in models.yml</h2>
+      <div style="font-size:0.9rem;color:var(--text-secondary);line-height:1.6;">
+        <p style="margin:0 0 0.75rem;">This provider is defined in <code>config/models.yml</code>, not by a provider plugin, so it has no plugin-provided actions.</p>
+        <p style="margin:0 0 0.75rem;">Edit and configure it on the <b>Models</b> page (Models in the sidebar): add, change or remove providers and models there.</p>
+        <p style="margin:0;">Changes take effect after the configuration is reloaded or the service restarts (use the <b>Reload</b> button in the header).</p>
+      </div>
+      <div style="display:flex;justify-content:flex-end;margin-top:1.25rem;">
+        <button type="button" class="models-yml-info-close" style="background:rgba(148,163,184,0.1);border:1px solid rgba(148,163,184,0.2);border-radius:6px;padding:0.5rem 1.25rem;cursor:pointer;color:var(--text-secondary);font-size:0.85rem;">Close</button>
+      </div>
+    </div>
+  `;
+
+  document.body.appendChild(backdrop);
+
+  function close() {
+    backdrop.remove();
+    document.removeEventListener("keydown", onKey);
+  }
+
+  function onKey(e: KeyboardEvent) {
+    if (e.key === "Escape") close();
+  }
+
+  backdrop.querySelector(".models-yml-info-close")?.addEventListener("click", close);
+  backdrop.addEventListener("click", (e) => {
+    if (e.target === backdrop) close();
+  });
+  document.addEventListener("keydown", onKey);
+  backdrop.querySelector(".models-yml-info-close")?.focus();
+}
 
 // ── Install from Git Modal ──
 
