@@ -197,7 +197,7 @@ Read-only database browser/query runner:
 - **Table list** (left sidebar): all tables with row counts; click to view columns + first rows.
 - **Custom SELECT** box: run any read-only query (`LIMIT 25` appended automatically if missing), Ctrl+Enter to run.
 - Results with sortable columns, null styling, and pagination.
-- Backed by the OmniAgent `search_database` MCP tool (the DB page calls `POST /api/db/query` which proxies to it).
+- Backed by the OmniAgent CORE read-only DB API (`POST /db/query`, `GET /db/tables`); the DB page calls `POST /api/db/query`, which proxies to core directly - no plugin or MCP tool has to be enabled.
 
 ### Settings (`/settings`)
 
@@ -302,7 +302,7 @@ repo/
 │       ├── actions.ts             # Saved action manager (create, run, edit, delete MCP tool actions)
 │       ├── prompt.ts              # Prompt preview tool (channel selector, prompt textarea, plan toggle)
 │       ├── explorer.ts            # Filesystem browser (file tree, markdown viewer, search, upload/delete, git box)
-│       ├── database.ts            # Read-only DB browser (table list, custom SELECT via search_database)
+│       ├── database.ts            # Read-only DB browser (table list, custom SELECT via core /db/query)
 │       └── settings.ts            # Settings editor (env vars, per-row confirm/cancel, secret toggle)
 └── server/
     ├── index.ts                   # Express setup, static file serving, SPA fallback
@@ -320,7 +320,7 @@ repo/
         ├── profiles.ts            # Profiles list from DB
         ├── platforms.ts           # Platforms + subscription management from DB
         ├── plugins.ts             # Plugin management endpoints (list, get, enable, disable, config)
-        ├── db.ts                  # Read-only query endpoint (proxies to OmniAgent search_database MCP tool)
+        ├── db.ts                  # Read-only query endpoint (proxies to the core OmniAgent /db/query + /db/tables API)
         ├── wiki-search.ts         # Wiki search via Qdrant vector DB
         ├── uploads.ts             # File upload/delete/check with multer
         └── fs.ts                  # Filesystem browse/read/download
@@ -463,7 +463,7 @@ All endpoints are under `/api/`:
 | `/api/models`                               | PUT    | Write models.yml                                                         |
 | `/api/models/import`                        | POST   | Import a models.yml-like file                                            |
 | `/api/models/refresh`                       | POST   | Refresh model lists from provider refresh_url                            |
-| `/api/db/query`                             | POST   | Read-only SQL query (proxied to OmniAgent `search_database` MCP tool)    |
+| `/api/db/query`                             | POST   | Read-only SQL query (proxied to the core OmniAgent `/db/query` API)     |
 | `/api/wiki-search`                          | POST   | Search wiki via Qdrant                                                   |
 | `/api/uploads`                              | POST   | Upload files                                                             |
 | `/api/uploads/list`                         | GET    | List uploaded files                                                      |

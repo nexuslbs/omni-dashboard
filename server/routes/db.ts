@@ -1,11 +1,14 @@
 /**
- * Database browser API, backed by the omniagent QUERY TOOL (read-only MCP).
+ * Database browser API, backed by the omniagent CORE read-only DB API.
  *
- * All DB access is proxied through POST /mcp/execute on the omniagent backend
- * (search_database, arguments { sql }). The dashboard server never connects to
- * PostgreSQL directly: no DATABASE_URL, no pg client. Read-only validation is
- * applied here as defense in depth (SELECT/WITH only, no semicolons, no write
- * keywords); the query tool itself and its read-only DB user are the backstop.
+ * All DB access is proxied through the core omniagent endpoints POST /db/query
+ * and GET /db/tables, which core executes directly against the agent database.
+ * The dashboard server never connects to PostgreSQL directly (no DATABASE_URL,
+ * no pg client) and NO LONGER depends on the `search` plugin (or on any MCP
+ * tool being enabled): the Database page works even when every plugin is
+ * disabled. Read-only validation is applied here as defense in depth
+ * (SELECT/WITH only, no semicolons, no write keywords); the core read-only
+ * guard (READ ONLY transaction, statement timeout, row cap) is the backstop.
  */
 import { Router, type Request, type Response } from "express";
 
@@ -40,7 +43,7 @@ function stripCommentsAndStrings(sql: string): string {
 const STATEMENT_KEYWORDS =
   /\b(INSERT|UPDATE|DELETE|DROP|ALTER|CREATE|TRUNCATE|GRANT|REVOKE|MERGE|REPLACE|VACUUM|REINDEX|CALL|EXEC|EXECUTE|COPY|COMMENT|LOCK|SET|RESET|ATTACH|DETACH|ANALYZE|CLUSTER|REFRESH|REASSIGN|SECURITY|UNLISTEN|LISTEN|NOTIFY)\b/i;
 
-/** Defense in depth: read-only validation before anything hits the query tool. */
+/** Defense in depth: read-only validation before anything hits the core DB API. */
 function assertReadOnly(sql: string): void {
   const cleaned = stripCommentsAndStrings(sql);
   if (!/^(SELECT|WITH)\b/i.test(cleaned)) {
@@ -72,52 +75,61 @@ function parsePaging(body: { page?: unknown; pageSize?: unknown }): {
   return { page, pageSize, offset: (page - 1) * pageSize };
 }
 
-interface McpExecuteResult {
+interface CoreDbResponse {
   success?: boolean;
-  is_error?: boolean;
-  content?: unknown;
+  rows?: Record<string, unknown>[];
+  row_count?: number;
+  tables?: Record<string, unknown>[];
+  count?: number;
   error?: string;
+  error_code?: string;
+  remediation?: string;
+}
+
+/** Turn a core API error envelope into an ApiError preserving status + code. */
+function coreApiError(status: number, body: CoreDbResponse): ApiError {
+  const detail = body.error || `HTTP ${status}`;
+  const code = body.error_code ? ` [${body.error_code}]` : "";
+  const hint = body.remediation ? ` - ${body.remediation}` : "";
+  const httpStatus = status >= 400 && status < 600 ? status : 502;
+  return new ApiError(httpStatus, `${detail}${code}${hint}`);
 }
 
 /**
- * Run a read-only query through the omniagent query tool:
- *   POST ${OMNIAGENT}/mcp/execute
- *   body: { name: "search_database", arguments: { sql } }
- * Returns the parsed row objects from the pretty-JSON `content` field.
+ * Call the core omniagent read-only DB API:
+ *   POST ${OMNIAGENT}/db/query    body: { sql }
+ *   GET  ${OMNIAGENT}/db/tables
+ * Core executes the statement itself (no MCP tool, no plugin involved), so the
+ * Database page keeps working when the `search` plugin is disabled/uninstalled.
  */
-async function runQueryTool(sql: string): Promise<Record<string, unknown>[]> {
+async function coreDbRequest(path: string, init?: RequestInit): Promise<CoreDbResponse> {
   let httpRes: Awaited<ReturnType<typeof fetch>>;
   try {
-    httpRes = await fetch(`${OMNIAGENT}/mcp/execute`, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        name: "search_database",
-        arguments: { sql },
-      }),
-    });
+    httpRes = await fetch(`${OMNIAGENT}${path}`, init);
   } catch (err) {
-    throw new ApiError(502, `Query tool unreachable: ${(err as Error).message}`);
+    throw new ApiError(502, `Core DB API unreachable: ${(err as Error).message}`);
   }
-  if (!httpRes.ok) {
-    throw new ApiError(502, `Query tool returned HTTP ${httpRes.status}`);
+  const body = (await httpRes.json().catch(() => ({}))) as CoreDbResponse;
+  if (!httpRes.ok || body.success !== true) {
+    throw coreApiError(httpRes.status, body);
   }
-  const body = (await httpRes.json().catch(() => ({}))) as McpExecuteResult;
-  if (body.success !== true || body.is_error === true) {
-    throw new ApiError(
-      502,
-      body.error || (typeof body.content === "string" ? body.content : "Query tool failed"),
-    );
-  }
-  if (typeof body.content !== "string") {
-    return [];
-  }
-  try {
-    const parsed: unknown = JSON.parse(body.content);
-    return Array.isArray(parsed) ? (parsed as Record<string, unknown>[]) : [];
-  } catch {
-    return [];
-  }
+  return body;
+}
+
+/** Run one read-only statement through the core DB API and return its rows. */
+async function runCoreQuery(sql: string): Promise<Record<string, unknown>[]> {
+  const body = await coreDbRequest("/db/query", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ sql }),
+  });
+  return Array.isArray(body.rows) ? body.rows : [];
+}
+
+/** Public-schema table list straight from the core DB API (no plugin needed). */
+async function runCoreTables(): Promise<Record<string, unknown>[]> {
+  const body = await coreDbRequest("/db/tables");
+  return Array.isArray(body.tables) ? body.tables : [];
 }
 
 function sendError(res: Response, err: unknown): void {
@@ -126,26 +138,24 @@ function sendError(res: Response, err: unknown): void {
   res.status(status).json({ error: message });
 }
 
-/** GET /api/db/tables: public-schema tables via the query tool. */
+/** GET /api/db/tables: public-schema tables from the core DB API (no plugin). */
 router.get("/tables", async (_req: Request, res: Response) => {
   try {
-    const rows = await runQueryTool(
-      "SELECT table_name, table_type FROM information_schema.tables WHERE table_schema = 'public' ORDER BY table_name",
-    );
+    const rows = await runCoreTables();
     res.json({ tables: rows });
   } catch (err) {
     sendError(res, err);
   }
 });
 
-/** GET /api/db/columns?table=X: columns of a table via the query tool. */
+/** GET /api/db/columns?table=X: columns of a table via the core DB API. */
 router.get("/columns", async (req: Request, res: Response) => {
   try {
     const table = typeof req.query.table === "string" ? req.query.table.trim() : "";
     if (!validIdentifier(table)) {
       throw new ApiError(400, `Invalid table name: ${table}`);
     }
-    const rows = await runQueryTool(
+    const rows = await runCoreQuery(
       `SELECT column_name, data_type FROM information_schema.columns WHERE table_schema = 'public' AND table_name = '${table.replace(/'/g, "''")}' ORDER BY ordinal_position`,
     );
     res.json({ columns: rows });
@@ -222,7 +232,7 @@ router.post("/query", async (req: Request, res: Response) => {
     // contains LIMIT inside a subquery or string literal).
     const countSql = `SELECT count(*)::bigint AS total FROM (${countBaseSql}) AS sub`;
 
-    const [dataRows, countRows] = await Promise.all([runQueryTool(execSql), runQueryTool(countSql)]);
+    const [dataRows, countRows] = await Promise.all([runCoreQuery(execSql), runCoreQuery(countSql)]);
 
     const columns = dataRows.length > 0 ? Object.keys(dataRows[0]) : [];
     const total = Number(countRows[0]?.total ?? 0) || 0;
