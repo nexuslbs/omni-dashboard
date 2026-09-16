@@ -47,8 +47,17 @@ describe("src/lib/kanban-boards.ts: board workflow select + display", () => {
   });
 
   it("wireBoardControls renders a muted workflow/channel label for the current board", () => {
-    assert.ok(/kanban-board-meta/.test(src), "selector should render #kanban-board-meta");
-    assert.ok(/boardMetaLabel\(currentMeta\)/.test(src), "label built from boardMetaLabel(currentMeta)");
+    // The strip markup (incl. #kanban-board-meta) lives in the pure
+    // kanban-board-controls module; kanban-boards.ts feeds it the label.
+    const controls = readFileSync(
+      new URL("../src/lib/kanban-board-controls.ts", import.meta.url),
+      "utf-8",
+    );
+    assert.ok(/kanban-board-meta/.test(controls), "selector should render #kanban-board-meta");
+    assert.ok(
+      /boardMetaLabel\(currentMeta\)/.test(src),
+      "label built from boardMetaLabel(currentMeta)",
+    );
   });
 
   it("wireBoardControls enhances the board selector with the custom stylized select (Item 2)", () => {

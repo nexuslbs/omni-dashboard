@@ -404,8 +404,12 @@ export async function wireBoardControls(opts: {
   if (editBtn) editBtn.style.display = editBoardButtonVisible(opts.currentBoard) ? "inline-block" : "none";
   editBtn?.addEventListener("click", () => {
     if (!opts.currentBoard) return;
-    void openBoardModal("edit", opts.currentBoard, boards, () => {
-      opts.onBoardsChanged();
+    void openBoardModal("edit", opts.currentBoard, boards, (savedKey) => {
+      // Saving keeps the board selected (just re-render); DELETING it passes no
+      // key, so the selection is cleared: with no board selected the Edit Board
+      // button must hide and the selector must fall back to "No board".
+      if (savedKey) opts.onBoardsChanged();
+      else opts.onBoardChange(null);
     });
   });
 }
