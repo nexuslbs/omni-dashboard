@@ -167,7 +167,7 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
           <div>${
             task.toolset
               ? `<code style="font-size:0.8rem;color:var(--accent-purple);background:var(--bg-card);padding:0.15rem 0.4rem;border-radius:4px;">${escapeHtml(String(task.toolset))}</code>`
-              : '<em style="font-size:0.8rem;color:var(--text-muted);">All tools allowed</em>'
+              : '<em style="font-size:0.8rem;color:var(--text-muted);">Use default toolset</em>'
           }</div>
         </div>
         <div>

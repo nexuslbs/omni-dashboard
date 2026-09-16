@@ -223,7 +223,7 @@ export async function showHookModal(
           <div>
             <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Toolset</label>
             <select id="hook-toolset" class="filter-select" style="width:100%;">
-              <option value="">None (All tools allowed)</option>
+              <option value="">None (use default toolset)</option>
               ${hookToolsets.map((t) => `<option value="${escapeHtml(t)}" ${cur.toolset === t ? "selected" : ""}>${escapeHtml(t)}</option>`).join("")}
             </select>
             <div style="font-size:0.72rem;color:var(--text-muted);margin-top:0.25rem;">First match wins: workflow role &gt; workflow &gt; task &gt; channel &gt; profile.</div>

@@ -416,7 +416,7 @@ export interface ChannelData {
   readonly: boolean;
   plan: boolean;
   template: string | null;
-  /** Toolset id from config/toolsets.yml; null = all tools allowed. */
+  /** Toolset id from config/toolsets.yml; null = use the default toolset (all tools allowed only if no fallback is defined). */
   toolset?: string | null;
 }
 
@@ -604,7 +604,7 @@ export interface WorkflowRoleConfig {
    * [] = no tools, non-empty = profile tools INTERSECT this list.
    */
   allowed_tools?: string[] | null;
-  /** Toolset id (config/toolsets.yml); undefined = all tools allowed, [] toolset = no tools. */
+  /** Toolset id (config/toolsets.yml); undefined = use the default toolset (all tools allowed only if no fallback is defined), [] toolset = no tools. */
   toolset?: string | null;
 }
 

@@ -418,8 +418,8 @@ export function wireChannelConfigEditing(): void {
 /**
  * Channel-level toolset select (`config/toolsets.yml`). The channel defines the
  * toolset only when no higher-priority level (workflow role / workflow / task)
- * does; empty value = no channel-level toolset (all tools allowed when nothing
- * else defines one).
+ * does; empty value = no channel-level toolset (uses the default toolset; all
+ * tools allowed only if no fallback is defined).
  */
 export function renderToolsetInput(channelId: string, current: string, readonly: boolean): string {
   if (readonly) {
@@ -434,7 +434,7 @@ export function renderToolsetInput(channelId: string, current: string, readonly:
     <div class="channel-field-group">
       <select id="${selectId}" class="filter-select channel-edit-input"
         data-channel-id="${channelId}" data-field="toolset" data-original="${escapeHtml(current)}">
-        <option value="">None (All tools allowed)</option>
+        <option value="">None (use default toolset)</option>
         ${_channelToolsets
           .slice()
           .map(

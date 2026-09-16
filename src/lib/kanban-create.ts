@@ -148,7 +148,7 @@ async function populateToolsetSelect(selectId: string, selected: string | null):
   try {
     const toolsets =
       (await cachedGet<{ toolsets?: Record<string, string[]> }>("/api/toolsets"))?.toolsets || {};
-    select.innerHTML = '<option value="">None (All tools allowed)</option>';
+    select.innerHTML = '<option value="">None (use default toolset)</option>';
     for (const id of Object.keys(toolsets).sort()) {
       const opt = document.createElement("option");
       opt.value = id;
@@ -158,7 +158,7 @@ async function populateToolsetSelect(selectId: string, selected: string | null):
     }
     refreshEnhancedSelect(selectId);
   } catch {
-    select.innerHTML = '<option value="">None (All tools allowed)</option>';
+    select.innerHTML = '<option value="">None (use default toolset)</option>';
   }
 }
 
@@ -287,7 +287,7 @@ export function taskModalHTML(mode: TaskModalMode): string {
               <div>
                 <label style="${labelStyle}">Toolset</label>
                 <select id="${p}-toolset" style="${inputStyle}">
-                  <option value="">None (All tools allowed)</option>
+                  <option value="">None (use default toolset)</option>
                 </select>
                 <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">First match wins: workflow role &gt; workflow &gt; task &gt; channel &gt; profile. Defined in config/toolsets.yml.</div>
               </div>

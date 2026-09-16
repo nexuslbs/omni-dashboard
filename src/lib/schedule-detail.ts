@@ -150,7 +150,7 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
           </div>
           <div style="margin-bottom:0.75rem;">
             <div class="detail-label">Toolset</div>
-            <div style="color:var(--text-primary);">${job.toolset ? escapeHtml(String(job.toolset)) : "- (All tools allowed)"}</div>
+            <div style="color:var(--text-primary);">${job.toolset ? escapeHtml(String(job.toolset)) : "- (use default toolset)"}</div>
           </div>
           ${
             job.mode === "action"
@@ -366,7 +366,7 @@ export async function showCronModal(
         <div style="margin-bottom:1rem;">
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Toolset</label>
           <select id="cron-toolset" class="filter-select" style="width:100%;">
-            <option value="">None (All tools allowed)</option>
+            <option value="">None (use default toolset)</option>
             ${toolsets.map((t: string) => `<option value="${escapeHtml(t)}" ${isEdit && job.toolset === t ? "selected" : ""}>${escapeHtml(t)}</option>`).join("")}
           </select>
           <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">First match wins: workflow role &gt; workflow &gt; task &gt; channel &gt; profile. Defined in config/toolsets.yml.</div>

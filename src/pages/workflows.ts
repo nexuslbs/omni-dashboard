@@ -364,7 +364,7 @@ function toolsetOptions(current: string): string {
   const cur = current || "";
   const inList = !!cur && _wfToolsets.includes(cur);
   return (
-    opt("", "None (All tools allowed)", cur === "") +
+    opt("", "None (use default toolset)", cur === "") +
     (cur && !inList ? opt(cur, cur, true) : "") +
     _wfToolsets.map((t) => opt(t, t, t === cur)).join("")
   );
