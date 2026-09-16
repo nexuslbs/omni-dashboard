@@ -70,3 +70,27 @@ describe("Messages page subtasks break long words (no horizontal overflow)", () 
     assert.match(rule(".msg-subtask-badge"), /flex-shrink:\s*0/, "the status badge must not shrink");
   });
 });
+
+describe("Messages page subtasks render the processing state (task 2087)", () => {
+  it("subtaskStatusEmoji maps processing to the spinner icon", () => {
+    assert.ok(
+      /case "processing":\s*\n\s*case "in_progress":\s*\n\s*return "🔄"/.test(messages),
+      "subtaskStatusEmoji must return 🔄 for processing (and legacy in_progress)",
+    );
+  });
+
+  it("renderSubtasks renders the icon via subtaskStatusEmoji", () => {
+    assert.ok(
+      messages.includes("subtaskStatusEmoji("),
+      "renderSubtasks must call subtaskStatusEmoji so the processing state gets its icon",
+    );
+  });
+
+  it("kanban-subtasks helper maps processing to the spinner icon", () => {
+    const ks = readFileSync(new URL("../src/lib/kanban-subtasks.ts", import.meta.url), "utf-8");
+    assert.ok(
+      /case "processing":\s*\n\s*case "in_progress":\s*\n\s*return "🔄"/.test(ks),
+      "kanban-subtasks subtaskStatusEmoji must return 🔄 for processing",
+    );
+  });
+});
