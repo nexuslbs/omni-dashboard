@@ -2,11 +2,9 @@ import { showToast } from "../lib/utils";
 import { allSettledOrNull } from "../lib/parallel";
 import {
   apiGet,
-  toCamelCase,
   fetchWorkflows,
   upsertWorkflow,
   deleteWorkflow,
-  type PluginData,
   type Workflow,
   type WorkflowEntry,
   type WorkflowRoleConfig,
@@ -18,10 +16,12 @@ import { renderMarkdown } from "../lib/markdown";
 import {
   _profiles,
   _providers,
-  _providerModels,
   _templates,
   getModelsForProvider,
+  setChannelData,
+  setProviderErrors,
 } from "../lib/channel-config";
+import { mergedProvidersFromApi, providerErrorBanner } from "../lib/providers";
 
 const ROLE_KEYS = ["executor", "tester", "reviewer"] as const;
 
@@ -86,39 +86,13 @@ export async function loadWorkflowData(): Promise<void> {
   );
   _profiles.length = 0;
   if (Array.isArray(profilesRes)) _profiles.push(...(profilesRes as never[]));
-  if (pluginsRes) {
-    const pluginResp = pluginsRes;
-    const allPlugins: PluginData[] = (pluginResp.data || pluginResp).map((p: Record<string, unknown>) =>
-      toCamelCase<PluginData>(p),
-    );
-    const providers = allPlugins.filter((p: PluginData) => p.pluginType === "provider");
-    _providers.length = 0;
-    _providers.push(...providers.map((p: PluginData) => p.name).sort());
-    const modelMap: Record<string, string[]> = {};
-    for (const p of providers) {
-      try {
-        const schema = [
-          ...((p.configSchema || []) as never[]),
-          ...((p.manifest?.config_schema || []) as never[]),
-        ];
-        const modelField = (schema as any[]).find((f: any) => f.key === "default_model");
-        if (modelField && modelField.allowed_values && modelField.allowed_values.length > 0) {
-          modelMap[p.name] = modelField.allowed_values as string[];
-        } else if (modelField && modelField.default) {
-          modelMap[p.name] = [modelField.default as string];
-        } else {
-          modelMap[p.name] = [];
-        }
-      } catch {
-        modelMap[p.name] = [];
-      }
-    }
-    Object.keys(_providerModels).forEach((k) => delete _providerModels[k]);
-    Object.assign(_providerModels, modelMap);
-  } else {
-    _providers.length = 0;
-    Object.keys(_providerModels).forEach((k) => delete _providerModels[k]);
-  }
+  // Provider options come from the SINGLE merged resolution served by the
+  // omniagent API (`/plugins`): enabled provider plugins UNION models.yml
+  // providers, deduped with models.yml precedence (same source of truth as the
+  // channels and profiles selectors). Never assembled locally.
+  const merged = mergedProvidersFromApi(pluginsRes);
+  setChannelData(_profiles, merged.providers, merged.models);
+  setProviderErrors(merged.errors);
   _templates.length = 0;
   if (Array.isArray(templatesRes)) _templates.push(...templatesRes);
   _actions.length = 0;
@@ -137,6 +111,9 @@ async function loadWorkflows(): Promise<void> {
     const [workflows] = await Promise.all([fetchWorkflows(), loadWorkflowData()]);
     currentWorkflows = workflows;
     content.innerHTML = renderWorkflowList(currentWorkflows);
+    // Loud provider merge-contract errors instead of silently dropping a
+    // provider from the workflow role provider selects.
+    content.insertAdjacentHTML("afterbegin", providerErrorBanner(_providerErrors));
     wireListActions(content);
   } catch (e) {
     content.innerHTML = `<div class="empty-state" style="color:#e55;">Failed to load workflows: ${escapeHtml(formatApiError(e))}</div>`;

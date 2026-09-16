@@ -2,17 +2,18 @@
  * Main channels page: rendering, data loading, filter state management.
  * Delegates to lib/channel-config.ts and lib/channel-status.ts.
  */
-import { apiGet, toCamelCase, type ChannelData, type PluginData } from "../lib/api";
+import { apiGet, type ChannelData } from "../lib/api";
+import { mergedProvidersFromApi } from "../lib/providers";
 import { allSettledOrNull } from "../lib/parallel";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 import { escapeHtml, fixMissingSelectOptions, formatApiError, getDefaultProfile } from "../lib/helpers";
 import { showChannelsImportModal } from "../lib/config-import";
 import {
   _profiles,
-  _providers,
-  _providerModels,
   _templates,
   _channelToolsets,
+  setChannelData,
+  setProviderErrors,
   wireChannelConfigEditing,
 } from "../lib/channel-config";
 import {
@@ -91,44 +92,14 @@ async function loadChannels(): Promise<void> {
     if (!channels) throw new Error("Failed to load channels");
     _profiles.length = 0;
     if (Array.isArray(profilesRes)) _profiles.push(...(profilesRes as any));
-    // Load provider names and their model lists
-    if (pluginsRes) {
-      const pluginResp = pluginsRes;
-      const allPlugins: PluginData[] = (pluginResp.data || pluginResp).map((p: Record<string, any>) =>
-        toCamelCase<PluginData>(p),
-      );
-      const providers = allPlugins.filter((p: PluginData) => p.pluginType === "provider");
-      _providers.length = 0;
-      _providers.push(...providers.map((p: PluginData) => p.name).sort());
-      const modelMap: Record<string, string[]> = {};
-      for (const p of providers) {
-        try {
-          // Use data already returned in the plugin list response instead of
-          // fetching /api/plugins/:name individually (which may 404)
-          const schema = [
-            ...((p.configSchema || []) as any[]),
-            ...((p.manifest?.config_schema || []) as any[]),
-          ];
-          const modelField = schema.find((f: any) => f.key === "default_model");
-          if (modelField && modelField.allowed_values && modelField.allowed_values.length > 0) {
-            modelMap[p.name] = modelField.allowed_values as string[];
-          } else if (modelField && modelField.default) {
-            modelMap[p.name] = [modelField.default as string];
-          } else if (modelField && modelField.refresh_url && modelField.type === "enum") {
-            modelMap[p.name] = [];
-          } else {
-            modelMap[p.name] = [];
-          }
-        } catch {
-          modelMap[p.name] = [];
-        }
-      }
-      Object.keys(_providerModels).forEach((k) => delete _providerModels[k]);
-      Object.assign(_providerModels, modelMap);
-    } else {
-      _providers.length = 0;
-      Object.keys(_providerModels).forEach((k) => delete _providerModels[k]);
-    }
+    // Provider options come from the SINGLE merged resolution served by the
+    // omniagent API (`/plugins`): enabled provider plugins UNION the providers
+    // defined in models.yml, deduplicated by provider id with models.yml
+    // precedence. Never assembled locally, so models.yml-only (code-less)
+    // providers are always selectable and merge-contract errors surface loudly.
+    const merged = mergedProvidersFromApi(pluginsRes);
+    setChannelData(_profiles, merged.providers, merged.models);
+    setProviderErrors(merged.errors);
     // Populate platform filter from data
     const platformSel = document.getElementById("filter-platform") as HTMLSelectElement | null;
     if (platformSel) {

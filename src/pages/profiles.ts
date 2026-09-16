@@ -4,10 +4,13 @@ import { enhanceSelect, unenhanceSelect } from "../lib/dropdown";
 import { escapeHtml, formatApiError } from "../lib/helpers";
 import type { PluginBase, ProfileData } from "../lib/types";
 import { allSettledOrNull } from "../lib/parallel";
+import { mergedProvidersFromApi, providerErrorBanner, type ProviderError } from "../lib/providers";
 
 // ── Cached provider/model data ──
 let _providers: string[] = [];
 let _providerModels: Record<string, string[]> = {};
+// Loud merge-contract errors from the providers API (see lib/providers.ts).
+let _providerErrors: ProviderError[] = [];
 let _explorerPrefix = ""; // OMNI_DIR path relative to EXPLORER_DIR
 // Toolset ids defined in config/toolsets.yml (None = all tools allowed).
 let _toolsetIds: string[] = [];
@@ -50,45 +53,15 @@ async function loadProfiles(): Promise<void> {
     }
     if (!profilesRes) throw new Error("Failed to load profiles");
     const profiles = profilesRes;
-    // Load provider names and their model lists (same pattern as channels)
-    if (pluginResp) {
-      const rawPlugins: Record<string, any>[] = ((pluginResp as any).data || pluginResp || []).map(
-        (p: Record<string, any>) => {
-          const r: Record<string, unknown> = {};
-          for (const k of Object.keys(p)) {
-            r[k.replace(/_([a-z])/g, (_, c) => c.toUpperCase())] = p[k];
-          }
-          return r;
-        },
-      );
-      const providers = rawPlugins.filter((p) => p.pluginType === "provider");
-      _providers = (providers as { name: string }[]).map((p) => p.name).sort();
-      const modelMap: Record<string, string[]> = {};
-      for (const p of providers) {
-        try {
-          // Use data already returned in the plugin list response instead of
-          // fetching /api/plugins/:name individually (which may 404)
-          const schema = [
-            ...((p.configSchema || []) as any[]),
-            ...((p.manifest?.config_schema || []) as any[]),
-          ];
-          const modelField = schema.find((f: Record<string, unknown>) => f.key === "default_model");
-          if (modelField && modelField.allowed_values && modelField.allowed_values.length > 0) {
-            modelMap[p.name] = modelField.allowed_values as string[];
-          } else if (modelField && modelField.default) {
-            modelMap[p.name] = [modelField.default as string];
-          } else {
-            modelMap[p.name] = [];
-          }
-        } catch {
-          modelMap[p.name] = [];
-        }
-      }
-      _providerModels = modelMap;
-    } else {
-      _providers = [];
-      _providerModels = {};
-    }
+    // Provider options come from the SINGLE merged resolution served by the
+    // omniagent API (`/plugins`): enabled provider plugins UNION the providers
+    // defined in models.yml, deduplicated by provider id with models.yml
+    // precedence. Never assembled locally, so models.yml-only providers are
+    // always selectable and merge-contract errors surface loudly below.
+    const merged = mergedProvidersFromApi(pluginResp);
+    _providers = merged.providers;
+    _providerModels = merged.models;
+    _providerErrors = merged.errors;
 
     // Build tool→server_name lookup BEFORE rendering so toolsetOf()
     // uses the map instead of the fallback (which would produce "list"
@@ -100,6 +73,9 @@ async function loadProfiles(): Promise<void> {
       }
     }
     content.innerHTML = renderProfilesPage(profiles);
+    // Loud provider merge-contract errors (models.yml plugin-backed entry with
+    // no enabled provider plugin) instead of silently dropping the provider.
+    content.insertAdjacentHTML("afterbegin", providerErrorBanner(_providerErrors));
     wireProfiles();
     // Enhance provider and model selects
     document.querySelectorAll("#profiles-content select").forEach((el) => {

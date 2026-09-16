@@ -7,11 +7,16 @@ import { enhanceSelect, unenhanceSelect } from "./dropdown";
 import { apiGet, apiPost } from "./api";
 import type { SettingDefinition, ProfileData } from "./types";
 import { showToast } from "./utils";
+import { providerErrorBanner, type ProviderError } from "./providers";
 
 // ── Module-level data shared across channel modules ──
 export let _profiles: ProfileData[] = [];
 export let _providers: string[] = [];
 export let _providerModels: Record<string, string[]> = {};
+// Merge-contract errors from the omniagent providers API (plugin-backed
+// models.yml entry without its provider plugin): rendered loudly next to the
+// provider selects instead of silently dropping the provider.
+export let _providerErrors: ProviderError[] = [];
 export const _templates: { profile: string; name: string; label: string }[] = [];
 // Toolset ids (`config/toolsets.yml`) selectable for channels.
 export const _channelToolsets: string[] = [];
@@ -24,6 +29,11 @@ export function setChannelData(
   _profiles = profiles;
   _providers = providers;
   _providerModels = providerModels;
+}
+
+/** Store the loud merge-contract errors carried by the providers API. */
+export function setProviderErrors(errors: ProviderError[]): void {
+  _providerErrors = errors || [];
 }
 
 // ── Helper functions ──
@@ -85,6 +95,7 @@ export function renderProviderSelect(channelId: string, currentProvider: string)
   const selectId = `ch-${channelId}-provider`;
   const currentInList = currentProvider && (_providers as string[]).includes(currentProvider);
   return `
+    ${providerErrorBanner(_providerErrors)}
     <div class="channel-field-group">
       <select id="${selectId}" class="filter-select channel-provider-select channel-edit-input"
         data-channel-id="${channelId}" data-field="provider" data-original="${escapeHtml(currentProvider)}">
