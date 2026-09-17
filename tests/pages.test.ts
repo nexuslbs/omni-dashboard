@@ -652,6 +652,25 @@ describe("Kanban mobile overflow, keep-board on move, topmost drop, tags in deta
     const rowStatusIdx = content.indexOf("status-badge-", rowToggleIdx);
     assert.ok(rowToggleIdx !== -1 && rowStatusIdx !== -1 && rowToggleIdx < rowStatusIdx);
   });
+  it("threads.ts left-aligns the Status header and the status badges in rows", () => {
+    const content = readFileSync(new URL("../src/pages/threads.ts", import.meta.url), "utf-8");
+    // Header: the Status columnheader carries no inline override, so it keeps
+    // the .data-table [role="columnheader"] { text-align: left } rule.
+    assert.ok(/<div role="columnheader">Status<\/div>/.test(content));
+    // Row: the status cell's flex column aligns its children to the start
+    // (left) so the badge lines up with the left-aligned header. Regression
+    // guard against the old align-items:center.
+    assert.ok(
+      content.includes(
+        '<div style="display:flex;flex-direction:column;align-items:flex-start;gap:0.25rem;"><span class="badge status-badge-',
+      ),
+      "status cell flex column must use align-items:flex-start",
+    );
+    assert.ok(
+      !/align-items:center;gap:0\.25rem;"><span class="badge status-badge-/.test(content),
+      "status cell must not center the badge",
+    );
+  });
 
   it("style.css lays the threads details box fields side by side (auto-fit grid, mobile-friendly)", () => {
     const content = readFileSync(new URL("../src/style.css", import.meta.url), "utf-8");
