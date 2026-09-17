@@ -415,6 +415,11 @@ async function loadThreads(): Promise<void> {
     pageInfo.textContent = data.total > 0 ? `Page ${currentPage} of ${totalPages}` : "";
     pageInfoBottom.textContent = pageInfo.textContent;
 
+    // Sync current filters to URL search params BEFORE the empty-result early
+    // return: a filter that matches zero threads must still be reflected in the
+    // URL, otherwise refreshing the page loses the selection (C1/D1 regression).
+    syncFiltersToUrl();
+
     if (data.threads.length === 0) {
       listEl.innerHTML = '<div class="empty-state">No threads match the current filters</div>';
       return;
@@ -444,9 +449,6 @@ async function loadThreads(): Promise<void> {
         </div>
       </div>
     `;
-    // Sync current filters to URL search params
-    syncFiltersToUrl();
-
     // Wire thread stop buttons
     document.querySelectorAll(".thread-stop-btn").forEach((btn) => {
       btn.addEventListener("click", async (e) => {
