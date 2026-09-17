@@ -1,5 +1,6 @@
 import { showToast } from "../lib/utils";
 import { apiGet } from "../lib/api";
+import { cachedGet } from "../lib/refcache";
 import { enhanceSelect, syncSelectDisplay } from "../lib/dropdown";
 import { escapeHtml, formatApiError } from "../lib/helpers";
 
@@ -53,6 +54,8 @@ const currentLimit = 50;
 let currentOffset = 0;
 let currentStatus = "all";
 let currentCause = "all";
+let currentChannel = "all";
+let currentProfile = "all";
 let currentThreadId = "";
 let currentParentId = "";
 
@@ -61,6 +64,8 @@ function syncFiltersToUrl(): void {
   const params = new URLSearchParams();
   if (currentStatus !== "all") params.set("status", currentStatus);
   if (currentCause !== "all") params.set("cause", currentCause);
+  if (currentChannel !== "all") params.set("channel", currentChannel);
+  if (currentProfile !== "all") params.set("profile", currentProfile);
   if (currentThreadId) params.set("thread_id", currentThreadId);
   if (currentParentId) params.set("parent_id", currentParentId);
   if (currentOffset > 0) params.set("offset", String(currentOffset));
@@ -75,6 +80,10 @@ function applyFiltersFromUrl(): void {
   if (status) currentStatus = status;
   const cause = p.get("cause");
   if (cause) currentCause = cause;
+  const channel = p.get("channel");
+  if (channel) currentChannel = channel;
+  const profile = p.get("profile");
+  if (profile) currentProfile = profile;
   const threadId = p.get("thread_id");
   if (threadId) currentThreadId = threadId;
   const parentId = p.get("parent_id");
@@ -150,6 +159,18 @@ export function renderThreads(container: HTMLElement): void {
         </select>
       </div>
       <div class="filter-section">
+        <label class="filter-label">Channel</label>
+        <select class="filter-select" id="filter-channel">
+          <option value="all">All</option>
+        </select>
+      </div>
+      <div class="filter-section">
+        <label class="filter-label">Profile</label>
+        <select class="filter-select" id="filter-profile">
+          <option value="all">All</option>
+        </select>
+      </div>
+      <div class="filter-section">
         <label class="filter-label">Thread ID</label>
         <input class="filter-input" id="filter-thread-id" type="text" placeholder="Thread ID..." />
       </div>
@@ -186,6 +207,8 @@ export function renderThreads(container: HTMLElement): void {
   currentOffset = 0;
   currentStatus = "all";
   currentCause = "all";
+  currentChannel = "all";
+  currentProfile = "all";
   currentThreadId = "";
   currentParentId = "";
 
@@ -211,7 +234,7 @@ async function loadFilters(): Promise<void> {
   }
 }
 
-function populateFilterControls(filters: ThreadFilters): void {
+async function populateFilterControls(filters: ThreadFilters): Promise<void> {
   const statusSel = document.getElementById("filter-status") as HTMLSelectElement;
   statusSel.innerHTML = '<option value="all">All</option>';
   for (const s of filters.statuses) {
@@ -224,13 +247,46 @@ function populateFilterControls(filters: ThreadFilters): void {
     causeSel.innerHTML += `<option value="${escapeHtml(c)}">${escapeHtml(c.charAt(0).toUpperCase() + c.slice(1))}</option>`;
   }
 
+  // Channel options from /channels (id == channel name == threads.channel_id)
+  const channelSel = document.getElementById("filter-channel") as HTMLSelectElement;
+  channelSel.innerHTML = '<option value="all">All</option>';
+  try {
+    const channels = (await cachedGet<Record<string, unknown>[]>("/channels")) || [];
+    for (const ch of channels) {
+      const chAny = ch as Record<string, string>;
+      const id = chAny.id || chAny.name || "";
+      const label = chAny.name || chAny.id || id;
+      channelSel.innerHTML += `<option value="${escapeHtml(id)}">${escapeHtml(label)}</option>`;
+    }
+  } catch {
+    channelSel.innerHTML += '<option value="">Error loading channels</option>';
+  }
+
+  // Profile options from /profiles
+  const profileSel = document.getElementById("filter-profile") as HTMLSelectElement;
+  profileSel.innerHTML = '<option value="all">All</option>';
+  try {
+    const profiles = (await cachedGet<unknown[]>("/profiles")) || [];
+    for (const p of profiles) {
+      const name = typeof p === "string" ? p : (p as { name?: string }).name || "";
+      if (!name) continue;
+      profileSel.innerHTML += `<option value="${escapeHtml(name)}">${escapeHtml(name)}</option>`;
+    }
+  } catch {
+    profileSel.innerHTML += '<option value="">Error loading profiles</option>';
+  }
+
   // Restore filter values from URL-restored state (set BEFORE enhance)
   statusSel.value = currentStatus;
   causeSel.value = currentCause;
+  channelSel.value = currentChannel;
+  profileSel.value = currentProfile;
 
   // Enhance filter selects with custom dropdowns
   enhanceSelect("filter-status");
   enhanceSelect("filter-cause");
+  enhanceSelect("filter-channel");
+  enhanceSelect("filter-profile");
 
   wireFilterEvents();
 }
@@ -243,6 +299,16 @@ function wireFilterEvents(): void {
   });
   document.getElementById("filter-cause")!.addEventListener("change", (e) => {
     currentCause = (e.target as HTMLSelectElement).value;
+    currentOffset = 0;
+    void loadThreads();
+  });
+  document.getElementById("filter-channel")!.addEventListener("change", (e) => {
+    currentChannel = (e.target as HTMLSelectElement).value;
+    currentOffset = 0;
+    void loadThreads();
+  });
+  document.getElementById("filter-profile")!.addEventListener("change", (e) => {
+    currentProfile = (e.target as HTMLSelectElement).value;
     currentOffset = 0;
     void loadThreads();
   });
@@ -262,19 +328,27 @@ function wireFilterEvents(): void {
   document.getElementById("btn-reset")!.addEventListener("click", () => {
     currentStatus = "all";
     currentCause = "all";
+    currentChannel = "all";
+    currentProfile = "all";
     currentThreadId = "";
     currentParentId = "";
     currentOffset = 0;
     const statusSel = document.getElementById("filter-status") as HTMLSelectElement;
     const causeSel = document.getElementById("filter-cause") as HTMLSelectElement;
+    const channelSel = document.getElementById("filter-channel") as HTMLSelectElement;
+    const profileSel = document.getElementById("filter-profile") as HTMLSelectElement;
     const threadInput = document.getElementById("filter-thread-id") as HTMLInputElement;
     const parentInput = document.getElementById("filter-parent-id") as HTMLInputElement;
     statusSel.value = "all";
     causeSel.value = "all";
+    channelSel.value = "all";
+    profileSel.value = "all";
     threadInput.value = "";
     parentInput.value = "";
     syncSelectDisplay("filter-status");
     syncSelectDisplay("filter-cause");
+    syncSelectDisplay("filter-channel");
+    syncSelectDisplay("filter-profile");
     history.replaceState(null, "", window.location.pathname);
     void loadThreads();
   });
@@ -319,6 +393,8 @@ async function loadThreads(): Promise<void> {
     params.set("offset", String(currentOffset));
     if (currentStatus !== "all") params.set("status", currentStatus);
     if (currentCause !== "all") params.set("cause", currentCause);
+    if (currentChannel !== "all") params.set("channel", currentChannel);
+    if (currentProfile !== "all") params.set("profile", currentProfile);
     // omniagent /threads filters by `id` (numeric thread id), not `thread_id`
     if (currentThreadId && /^\d+$/.test(currentThreadId)) params.set("id", currentThreadId);
     if (currentParentId && /^\d+$/.test(currentParentId)) params.set("parent_id", currentParentId);
