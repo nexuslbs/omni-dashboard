@@ -655,7 +655,7 @@ const ACTION_META: Record<ImportAction, { label: string; bg: string; border: str
 };
 
 const MODAL_CSS =
-  "position:fixed;top:0;left:0;right:0;bottom:0;background:#0d0d1a;z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding:3rem 1rem;overflow-y:auto;";
+  "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding:3rem 1rem;overflow-y:auto;";
 
 /**
  * The shared import modal. Fetches the URL, parses via `config.parse`, plans

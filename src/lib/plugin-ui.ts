@@ -64,7 +64,7 @@ export function renderPluginCard(
           <span class="badge badge-neutral" style="margin-left:0.125rem;">source: ${escapeHtml(p.source)}</span>
           ${hasTools ? `<span class="badge badge-neutral" style="margin-left:0.125rem;">${pluginTools!.length} tool${pluginTools!.length > 1 ? "s" : ""}</span>` : ""}
           ${renderActionButtons(p, hasRemote, hasCompilableSource)}
-          ${p.source === "models.yml" ? `<button type="button" class="models-yml-info-btn" title="This provider is defined in models.yml, not by a plugin" aria-label="About this models.yml provider" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:50%;width:1.4rem;height:1.4rem;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.8rem;color:var(--text-secondary);margin-right:0.25rem;">?</button>` : ""}
+          ${p.source === "models.yml" ? `<button type="button" class="models-yml-info-btn" title="This provider is defined in models.yml, not by a plugin" aria-label="About this models.yml provider" style="background:#475569;border:1px solid rgba(255,255,255,0.2);border-radius:50%;width:1.4rem;height:1.4rem;line-height:1;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;font-size:0.8rem;color:#fff;margin-right:0.25rem;">?</button>` : ""}
           ${p.source !== "models.yml" && !p.needsBuild && p.status === "enabled" ? `<button type="button" class="plugin-restart-btn" title="Restart this plugin (disable + enable cycle)" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;margin-right:0.25rem;">⟳</button><button type="button" class="plugin-toggle-btn" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:var(--text-secondary);">Disable</button>` : p.source !== "models.yml" && !p.needsBuild && (p.status === "disabled" || p.status === "error") ? `<button type="button" class="plugin-toggle-btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#34d399;">Enable</button>` : ""}
           <button type="button" class="plugin-expand-btn" style="background:none;border:none;color:var(--text-muted);cursor:pointer;padding:0.25rem;font-size:1rem;" title="Toggle config">▶</button>
         </span>
@@ -623,7 +623,7 @@ export function showModelsYmlInfoModal(providerName: string): void {
   backdrop.setAttribute("aria-modal", "true");
   backdrop.setAttribute("aria-labelledby", titleId);
   backdrop.style.cssText =
-    "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.85);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding-top:15vh;";
+    "position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.6);z-index:1000;display:flex;align-items:flex-start;justify-content:center;padding-top:15vh;";
 
   backdrop.innerHTML = `
     <div style="background:var(--bg-card,#1e1e2e);border:1px solid var(--glass-border,rgba(255,255,255,0.1));border-radius:12px;padding:2rem;width:520px;max-width:90vw;">

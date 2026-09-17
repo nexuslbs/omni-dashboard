@@ -430,3 +430,66 @@ describe("executeImportBatch", () => {
     assert.ok(calls.some((c) => c.includes("DELETE /api/plugins/tools/remote/p2")));
   });
 });
+// ── Import modal backdrop opacity regression ──
+// (dashboard modal opacity task): the import modal itself stays opaque, but
+// the backdrop OUTSIDE it must be semi-transparent (dimmed), matching the
+// standard .modal-backdrop rgba(0,0,0,0.6) - never an opaque fill.
+
+describe("Import modal backdrop (opacity regression)", () => {
+  it("showImportFlow renders a semi-transparent backdrop, not an opaque one", async () => {
+    const mod = await loadImport();
+    if (!mod) return;
+    type Listener = (e?: unknown) => void;
+    let bodyChildren: FakeEl[] = [];
+    class FakeEl {
+      style: Record<string, string> = {};
+      innerHTML = "";
+      value = "";
+      listeners: Record<string, Listener[]> = {};
+      querySelector(sel: string): FakeEl | null {
+        // showImportFlow attaches listeners to #import-fetch / #import-batch-confirm
+        // and reads #import-url.value; the rest may be null.
+        if (sel === "#import-fetch" || sel === "#import-batch-confirm" || sel === "#import-url") return this;
+        return null;
+      }
+      addEventListener(t: string, fn: Listener) {
+        (this.listeners[t] ||= []).push(fn);
+      }
+      remove() {
+        bodyChildren = bodyChildren.filter((c) => c !== this);
+      }
+    }
+    const fakeDocument = {
+      createElement: () => new FakeEl(),
+      body: { appendChild: (c: FakeEl) => bodyChildren.push(c) },
+    };
+    const g = globalThis as Record<string, unknown>;
+    const prevDoc = g.document;
+    g.document = fakeDocument;
+    try {
+      mod.showImportFlow({
+        title: "Import providers",
+        urlLabel: "models.yml URL",
+        urlPlaceholder: "https://example.com/models.yml",
+        entryNoun: "provider",
+        parse: () => [],
+        fetchLocal: async () => ({}),
+        plan: () => [],
+        describe: () => ({ subtitle: "" }),
+        execute: async () => [],
+      });
+      assert.equal(bodyChildren.length, 1, "import modal backdrop appended to body");
+      const backdrop = bodyChildren[0];
+      assert.ok(
+        backdrop.style.cssText.includes("rgba(0,0,0,0.6)"),
+        "import modal backdrop must be semi-transparent (rgba(0,0,0,0.6))",
+      );
+      assert.ok(
+        !backdrop.style.cssText.includes("#0d0d1a"),
+        "import modal backdrop must not be the opaque #0d0d1a fill",
+      );
+    } finally {
+      g.document = prevDoc;
+    }
+  });
+});

@@ -64,6 +64,13 @@ describe("models.yml-source providers: no plugin actions", () => {
     const { renderPluginCard } = await load();
     const html = renderPluginCard(modelsYmlProvider(), {});
     assert.ok(html.includes("models-yml-info-btn"), "question-icon button must be present");
+    // Opacity regression (dashboard modal opacity task): the ? button must be
+    // fully OPAQUE (solid background, no rgba translucency).
+    assert.ok(html.includes("background:#475569"), "question-icon button must have a solid opaque background");
+    assert.ok(
+      !/models-yml-info-btn[^>]*background:rgba\(/.test(html),
+      "question-icon button must not use a translucent rgba background",
+    );
     assert.ok(!html.includes("plugin-install-btn"), "no Install");
     assert.ok(!html.includes("plugin-reinstall-btn"), "no Reinstall");
     assert.ok(!html.includes("plugin-download-btn"), "no Download");
@@ -149,6 +156,16 @@ describe("models.yml info modal (accessible, dismissible)", () => {
       assert.equal(backdrop.attrs["role"], "dialog");
       assert.equal(backdrop.attrs["aria-modal"], "true");
       assert.ok(backdrop.attrs["aria-labelledby"], "aria-labelledby set");
+      // Opacity regression: the backdrop must be SEMI-TRANSPARENT (dimmed),
+      // matching the standard .modal-backdrop rgba(0,0,0,0.6), never opaque.
+      assert.ok(
+        backdrop.style.cssText.includes("rgba(0,0,0,0.6)"),
+        "modal backdrop must be semi-transparent (rgba(0,0,0,0.6))",
+      );
+      assert.ok(
+        !backdrop.style.cssText.includes("0.85"),
+        "modal backdrop must not use the near-opaque 0.85 alpha",
+      );
       assert.ok(backdrop.innerHTML.includes("models.yml"), "modal text mentions models.yml");
       assert.ok(
         backdrop.innerHTML.includes("no plugin-provided actions"),
