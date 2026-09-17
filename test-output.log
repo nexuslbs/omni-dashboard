@@ -1,0 +1,3892 @@
+
+> omni-dashboard@0.3.0 test
+> NODE_OPTIONS="--import=./ts-loader.mjs" node --test tests/*.test.ts
+
+TAP version 13
+# Subtest: OmniDashboard API
+    # Subtest: /api/health returns ok status
+    not ok 1 - /api/health returns ok status
+      ---
+      duration_ms: 52.01102
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:15:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGet (file:///opt/repo/tests/api.test.ts:5:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:16:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Promise.all (index 0)
+        async Suite.run (node:internal/test_runner/test:1442:7)
+        async startSubtestAfterBootstrap (node:internal/test_runner/harness:296:3)
+      ...
+    # Subtest: /api/overview returns array with correct structure
+    not ok 2 - /api/overview returns array with correct structure
+      ---
+      duration_ms: 5.930091
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:22:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGet (file:///opt/repo/tests/api.test.ts:5:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:23:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: /api/messages/events returns messages array with total
+    not ok 3 - /api/messages/events returns messages array with total
+      ---
+      duration_ms: 2.454096
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:36:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGet (file:///opt/repo/tests/api.test.ts:5:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:37:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: /api/messages/events?role=user filters correctly
+    not ok 4 - /api/messages/events?role=user filters correctly
+      ---
+      duration_ms: 2.313796
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:44:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGet (file:///opt/repo/tests/api.test.ts:5:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:45:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: /api/messages/events?channel_id=all returns all (no filter)
+    not ok 5 - /api/messages/events?channel_id=all returns all (no filter)
+      ---
+      duration_ms: 2.414697
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:52:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGet (file:///opt/repo/tests/api.test.ts:5:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:53:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: /api/messages/filters returns filters with channels
+    not ok 6 - /api/messages/filters returns filters with channels
+      ---
+      duration_ms: 1.966197
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:57:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGet (file:///opt/repo/tests/api.test.ts:5:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:58:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: /api/fs/list returns entries array
+    not ok 7 - /api/fs/list returns entries array
+      ---
+      duration_ms: 2.948296
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:65:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGet (file:///opt/repo/tests/api.test.ts:5:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:66:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: HTML page includes favicon link
+    not ok 8 - HTML page includes favicon link
+      ---
+      duration_ms: 2.404696
+      type: 'test'
+      location: '/opt/repo/tests/api.test.ts:71:3'
+      failureType: 'testCodeFailure'
+      error: 'fetch failed'
+      code: 'ERR_TEST_FAILURE'
+      name: 'TypeError'
+      stack: |-
+        node:internal/deps/undici/undici:15157:13
+        process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+        async apiGetRaw (file:///opt/repo/tests/api.test.ts:10:15)
+        async TestContext.<anonymous> (file:///opt/repo/tests/api.test.ts:72:30)
+        async Test.run (node:internal/test_runner/test:1054:7)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    1..8
+not ok 1 - OmniDashboard API
+  ---
+  duration_ms: 74.542185
+  type: 'suite'
+  location: '/opt/repo/tests/api.test.ts:14:1'
+  failureType: 'subtestsFailed'
+  error: '8 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: Config import wiring (config-import.ts, item 9)
+    # Subtest: workflows.ts: Import button wired to showWorkflowsImportModal
+    ok 1 - workflows.ts: Import button wired to showWorkflowsImportModal
+      ---
+      duration_ms: 1.773797
+      type: 'test'
+      ...
+    # Subtest: schedule.ts: Import button wired to showSchedulesImportModal
+    ok 2 - schedule.ts: Import button wired to showSchedulesImportModal
+      ---
+      duration_ms: 4.330294
+      type: 'test'
+      ...
+    # Subtest: hooks.ts: Import button wired to showHooksImportModal
+    ok 3 - hooks.ts: Import button wired to showHooksImportModal
+      ---
+      duration_ms: 0.281299
+      type: 'test'
+      ...
+    # Subtest: channels.ts: Import button wired to showChannelsImportModal
+    ok 4 - channels.ts: Import button wired to showChannelsImportModal
+      ---
+      duration_ms: 0.2204
+      type: 'test'
+      ...
+    # Subtest: actions.ts: Import button wired to showActionsImportModal
+    ok 5 - actions.ts: Import button wired to showActionsImportModal
+      ---
+      duration_ms: 0.258399
+      type: 'test'
+      ...
+    # Subtest: settings.ts: Import button wired to showSettingsImportModal
+    ok 6 - settings.ts: Import button wired to showSettingsImportModal
+      ---
+      duration_ms: 0.2757
+      type: 'test'
+      ...
+    # Subtest: parses each config file's expected section (workflows/schedules/hooks/channels/actions)
+    ok 7 - parses each config file's expected section (workflows/schedules/hooks/channels/actions)
+      ---
+      duration_ms: 0.281699
+      type: 'test'
+      ...
+    # Subtest: settings flow accepts a flat name→value map or a settings: section
+    not ok 8 - settings flow accepts a flat name→value map or a settings: section
+      ---
+      duration_ms: 0.681399
+      type: 'test'
+      location: '/opt/repo/tests/config-import.test.ts:68:3'
+      failureType: 'testCodeFailure'
+      error: 'settings flow must fall back to a flat map'
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        TestContext.<anonymous> (file:///opt/repo/tests/config-import.test.ts:69:12)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        Suite.processPendingSubtests (node:internal/test_runner/test:744:18)
+        Test.postRun (node:internal/test_runner/test:1173:19)
+        Test.run (node:internal/test_runner/test:1101:12)
+        async Suite.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: routes imports to the right write paths
+    ok 9 - routes imports to the right write paths
+      ---
+      duration_ms: 0.3007
+      type: 'test'
+      ...
+    # Subtest: reuses the shared import modal + planner for all six flows
+    ok 10 - reuses the shared import modal + planner for all six flows
+      ---
+      duration_ms: 0.5175
+      type: 'test'
+      ...
+    # Subtest: exports a generic YAML parser used by every flow
+    ok 11 - exports a generic YAML parser used by every flow
+      ---
+      duration_ms: 0.193699
+      type: 'test'
+      ...
+    1..11
+not ok 2 - Config import wiring (config-import.ts, item 9)
+  ---
+  duration_ms: 16.134075
+  type: 'suite'
+  location: '/opt/repo/tests/config-import.test.ts:9:1'
+  failureType: 'subtestsFailed'
+  error: '1 subtest failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: Database page fixes
+    # Subtest: Loading indicator is hidden by default and only shown during a query
+    ok 1 - Loading indicator is hidden by default and only shown during a query
+      ---
+      duration_ms: 1.104398
+      type: 'test'
+      ...
+    # Subtest: pagination renders at the top and bottom even when a query returns 0 rows
+    ok 2 - pagination renders at the top and bottom even when a query returns 0 rows
+      ---
+      duration_ms: 0.1589
+      type: 'test'
+      ...
+    # Subtest: Run button has a visible purple background (--accent defined)
+    ok 3 - Run button has a visible purple background (--accent defined)
+      ---
+      duration_ms: 0.168099
+      type: 'test'
+      ...
+    # Subtest: secondary / action buttons use the neutral slate tint, never a white background
+    ok 4 - secondary / action buttons use the neutral slate tint, never a white background
+      ---
+      duration_ms: 0.2847
+      type: 'test'
+      ...
+    1..4
+ok 3 - Database page fixes
+  ---
+  duration_ms: 3.080695
+  type: 'suite'
+  ...
+# Subtest: Database page layout (db-center-area, item 4)
+    # Subtest: wraps loading/table/empty in a center area between the two paginators
+    ok 1 - wraps loading/table/empty in a center area between the two paginators
+      ---
+      duration_ms: 0.216699
+      type: 'test'
+      ...
+    # Subtest: center area fills the box and centers its content; paginators pin top/bottom
+    ok 2 - center area fills the box and centers its content; paginators pin top/bottom
+      ---
+      duration_ms: 0.2669
+      type: 'test'
+      ...
+    1..2
+ok 4 - Database page layout (db-center-area, item 4)
+  ---
+  duration_ms: 0.710299
+  type: 'suite'
+  ...
+# Subtest: Database page: Show full texts checkbox
+    # Subtest: renders the Show full texts checkbox unchecked by default
+    ok 1 - renders the Show full texts checkbox unchecked by default
+      ---
+      duration_ms: 0.3574
+      type: 'test'
+      ...
+    # Subtest: keeps the toggle on the DOM checkbox, not in the persistent module state
+    ok 2 - keeps the toggle on the DOM checkbox, not in the persistent module state
+      ---
+      duration_ms: 0.226
+      type: 'test'
+      ...
+    # Subtest: unchecked keeps shortened cells with the full text as title; checked shows the whole text inline
+    ok 3 - unchecked keeps shortened cells with the full text as title; checked shows the whole text inline
+      ---
+      duration_ms: 0.1872
+      type: 'test'
+      ...
+    # Subtest: styles the full-texts checkbox with the purple accent
+    ok 4 - styles the full-texts checkbox with the purple accent
+      ---
+      duration_ms: 0.388399
+      type: 'test'
+      ...
+    1..4
+ok 5 - Database page: Show full texts checkbox
+  ---
+  duration_ms: 1.496198
+  type: 'suite'
+  ...
+# Subtest: Models header buttons (item 1)
+    # Subtest: ↻ Refresh reuses the shared .btn geometry of Import / + Add Provider
+    ok 1 - ↻ Refresh reuses the shared .btn geometry of Import / + Add Provider
+      ---
+      duration_ms: 1.485198
+      type: 'test'
+      ...
+    # Subtest: ↻ Refresh uses the existing Enable green (no new hue)
+    ok 2 - ↻ Refresh uses the existing Enable green (no new hue)
+      ---
+      duration_ms: 0.202199
+      type: 'test'
+      ...
+    # Subtest: Import / + Add Provider / ↻ Refresh share ONE right-aligned header group
+    ok 3 - Import / + Add Provider / ↻ Refresh share ONE right-aligned header group
+      ---
+      duration_ms: 0.2094
+      type: 'test'
+      ...
+    1..3
+ok 6 - Models header buttons (item 1)
+  ---
+  duration_ms: 3.283795
+  type: 'suite'
+  ...
+# Subtest: Channels header buttons (item 2)
+    # Subtest: ↻ Refresh and ✕ Reset reuse the shared .btn geometry of Import
+    ok 1 - ↻ Refresh and ✕ Reset reuse the shared .btn geometry of Import
+      ---
+      duration_ms: 0.279099
+      type: 'test'
+      ...
+    # Subtest: ↻ Refresh is the Enable green and ✕ Reset the dashboard danger red
+    ok 2 - ↻ Refresh is the Enable green and ✕ Reset the dashboard danger red
+      ---
+      duration_ms: 1.105198
+      type: 'test'
+      ...
+    # Subtest: Import / ↻ Refresh / ✕ Reset sit together in the header group
+    ok 3 - Import / ↻ Refresh / ✕ Reset sit together in the header group
+      ---
+      duration_ms: 0.1365
+      type: 'test'
+      ...
+    1..3
+ok 7 - Channels header buttons (item 2)
+  ---
+  duration_ms: 1.784397
+  type: 'suite'
+  ...
+# Subtest: Profiles header + Create Profile modal (item 3)
+    # Subtest: + Create Profile and Import form the RIGHT-aligned page-header group
+    ok 1 - + Create Profile and Import form the RIGHT-aligned page-header group
+      ---
+      duration_ms: 0.3613
+      type: 'test'
+      ...
+    # Subtest: the Create Profile modal asks for the name only (no provider field, no model section)
+    ok 2 - the Create Profile modal asks for the name only (no provider field, no model section)
+      ---
+      duration_ms: 0.181199
+      type: 'test'
+      ...
+    # Subtest: creation posts the name only, so a provider-less profile is legal
+    ok 3 - creation posts the name only, so a provider-less profile is legal
+      ---
+      duration_ms: 0.1978
+      type: 'test'
+      ...
+    # Subtest: the helper text documents the real default (all enabled tools unless a toolset is set)
+    ok 4 - the helper text documents the real default (all enabled tools unless a toolset is set)
+      ---
+      duration_ms: 0.2746
+      type: 'test'
+      ...
+    1..4
+ok 8 - Profiles header + Create Profile modal (item 3)
+  ---
+  duration_ms: 1.328098
+  type: 'suite'
+  ...
+# Subtest: Actions header button (item 4)
+    # Subtest: Import sits in the RIGHT-aligned page-header group next to + New Action
+    ok 1 - Import sits in the RIGHT-aligned page-header group next to + New Action
+      ---
+      duration_ms: 0.1874
+      type: 'test'
+      ...
+    1..1
+ok 9 - Actions header button (item 4)
+  ---
+  duration_ms: 0.2554
+  type: 'suite'
+  ...
+# Subtest: Import button wiring (plugin-list.ts)
+    # Subtest: adds an Import button next to the Add button
+    ok 1 - adds an Import button next to the Add button
+      ---
+      duration_ms: 0.927998
+      type: 'test'
+      ...
+    # Subtest: wires the Import button to showImportModal with a page reload
+    ok 2 - wires the Import button to showImportModal with a page reload
+      ---
+      duration_ms: 0.1316
+      type: 'test'
+      ...
+    # Subtest: imports showImportModal from ./plugin-import
+    ok 3 - imports showImportModal from ./plugin-import
+      ---
+      duration_ms: 0.178499
+      type: 'test'
+      ...
+    1..3
+ok 10 - Import button wiring (plugin-list.ts)
+  ---
+  duration_ms: 2.280696
+  type: 'suite'
+  ...
+# Subtest: server proxy route (server/index.ts)
+    # Subtest: registers GET /api/fetch-remote before the generic proxy
+    ok 1 - registers GET /api/fetch-remote before the generic proxy
+      ---
+      duration_ms: 0.2442
+      type: 'test'
+      ...
+    # Subtest: only allows http(s) URLs
+    ok 2 - only allows http(s) URLs
+      ---
+      duration_ms: 0.135
+      type: 'test'
+      ...
+    # Subtest: registers GET /api/remote-yml for the local remote.yml
+    ok 3 - registers GET /api/remote-yml for the local remote.yml
+      ---
+      duration_ms: 0.1183
+      type: 'test'
+      ...
+    1..3
+ok 11 - server proxy route (server/index.ts)
+  ---
+  duration_ms: 0.823999
+  type: 'suite'
+  ...
+# Subtest: parseRemoteYml
+    # Subtest: parses sections, entries, url/path/ref and skips comments
+    ok 1 - parses sections, entries, url/path/ref and skips comments
+      ---
+      duration_ms: 61.244706
+      type: 'test'
+      ...
+    # Subtest: omits sections that are not present in the document
+    ok 2 - omits sections that are not present in the document
+      ---
+      duration_ms: 1.461697
+      type: 'test'
+      ...
+    # Subtest: ignores unknown top-level sections and git_ref alias
+    ok 3 - ignores unknown top-level sections and git_ref alias
+      ---
+      duration_ms: 0.954799
+      type: 'test'
+      ...
+    # Subtest: throws Invalid YAML for malformed content
+    ok 4 - throws Invalid YAML for malformed content
+      ---
+      duration_ms: 1.584597
+      type: 'test'
+      ...
+    # Subtest: throws Invalid YAML for an entry missing url
+    ok 5 - throws Invalid YAML for an entry missing url
+      ---
+      duration_ms: 0.737699
+      type: 'test'
+      ...
+    # Subtest: throws Invalid YAML for empty documents
+    ok 6 - throws Invalid YAML for empty documents
+      ---
+      duration_ms: 0.673099
+      type: 'test'
+      ...
+    # Subtest: returns no sections for a comment-only document
+    ok 7 - returns no sections for a comment-only document
+      ---
+      duration_ms: 0.738999
+      type: 'test'
+      ...
+    1..7
+ok 12 - parseRemoteYml
+  ---
+  duration_ms: 68.053496
+  type: 'suite'
+  ...
+# Subtest: determineAction
+    # Subtest: returns add when no local plugin and no local remote.yml entry exist
+    ok 1 - returns add when no local plugin and no local remote.yml entry exist
+      ---
+      duration_ms: 0.728799
+      type: 'test'
+      ...
+    # Subtest: returns remove when the local plugin has the SAME url+path+ref
+    ok 2 - returns remove when the local plugin has the SAME url+path+ref
+      ---
+      duration_ms: 0.709699
+      type: 'test'
+      ...
+    # Subtest: returns override when url differs
+    ok 3 - returns override when url differs
+      ---
+      duration_ms: 0.704999
+      type: 'test'
+      ...
+    # Subtest: returns override when path differs
+    ok 4 - returns override when path differs
+      ---
+      duration_ms: 0.544699
+      type: 'test'
+      ...
+    # Subtest: returns override when ref differs (including missing ref)
+    ok 5 - returns override when ref differs (including missing ref)
+      ---
+      duration_ms: 0.607599
+      type: 'test'
+      ...
+    # Subtest: falls back to the local remote.yml entry when the plugin is not installed
+    ok 6 - falls back to the local remote.yml entry when the plugin is not installed
+      ---
+      duration_ms: 0.565999
+      type: 'test'
+      ...
+    1..6
+ok 13 - determineAction
+  ---
+  duration_ms: 4.104793
+  type: 'suite'
+  ...
+# Subtest: planImportActions
+    # Subtest: maps entries to planned actions using local plugins + local remote.yml
+    ok 1 - maps entries to planned actions using local plugins + local remote.yml
+      ---
+      duration_ms: 3.993394
+      type: 'test'
+      ...
+    1..1
+ok 14 - planImportActions
+  ---
+  duration_ms: 4.204894
+  type: 'suite'
+  ...
+# Subtest: fetchRemoteYml error handling
+    # Subtest: returns ok with text on a successful direct fetch
+    ok 1 - returns ok with text on a successful direct fetch
+      ---
+      duration_ms: 34.855447
+      type: 'test'
+      ...
+    # Subtest: reports HTTP 404 without proxying
+    ok 2 - reports HTTP 404 without proxying
+      ---
+      duration_ms: 1.203098
+      type: 'test'
+      ...
+    # Subtest: reports network errors and falls back to the server proxy
+    ok 3 - reports network errors and falls back to the server proxy
+      ---
+      duration_ms: 24.834362
+      type: 'test'
+      ...
+    # Subtest: surfaces the proxy error when both direct fetch and proxy fail
+    ok 4 - surfaces the proxy error when both direct fetch and proxy fail
+      ---
+      duration_ms: 1.788998
+      type: 'test'
+      ...
+    # Subtest: reports an empty response body
+    ok 5 - reports an empty response body
+      ---
+      duration_ms: 14.329278
+      type: 'test'
+      ...
+    1..5
+ok 15 - fetchRemoteYml error handling
+  ---
+  duration_ms: 77.364881
+  type: 'suite'
+  ...
+# Subtest: executeImportBatch
+    # Subtest: executes marked actions sequentially in list order and continues on failure
+    ok 1 - executes marked actions sequentially in list order and continues on failure
+      ---
+      duration_ms: 1.515598
+      type: 'test'
+      ...
+    # Subtest: routes remove actions to executor.remove with the type dir
+    ok 2 - routes remove actions to executor.remove with the type dir
+      ---
+      duration_ms: 0.691799
+      type: 'test'
+      ...
+    # Subtest: uses the default executor against /plugins/install-git and DELETE
+    ok 3 - uses the default executor against /plugins/install-git and DELETE
+      ---
+      duration_ms: 2.252996
+      type: 'test'
+      ...
+    1..3
+ok 16 - executeImportBatch
+  ---
+  duration_ms: 4.653093
+  type: 'suite'
+  ...
+# Subtest: Import modal backdrop (opacity regression)
+    # Subtest: showImportFlow renders a semi-transparent backdrop, not an opaque one
+    ok 1 - showImportFlow renders a semi-transparent backdrop, not an opaque one
+      ---
+      duration_ms: 2.337296
+      type: 'test'
+      ...
+    1..1
+ok 17 - Import modal backdrop (opacity regression)
+  ---
+  duration_ms: 2.549796
+  type: 'suite'
+  ...
+# Subtest: Item action buttons: canonical names + left-to-right order
+    # Subtest: schedules list row renders Run | Disable/Enable | Edit | Delete | Details
+    ok 1 - schedules list row renders Run | Disable/Enable | Edit | Delete | Details
+      ---
+      duration_ms: 1.480797
+      type: 'test'
+      ...
+    # Subtest: schedule details page keeps the same order, ending with the back-link
+    ok 2 - schedule details page keeps the same order, ending with the back-link
+      ---
+      duration_ms: 0.2238
+      type: 'test'
+      ...
+    # Subtest: hooks list row renders Run | Disable/Enable | Edit | Delete | Details
+    ok 3 - hooks list row renders Run | Disable/Enable | Edit | Delete | Details
+      ---
+      duration_ms: 0.256699
+      type: 'test'
+      ...
+    # Subtest: hook details page keeps the same order, ending with the back-link
+    ok 4 - hook details page keeps the same order, ending with the back-link
+      ---
+      duration_ms: 0.1797
+      type: 'test'
+      ...
+    # Subtest: actions page keeps the prefix Run | Disable/Enable | Edit | Delete
+    ok 5 - actions page keeps the prefix Run | Disable/Enable | Edit | Delete
+      ---
+      duration_ms: 0.2018
+      type: 'test'
+      ...
+    1..5
+ok 18 - Item action buttons: canonical names + left-to-right order
+  ---
+  duration_ms: 3.886794
+  type: 'suite'
+  ...
+# Subtest: Task-details pages: shared .detail-label + no field separator borders
+    # Subtest: schedule details labels every field with the shared .detail-label class
+    ok 1 - schedule details labels every field with the shared .detail-label class
+      ---
+      duration_ms: 0.2007
+      type: 'test'
+      ...
+    # Subtest: hook details labels every field with .detail-label and drops the field border-bottom
+    ok 2 - hook details labels every field with .detail-label and drops the field border-bottom
+      ---
+      duration_ms: 0.274399
+      type: 'test'
+      ...
+    # Subtest: the hook details page keeps its OTHER legitimate borders (targeted removal)
+    ok 3 - the hook details page keeps its OTHER legitimate borders (targeted removal)
+      ---
+      duration_ms: 0.3216
+      type: 'test'
+      ...
+    1..3
+ok 19 - Task-details pages: shared .detail-label + no field separator borders
+  ---
+  duration_ms: 1.081899
+  type: 'suite'
+  ...
+# Subtest: Kanban board controls HTML: always rendered
+    # Subtest: renders the selector and the Create Board button in every state
+    ok 1 - renders the selector and the Create Board button in every state
+      ---
+      duration_ms: 1.765097
+      type: 'test'
+      ...
+    # Subtest: always offers the 'No board' option
+    ok 2 - always offers the 'No board' option
+      ---
+      duration_ms: 0.362999
+      type: 'test'
+      ...
+    # Subtest: lists every board key when the list loaded
+    ok 3 - lists every board key when the list loaded
+      ---
+      duration_ms: 0.1724
+      type: 'test'
+      ...
+    # Subtest: marks the selected board
+    ok 4 - marks the selected board
+      ---
+      duration_ms: 0.312499
+      type: 'test'
+      ...
+    # Subtest: keeps the selector usable on a failed fetch (only 'No board' offered)
+    ok 5 - keeps the selector usable on a failed fetch (only 'No board' offered)
+      ---
+      duration_ms: 0.954899
+      type: 'test'
+      ...
+    # Subtest: shows a non-blocking hint when the list is empty or failed
+    ok 6 - shows a non-blocking hint when the list is empty or failed
+      ---
+      duration_ms: 0.265399
+      type: 'test'
+      ...
+    1..6
+ok 20 - Kanban board controls HTML: always rendered
+  ---
+  duration_ms: 5.430992
+  type: 'suite'
+  ...
+# Subtest: Kanban Edit Board button visibility
+    # Subtest: is visible whenever a board is selected
+    ok 1 - is visible whenever a board is selected
+      ---
+      duration_ms: 0.312499
+      type: 'test'
+      ...
+    # Subtest: is rendered but hidden when no board is selected
+    ok 2 - is rendered but hidden when no board is selected
+      ---
+      duration_ms: 0.3688
+      type: 'test'
+      ...
+    # Subtest: stays visible after a re-render with the same selected board (boards reloaded)
+    ok 3 - stays visible after a re-render with the same selected board (boards reloaded)
+      ---
+      duration_ms: 0.285399
+      type: 'test'
+      ...
+    1..3
+ok 21 - Kanban Edit Board button visibility
+  ---
+  duration_ms: 1.418998
+  type: 'suite'
+  ...
+# Subtest: Board panel click keeps the header board select in sync
+    # Subtest: kanban-boards.ts exports selectBoardInControls
+    ok 1 - kanban-boards.ts exports selectBoardInControls
+      ---
+      duration_ms: 1.118899
+      type: 'test'
+      ...
+    # Subtest: selectBoardInControls sets the select value, syncs the custom dropdown and fires change
+    ok 2 - selectBoardInControls sets the select value, syncs the custom dropdown and fires change
+      ---
+      duration_ms: 0.2215
+      type: 'test'
+      ...
+    # Subtest: kanban-board.ts imports selectBoardInControls and uses it in the board-choice click handler
+    ok 3 - kanban-board.ts imports selectBoardInControls and uses it in the board-choice click handler
+      ---
+      duration_ms: 0.376399
+      type: 'test'
+      ...
+    1..3
+ok 22 - Board panel click keeps the header board select in sync
+  ---
+  duration_ms: 3.219795
+  type: 'suite'
+  ...
+# Subtest: Kanban detail dependencies (kanban-detail.ts)
+    # Subtest: fetches the dependency list from /kanban/tasks/{id}/dependencies, not task.dependencies
+    ok 1 - fetches the dependency list from /kanban/tasks/{id}/dependencies, not task.dependencies
+      ---
+      duration_ms: 1.037598
+      type: 'test'
+      ...
+    # Subtest: renders dependency rows that open the linked task (clickable dep-row)
+    ok 2 - renders dependency rows that open the linked task (clickable dep-row)
+      ---
+      duration_ms: 0.1677
+      type: 'test'
+      ...
+    # Subtest: renders dependents (tasks that depend on this one) and their empty state
+    ok 3 - renders dependents (tasks that depend on this one) and their empty state
+      ---
+      duration_ms: 0.2362
+      type: 'test'
+      ...
+    # Subtest: loads dependents with ONE reverse-lookup call (no all-tasks + per-task fan-out)
+    ok 4 - loads dependents with ONE reverse-lookup call (no all-tasks + per-task fan-out)
+      ---
+      duration_ms: 0.2848
+      type: 'test'
+      ...
+    # Subtest: keeps the empty state for tasks with no dependencies
+    ok 5 - keeps the empty state for tasks with no dependencies
+      ---
+      duration_ms: 0.1313
+      type: 'test'
+      ...
+    1..5
+ok 23 - Kanban detail dependencies (kanban-detail.ts)
+  ---
+  duration_ms: 3.313095
+  type: 'suite'
+  ...
+# Subtest: src/lib/kanban-detail.ts: move-to-another-board uses the custom select
+    # Subtest: imports enhanceSelectElement + syncSelectDisplayEl from ./dropdown
+    ok 1 - imports enhanceSelectElement + syncSelectDisplayEl from ./dropdown
+      ---
+      duration_ms: 1.276698
+      type: 'test'
+      ...
+    # Subtest: renders \#task-move-board as a plain native select, without one-off inline styling
+    ok 2 - renders \#task-move-board as a plain native select, without one-off inline styling
+      ---
+      duration_ms: 0.439099
+      type: 'test'
+      ...
+    # Subtest: enhances the select AFTER populating the options, and syncs the custom display
+    ok 3 - enhances the select AFTER populating the options, and syncs the custom display
+      ---
+      duration_ms: 0.1679
+      type: 'test'
+      ...
+    # Subtest: keeps the previous behaviour: options, disabled state, PATCH move and wrap hiding
+    ok 4 - keeps the previous behaviour: options, disabled state, PATCH move and wrap hiding
+      ---
+      duration_ms: 0.442999
+      type: 'test'
+      ...
+    1..4
+ok 24 - src/lib/kanban-detail.ts: move-to-another-board uses the custom select
+  ---
+  duration_ms: 3.891694
+  type: 'suite'
+  ...
+# Subtest: Kanban archived filter (show_archived)
+    # Subtest: loadBoard filters tasks on the archived flag (not just the URL)
+    ok 1 - loadBoard filters tasks on the archived flag (not just the URL)
+      ---
+      duration_ms: 1.144899
+      type: 'test'
+      ...
+    # Subtest: loadBoard asks the API for archived tasks when showArchived is on
+    ok 2 - loadBoard asks the API for archived tasks when showArchived is on
+      ---
+      duration_ms: 0.153399
+      type: 'test'
+      ...
+    # Subtest: columns and totals are computed from the filtered list
+    ok 3 - columns and totals are computed from the filtered list
+      ---
+      duration_ms: 0.2705
+      type: 'test'
+      ...
+    1..3
+ok 25 - Kanban archived filter (show_archived)
+  ---
+  duration_ms: 2.933796
+  type: 'suite'
+  ...
+# Subtest: Shared create/edit task modal (kanban-create.ts)
+    # Subtest: exports one taskModalHTML(mode) used for both Create and Edit
+    ok 1 - exports one taskModalHTML(mode) used for both Create and Edit
+      ---
+      duration_ms: 0.207199
+      type: 'test'
+      ...
+    # Subtest: Board and Workflow selects exist in BOTH modes (custom select, not native)
+    ok 2 - Board and Workflow selects exist in BOTH modes (custom select, not native)
+      ---
+      duration_ms: 0.179
+      type: 'test'
+      ...
+    # Subtest: openTaskModal shows the modal BEFORE populating selects (latency fix)
+    ok 3 - openTaskModal shows the modal BEFORE populating selects (latency fix)
+      ---
+      duration_ms: 0.241199
+      type: 'test'
+      ...
+    # Subtest: wireTaskModal wires cancel + submit for both modes; submit differs by mode
+    ok 4 - wireTaskModal wires cancel + submit for both modes; submit differs by mode
+      ---
+      duration_ms: 0.262
+      type: 'test'
+      ...
+    # Subtest: submitTaskModal keeps an empty workflow selection so edit can clear to board default
+    ok 5 - submitTaskModal keeps an empty workflow selection so edit can clear to board default
+      ---
+      duration_ms: 0.446399
+      type: 'test'
+      ...
+    1..5
+ok 26 - Shared create/edit task modal (kanban-create.ts)
+  ---
+  duration_ms: 1.780897
+  type: 'suite'
+  ...
+# Subtest: Kanban detail reuses the shared task modal
+    # Subtest: renders taskModalHTML("edit") instead of a bespoke edit modal
+    ok 1 - renders taskModalHTML("edit") instead of a bespoke edit modal
+      ---
+      duration_ms: 0.323599
+      type: 'test'
+      ...
+    # Subtest: no longer defines its own edit-modal field HTML
+    ok 2 - no longer defines its own edit-modal field HTML
+      ---
+      duration_ms: 0.3408
+      type: 'test'
+      ...
+    # Subtest: task details always renders the effective workflow from task.workflow (resolved), not the DB column name workflow_id
+    ok 3 - task details always renders the effective workflow from task.workflow (resolved), not the DB column name workflow_id
+      ---
+      duration_ms: 0.246699
+      type: 'test'
+      ...
+    1..3
+ok 27 - Kanban detail reuses the shared task modal
+  ---
+  duration_ms: 1.085598
+  type: 'suite'
+  ...
+# Subtest: Reusable message box used by message-rendering pages
+    # Subtest: Messages page, kanban detail and schedule detail all use renderMessageCard
+    ok 1 - Messages page, kanban detail and schedule detail all use renderMessageCard
+      ---
+      duration_ms: 0.693499
+      type: 'test'
+      ...
+    # Subtest: the shared threads list renders every message card with renderMessageCard
+    ok 2 - the shared threads list renders every message card with renderMessageCard
+      ---
+      duration_ms: 0.1923
+      type: 'test'
+      ...
+    1..2
+ok 28 - Reusable message box used by message-rendering pages
+  ---
+  duration_ms: 0.983199
+  type: 'suite'
+  ...
+# Subtest: Modal latency: refcache prefetch
+    # Subtest: refcache.ts exports cachedGet + prefetch
+    ok 1 - refcache.ts exports cachedGet + prefetch
+      ---
+      duration_ms: 0.2367
+      type: 'test'
+      ...
+    # Subtest: pages prefetch modal option lists on load
+    ok 2 - pages prefetch modal option lists on load
+      ---
+      duration_ms: 0.333799
+      type: 'test'
+      ...
+    # Subtest: cron and hook modals load their option lists from the cache in parallel
+    ok 3 - cron and hook modals load their option lists from the cache in parallel
+      ---
+      duration_ms: 0.38
+      type: 'test'
+      ...
+    1..3
+ok 29 - Modal latency: refcache prefetch
+  ---
+  duration_ms: 1.157199
+  type: 'suite'
+  ...
+# Subtest: Kanban tag filter (tag=)
+    # Subtest: loadBoard AND-combines the tag filter with the archived filter
+    ok 1 - loadBoard AND-combines the tag filter with the archived filter
+      ---
+      duration_ms: 0.200899
+      type: 'test'
+      ...
+    # Subtest: loadBoard restores the tag filter from the URL so it survives navigation
+    ok 2 - loadBoard restores the tag filter from the URL so it survives navigation
+      ---
+      duration_ms: 0.1395
+      type: 'test'
+      ...
+    # Subtest: kanban.ts exposes a tag input and a clear control wired to the URL
+    ok 3 - kanban.ts exposes a tag input and a clear control wired to the URL
+      ---
+      duration_ms: 0.1617
+      type: 'test'
+      ...
+    1..3
+ok 30 - Kanban tag filter (tag=)
+  ---
+  duration_ms: 0.623799
+  type: 'suite'
+  ...
+# Subtest: Kanban header layout: board controls below the subtitle
+    # Subtest: orders the header: title, then subtitle, then board controls (dropdown + info line)
+    ok 1 - orders the header: title, then subtitle, then board controls (dropdown + info line)
+      ---
+      duration_ms: 0.156699
+      type: 'test'
+      ...
+    # Subtest: keeps the subtitle a plain heading (no embedded workflow/channel meta)
+    ok 2 - keeps the subtitle a plain heading (no embedded workflow/channel meta)
+      ---
+      duration_ms: 0.1386
+      type: 'test'
+      ...
+    1..2
+ok 31 - Kanban header layout: board controls below the subtitle
+  ---
+  duration_ms: 0.384499
+  type: 'suite'
+  ...
+# Subtest: Kanban drag+drop exact position (drop handler)
+    # Subtest: excludes the dragged card from the insert-index computation
+    ok 1 - excludes the dragged card from the insert-index computation
+      ---
+      duration_ms: 0.1644
+      type: 'test'
+      ...
+    # Subtest: computes the insert index from the actual drop Y (midpoint comparison, bottom default)
+    ok 2 - computes the insert index from the actual drop Y (midpoint comparison, bottom default)
+      ---
+      duration_ms: 0.148099
+      type: 'test'
+      ...
+    # Subtest: sends the computed position to the /position endpoint
+    ok 3 - sends the computed position to the /position endpoint
+      ---
+      duration_ms: 0.124
+      type: 'test'
+      ...
+    1..3
+ok 32 - Kanban drag+drop exact position (drop handler)
+  ---
+  duration_ms: 0.546599
+  type: 'suite'
+  ...
+# Subtest: Kanban header board controls are always rendered
+    # Subtest: never wipes \#kanban-board-controls when the boards list is empty
+    ok 1 - never wipes \#kanban-board-controls when the boards list is empty
+      ---
+      duration_ms: 0.395299
+      type: 'test'
+      ...
+    # Subtest: renders the strip through the pure boardControlsHTML helper
+    ok 2 - renders the strip through the pure boardControlsHTML helper
+      ---
+      duration_ms: 0.2866
+      type: 'test'
+      ...
+    # Subtest: boardControlsHTML always emits the selector, Create Board and Edit Board
+    ok 3 - boardControlsHTML always emits the selector, Create Board and Edit Board
+      ---
+      duration_ms: 0.1362
+      type: 'test'
+      ...
+    # Subtest: keeps the selector options ('No board' + every board key) and the failure hint
+    ok 4 - keeps the selector options ('No board' + every board key) and the failure hint
+      ---
+      duration_ms: 1.132998
+      type: 'test'
+      ...
+    # Subtest: Edit Board visibility follows the selected board in every render
+    ok 5 - Edit Board visibility follows the selected board in every render
+      ---
+      duration_ms: 0.1404
+      type: 'test'
+      ...
+    # Subtest: wireBoardControls keeps the board-change handler and the custom select
+    ok 6 - wireBoardControls keeps the board-change handler and the custom select
+      ---
+      duration_ms: 0.172499
+      type: 'test'
+      ...
+    # Subtest: re-loads the boards list with its failure reason (empty != failed)
+    ok 7 - re-loads the boards list with its failure reason (empty != failed)
+      ---
+      duration_ms: 0.11
+      type: 'test'
+      ...
+    1..7
+ok 33 - Kanban header board controls are always rendered
+  ---
+  duration_ms: 2.590096
+  type: 'suite'
+  ...
+# Subtest: src/lib/kanban-boards.ts: board workflow select + display
+    # Subtest: imports fetchWorkflows and the WorkflowEntry type from api.ts
+    ok 1 - imports fetchWorkflows and the WorkflowEntry type from api.ts
+      ---
+      duration_ms: 1.531497
+      type: 'test'
+      ...
+    # Subtest: exports workflowSelectOptions, renderWorkflowSelect, boardMetaLabel
+    ok 2 - exports workflowSelectOptions, renderWorkflowSelect, boardMetaLabel
+      ---
+      duration_ms: 0.449
+      type: 'test'
+      ...
+    # Subtest: board modal workflow field is a <select> rendered from renderWorkflowSelect (not a free-text input)
+    ok 3 - board modal workflow field is a <select> rendered from renderWorkflowSelect (not a free-text input)
+      ---
+      duration_ms: 0.284299
+      type: 'test'
+      ...
+    # Subtest: openBoardModal loads workflows asynchronously before rendering
+    ok 4 - openBoardModal loads workflows asynchronously before rendering
+      ---
+      duration_ms: 0.2214
+      type: 'test'
+      ...
+    # Subtest: wireBoardControls renders a muted workflow/channel label for the current board
+    ok 5 - wireBoardControls renders a muted workflow/channel label for the current board
+      ---
+      duration_ms: 0.287399
+      type: 'test'
+      ...
+    # Subtest: wireBoardControls enhances the board selector with the custom stylized select (Item 2)
+    ok 6 - wireBoardControls enhances the board selector with the custom stylized select (Item 2)
+      ---
+      duration_ms: 0.2867
+      type: 'test'
+      ...
+    # Subtest: readBoardForm still reads the workflow select value via \#board-form-workflow
+    ok 7 - readBoardForm still reads the workflow select value via \#board-form-workflow
+      ---
+      duration_ms: 0.192699
+      type: 'test'
+      ...
+    1..7
+ok 34 - src/lib/kanban-boards.ts: board workflow select + display
+  ---
+  duration_ms: 4.770492
+  type: 'suite'
+  ...
+# Subtest: src/lib/kanban-board.ts: board choice buttons show workflow
+    # Subtest: imports boardMetaLabel from kanban-boards
+    ok 1 - imports boardMetaLabel from kanban-boards
+      ---
+      duration_ms: 0.376999
+      type: 'test'
+      ...
+    # Subtest: 'choose a board' buttons append the board's workflow/channel meta under the key
+    ok 2 - 'choose a board' buttons append the board's workflow/channel meta under the key
+      ---
+      duration_ms: 0.3035
+      type: 'test'
+      ...
+    1..2
+ok 35 - src/lib/kanban-board.ts: board choice buttons show workflow
+  ---
+  duration_ms: 1.230198
+  type: 'suite'
+  ...
+# Subtest: board workflow helpers (runtime, pure functions)
+    # Subtest: workflowSelectOptions and boardMetaLabel behave as specified
+    ok 1 - workflowSelectOptions and boardMetaLabel behave as specified
+      ---
+      duration_ms: 25.72176
+      type: 'test'
+      ...
+    1..1
+ok 36 - board workflow helpers (runtime, pure functions)
+  ---
+  duration_ms: 25.93486
+  type: 'suite'
+  ...
+# Subtest: src/lib/api.ts
+    # Subtest: API_BASE constant equals /api
+    ok 1 - API_BASE constant equals /api
+      ---
+      duration_ms: 1.488598
+      type: 'test'
+      ...
+    # Subtest: exports apiGet, apiPost, apiDelete functions
+    ok 2 - exports apiGet, apiPost, apiDelete functions
+      ---
+      duration_ms: 0.401099
+      type: 'test'
+      ...
+    # Subtest: all API functions throw on non-ok response
+    ok 3 - all API functions throw on non-ok response
+      ---
+      duration_ms: 0.2443
+      type: 'test'
+      ...
+    # Subtest: defines all expected TypeScript interfaces
+    ok 4 - defines all expected TypeScript interfaces
+      ---
+      duration_ms: 1.056599
+      type: 'test'
+      ...
+    # Subtest: apiGet uses fetch with API_BASE prefix
+    ok 5 - apiGet uses fetch with API_BASE prefix
+      ---
+      duration_ms: 0.238699
+      type: 'test'
+      ...
+    # Subtest: apiPost uses POST method and JSON content-type
+    ok 6 - apiPost uses POST method and JSON content-type
+      ---
+      duration_ms: 1.232498
+      type: 'test'
+      ...
+    # Subtest: apiDelete uses DELETE method
+    ok 7 - apiDelete uses DELETE method
+      ---
+      duration_ms: 0.2381
+      type: 'test'
+      ...
+    # Subtest: module can be imported and exports expected symbols
+    ok 8 - module can be imported and exports expected symbols
+      ---
+      duration_ms: 18.628471
+      type: 'test'
+      ...
+    1..8
+ok 37 - src/lib/api.ts
+  ---
+  duration_ms: 25.56726
+  type: 'suite'
+  ...
+# Subtest: src/lib/router.ts
+    # Subtest: exports router with go method
+    ok 1 - exports router with go method
+      ---
+      duration_ms: 0.583099
+      type: 'test'
+      ...
+    # Subtest: defines all expected page routes
+    ok 2 - defines all expected page routes
+      ---
+      duration_ms: 0.435899
+      type: 'test'
+      ...
+    # Subtest: defines parameterized routes for detail pages
+    ok 3 - defines parameterized routes for detail pages
+      ---
+      duration_ms: 0.2018
+      type: 'test'
+      ...
+    # Subtest: param route handlers extract parameter correctly
+    ok 4 - param route handlers extract parameter correctly
+      ---
+      duration_ms: 0.165999
+      type: 'test'
+      ...
+    # Subtest: 404 fallback renders error state
+    ok 5 - 404 fallback renders error state
+      ---
+      duration_ms: 0.1629
+      type: 'test'
+      ...
+    # Subtest: routes use dynamically imported page renderers
+    ok 6 - routes use dynamically imported page renderers
+      ---
+      duration_ms: 0.1639
+      type: 'test'
+      ...
+    # Subtest: router.go iterates param routes before exact routes
+    ok 7 - router.go iterates param routes before exact routes
+      ---
+      duration_ms: 0.160999
+      type: 'test'
+      ...
+    1..7
+ok 38 - src/lib/router.ts
+  ---
+  duration_ms: 2.256596
+  type: 'suite'
+  ...
+# Subtest: src/lib/plugin-ui.ts
+    # Subtest: renderPluginCard includes card-body with renderPluginConfig call
+    ok 1 - renderPluginCard includes card-body with renderPluginConfig call
+      ---
+      duration_ms: 0.4033
+      type: 'test'
+      ...
+    # Subtest: renderPluginCard includes tool names in card body when pluginTools provided
+    ok 2 - renderPluginCard includes tool names in card body when pluginTools provided
+      ---
+      duration_ms: 0.328299
+      type: 'test'
+      ...
+    # Subtest: renderPluginCard renders a uniform 'source: <value>' badge for every source
+    ok 3 - renderPluginCard renders a uniform 'source: <value>' badge for every source
+      ---
+      duration_ms: 0.412799
+      type: 'test'
+      ...
+    # Subtest: renderPluginConfig function generates config fields from configSchema
+    ok 4 - renderPluginConfig function generates config fields from configSchema
+      ---
+      duration_ms: 0.3611
+      type: 'test'
+      ...
+    # Subtest: exports renderPluginCard, renderActionButtons, wirePluginButtons, showInstallModal
+    ok 5 - exports renderPluginCard, renderActionButtons, wirePluginButtons, showInstallModal
+      ---
+      duration_ms: 0.615099
+      type: 'test'
+      ...
+    # Subtest: restart handler persists pending config before restarting
+    ok 6 - restart handler persists pending config before restarting
+      ---
+      duration_ms: 1.403498
+      type: 'test'
+      ...
+    1..6
+ok 39 - src/lib/plugin-ui.ts
+  ---
+  duration_ms: 3.759894
+  type: 'suite'
+  ...
+# Subtest: src/lib/helpers.ts
+    # Subtest: escapeHtml source escapes double and single quotes
+    ok 1 - escapeHtml source escapes double and single quotes
+      ---
+      duration_ms: 0.2273
+      type: 'test'
+      ...
+    # Subtest: escapeHtml runtime: quotes and special chars are fully preserved (node 22+)
+    ok 2 - escapeHtml runtime: quotes and special chars are fully preserved (node 22+)
+      ---
+      duration_ms: 36.204544
+      type: 'test'
+      ...
+    1..2
+ok 40 - src/lib/helpers.ts
+  ---
+  duration_ms: 36.602444
+  type: 'suite'
+  ...
+# Subtest: src/pages/secrets.ts
+    # Subtest: secret value inputs render readonly with an explicit Edit button
+    ok 1 - secret value inputs render readonly with an explicit Edit button
+      ---
+      duration_ms: 0.338799
+      type: 'test'
+      ...
+    # Subtest: Edit unlocks the input; save/cancel re-lock it
+    ok 2 - Edit unlocks the input; save/cancel re-lock it
+      ---
+      duration_ms: 0.2748
+      type: 'test'
+      ...
+    1..2
+ok 41 - src/pages/secrets.ts
+  ---
+  duration_ms: 0.740699
+  type: 'suite'
+  ...
+# Subtest: plugin secret select sync (dropdown/plugin-config/plugin-list/plugin-ui)
+    # Subtest: dropdown.ts exports syncSelectDisplayEl (by-element variant of syncSelectDisplay)
+    ok 1 - dropdown.ts exports syncSelectDisplayEl (by-element variant of syncSelectDisplay)
+      ---
+      duration_ms: 0.281599
+      type: 'test'
+      ...
+    # Subtest: plugin-config.ts re-syncs the enhanced select after secrets fetch and value changes
+    ok 2 - plugin-config.ts re-syncs the enhanced select after secrets fetch and value changes
+      ---
+      duration_ms: 0.2905
+      type: 'test'
+      ...
+    # Subtest: plugin-list.ts and plugin-ui.ts discard handlers re-sync enhanced selects
+    ok 3 - plugin-list.ts and plugin-ui.ts discard handlers re-sync enhanced selects
+      ---
+      duration_ms: 0.425399
+      type: 'test'
+      ...
+    1..3
+ok 42 - plugin secret select sync (dropdown/plugin-config/plugin-list/plugin-ui)
+  ---
+  duration_ms: 1.130798
+  type: 'suite'
+  ...
+# Subtest: src/pages/secrets.ts: multiline secret fields
+    # Subtest: secret value fields render as <textarea> (multiline), not single-line inputs
+    ok 1 - secret value fields render as <textarea> (multiline), not single-line inputs
+      ---
+      duration_ms: 0.440399
+      type: 'test'
+      ...
+    # Subtest: multiline values are NOT embedded in HTML attributes (newline normalization would corrupt them)
+    ok 2 - multiline values are NOT embedded in HTML attributes (newline normalization would corrupt them)
+      ---
+      duration_ms: 0.337
+      type: 'test'
+      ...
+    # Subtest: provides bullet-per-line masking for password-type multiline secrets
+    ok 3 - provides bullet-per-line masking for password-type multiline secrets
+      ---
+      duration_ms: 0.231599
+      type: 'test'
+      ...
+    # Subtest: mask/unmask toggle and edit reveal operate on the textarea
+    ok 4 - mask/unmask toggle and edit reveal operate on the textarea
+      ---
+      duration_ms: 0.2293
+      type: 'test'
+      ...
+    # Subtest: versions modal renders multiline values as masked textareas
+    ok 5 - versions modal renders multiline values as masked textareas
+      ---
+      duration_ms: 0.315099
+      type: 'test'
+      ...
+    1..5
+ok 43 - src/pages/secrets.ts: multiline secret fields
+  ---
+  duration_ms: 1.789097
+  type: 'suite'
+  ...
+# Subtest: src/lib/message-card.ts (preview/truncation fix)
+    # Subtest: defines a bounded PREVIEW_CHARS constant
+    ok 1 - defines a bounded PREVIEW_CHARS constant
+      ---
+      duration_ms: 1.724697
+      type: 'test'
+      ...
+    # Subtest: renderMessageCard renders only a preview for long content (no full text in DOM)
+    ok 2 - renderMessageCard renders only a preview for long content (no full text in DOM)
+      ---
+      duration_ms: 0.3018
+      type: 'test'
+      ...
+    # Subtest: keeps full content out of the DOM: long messages get NO data-view-raw attribute
+    ok 3 - keeps full content out of the DOM: long messages get NO data-view-raw attribute
+      ---
+      duration_ms: 0.2418
+      type: 'test'
+      ...
+    # Subtest: wireMessageCardToggles expands truncated cards to the full content lazily
+    ok 4 - wireMessageCardToggles expands truncated cards to the full content lazily
+      ---
+      duration_ms: 0.143099
+      type: 'test'
+      ...
+    # Subtest: messages.ts keeps the expand button for truncated previews
+    ok 5 - messages.ts keeps the expand button for truncated previews
+      ---
+      duration_ms: 0.3347
+      type: 'test'
+      ...
+    # Subtest: module exports renderMessageCard (behavior smoke test)
+    ok 6 - module exports renderMessageCard (behavior smoke test)
+      ---
+      duration_ms: 159.358754
+      type: 'test'
+      ...
+    1..6
+ok 44 - src/lib/message-card.ts (preview/truncation fix)
+  ---
+  duration_ms: 163.593348
+  type: 'suite'
+  ...
+# Subtest: src/lib/message-card.ts (workflow + workflow role badges)
+    # Subtest: maps workflow steps to role names (running→executor, testing→tester, review→reviewer)
+    ok 1 - maps workflow steps to role names (running→executor, testing→tester, review→reviewer)
+      ---
+      duration_ms: 0.530599
+      type: 'test'
+      ...
+    # Subtest: renderMessageCard emits workflow + workflow-role badges from msg.workflow/workflow_step
+    ok 2 - renderMessageCard emits workflow + workflow-role badges from msg.workflow/workflow_step
+      ---
+      duration_ms: 0.393099
+      type: 'test'
+      ...
+    # Subtest: renderMessageCard renders the workflow badges (behavior smoke test)
+    ok 3 - renderMessageCard renders the workflow badges (behavior smoke test)
+      ---
+      duration_ms: 5.148892
+      type: 'test'
+      ...
+    1..3
+ok 45 - src/lib/message-card.ts (workflow + workflow role badges)
+  ---
+  duration_ms: 6.665289
+  type: 'suite'
+  ...
+# Subtest: Messages page subtasks break long words (no horizontal overflow)
+    # Subtest: renderSubtasks uses the shared .msg-subtask-* classes
+    ok 1 - renderSubtasks uses the shared .msg-subtask-* classes
+      ---
+      duration_ms: 0.814298
+      type: 'test'
+      ...
+    # Subtest: renderSubtasks no longer relies on ad-hoc inline layout styles
+    ok 2 - renderSubtasks no longer relies on ad-hoc inline layout styles
+      ---
+      duration_ms: 0.140699
+      type: 'test'
+      ...
+    # Subtest: .msg-subtask-desc breaks over-long tokens and can shrink
+    ok 3 - .msg-subtask-desc breaks over-long tokens and can shrink
+      ---
+      duration_ms: 0.3795
+      type: 'test'
+      ...
+    # Subtest: the subtask flex chain can shrink (min-width:0 on row and card)
+    ok 4 - the subtask flex chain can shrink (min-width:0 on row and card)
+      ---
+      duration_ms: 0.419799
+      type: 'test'
+      ...
+    1..4
+ok 46 - Messages page subtasks break long words (no horizontal overflow)
+  ---
+  duration_ms: 2.837996
+  type: 'suite'
+  ...
+# Subtest: Messages page subtasks render the processing state (task 2087)
+    # Subtest: subtaskStatusEmoji maps processing to the spinner icon
+    ok 1 - subtaskStatusEmoji maps processing to the spinner icon
+      ---
+      duration_ms: 0.220099
+      type: 'test'
+      ...
+    # Subtest: renderSubtasks renders the icon via subtaskStatusEmoji
+    ok 2 - renderSubtasks renders the icon via subtaskStatusEmoji
+      ---
+      duration_ms: 0.1194
+      type: 'test'
+      ...
+    # Subtest: kanban-subtasks helper maps processing to the spinner icon
+    ok 3 - kanban-subtasks helper maps processing to the spinner icon
+      ---
+      duration_ms: 0.231799
+      type: 'test'
+      ...
+    1..3
+ok 47 - Messages page subtasks render the processing state (task 2087)
+  ---
+  duration_ms: 1.014498
+  type: 'suite'
+  ...
+# Subtest: Shared modal scroll contract (style.css + lib/modal.ts)
+    # Subtest: caps modal panels to the viewport using dynamic viewport units (vh fallback)
+    ok 1 - caps modal panels to the viewport using dynamic viewport units (vh fallback)
+      ---
+      duration_ms: 1.297098
+      type: 'test'
+      ...
+    # Subtest: makes the overlay the scroll container and contains scroll chaining
+    ok 2 - makes the overlay the scroll container and contains scroll chaining
+      ---
+      duration_ms: 0.4933
+      type: 'test'
+      ...
+    # Subtest: locks the page behind an open modal (body/html + .main-content)
+    ok 3 - locks the page behind an open modal (body/html + .main-content)
+      ---
+      duration_ms: 0.4101
+      type: 'test'
+      ...
+    # Subtest: tags every overlay/panel at runtime so all modals (and future ones) inherit it
+    ok 4 - tags every overlay/panel at runtime so all modals (and future ones) inherit it
+      ---
+      duration_ms: 0.1607
+      type: 'test'
+      ...
+    # Subtest: keeps the sticky header of the shared .modal component and scrolls only its body
+    ok 5 - keeps the sticky header of the shared .modal component and scrolls only its body
+      ---
+      duration_ms: 0.3202
+      type: 'test'
+      ...
+    1..5
+ok 48 - Shared modal scroll contract (style.css + lib/modal.ts)
+  ---
+  duration_ms: 3.829194
+  type: 'suite'
+  ...
+# Subtest: models.yml-source providers: no plugin actions
+    # Subtest: pluginActionState is 'none' for a models.yml provider
+    ok 1 - pluginActionState is 'none' for a models.yml provider
+      ---
+      duration_ms: 38.302641
+      type: 'test'
+      ...
+    # Subtest: renderActionButtons renders NOTHING for a models.yml provider
+    ok 2 - renderActionButtons renders NOTHING for a models.yml provider
+      ---
+      duration_ms: 1.240298
+      type: 'test'
+      ...
+    # Subtest: renderPluginCard: models.yml provider card has the ? button and NO plugin action buttons
+    ok 3 - renderPluginCard: models.yml provider card has the ? button and NO plugin action buttons
+      ---
+      duration_ms: 1.495997
+      type: 'test'
+      ...
+    # Subtest: renderPluginCard: plugin-backed provider keeps its actions
+    ok 4 - renderPluginCard: plugin-backed provider keeps its actions
+      ---
+      duration_ms: 0.908099
+      type: 'test'
+      ...
+    1..4
+ok 49 - models.yml-source providers: no plugin actions
+  ---
+  duration_ms: 43.586633
+  type: 'suite'
+  ...
+# Subtest: models.yml info modal (accessible, dismissible)
+    # Subtest: opens a role=dialog modal with the short description; Close, click-outside and Escape dismiss it
+    ok 1 - opens a role=dialog modal with the short description; Close, click-outside and Escape dismiss it
+      ---
+      duration_ms: 2.302497
+      type: 'test'
+      ...
+    1..1
+ok 50 - models.yml info modal (accessible, dismissible)
+  ---
+  duration_ms: 2.482297
+  type: 'suite'
+  ...
+# Subtest: Models page route (router.ts)
+    # Subtest: imports renderModels from ../pages/models
+    ok 1 - imports renderModels from ../pages/models
+      ---
+      duration_ms: 0.946598
+      type: 'test'
+      ...
+    # Subtest: registers a 'models' route
+    ok 2 - registers a 'models' route
+      ---
+      duration_ms: 0.160299
+      type: 'test'
+      ...
+    1..2
+ok 51 - Models page route (router.ts)
+  ---
+  duration_ms: 2.105896
+  type: 'suite'
+  ...
+# Subtest: Models nav entry (index.html)
+    # Subtest: adds a Models nav item with data-route=models
+    ok 1 - adds a Models nav item with data-route=models
+      ---
+      duration_ms: 0.3083
+      type: 'test'
+      ...
+    1..1
+ok 52 - Models nav entry (index.html)
+  ---
+  duration_ms: 0.4067
+  type: 'suite'
+  ...
+# Subtest: Models page API usage (pages/models.ts)
+    # Subtest: reads via GET /api/models
+    ok 1 - reads via GET /api/models
+      ---
+      duration_ms: 0.2664
+      type: 'test'
+      ...
+    # Subtest: writes via PUT /api/models
+    ok 2 - writes via PUT /api/models
+      ---
+      duration_ms: 0.1525
+      type: 'test'
+      ...
+    # Subtest: renders provider + model config rows (channels-style page)
+    ok 3 - renders provider + model config rows (channels-style page)
+      ---
+      duration_ms: 0.201799
+      type: 'test'
+      ...
+    1..3
+ok 53 - Models page API usage (pages/models.ts)
+  ---
+  duration_ms: 0.988298
+  type: 'suite'
+  ...
+# Subtest: Models server proxy (server/index.ts, item 3)
+    # Subtest: registers the /api/models proxy before the generic proxy
+    ok 1 - registers the /api/models proxy before the generic proxy
+      ---
+      duration_ms: 0.173799
+      type: 'test'
+      ...
+    # Subtest: forwards the full /api/models path to omniagent (prefix preserved)
+    ok 2 - forwards the full /api/models path to omniagent (prefix preserved)
+      ---
+      duration_ms: 0.818899
+      type: 'test'
+      ...
+    1..2
+ok 54 - Models server proxy (server/index.ts, item 3)
+  ---
+  duration_ms: 1.176398
+  type: 'suite'
+  ...
+# Subtest: Models page UI (pages/models.ts, 9bce18c)
+    # Subtest: editor selects use the app custom dropdown component (enhanceSelectElement), not native selects
+    ok 1 - editor selects use the app custom dropdown component (enhanceSelectElement), not native selects
+      ---
+      duration_ms: 0.310699
+      type: 'test'
+      ...
+    # Subtest: Save/Cancel buttons use the app standard button classes
+    ok 2 - Save/Cancel buttons use the app standard button classes
+      ---
+      duration_ms: 0.3999
+      type: 'test'
+      ...
+    # Subtest: refresh wiring is scoped to .channel-refresh-btn and guards on refresh_url
+    ok 3 - refresh wiring is scoped to .channel-refresh-btn and guards on refresh_url
+      ---
+      duration_ms: 0.177299
+      type: 'test'
+      ...
+    # Subtest: per-model config is rendered inline in each provider card (renderModelConfigInline)
+    ok 4 - per-model config is rendered inline in each provider card (renderModelConfigInline)
+      ---
+      duration_ms: 0.1489
+      type: 'test'
+      ...
+    1..4
+ok 55 - Models page UI (pages/models.ts, 9bce18c)
+  ---
+  duration_ms: 1.183998
+  type: 'suite'
+  ...
+# Subtest: Page modules exist and export render functions
+    # Subtest: kanban.ts exports renderKanban, renderKanbanDetail
+    ok 1 - kanban.ts exports renderKanban, renderKanbanDetail
+      ---
+      duration_ms: 1.271898
+      type: 'test'
+      ...
+    # Subtest: schedule.ts exports renderSchedule, renderScheduleDetail
+    ok 2 - schedule.ts exports renderSchedule, renderScheduleDetail
+      ---
+      duration_ms: 0.326299
+      type: 'test'
+      ...
+    # Subtest: channels.ts exports renderChannels
+    ok 3 - channels.ts exports renderChannels
+      ---
+      duration_ms: 0.2509
+      type: 'test'
+      ...
+    # Subtest: database.ts exports renderDatabase
+    ok 4 - database.ts exports renderDatabase
+      ---
+      duration_ms: 0.2642
+      type: 'test'
+      ...
+    # Subtest: kanban.ts is under 350 lines
+    ok 5 - kanban.ts is under 350 lines
+      ---
+      duration_ms: 0.243699
+      type: 'test'
+      ...
+    # Subtest: schedule.ts is under 350 lines
+    ok 6 - schedule.ts is under 350 lines
+      ---
+      duration_ms: 0.203099
+      type: 'test'
+      ...
+    # Subtest: channels.ts is under 350 lines
+    ok 7 - channels.ts is under 350 lines
+      ---
+      duration_ms: 0.2221
+      type: 'test'
+      ...
+    1..7
+ok 56 - Page modules exist and export render functions
+  ---
+  duration_ms: 4.454193
+  type: 'suite'
+  ...
+# Subtest: New kanban lib modules
+    # Subtest: kanban-board.ts exports expected functions
+    ok 1 - kanban-board.ts exports expected functions
+      ---
+      duration_ms: 0.793199
+      type: 'test'
+      ...
+    # Subtest: kanban-detail.ts exports expected functions
+    ok 2 - kanban-detail.ts exports expected functions
+      ---
+      duration_ms: 0.529799
+      type: 'test'
+      ...
+    # Subtest: kanban-subtasks.ts exports expected functions
+    ok 3 - kanban-subtasks.ts exports expected functions
+      ---
+      duration_ms: 0.511499
+      type: 'test'
+      ...
+    1..3
+ok 57 - New kanban lib modules
+  ---
+  duration_ms: 2.157797
+  type: 'suite'
+  ...
+# Subtest: New schedule lib modules
+    # Subtest: schedule-list.ts exports expected functions
+    ok 1 - schedule-list.ts exports expected functions
+      ---
+      duration_ms: 0.346599
+      type: 'test'
+      ...
+    # Subtest: schedule-detail.ts exports expected functions
+    ok 2 - schedule-detail.ts exports expected functions
+      ---
+      duration_ms: 0.607199
+      type: 'test'
+      ...
+    1..2
+ok 58 - New schedule lib modules
+  ---
+  duration_ms: 1.084498
+  type: 'suite'
+  ...
+# Subtest: New channels lib modules
+    # Subtest: channel-config.ts exports expected functions
+    ok 1 - channel-config.ts exports expected functions
+      ---
+      duration_ms: 0.821899
+      type: 'test'
+      ...
+    # Subtest: channel-status.ts exports expected functions
+    ok 2 - channel-status.ts exports expected functions
+      ---
+      duration_ms: 0.624099
+      type: 'test'
+      ...
+    1..2
+ok 59 - New channels lib modules
+  ---
+  duration_ms: 1.549898
+  type: 'suite'
+  ...
+# Subtest: plugin-config library functions
+    # Subtest: plugin-config.ts exports renderConfigField
+    ok 1 - plugin-config.ts exports renderConfigField
+      ---
+      duration_ms: 0.453799
+      type: 'test'
+      ...
+    # Subtest: plugin-config.ts exports renderPluginConfig
+    ok 2 - plugin-config.ts exports renderPluginConfig
+      ---
+      duration_ms: 0.350799
+      type: 'test'
+      ...
+    # Subtest: plugin-config.ts exports getCurrentConfig
+    ok 3 - plugin-config.ts exports getCurrentConfig
+      ---
+      duration_ms: 0.3416
+      type: 'test'
+      ...
+    # Subtest: plugin-config.ts exports dirtyCheckSaveButton
+    ok 4 - plugin-config.ts exports dirtyCheckSaveButton
+      ---
+      duration_ms: 1.417198
+      type: 'test'
+      ...
+    # Subtest: plugin-config.ts exports renderBuiltinSection
+    ok 5 - plugin-config.ts exports renderBuiltinSection
+      ---
+      duration_ms: 0.3067
+      type: 'test'
+      ...
+    1..5
+ok 60 - plugin-config library functions
+  ---
+  duration_ms: 3.280595
+  type: 'suite'
+  ...
+# Subtest: Hooks page and lib modules
+    # Subtest: hooks.ts page exports renderHooks
+    ok 1 - hooks.ts page exports renderHooks
+      ---
+      duration_ms: 0.245099
+      type: 'test'
+      ...
+    # Subtest: hooks.ts is under 350 lines
+    ok 2 - hooks.ts is under 350 lines
+      ---
+      duration_ms: 0.137
+      type: 'test'
+      ...
+    # Subtest: hooks.ts lib exports helpers
+    ok 3 - hooks.ts lib exports helpers
+      ---
+      duration_ms: 0.686699
+      type: 'test'
+      ...
+    # Subtest: hooks-list.ts exports loadHooks
+    ok 4 - hooks-list.ts exports loadHooks
+      ---
+      duration_ms: 0.1865
+      type: 'test'
+      ...
+    # Subtest: hooks-detail.ts exports showHookModal
+    ok 5 - hooks-detail.ts exports showHookModal
+      ---
+      duration_ms: 0.217999
+      type: 'test'
+      ...
+    # Subtest: router.ts registers the hooks route
+    ok 6 - router.ts registers the hooks route
+      ---
+      duration_ms: 0.2127
+      type: 'test'
+      ...
+    1..6
+ok 61 - Hooks page and lib modules
+  ---
+  duration_ms: 1.861597
+  type: 'suite'
+  ...
+# Subtest: Kanban boards lib
+    # Subtest: kanban-boards.ts exports expected helpers
+    ok 1 - kanban-boards.ts exports expected helpers
+      ---
+      duration_ms: 0.864098
+      type: 'test'
+      ...
+    # Subtest: kanban-board.ts loadBoard accepts a board filter
+    ok 2 - kanban-board.ts loadBoard accepts a board filter
+      ---
+      duration_ms: 0.3385
+      type: 'test'
+      ...
+    # Subtest: pages/kanban.ts wires board controls + localStorage
+    ok 3 - pages/kanban.ts wires board controls + localStorage
+      ---
+      duration_ms: 0.211299
+      type: 'test'
+      ...
+    # Subtest: kanban-detail.ts has move-to-another-board
+    ok 4 - kanban-detail.ts has move-to-another-board
+      ---
+      duration_ms: 0.2945
+      type: 'test'
+      ...
+    # Subtest: api.ts declares board types + task.board
+    ok 5 - api.ts declares board types + task.board
+      ---
+      duration_ms: 0.193599
+      type: 'test'
+      ...
+    1..5
+ok 62 - Kanban boards lib
+  ---
+  duration_ms: 2.184296
+  type: 'suite'
+  ...
+# Subtest: Threads page merged-into badge
+    # Subtest: threads.ts declares merged_into_thread_id on ThreadRow
+    ok 1 - threads.ts declares merged_into_thread_id on ThreadRow
+      ---
+      duration_ms: 0.2834
+      type: 'test'
+      ...
+    # Subtest: mergedIntoBadge renders for skipped/merged threads with a recorded target (acceptance 3)
+    ok 2 - mergedIntoBadge renders for skipped/merged threads with a recorded target (acceptance 3)
+      ---
+      duration_ms: 0.311999
+      type: 'test'
+      ...
+    # Subtest: badge links to the target thread on the Threads page (acceptance 1+2)
+    ok 3 - badge links to the target thread on the Threads page (acceptance 1+2)
+      ---
+      duration_ms: 0.2838
+      type: 'test'
+      ...
+    1..3
+ok 63 - Threads page merged-into badge
+  ---
+  duration_ms: 1.085399
+  type: 'suite'
+  ...
+# Subtest: Kanban task tags on the dashboard
+    # Subtest: KanbanTask type carries an optional tags array (api.ts)
+    ok 1 - KanbanTask type carries an optional tags array (api.ts)
+      ---
+      duration_ms: 0.384899
+      type: 'test'
+      ...
+    # Subtest: board cards render colored tag badges derived from the tag name (kanban-board.ts)
+    ok 2 - board cards render colored tag badges derived from the tag name (kanban-board.ts)
+      ---
+      duration_ms: 0.304799
+      type: 'test'
+      ...
+    1..2
+ok 64 - Kanban task tags on the dashboard
+  ---
+  duration_ms: 0.795198
+  type: 'suite'
+  ...
+# Subtest: Kanban history events for tags and dependencies
+    # Subtest: tag add/remove render colored badges with 'was Tagged' / 'had Tag Removed' texts
+    not ok 1 - tag add/remove render colored badges with 'was Tagged' / 'had Tag Removed' texts
+      ---
+      duration_ms: 6.224991
+      type: 'test'
+      location: '/opt/repo/tests/pages.test.ts:301:3'
+      failureType: 'testCodeFailure'
+      error: |-
+        The expression evaluated to a falsy value:
+        
+          assert.ok(/had Tag Removed/.test(content))
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        TestContext.<anonymous> (file:///opt/repo/tests/pages.test.ts:307:12)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        Test.start (node:internal/test_runner/test:944:17)
+        node:internal/test_runner/test:1440:71
+        node:internal/per_context/primordials:466:82
+        new Promise (<anonymous>)
+        new SafePromise (node:internal/per_context/primordials:435:3)
+        node:internal/per_context/primordials:466:9
+        Array.map (<anonymous>)
+      ...
+    # Subtest: dependency add/remove render target id + title texts
+    not ok 2 - dependency add/remove render target id + title texts
+      ---
+      duration_ms: 0.664699
+      type: 'test'
+      location: '/opt/repo/tests/pages.test.ts:309:3'
+      failureType: 'testCodeFailure'
+      error: |-
+        The expression evaluated to a falsy value:
+        
+          assert.ok(/gained a dependency on/.test(content))
+        
+      code: 'ERR_ASSERTION'
+      name: 'AssertionError'
+      expected: true
+      actual: false
+      operator: '=='
+      stack: |-
+        TestContext.<anonymous> (file:///opt/repo/tests/pages.test.ts:312:12)
+        Test.runInAsyncScope (node:async_hooks:214:14)
+        Test.run (node:internal/test_runner/test:1047:25)
+        Suite.processPendingSubtests (node:internal/test_runner/test:744:18)
+        Test.postRun (node:internal/test_runner/test:1173:19)
+        Test.run (node:internal/test_runner/test:1101:12)
+        async Promise.all (index 0)
+        async Suite.run (node:internal/test_runner/test:1442:7)
+        async Test.processPendingSubtests (node:internal/test_runner/test:744:7)
+      ...
+    # Subtest: action filter dropdown exposes the four new actions
+    ok 3 - action filter dropdown exposes the four new actions
+      ---
+      duration_ms: 0.2096
+      type: 'test'
+      ...
+    1..3
+not ok 65 - Kanban history events for tags and dependencies
+  ---
+  duration_ms: 7.284589
+  type: 'suite'
+  location: '/opt/repo/tests/pages.test.ts:300:1'
+  failureType: 'subtestsFailed'
+  error: '2 subtests failed'
+  code: 'ERR_TEST_FAILURE'
+  ...
+# Subtest: Overview page widgets
+    # Subtest: api.ts declares the token-trend 3-series breakdown + kanban snapshot types
+    ok 1 - api.ts declares the token-trend 3-series breakdown + kanban snapshot types
+      ---
+      duration_ms: 0.346799
+      type: 'test'
+      ...
+    # Subtest: Token Trend renders a stacked block chart with exactly 3 series (cache hit / cache miss / output)
+    ok 2 - Token Trend renders a stacked block chart with exactly 3 series (cache hit / cache miss / output)
+      ---
+      duration_ms: 0.2444
+      type: 'test'
+      ...
+    # Subtest: Token Trend x-axis renders real dates (Invalid Date guard)
+    ok 3 - Token Trend x-axis renders real dates (Invalid Date guard)
+      ---
+      duration_ms: 0.1893
+      type: 'test'
+      ...
+    # Subtest: Kanban Snapshot rows link to the task detail page with board/task/status/tags/date columns
+    ok 4 - Kanban Snapshot rows link to the task detail page with board/task/status/tags/date columns
+      ---
+      duration_ms: 0.230499
+      type: 'test'
+      ...
+    # Subtest: Top Tools render real tool names with counts (no Unknown)
+    ok 5 - Top Tools render real tool names with counts (no Unknown)
+      ---
+      duration_ms: 0.1898
+      type: 'test'
+      ...
+    # Subtest: All 4 KPI stat cards have a short description instead of '-'
+    ok 6 - All 4 KPI stat cards have a short description instead of '-'
+      ---
+      duration_ms: 0.1838
+      type: 'test'
+      ...
+    1..6
+ok 66 - Overview page widgets
+  ---
+  duration_ms: 1.551098
+  type: 'suite'
+  ...
+# Subtest: Threads page 'Show details' toggle + workflow details (dashboard UI polish)
+    # Subtest: threads.ts declares the new kanban/hook linkage fields on ThreadRow
+    ok 1 - threads.ts declares the new kanban/hook linkage fields on ThreadRow
+      ---
+      duration_ms: 0.4189
+      type: 'test'
+      ...
+    # Subtest: threads.ts row has a purple 'Show details' toggle that swaps to 'Hide details'
+    ok 2 - threads.ts row has a purple 'Show details' toggle that swaps to 'Hide details'
+      ---
+      duration_ms: 0.226899
+      type: 'test'
+      ...
+    # Subtest: threads.ts moves Cause/Type/Subtype/Plan Mode out of the header row
+    ok 3 - threads.ts moves Cause/Type/Subtype/Plan Mode out of the header row
+      ---
+      duration_ms: 0.231
+      type: 'test'
+      ...
+    # Subtest: threads.ts details box shows Cause, Type, Subtype and Plan Mode
+    ok 4 - threads.ts details box shows Cause, Type, Subtype and Plan Mode
+      ---
+      duration_ms: 0.2573
+      type: 'test'
+      ...
+    # Subtest: threads.ts details box shows kanban board, workflow and workflow role for kanban threads
+    ok 5 - threads.ts details box shows kanban board, workflow and workflow role for kanban threads
+      ---
+      duration_ms: 0.240399
+      type: 'test'
+      ...
+    # Subtest: workflowRole maps kanban workflow steps to executor/tester/reviewer
+    ok 6 - workflowRole maps kanban workflow steps to executor/tester/reviewer
+      ---
+      duration_ms: 0.3082
+      type: 'test'
+      ...
+    # Subtest: threads.ts links kanban/cron/hook threads to their task pages
+    ok 7 - threads.ts links kanban/cron/hook threads to their task pages
+      ---
+      duration_ms: 0.293699
+      type: 'test'
+      ...
+    # Subtest: kanban-detail.ts always shows the effective workflow below the board name
+    ok 8 - kanban-detail.ts always shows the effective workflow below the board name
+      ---
+      duration_ms: 0.2669
+      type: 'test'
+      ...
+    # Subtest: kanban/schedule/hook pages emphasize their titles with .emphasized-title
+    ok 9 - kanban/schedule/hook pages emphasize their titles with .emphasized-title
+      ---
+      duration_ms: 0.460999
+      type: 'test'
+      ...
+    # Subtest: hooks/schedules item titles are compact (.875rem) while the kanban title keeps the 1.1rem base
+    ok 10 - hooks/schedules item titles are compact (.875rem) while the kanban title keeps the 1.1rem base
+      ---
+      duration_ms: 0.968199
+      type: 'test'
+      ...
+    # Subtest: style.css provides the threads grid, details box and emphasized-title styles
+    ok 11 - style.css provides the threads grid, details box and emphasized-title styles
+      ---
+      duration_ms: 0.983299
+      type: 'test'
+      ...
+    1..11
+ok 67 - Threads page 'Show details' toggle + workflow details (dashboard UI polish)
+  ---
+  duration_ms: 4.938592
+  type: 'suite'
+  ...
+# Subtest: Kanban mobile overflow, keep-board on move, topmost drop, tags in details
+    # Subtest: style.css keeps kanban board/columns/cards within the page width on mobile
+    ok 1 - style.css keeps kanban board/columns/cards within the page width on mobile
+      ---
+      duration_ms: 1.031598
+      type: 'test'
+      ...
+    # Subtest: style.css never clamps the kanban column height and never shrinks cards (Done column collapse fix)
+    ok 2 - style.css never clamps the kanban column height and never shrinks cards (Done column collapse fix)
+      ---
+      duration_ms: 0.800899
+      type: 'test'
+      ...
+    # Subtest: kanban-board.ts loadBoard keeps the current board after a move (URL ?board= then stored board)
+    ok 3 - kanban-board.ts loadBoard keeps the current board after a move (URL ?board= then stored board)
+      ---
+      duration_ms: 0.809699
+      type: 'test'
+      ...
+    # Subtest: kanban-board.ts shows a success toast after moving a task (touch or drop)
+    ok 4 - kanban-board.ts shows a success toast after moving a task (touch or drop)
+      ---
+      duration_ms: 0.221799
+      type: 'test'
+      ...
+    # Subtest: kanban-board.ts cross-column drop lands the task topmost (PATCH /status without position)
+    ok 5 - kanban-board.ts cross-column drop lands the task topmost (PATCH /status without position)
+      ---
+      duration_ms: 0.2737
+      type: 'test'
+      ...
+    # Subtest: kanban-detail.ts renders the task's tags as chips on the details page
+    ok 6 - kanban-detail.ts renders the task's tags as chips on the details page
+      ---
+      duration_ms: 0.248799
+      type: 'test'
+      ...
+    # Subtest: kanban-detail.ts drops the 'Task: ' prefix from the header subtitle
+    ok 7 - kanban-detail.ts drops the 'Task: ' prefix from the header subtitle
+      ---
+      duration_ms: 0.2732
+      type: 'test'
+      ...
+    # Subtest: threads.ts places the Show details toggle as the 2nd field of each row
+    ok 8 - threads.ts places the Show details toggle as the 2nd field of each row
+      ---
+      duration_ms: 0.332599
+      type: 'test'
+      ...
+    # Subtest: style.css lays the threads details box fields side by side (auto-fit grid, mobile-friendly)
+    ok 9 - style.css lays the threads details box fields side by side (auto-fit grid, mobile-friendly)
+      ---
+      duration_ms: 0.957799
+      type: 'test'
+      ...
+    1..9
+ok 68 - Kanban mobile overflow, keep-board on move, topmost drop, tags in details
+  ---
+  duration_ms: 5.205992
+  type: 'suite'
+  ...
+# Subtest: Kanban drag micro-move click suppression (drag keeps the selected board)
+    # Subtest: kanban-board.ts treats any >2px mousemove while pressed as drag intent
+    ok 1 - kanban-board.ts treats any >2px mousemove while pressed as drag intent
+      ---
+      duration_ms: 0.361799
+      type: 'test'
+      ...
+    # Subtest: kanban-board.ts keeps drag intent armed until the release click is consumed
+    ok 2 - kanban-board.ts keeps drag intent armed until the release click is consumed
+      ---
+      duration_ms: 0.3643
+      type: 'test'
+      ...
+    # Subtest: kanban-board.ts genuine (zero-movement) clicks still open the task detail page
+    ok 3 - kanban-board.ts genuine (zero-movement) clicks still open the task detail page
+      ---
+      duration_ms: 0.202899
+      type: 'test'
+      ...
+    # Subtest: kanban-board.ts touch drags also arm click suppression for micro-moves (>2px)
+    ok 4 - kanban-board.ts touch drags also arm click suppression for micro-moves (>2px)
+      ---
+      duration_ms: 0.2529
+      type: 'test'
+      ...
+    1..4
+ok 69 - Kanban drag micro-move click suppression (drag keeps the selected board)
+  ---
+  duration_ms: 1.317498
+  type: 'suite'
+  ...
+# Subtest: plugin boolean config truthiness (allow_omni_dir fix)
+    # Subtest: plugin-config.ts renders boolean fields from configValueIsTrue + booleanStatusText
+    ok 1 - plugin-config.ts renders boolean fields from configValueIsTrue + booleanStatusText
+      ---
+      duration_ms: 0.234699
+      type: 'test'
+      ...
+    # Subtest: an ABSENT boolean value falls back to the schema default (checked when true)
+    ok 2 - an ABSENT boolean value falls back to the schema default (checked when true)
+      ---
+      duration_ms: 0.2219
+      type: 'test'
+      ...
+    # Subtest: plugin-config.ts exports the truthiness/status helpers
+    ok 3 - plugin-config.ts exports the truthiness/status helpers
+      ---
+      duration_ms: 0.1347
+      type: 'test'
+      ...
+    # Subtest: plugin-ui.ts save/restart collect form values via getCurrentConfig (unchecked => false)
+    ok 4 - plugin-ui.ts save/restart collect form values via getCurrentConfig (unchecked => false)
+      ---
+      duration_ms: 0.143199
+      type: 'test'
+      ...
+    # Subtest: plugin-list.ts wires status spans and restores checkbox state from the parsed boolean
+    ok 5 - plugin-list.ts wires status spans and restores checkbox state from the parsed boolean
+      ---
+      duration_ms: 0.0997
+      type: 'test'
+      ...
+    1..5
+ok 70 - plugin boolean config truthiness (allow_omni_dir fix)
+  ---
+  duration_ms: 0.988898
+  type: 'suite'
+  ...
+# Subtest: allSettledOrNull
+    # Subtest: starts independent promises concurrently: page pays max, not sum
+    ok 1 - starts independent promises concurrently: page pays max, not sum
+      ---
+      duration_ms: 124.221208
+      type: 'test'
+      ...
+    # Subtest: resolves a failed source to null without failing the others
+    ok 2 - resolves a failed source to null without failing the others
+      ---
+      duration_ms: 0.884499
+      type: 'test'
+      ...
+    1..2
+ok 71 - allSettledOrNull
+  ---
+  duration_ms: 127.411703
+  type: 'suite'
+  ...
+# Subtest: page loaders parallelize independent API calls
+    # Subtest: workflows loader fetches profiles/plugins/templates/actions/settings in one batch
+    ok 1 - workflows loader fetches profiles/plugins/templates/actions/settings in one batch
+      ---
+      duration_ms: 1.628497
+      type: 'test'
+      ...
+    # Subtest: channels loader fetches channels/profiles/plugins/templates/settings in one batch
+    ok 2 - channels loader fetches channels/profiles/plugins/templates/settings in one batch
+      ---
+      duration_ms: 0.842499
+      type: 'test'
+      ...
+    1..2
+ok 72 - page loaders parallelize independent API calls
+  ---
+  duration_ms: 2.977595
+  type: 'suite'
+  ...
+# Subtest: memory page load parallelizes independent API calls
+    # Subtest: batches /profiles, /channels and the data blocks in one Promise.all
+    ok 1 - batches /profiles, /channels and the data blocks in one Promise.all
+      ---
+      duration_ms: 1.237498
+      type: 'test'
+      ...
+    1..1
+ok 73 - memory page load parallelizes independent API calls
+  ---
+  duration_ms: 1.681598
+  type: 'suite'
+  ...
+# Subtest: plugin card Download/Update state
+    # Subtest: remote + no source (needs_download) -> ONLY Download
+    ok 1 - remote + no source (needs_download) -> ONLY Download
+      ---
+      duration_ms: 31.039852
+      type: 'test'
+      ...
+    # Subtest: remote + no source derived from has_source_code=false -> ONLY Download
+    ok 2 - remote + no source derived from has_source_code=false -> ONLY Download
+      ---
+      duration_ms: 1.055398
+      type: 'test'
+      ...
+    # Subtest: remote + downloaded script source -> ONLY Update
+    ok 3 - remote + downloaded script source -> ONLY Update
+      ---
+      duration_ms: 0.629399
+      type: 'test'
+      ...
+    # Subtest: remote + downloaded compilable source -> ONLY Update
+    ok 4 - remote + downloaded compilable source -> ONLY Update
+      ---
+      duration_ms: 0.668899
+      type: 'test'
+      ...
+    # Subtest: built-in -> no action state, no buttons
+    ok 5 - built-in -> no action state, no buttons
+      ---
+      duration_ms: 0.555299
+      type: 'test'
+      ...
+    # Subtest: bundled installed -> no Download/Update (behaviour unchanged)
+    ok 6 - bundled installed -> no Download/Update (behaviour unchanged)
+      ---
+      duration_ms: 3.968594
+      type: 'test'
+      ...
+    # Subtest: remote source downloaded but not built yet -> Install only
+    ok 7 - remote source downloaded but not built yet -> Install only
+      ---
+      duration_ms: 1.440797
+      type: 'test'
+      ...
+    # Subtest: invariant: Download and Update never render together (full state sweep)
+    ok 8 - invariant: Download and Update never render together (full state sweep)
+      ---
+      duration_ms: 1.805298
+      type: 'test'
+      ...
+    1..8
+ok 74 - plugin card Download/Update state
+  ---
+  duration_ms: 42.777534
+  type: 'suite'
+  ...
+# Subtest: plugin card Setup button route
+    # Subtest: mattermost platform card posts to /plugins/platforms/built-in/mattermost/setup
+    ok 1 - mattermost platform card posts to /plugins/platforms/built-in/mattermost/setup
+      ---
+      duration_ms: 1.158698
+      type: 'test'
+      ...
+    # Subtest: mattermost card carries the attributes the handler reads
+    ok 2 - mattermost card carries the attributes the handler reads
+      ---
+      duration_ms: 0.313999
+      type: 'test'
+      ...
+    # Subtest: the handler pluralizes the plugin type into the route directory
+    ok 3 - the handler pluralizes the plugin type into the route directory
+      ---
+      duration_ms: 0.1496
+      type: 'test'
+      ...
+    # Subtest: the handler posts the built path to apiPost with an empty body
+    ok 4 - the handler posts the built path to apiPost with an empty body
+      ---
+      duration_ms: 0.1441
+      type: 'test'
+      ...
+    # Subtest: the Setup button is only rendered for plugins declaring the setup capability
+    ok 5 - the Setup button is only rendered for plugins declaring the setup capability
+      ---
+      duration_ms: 0.1311
+      type: 'test'
+      ...
+    1..5
+ok 75 - plugin card Setup button route
+  ---
+  duration_ms: 3.586894
+  type: 'suite'
+  ...
+# Subtest: Long unbroken preview tokens stay inside their column
+    # Subtest: root cause context: threads-table is a grid and the preview is one of its tracks
+    ok 1 - root cause context: threads-table is a grid and the preview is one of its tracks
+      ---
+      duration_ms: 1.157698
+      type: 'test'
+      ...
+    # Subtest: guard: cells may shrink below their min-content width (min-width:0)
+    ok 2 - guard: cells may shrink below their min-content width (min-width:0)
+      ---
+      duration_ms: 0.2263
+      type: 'test'
+      ...
+    # Subtest: guard: an unbreakable token can break (overflow-wrap:anywhere)
+    ok 3 - guard: an unbreakable token can break (overflow-wrap:anywhere)
+      ---
+      duration_ms: 0.170099
+      type: 'test'
+      ...
+    # Subtest: guard is row-wide (cells AND headers), not only the preview cell
+    ok 4 - guard is row-wide (cells AND headers), not only the preview cell
+      ---
+      duration_ms: 0.2096
+      type: 'test'
+      ...
+    # Subtest: no later .data-table cell rule re-enables an unbreakable layout
+    ok 5 - no later .data-table cell rule re-enables an unbreakable layout
+      ---
+      duration_ms: 0.2265
+      type: 'test'
+      ...
+    1..5
+ok 76 - Long unbroken preview tokens stay inside their column
+  ---
+  duration_ms: 3.343095
+  type: 'suite'
+  ...
+# Subtest: profiles PATCH body: explicit clears are forwarded, absent keys are omitted
+    # Subtest: forwards the empty-string clear the dashboard Default option sends
+    ok 1 - forwards the empty-string clear the dashboard Default option sends
+      ---
+      duration_ms: 2.234796
+      type: 'test'
+      ...
+    # Subtest: forwards an explicit JSON null clear
+    ok 2 - forwards an explicit JSON null clear
+      ---
+      duration_ms: 0.1499
+      type: 'test'
+      ...
+    # Subtest: omits keys the caller did not send (leave unchanged)
+    ok 3 - omits keys the caller did not send (leave unchanged)
+      ---
+      duration_ms: 0.298499
+      type: 'test'
+      ...
+    # Subtest: trims concrete values but keeps them as values
+    ok 4 - trims concrete values but keeps them as values
+      ---
+      duration_ms: 0.1592
+      type: 'test'
+      ...
+    # Subtest: keeps plan tri-state (null clear, boolean set)
+    ok 5 - keeps plan tri-state (null clear, boolean set)
+      ---
+      duration_ms: 0.3656
+      type: 'test'
+      ...
+    # Subtest: forwards template clears too
+    ok 6 - forwards template clears too
+      ---
+      duration_ms: 0.1669
+      type: 'test'
+      ...
+    1..6
+ok 77 - profiles PATCH body: explicit clears are forwarded, absent keys are omitted
+  ---
+  duration_ms: 5.107692
+  type: 'suite'
+  ...
+# Subtest: Profiles field-edit Confirm/Cancel buttons
+    # Subtest: reuses the shared settings-page action-button classes on both fields
+    ok 1 - reuses the shared settings-page action-button classes on both fields
+      ---
+      duration_ms: 1.229498
+      type: 'test'
+      ...
+    # Subtest: dropped the bare 24x24 inline box that rendered the glyph top-left
+    ok 2 - dropped the bare 24x24 inline box that rendered the glyph top-left
+      ---
+      duration_ms: 0.1797
+      type: 'test'
+      ...
+    # Subtest: the shared .setting-action-btn rule centers the glyph on both axes
+    ok 3 - the shared .setting-action-btn rule centers the glyph on both axes
+      ---
+      duration_ms: 0.322699
+      type: 'test'
+      ...
+    # Subtest: keeps the class selectors the edit wiring toggles
+    ok 4 - keeps the class selectors the edit wiring toggles
+      ---
+      duration_ms: 0.224
+      type: 'test'
+      ...
+    1..4
+ok 78 - Profiles field-edit Confirm/Cancel buttons
+  ---
+  duration_ms: 3.375195
+  type: 'suite'
+  ...
+# Subtest: Profiles skills links
+    # Subtest: points at the real on-disk skill file <skill>/SKILL.md
+    ok 1 - points at the real on-disk skill file <skill>/SKILL.md
+      ---
+      duration_ms: 0.177199
+      type: 'test'
+      ...
+    # Subtest: normalises a .md-listed entry to the directory form
+    ok 2 - normalises a .md-listed entry to the directory form
+      ---
+      duration_ms: 0.1405
+      type: 'test'
+      ...
+    # Subtest: builds the explorer prefix as one fully encoded path (relative href, no host)
+    ok 3 - builds the explorer prefix as one fully encoded path (relative href, no host)
+      ---
+      duration_ms: 0.2395
+      type: 'test'
+      ...
+    1..3
+ok 79 - Profiles skills links
+  ---
+  duration_ms: 1.081698
+  type: 'suite'
+  ...
+# Subtest: Profiles toolset select width
+    # Subtest: root cause: .setting-controls is a column flex container capped at 420px
+    ok 1 - root cause: .setting-controls is a column flex container capped at 420px
+      ---
+      duration_ms: 1.307898
+      type: 'test'
+      ...
+    # Subtest: the Toolset row keeps its uncapped .setting-controls (help text spans the card)
+    ok 2 - the Toolset row keeps its uncapped .setting-controls (help text spans the card)
+      ---
+      duration_ms: 0.1489
+      type: 'test'
+      ...
+    # Subtest: toolset renderer wraps the select in .profile-toolset-control
+    ok 3 - toolset renderer wraps the select in .profile-toolset-control
+      ---
+      duration_ms: 0.331699
+      type: 'test'
+      ...
+    # Subtest: the wrapper rule matches the provider/model width regime (flex row + 420px cap)
+    ok 4 - the wrapper rule matches the provider/model width regime (flex row + 420px cap)
+      ---
+      duration_ms: 0.320099
+      type: 'test'
+      ...
+    # Subtest: provider and model selects keep their inline flex wrapper (reference behaviour)
+    ok 5 - provider and model selects keep their inline flex wrapper (reference behaviour)
+      ---
+      duration_ms: 0.2226
+      type: 'test'
+      ...
+    # Subtest: toolset select keeps its options, attributes and save wiring
+    ok 6 - toolset select keeps its options, attributes and save wiring
+      ---
+      duration_ms: 0.2592
+      type: 'test'
+      ...
+    1..6
+ok 80 - Profiles toolset select width
+  ---
+  duration_ms: 4.177793
+  type: 'suite'
+  ...
+# Subtest: src/lib/providers.ts - merged providers from the omniagent API
+    # Subtest: unions enabled provider plugins with models.yml providers
+    ok 1 - unions enabled provider plugins with models.yml providers
+      ---
+      duration_ms: 2.197596
+      type: 'test'
+      ...
+    # Subtest: lists models.yml-only providers even when NO provider plugin is enabled
+    ok 2 - lists models.yml-only providers even when NO provider plugin is enabled
+      ---
+      duration_ms: 0.309899
+      type: 'test'
+      ...
+    # Subtest: deduplicates a provider defined in both places, models.yml winning
+    ok 3 - deduplicates a provider defined in both places, models.yml winning
+      ---
+      duration_ms: 0.2283
+      type: 'test'
+      ...
+    # Subtest: never offers disabled rows as options
+    ok 4 - never offers disabled rows as options
+      ---
+      duration_ms: 0.398599
+      type: 'test'
+      ...
+    # Subtest: surfaces a plugin-backed models.yml entry without its plugin as a loud error
+    ok 5 - surfaces a plugin-backed models.yml entry without its plugin as a loud error
+      ---
+      duration_ms: 0.518599
+      type: 'test'
+      ...
+    # Subtest: accepts a bare array payload (no data envelope)
+    ok 6 - accepts a bare array payload (no data envelope)
+      ---
+      duration_ms: 0.2215
+      type: 'test'
+      ...
+    # Subtest: modelsFromProviderRow reads models.yml allowed_values then the default
+    ok 7 - modelsFromProviderRow reads models.yml allowed_values then the default
+      ---
+      duration_ms: 0.267099
+      type: 'test'
+      ...
+    1..7
+ok 81 - src/lib/providers.ts - merged providers from the omniagent API
+  ---
+  duration_ms: 5.526891
+  type: 'suite'
+  ...
+# Subtest: PWA manifest (public/manifest.webmanifest)
+    # Subtest: declares navy background_color \#0a0f1e
+    ok 1 - declares navy background_color \#0a0f1e
+      ---
+      duration_ms: 0.873698
+      type: 'test'
+      ...
+    # Subtest: declares navy theme_color \#0a0f1e
+    ok 2 - declares navy theme_color \#0a0f1e
+      ---
+      duration_ms: 0.1201
+      type: 'test'
+      ...
+    # Subtest: is installable: standalone display + start_url + icons
+    ok 3 - is installable: standalone display + start_url + icons
+      ---
+      duration_ms: 0.2119
+      type: 'test'
+      ...
+    1..3
+ok 82 - PWA manifest (public/manifest.webmanifest)
+  ---
+  duration_ms: 2.499396
+  type: 'suite'
+  ...
+# Subtest: index.html PWA wiring
+    # Subtest: links the web app manifest
+    ok 1 - links the web app manifest
+      ---
+      duration_ms: 0.366999
+      type: 'test'
+      ...
+    # Subtest: sets theme-color meta to \#0a0f1e
+    ok 2 - sets theme-color meta to \#0a0f1e
+      ---
+      duration_ms: 0.2033
+      type: 'test'
+      ...
+    1..2
+ok 83 - index.html PWA wiring
+  ---
+  duration_ms: 0.743498
+  type: 'suite'
+  ...
+# Subtest: PWA install icons (public/icons)
+    # Subtest: declares raster PNG icons with sizes 192x192 and 512x512
+    ok 1 - declares raster PNG icons with sizes 192x192 and 512x512
+      ---
+      duration_ms: 0.3514
+      type: 'test'
+      ...
+    # Subtest: declares PNG icons for purpose any and purpose maskable
+    ok 2 - declares PNG icons for purpose any and purpose maskable
+      ---
+      duration_ms: 0.4095
+      type: 'test'
+      ...
+    # Subtest: icon file exists, is a non-empty PNG and matches its declared size: /icons/icon-192.png
+    ok 3 - icon file exists, is a non-empty PNG and matches its declared size: /icons/icon-192.png
+      ---
+      duration_ms: 1.197098
+      type: 'test'
+      ...
+    # Subtest: icon file exists, is a non-empty PNG and matches its declared size: /icons/icon-512.png
+    ok 4 - icon file exists, is a non-empty PNG and matches its declared size: /icons/icon-512.png
+      ---
+      duration_ms: 0.251699
+      type: 'test'
+      ...
+    # Subtest: icon file exists, is a non-empty PNG and matches its declared size: /icons/icon-maskable-192.png
+    ok 5 - icon file exists, is a non-empty PNG and matches its declared size: /icons/icon-maskable-192.png
+      ---
+      duration_ms: 0.3911
+      type: 'test'
+      ...
+    # Subtest: icon file exists, is a non-empty PNG and matches its declared size: /icons/icon-maskable-512.png
+    ok 6 - icon file exists, is a non-empty PNG and matches its declared size: /icons/icon-maskable-512.png
+      ---
+      duration_ms: 0.170399
+      type: 'test'
+      ...
+    1..6
+ok 84 - PWA install icons (public/icons)
+  ---
+  duration_ms: 3.349095
+  type: 'suite'
+  ...
+# Subtest: OmniDashboard API Routes
+    # Subtest: /api/kanban
+        # Subtest: /board returns expected structure
+        ok 1 - /board returns expected structure
+          ---
+          duration_ms: 52.426919
+          type: 'test'
+          ...
+        # Subtest: /tasks/{id} returns 404 for non-existent task
+        ok 2 - /tasks/{id} returns 404 for non-existent task
+          ---
+          duration_ms: 2.334996
+          type: 'test'
+          ...
+        1..2
+    ok 1 - /api/kanban
+      ---
+      duration_ms: 55.694414
+      type: 'suite'
+      ...
+    # Subtest: /api/schedule
+        # Subtest: / returns expected structure
+        ok 1 - / returns expected structure
+          ---
+          duration_ms: 2.840895
+          type: 'test'
+          ...
+        # Subtest: /{id} returns 404 for non-existent job
+        ok 2 - /{id} returns 404 for non-existent job
+          ---
+          duration_ms: 2.174397
+          type: 'test'
+          ...
+        1..2
+    ok 2 - /api/schedule
+      ---
+      duration_ms: 5.332591
+      type: 'suite'
+      ...
+    # Subtest: /api/wiki-search
+        # Subtest: POST / returns expected structure or validation error
+        ok 1 - POST / returns expected structure or validation error
+          ---
+          duration_ms: 5.217592
+          type: 'test'
+          ...
+        # Subtest: POST / with query returns expected result shape
+        ok 2 - POST / with query returns expected result shape
+          ---
+          duration_ms: 2.381496
+          type: 'test'
+          ...
+        1..2
+    ok 3 - /api/wiki-search
+      ---
+      duration_ms: 8.061688
+      type: 'suite'
+      ...
+    # Subtest: /api/overview
+        # Subtest: / returns array with correct structure
+        ok 1 - / returns array with correct structure
+          ---
+          duration_ms: 6.972289
+          type: 'test'
+          ...
+        1..1
+    ok 4 - /api/overview
+      ---
+      duration_ms: 7.328588
+      type: 'suite'
+      ...
+    # Subtest: /api/messages/filters
+        # Subtest: returns filters with all expected arrays
+        ok 1 - returns filters with all expected arrays
+          ---
+          duration_ms: 2.972096
+          type: 'test'
+          ...
+        1..1
+    ok 5 - /api/messages/filters
+      ---
+      duration_ms: 3.133196
+      type: 'suite'
+      ...
+    # Subtest: /api/messages/events
+        # Subtest: basic query returns messages array with total
+        ok 1 - basic query returns messages array with total
+          ---
+          duration_ms: 6.88789
+          type: 'test'
+          ...
+        # Subtest: filter by role=user returns correct structure
+        ok 2 - filter by role=user returns correct structure
+          ---
+          duration_ms: 2.330896
+          type: 'test'
+          ...
+        # Subtest: filter by channel_id=all returns all (no filter)
+        ok 3 - filter by channel_id=all returns all (no filter)
+          ---
+          duration_ms: 1.686497
+          type: 'test'
+          ...
+        # Subtest: filter by type param returns correct structure
+        ok 4 - filter by type param returns correct structure
+          ---
+          duration_ms: 1.383598
+          type: 'test'
+          ...
+        # Subtest: filter by subtype param returns correct structure
+        ok 5 - filter by subtype param returns correct structure
+          ---
+          duration_ms: 1.355198
+          type: 'test'
+          ...
+        # Subtest: filter by status returns correct structure
+        ok 6 - filter by status returns correct structure
+          ---
+          duration_ms: 1.391798
+          type: 'test'
+          ...
+        # Subtest: filter by search (provider) returns correct structure
+        ok 7 - filter by search (provider) returns correct structure
+          ---
+          duration_ms: 6.748489
+          type: 'test'
+          ...
+        # Subtest: filter by model returns correct structure
+        ok 8 - filter by model returns correct structure
+          ---
+          duration_ms: 2.377297
+          type: 'test'
+          ...
+        # Subtest: pagination params (offset, limit) work
+        ok 9 - pagination params (offset, limit) work
+          ---
+          duration_ms: 5.244492
+          type: 'test'
+          ...
+        1..9
+    ok 6 - /api/messages/events
+      ---
+      duration_ms: 29.940754
+      type: 'suite'
+      ...
+    # Subtest: /api/uploads/list
+        # Subtest: returns array of upload entries
+        ok 1 - returns array of upload entries
+          ---
+          duration_ms: 4.394793
+          type: 'test'
+          ...
+        1..1
+    ok 7 - /api/uploads/list
+      ---
+      duration_ms: 4.527993
+      type: 'suite'
+      ...
+    # Subtest: /api/fs/list
+        # Subtest: /list?path=/ returns entries array
+        ok 1 - /list?path=/ returns entries array
+          ---
+          duration_ms: 2.774596
+          type: 'test'
+          ...
+        1..1
+    ok 8 - /api/fs/list
+      ---
+      duration_ms: 2.897396
+      type: 'suite'
+      ...
+    # Subtest: /api/db/query
+        # Subtest: surfaces a query-tool error as an HTTP error, not empty results
+        ok 1 - surfaces a query-tool error as an HTTP error, not empty results
+          ---
+          duration_ms: 2.158196
+          type: 'test'
+          ...
+        1..1
+    ok 9 - /api/db/query
+      ---
+      duration_ms: 2.280396
+      type: 'suite'
+      ...
+    # Subtest: Frontend (HTML)
+        # Subtest: index page includes favicon link
+        ok 1 - index page includes favicon link
+          ---
+          duration_ms: 11.448882
+          type: 'test'
+          ...
+        1..1
+    ok 10 - Frontend (HTML)
+      ---
+      duration_ms: 11.877382
+      type: 'suite'
+      ...
+    1..10
+ok 85 - OmniDashboard API Routes
+  ---
+  duration_ms: 132.344396
+  type: 'suite'
+  ...
+# Subtest: /api/fetch-remote (Import modal proxy)
+    # Subtest: rejects missing url with 400
+    ok 1 - rejects missing url with 400
+      ---
+      duration_ms: 3.106995
+      type: 'test'
+      ...
+    # Subtest: rejects non-http(s) schemes with 400
+    ok 2 - rejects non-http(s) schemes with 400
+      ---
+      duration_ms: 1.500897
+      type: 'test'
+      ...
+    # Subtest: forwards upstream status (404) with a plain-text body
+    ok 3 - forwards upstream status (404) with a plain-text body
+      ---
+      duration_ms: 1.333298
+      type: 'test'
+      ...
+    # Subtest: returns YAML text for a valid raw github URL
+    ok 4 - returns YAML text for a valid raw github URL
+      ---
+      duration_ms: 1.389198
+      type: 'test'
+      ...
+    1..4
+ok 86 - /api/fetch-remote (Import modal proxy)
+  ---
+  duration_ms: 7.561588
+  type: 'suite'
+  ...
+# Subtest: /api/remote-yml (local remote.yml)
+    # Subtest: serves the local remote.yml or returns 404 with an error
+    ok 1 - serves the local remote.yml or returns 404 with an error
+      ---
+      duration_ms: 2.019897
+      type: 'test'
+      ...
+    1..1
+ok 87 - /api/remote-yml (local remote.yml)
+  ---
+  duration_ms: 2.166597
+  type: 'suite'
+  ...
+# Subtest: /api/templates/content
+    # Subtest: rejects missing profile/name with 400
+    ok 1 - rejects missing profile/name with 400
+      ---
+      duration_ms: 4.188594
+      type: 'test'
+      ...
+    # Subtest: rejects path traversal attempts with 400
+    ok 2 - rejects path traversal attempts with 400
+      ---
+      duration_ms: 1.528398
+      type: 'test'
+      ...
+    # Subtest: returns 404 for a missing template file
+    ok 3 - returns 404 for a missing template file
+      ---
+      duration_ms: 1.460097
+      type: 'test'
+      ...
+    # Subtest: returns the file content for an existing template
+    ok 4 - returns the file content for an existing template
+      ---
+      duration_ms: 1.514598
+      type: 'test'
+      ...
+    1..4
+ok 88 - /api/templates/content
+  ---
+  duration_ms: 8.933286
+  type: 'suite'
+  ...
+# Subtest: schedule edit form save payload
+    # Subtest: sends the cron expression under the API field name `cron`
+    ok 1 - sends the cron expression under the API field name `cron`
+      ---
+      duration_ms: 1.060999
+      type: 'test'
+      ...
+    # Subtest: no longer sends the legacy `schedule` key in the save body
+    ok 2 - no longer sends the legacy `schedule` key in the save body
+      ---
+      duration_ms: 0.2197
+      type: 'test'
+      ...
+    # Subtest: still sends the other form fields that already worked (silent, active, etc.)
+    ok 3 - still sends the other form fields that already worked (silent, active, etc.)
+      ---
+      duration_ms: 0.395799
+      type: 'test'
+      ...
+    1..3
+ok 89 - schedule edit form save payload
+  ---
+  duration_ms: 3.105295
+  type: 'suite'
+  ...
+# Subtest: channel edit form save payload (same bug class)
+    # Subtest: sends bare yml property names, not the legacy `current_*` prefix
+    ok 1 - sends bare yml property names, not the legacy `current_*` prefix
+      ---
+      duration_ms: 0.1631
+      type: 'test'
+      ...
+    1..1
+ok 90 - channel edit form save payload (same bug class)
+  ---
+  duration_ms: 0.2728
+  type: 'suite'
+  ...
+# Subtest: Schedules main page: Delete button
+    # Subtest: renders Delete (rose danger) after Edit, all row buttons same size
+    ok 1 - renders Delete (rose danger) after Edit, all row buttons same size
+      ---
+      duration_ms: 1.620398
+      type: 'test'
+      ...
+    # Subtest: confirms first, then DELETEs /api/schedule/:id and reloads the list
+    ok 2 - confirms first, then DELETEs /api/schedule/:id and reloads the list
+      ---
+      duration_ms: 0.347899
+      type: 'test'
+      ...
+    1..2
+ok 91 - Schedules main page: Delete button
+  ---
+  duration_ms: 3.548594
+  type: 'suite'
+  ...
+# Subtest: Schedule details page: top Delete button
+    # Subtest: places a same-size red Delete button after Disable/Enable and Edit
+    ok 1 - places a same-size red Delete button after Disable/Enable and Edit
+      ---
+      duration_ms: 0.357299
+      type: 'test'
+      ...
+    # Subtest: confirms, DELETEs the schedule and navigates back to the list
+    ok 2 - confirms, DELETEs the schedule and navigates back to the list
+      ---
+      duration_ms: 0.1881
+      type: 'test'
+      ...
+    1..2
+ok 92 - Schedule details page: top Delete button
+  ---
+  duration_ms: 0.718999
+  type: 'suite'
+  ...
+# Subtest: Hooks main page: Details button (last) + Delete parity
+    # Subtest: renders Delete (rose danger) and Details as the LAST action linking to /hooks/{id}
+    ok 1 - renders Delete (rose danger) and Details as the LAST action linking to /hooks/{id}
+      ---
+      duration_ms: 0.412799
+      type: 'test'
+      ...
+    # Subtest: opens the details page through the router and still deletes via the API
+    ok 2 - opens the details page through the router and still deletes via the API
+      ---
+      duration_ms: 0.338999
+      type: 'test'
+      ...
+    1..2
+ok 93 - Hooks main page: Details button (last) + Delete parity
+  ---
+  duration_ms: 1.152498
+  type: 'suite'
+  ...
+# Subtest: Hook details page
+    # Subtest: is registered as a parameter route and exported
+    ok 1 - is registered as a parameter route and exported
+      ---
+      duration_ms: 0.269299
+      type: 'test'
+      ...
+    # Subtest: shows the hook counters, the associated threads and the top action buttons
+    ok 2 - shows the hook counters, the associated threads and the top action buttons
+      ---
+      duration_ms: 0.2392
+      type: 'test'
+      ...
+    # Subtest: deletes the hook from its details page, with confirmation, and goes back
+    ok 3 - deletes the hook from its details page, with confirmation, and goes back
+      ---
+      duration_ms: 0.212599
+      type: 'test'
+      ...
+    1..3
+ok 94 - Hook details page
+  ---
+  duration_ms: 1.126398
+  type: 'suite'
+  ...
+# Subtest: runOutcomeMessage (schedule run outcome)
+    # Subtest: reports success with exit code and result thread
+    ok 1 - reports success with exit code and result thread
+      ---
+      duration_ms: 1.022098
+      type: 'test'
+      ...
+    # Subtest: reports FAILED with exit code and the first error line
+    ok 2 - reports FAILED with exit code and the first error line
+      ---
+      duration_ms: 0.229599
+      type: 'test'
+      ...
+    # Subtest: truncates a very long error line and never reports silence
+    ok 3 - truncates a very long error line and never reports silence
+      ---
+      duration_ms: 0.3593
+      type: 'test'
+      ...
+    # Subtest: reports a failing run with no error text as FAILED (not silence)
+    ok 4 - reports a failing run with no error text as FAILED (not silence)
+      ---
+      duration_ms: 0.182299
+      type: 'test'
+      ...
+    # Subtest: reports a still-running run when polling hit its deadline
+    ok 5 - reports a still-running run when polling hit its deadline
+      ---
+      duration_ms: 0.1741
+      type: 'test'
+      ...
+    # Subtest: reports an agentic fire (no run record) as a plain thread fire
+    ok 6 - reports an agentic fire (no run record) as a plain thread fire
+      ---
+      duration_ms: 0.1535
+      type: 'test'
+      ...
+    1..6
+ok 95 - runOutcomeMessage (schedule run outcome)
+  ---
+  duration_ms: 3.478394
+  type: 'suite'
+  ...
+# Subtest: fireScheduleRun contract (action runs are polled, not fire-and-forget)
+    # Subtest: POSTs the trigger and honours the force flag
+    ok 1 - POSTs the trigger and honours the force flag
+      ---
+      duration_ms: 0.2523
+      type: 'test'
+      ...
+    # Subtest: polls the recorded run until it is terminal
+    ok 2 - polls the recorded run until it is terminal
+      ---
+      duration_ms: 0.321399
+      type: 'test'
+      ...
+    1..2
+ok 96 - fireScheduleRun contract (action runs are polled, not fire-and-forget)
+  ---
+  duration_ms: 0.867599
+  type: 'suite'
+  ...
+# Subtest: schedule list wiring (Run button + Last Run badge)
+    # Subtest: shows the outcome toast from the polled run
+    ok 1 - shows the outcome toast from the polled run
+      ---
+      duration_ms: 0.244599
+      type: 'test'
+      ...
+    # Subtest: renders the recorded last_run_status for action jobs
+    ok 2 - renders the recorded last_run_status for action jobs
+      ---
+      duration_ms: 0.2984
+      type: 'test'
+      ...
+    1..2
+ok 97 - schedule list wiring (Run button + Last Run badge)
+  ---
+  duration_ms: 1.842697
+  type: 'suite'
+  ...
+# Subtest: Task Details description markdown toggle (kanban-detail.ts)
+    # Subtest: imports the shared markdown toggle helper
+    ok 1 - imports the shared markdown toggle helper
+      ---
+      duration_ms: 1.069199
+      type: 'test'
+      ...
+    # Subtest: keeps the Description section title
+    ok 2 - keeps the Description section title
+      ---
+      duration_ms: 0.134999
+      type: 'test'
+      ...
+    # Subtest: places the toggle slot on the same row as the Description title
+    ok 3 - places the toggle slot on the same row as the Description title
+      ---
+      duration_ms: 0.1703
+      type: 'test'
+      ...
+    # Subtest: renders the description into a dedicated body element instead of raw escaped text
+    ok 4 - renders the description into a dedicated body element instead of raw escaped text
+      ---
+      duration_ms: 0.237
+      type: 'test'
+      ...
+    # Subtest: wires the toggle with the raw task body
+    ok 5 - wires the toggle with the raw task body
+      ---
+      duration_ms: 0.131999
+      type: 'test'
+      ...
+    # Subtest: handles an empty description (no button, no crash)
+    ok 6 - handles an empty description (no button, no crash)
+      ---
+      duration_ms: 0.1249
+      type: 'test'
+      ...
+    1..6
+ok 98 - Task Details description markdown toggle (kanban-detail.ts)
+  ---
+  duration_ms: 3.284395
+  type: 'suite'
+  ...
+# Subtest: createMarkdownToggle (markdown.ts)
+    # Subtest: is exported and reuses the messages-box button style
+    ok 1 - is exported and reuses the messages-box button style
+      ---
+      duration_ms: 0.350199
+      type: 'test'
+      ...
+    # Subtest: marks the rendered view so CSS can scope it (data-view parity with the messages boxes)
+    ok 2 - marks the rendered view so CSS can scope it (data-view parity with the messages boxes)
+      ---
+      duration_ms: 0.3472
+      type: 'test'
+      ...
+    # Subtest: renders Markdown by default and offers the way back to the original text
+    ok 3 - renders Markdown by default and offers the way back to the original text
+      ---
+      duration_ms: 0.266
+      type: 'test'
+      ...
+    1..3
+ok 99 - createMarkdownToggle (markdown.ts)
+  ---
+  duration_ms: 1.390498
+  type: 'suite'
+  ...
+# Subtest: Description toggle layout (style.css)
+    # Subtest: defines the section header row (title left, button right)
+    ok 1 - defines the section header row (title left, button right)
+      ---
+      duration_ms: 0.2596
+      type: 'test'
+      ...
+    # Subtest: prevents horizontal overflow for long description words
+    ok 2 - prevents horizontal overflow for long description words
+      ---
+      duration_ms: 0.1382
+      type: 'test'
+      ...
+    # Subtest: resets white-space for the rendered Markdown view (no blank line per block)
+    ok 3 - resets white-space for the rendered Markdown view (no blank line per block)
+      ---
+      duration_ms: 0.431299
+      type: 'test'
+      ...
+    1..3
+ok 100 - Description toggle layout (style.css)
+  ---
+  duration_ms: 0.949299
+  type: 'suite'
+  ...
+# Subtest: Shared threads list is envelope-safe
+    # Subtest: loads pages through apiGet (which unwraps {success,data})
+    ok 1 - loads pages through apiGet (which unwraps {success,data})
+      ---
+      duration_ms: 1.066399
+      type: 'test'
+      ...
+    # Subtest: renders the last message of each thread with the shared message card
+    ok 2 - renders the last message of each thread with the shared message card
+      ---
+      duration_ms: 0.1613
+      type: 'test'
+      ...
+    # Subtest: has pagination, an order toggle and the Showing X of Z counter
+    ok 3 - has pagination, an order toggle and the Showing X of Z counter
+      ---
+      duration_ms: 0.1466
+      type: 'test'
+      ...
+    1..3
+ok 101 - Shared threads list is envelope-safe
+  ---
+  duration_ms: 2.740896
+  type: 'suite'
+  ...
+# Subtest: Schedule details page
+    # Subtest: Activity is wired to the shared threads list against /schedule/{id}/threads
+    ok 1 - Activity is wired to the shared threads list against /schedule/{id}/threads
+      ---
+      duration_ms: 0.379799
+      type: 'test'
+      ...
+    # Subtest: keeps the kanban-style Activity markup ids (schedule-threads-*)
+    ok 2 - keeps the kanban-style Activity markup ids (schedule-threads-*)
+      ---
+      duration_ms: 0.265799
+      type: 'test'
+      ...
+    # Subtest: no raw fetch reads .rows/.total off an enveloped body any more
+    ok 3 - no raw fetch reads .rows/.total off an enveloped body any more
+      ---
+      duration_ms: 0.249
+      type: 'test'
+      ...
+    # Subtest: drops the per-thread Subtasks section entirely
+    ok 4 - drops the per-thread Subtasks section entirely
+      ---
+      duration_ms: 0.375799
+      type: 'test'
+      ...
+    # Subtest: still exports the public helpers the pages depend on
+    ok 5 - still exports the public helpers the pages depend on
+      ---
+      duration_ms: 0.566399
+      type: 'test'
+      ...
+    # Subtest: run-outcome responses are unwrapped too (fireScheduleRun)
+    ok 6 - run-outcome responses are unwrapped too (fireScheduleRun)
+      ---
+      duration_ms: 0.2494
+      type: 'test'
+      ...
+    1..6
+ok 102 - Schedule details page
+  ---
+  duration_ms: 2.635396
+  type: 'suite'
+  ...
+# Subtest: Hook and kanban details share the same list
+    # Subtest: hook details loads /hooks/{id}/threads through the shared list
+    ok 1 - hook details loads /hooks/{id}/threads through the shared list
+      ---
+      duration_ms: 0.3783
+      type: 'test'
+      ...
+    # Subtest: kanban details keeps its activity on the shared list
+    ok 2 - kanban details keeps its activity on the shared list
+      ---
+      duration_ms: 1.135998
+      type: 'test'
+      ...
+    # Subtest: all three pages use the SAME element-id convention
+    ok 3 - all three pages use the SAME element-id convention
+      ---
+      duration_ms: 0.1773
+      type: 'test'
+      ...
+    1..3
+ok 103 - Hook and kanban details share the same list
+  ---
+  duration_ms: 1.822798
+  type: 'suite'
+  ...
+# Subtest: Toolsets page: Edit/Delete buttons follow the Actions-page styling
+    # Subtest: Actions page keeps the reference markup (purple Edit / danger Delete)
+    ok 1 - Actions page keeps the reference markup (purple Edit / danger Delete)
+      ---
+      duration_ms: 1.948497
+      type: 'test'
+      ...
+    # Subtest: Toolsets Edit/Delete reuse the shared classes (no ad-hoc inline colours)
+    ok 2 - Toolsets Edit/Delete reuse the shared classes (no ad-hoc inline colours)
+      ---
+      duration_ms: 0.3901
+      type: 'test'
+      ...
+    # Subtest: .btn-sm matches the compact size the Actions-page buttons use inline
+    ok 3 - .btn-sm matches the compact size the Actions-page buttons use inline
+      ---
+      duration_ms: 0.266599
+      type: 'test'
+      ...
+    # Subtest: .btn-action is the shared purple variant of the Actions-page Edit button
+    ok 4 - .btn-action is the shared purple variant of the Actions-page Edit button
+      ---
+      duration_ms: 0.371599
+      type: 'test'
+      ...
+    # Subtest: Delete keeps the existing shared danger variant
+    ok 5 - Delete keeps the existing shared danger variant
+      ---
+      duration_ms: 0.2092
+      type: 'test'
+      ...
+    1..5
+ok 104 - Toolsets page: Edit/Delete buttons follow the Actions-page styling
+  ---
+  duration_ms: 4.743593
+  type: 'suite'
+  ...
+# Subtest: Toolsets page: collapsible toolset boxes
+    # Subtest: each card renders a chevron toggle in the header with aria state
+    ok 1 - each card renders a chevron toggle in the header with aria state
+      ---
+      duration_ms: 0.295199
+      type: 'test'
+      ...
+    # Subtest: the collapsed box keeps its header (title + counts + Edit/Delete)
+    ok 2 - the collapsed box keeps its header (title + counts + Edit/Delete)
+      ---
+      duration_ms: 0.2284
+      type: 'test'
+      ...
+    # Subtest: collapse state is per box, kept in a module Set and mirrored to sessionStorage
+    ok 3 - collapse state is per box, kept in a module Set and mirrored to sessionStorage
+      ---
+      duration_ms: 0.362599
+      type: 'test'
+      ...
+    # Subtest: the toggle flips the class, the aria state and the persisted set
+    ok 4 - the toggle flips the class, the aria state and the persisted set
+      ---
+      duration_ms: 0.2686
+      type: 'test'
+      ...
+    # Subtest: style: collapsed box hides the body and rotates the chevron up
+    ok 5 - style: collapsed box hides the body and rotates the chevron up
+      ---
+      duration_ms: 0.470099
+      type: 'test'
+      ...
+    1..5
+ok 105 - Toolsets page: collapsible toolset boxes
+  ---
+  duration_ms: 1.949197
+  type: 'suite'
+  ...
+# Subtest: Toolsets page: header count '{current} tools / {total} total'
+    # Subtest: total is derived from the plugin catalogue, not hard-coded
+    ok 1 - total is derived from the plugin catalogue, not hard-coded
+      ---
+      duration_ms: 0.169399
+      type: 'test'
+      ...
+    # Subtest: the header renders current / total with the existing pluralisation
+    ok 2 - the header renders current / total with the existing pluralisation
+      ---
+      duration_ms: 0.183
+      type: 'test'
+      ...
+    1..2
+ok 106 - Toolsets page: header count '{current} tools / {total} total'
+  ---
+  duration_ms: 0.465099
+  type: 'suite'
+  ...
+# Subtest: Task Details workflow counters
+    # Subtest: api.ts declares the counters contract of the detail endpoint
+    ok 1 - api.ts declares the counters contract of the detail endpoint
+      ---
+      duration_ms: 0.880898
+      type: 'test'
+      ...
+    # Subtest: renders the per-role chips and the executions/retries counter
+    ok 2 - renders the per-role chips and the executions/retries counter
+      ---
+      duration_ms: 0.205099
+      type: 'test'
+      ...
+    # Subtest: hides the block when the server returns no counters
+    ok 3 - hides the block when the server returns no counters
+      ---
+      duration_ms: 0.2108
+      type: 'test'
+      ...
+    # Subtest: tooltips document the per-attempt semantics
+    ok 4 - tooltips document the per-attempt semantics
+      ---
+      duration_ms: 0.1411
+      type: 'test'
+      ...
+    # Subtest: loadTaskDetail injects the counters block into the detail grid
+    ok 5 - loadTaskDetail injects the counters block into the detail grid
+      ---
+      duration_ms: 0.137799
+      type: 'test'
+      ...
+    1..5
+ok 107 - Task Details workflow counters
+  ---
+  duration_ms: 2.716996
+  type: 'suite'
+  ...
+# Subtest: Phase 5 API client (src/lib/api.ts)
+    # Subtest: exports workflow data-fetch functions
+    ok 1 - exports workflow data-fetch functions
+      ---
+      duration_ms: 1.796997
+      type: 'test'
+      ...
+    # Subtest: defines workflow TypeScript interfaces
+    ok 2 - defines workflow TypeScript interfaces
+      ---
+      duration_ms: 0.530999
+      type: 'test'
+      ...
+    # Subtest: Workflow interface includes top-level clear_executions_on_review (default off, outside roles)
+    ok 3 - Workflow interface includes top-level clear_executions_on_review (default off, outside roles)
+      ---
+      duration_ms: 0.234299
+      type: 'test'
+      ...
+    # Subtest: uses the workflows.yml CRUD endpoints (GET/PUT/DELETE /workflows)
+    ok 4 - uses the workflows.yml CRUD endpoints (GET/PUT/DELETE /workflows)
+      ---
+      duration_ms: 0.1582
+      type: 'test'
+      ...
+    # Subtest: resetWorkflowExecutions calls POST /kanban/tasks/{id}/workflow/executions/reset
+    ok 5 - resetWorkflowExecutions calls POST /kanban/tasks/{id}/workflow/executions/reset
+      ---
+      duration_ms: 0.1493
+      type: 'test'
+      ...
+    1..5
+ok 108 - Phase 5 API client (src/lib/api.ts)
+  ---
+  duration_ms: 4.572693
+  type: 'suite'
+  ...
+# Subtest: Phase 5 routing (src/lib/router.ts)
+    # Subtest: imports renderWorkflows from pages/workflows
+    ok 1 - imports renderWorkflows from pages/workflows
+      ---
+      duration_ms: 1.279598
+      type: 'test'
+      ...
+    # Subtest: registers the workflows route
+    ok 2 - registers the workflows route
+      ---
+      duration_ms: 0.2918
+      type: 'test'
+      ...
+    1..2
+ok 109 - Phase 5 routing (src/lib/router.ts)
+  ---
+  duration_ms: 2.060897
+  type: 'suite'
+  ...
+# Subtest: Phase 5 navigation (index.html)
+    # Subtest: adds Workflows nav items for desktop and mobile
+    ok 1 - adds Workflows nav items for desktop and mobile
+      ---
+      duration_ms: 0.176
+      type: 'test'
+      ...
+    1..1
+ok 110 - Phase 5 navigation (index.html)
+  ---
+  duration_ms: 0.445099
+  type: 'suite'
+  ...
+# Subtest: Phase 5 Workflows page (src/pages/workflows.ts)
+    # Subtest: exports renderWorkflows
+    ok 1 - exports renderWorkflows
+      ---
+      duration_ms: 0.3681
+      type: 'test'
+      ...
+    # Subtest: form includes top-level clear_executions_on_review checkbox (outside roles)
+    ok 2 - form includes top-level clear_executions_on_review checkbox (outside roles)
+      ---
+      duration_ms: 0.338199
+      type: 'test'
+      ...
+    # Subtest: shows field precedence hints
+    ok 3 - shows field precedence hints
+      ---
+      duration_ms: 0.132
+      type: 'test'
+      ...
+    # Subtest: supports CRUD: list, upsert, delete against workflows.yml
+    ok 4 - supports CRUD: list, upsert, delete against workflows.yml
+      ---
+      duration_ms: 0.1117
+      type: 'test'
+      ...
+    # Subtest: notes that workflows are stored in workflows.yml
+    ok 5 - notes that workflows are stored in workflows.yml
+      ---
+      duration_ms: 0.140099
+      type: 'test'
+      ...
+    # Subtest: renders field precedence as an actual note (callout box)
+    ok 6 - renders field precedence as an actual note (callout box)
+      ---
+      duration_ms: 0.1165
+      type: 'test'
+      ...
+    # Subtest: places the save hint below the + New Workflow button
+    ok 7 - places the save hint below the + New Workflow button
+      ---
+      duration_ms: 0.1248
+      type: 'test'
+      ...
+    # Subtest: validates: executor role required, tester/reviewer template required when enabled
+    ok 8 - validates: executor role required, tester/reviewer template required when enabled
+      ---
+      duration_ms: 0.1539
+      type: 'test'
+      ...
+    1..8
+ok 111 - Phase 5 Workflows page (src/pages/workflows.ts)
+  ---
+  duration_ms: 1.749098
+  type: 'suite'
+  ...
+# Subtest: Workflows page form (selects, checkboxes, tel, role sections)
+    # Subtest: uses customized selects (enhanceSelectElement) for all form selects
+    ok 1 - uses customized selects (enhanceSelectElement) for all form selects
+      ---
+      duration_ms: 0.2427
+      type: 'test'
+      ...
+    # Subtest: renders template as a select filtered by the resolved profile
+    ok 2 - renders template as a select filtered by the resolved profile
+      ---
+      duration_ms: 0.1343
+      type: 'test'
+      ...
+    # Subtest: renders provider and model selects with cascade
+    ok 3 - renders provider and model selects with cascade
+      ---
+      duration_ms: 0.1306
+      type: 'test'
+      ...
+    # Subtest: renders planning mode as a 3-option select (Default/On/Off)
+    ok 4 - renders planning mode as a 3-option select (Default/On/Off)
+      ---
+      duration_ms: 0.156299
+      type: 'test'
+      ...
+    # Subtest: uses type=tel for retries (no browser number spinner)
+    ok 5 - uses type=tel for retries (no browser number spinner)
+      ---
+      duration_ms: 0.1322
+      type: 'test'
+      ...
+    # Subtest: retries placeholders default to 0 (default value when omitted)
+    ok 6 - retries placeholders default to 0 (default value when omitted)
+      ---
+      duration_ms: 0.1988
+      type: 'test'
+      ...
+    # Subtest: has enable checkboxes for tester/reviewer, checked by default on create
+    ok 7 - has enable checkboxes for tester/reviewer, checked by default on create
+      ---
+      duration_ms: 0.127299
+      type: 'test'
+      ...
+    # Subtest: opens all role sections by default (executor, tester, reviewer)
+    ok 8 - opens all role sections by default (executor, tester, reviewer)
+      ---
+      duration_ms: 0.1117
+      type: 'test'
+      ...
+    # Subtest: aligns role hints on the text baseline (no superscript look)
+    ok 9 - aligns role hints on the text baseline (no superscript look)
+      ---
+      duration_ms: 0.1085
+      type: 'test'
+      ...
+    # Subtest: shows template texts only on demand, rendered as markdown
+    ok 10 - shows template texts only on demand, rendered as markdown
+      ---
+      duration_ms: 0.161
+      type: 'test'
+      ...
+    # Subtest: styles clear executions on review as a bordered badge, centered with the key
+    ok 11 - styles clear executions on review as a bordered badge, centered with the key
+      ---
+      duration_ms: 0.1152
+      type: 'test'
+      ...
+    # Subtest: sizes up the roles box labels and role hints
+    ok 12 - sizes up the roles box labels and role hints
+      ---
+      duration_ms: 0.2501
+      type: 'test'
+      ...
+    # Subtest: renders each role on its own line with only defined fields
+    ok 13 - renders each role on its own line with only defined fields
+      ---
+      duration_ms: 0.157
+      type: 'test'
+      ...
+    # Subtest: styles the action buttons: purple Edit, cyan New, green Save, red Cancel
+    ok 14 - styles the action buttons: purple Edit, cyan New, green Save, red Cancel
+      ---
+      duration_ms: 0.151299
+      type: 'test'
+      ...
+    1..14
+ok 112 - Workflows page form (selects, checkboxes, tel, role sections)
+  ---
+  duration_ms: 2.742895
+  type: 'suite'
+  ...
+# Subtest: Phase 5 Kanban Task Details (src/lib/kanban-detail.ts)
+    # Subtest: renders a Reset Workflow Executions button
+    ok 1 - renders a Reset Workflow Executions button
+      ---
+      duration_ms: 0.1671
+      type: 'test'
+      ...
+    # Subtest: calls the reset-executions API
+    ok 2 - calls the reset-executions API
+      ---
+      duration_ms: 0.1305
+      type: 'test'
+      ...
+    1..2
+ok 113 - Phase 5 Kanban Task Details (src/lib/kanban-detail.ts)
+  ---
+  duration_ms: 0.3989
+  type: 'suite'
+  ...
+# Subtest: Workflows page responsive layout (small screens)
+    # Subtest: marks the workflow card action buttons with wf-card-actions
+    ok 1 - marks the workflow card action buttons with wf-card-actions
+      ---
+      duration_ms: 0.136499
+      type: 'test'
+      ...
+    # Subtest: wraps the card header and moves actions above roles below 900px
+    ok 2 - wraps the card header and moves actions above roles below 900px
+      ---
+      duration_ms: 0.2275
+      type: 'test'
+      ...
+    1..2
+ok 114 - Workflows page responsive layout (small screens)
+  ---
+  duration_ms: 0.457799
+  type: 'suite'
+  ...
+# Subtest: Workflow nav icon (index.html)
+    # Subtest: renders the outlined workflow diagram in the desktop and mobile icons
+    ok 1 - renders the outlined workflow diagram in the desktop and mobile icons
+      ---
+      duration_ms: 0.808399
+      type: 'test'
+      ...
+    1..1
+ok 115 - Workflow nav icon (index.html)
+  ---
+  duration_ms: 0.969798
+  type: 'suite'
+  ...
+1..115
+# tests 472
+# suites 125
+# pass 461
+# fail 11
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 13949.998316

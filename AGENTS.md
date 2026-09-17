@@ -401,8 +401,11 @@ This handles three cases:
 | Frontend-only changes | `npm run build:frontend` (no Docker)                              |
 | Server changes        | `npm run build:server` + `docker compose up -d --build dashboard` |
 | Combined changes      | `npm run build` + `docker compose up -d --build dashboard`        |
+| Type-check frontend   | `npm run typecheck` (`tsc --noEmit`; CI runs it in publish.yml)   |
 
 ### Rules
+
+- The frontend build (`build:frontend` = `vite build`) is transpile-only: esbuild does NOT catch undefined identifiers, so a dangling variable reference ships silently (regression: Workflows page `_providerErrors is not defined`). Always run `npm run typecheck` (`tsc --noEmit`) before pushing frontend changes; CI runs it in omni-deployer publish.yml so the release build fails on type errors.
 
 - Always use the combined `docker compose up -d --build` (not separate build + recreate).
 - Never use `--no-cache` unless the `dist/` directory is empty and stale cached layers cause issues.

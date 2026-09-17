@@ -21,7 +21,7 @@ import {
   setChannelData,
   setProviderErrors,
 } from "../lib/channel-config";
-import { mergedProvidersFromApi, providerErrorBanner } from "../lib/providers";
+import { mergedProvidersFromApi, providerErrorBanner, type ProviderError } from "../lib/providers";
 
 const ROLE_KEYS = ["executor", "tester", "reviewer"] as const;
 
@@ -60,6 +60,10 @@ let currentWorkflows: WorkflowEntry[] = [];
 let editingKey: string | null = null;
 let _defaultProfile = "omni";
 const _actions: { id: string; name: string }[] = [];
+// Loud merge-contract errors from the providers API (see lib/providers.ts).
+// Declared HERE at module scope so the banner render path below references a
+// real identifier: channel-config.ts keeps its own copy for the channels page.
+let _providerErrors: ProviderError[] = [];
 // Toolset ids (config/toolsets.yml). First match wins:
 // workflow role > workflow > task > channel > profile.
 let _wfToolsets: string[] = [];
@@ -93,6 +97,7 @@ export async function loadWorkflowData(): Promise<void> {
   const merged = mergedProvidersFromApi(pluginsRes);
   setChannelData(_profiles, merged.providers, merged.models);
   setProviderErrors(merged.errors);
+  _providerErrors = merged.errors;
   _templates.length = 0;
   if (Array.isArray(templatesRes)) _templates.push(...templatesRes);
   _actions.length = 0;

@@ -251,7 +251,8 @@ function wireSecrets(): void {
         if (isSecretMasked(el)) revealSecret(el);
         else maskSecret(el);
       } else {
-        el.type = el.type === "password" ? "text" : "password";
+        const input = el as unknown as HTMLInputElement;
+        input.type = input.type === "password" ? "text" : "password";
       }
       btn.setAttribute("title", isSecretMasked(el) ? "Toggle visibility" : "Hide");
     });

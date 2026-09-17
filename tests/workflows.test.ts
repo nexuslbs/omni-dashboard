@@ -138,6 +138,37 @@ describe("Phase 5 Workflows page (src/pages/workflows.ts)", () => {
   });
 });
 
+describe("Workflows page provider-error banner (regression: no dangling identifiers)", () => {
+  // Regression for: "Failed to load workflows: _providerErrors is not defined".
+  // loadWorkflows() renders providerErrorBanner(_providerErrors), so the
+  // identifier MUST be declared in THIS module (mirrors profiles.ts).
+  // channel-config.ts exports a same-named variable, but module scope is not
+  // shared: a missing local declaration is a runtime ReferenceError that a
+  // transpile-only build (vite/esbuild) cannot catch.
+  it("declares _providerErrors at module scope with the ProviderError[] type", () => {
+    assert.ok(
+      /let\s+_providerErrors:\s*ProviderError\[\]\s*=\s*\[\]/.test(page),
+      "module-scope declaration exists in workflows.ts",
+    );
+    assert.ok(
+      /type\s+ProviderError\s*\}?\s*from\s*"\.\.\/lib\/providers"/.test(page),
+      "imports the ProviderError type from lib/providers",
+    );
+  });
+  it("assigns _providerErrors from the merged provider resolution", () => {
+    assert.ok(page.includes("_providerErrors = merged.errors;"), "loadWorkflowData stores merged.errors");
+  });
+  it("banner render path references only declared identifiers", () => {
+    assert.ok(page.includes("providerErrorBanner(_providerErrors)"), "banner uses the local _providerErrors");
+    const declIdx = page.indexOf("let _providerErrors");
+    const useIdx = page.indexOf("providerErrorBanner(_providerErrors)");
+    assert.ok(
+      declIdx !== -1 && useIdx !== -1 && declIdx < useIdx,
+      "declaration precedes the banner use in the module",
+    );
+  });
+});
+
 describe("Workflows page form (selects, checkboxes, tel, role sections)", () => {
   it("uses customized selects (enhanceSelectElement) for all form selects", () => {
     assert.ok(page.includes("enhanceSelectElement"), "enhances selects via enhanceSelectElement");

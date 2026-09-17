@@ -655,7 +655,7 @@ export function showModelsYmlInfoModal(providerName: string): void {
     if (e.target === backdrop) close();
   });
   document.addEventListener("keydown", onKey);
-  backdrop.querySelector(".models-yml-info-close")?.focus();
+  (backdrop.querySelector(".models-yml-info-close") as HTMLElement | null)?.focus();
 }
 
 // ── Install from Git Modal ──

@@ -9,6 +9,7 @@
     "build:frontend": "vite build",
     "build:server": "tsc -p tsconfig.server.json",
     "build": "npm run build:frontend && npm run build:server",
+    "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "test": "NODE_OPTIONS=\"--import=./ts-loader.mjs\" node --test tests/*.test.ts",
     "test:unit": "NODE_OPTIONS=\"--import=./ts-loader.mjs\" node --test tests/lib.test.ts tests/routes.test.ts tests/pages.test.ts",

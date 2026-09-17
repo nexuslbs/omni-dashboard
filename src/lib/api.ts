@@ -493,7 +493,7 @@ export interface PluginData {
   name: string;
   pluginType: "platform" | "tool" | "provider";
   version?: string;
-  source: "built-in" | "installed" | "bundled" | "remote" | "mcp_config";
+  source: "built-in" | "installed" | "bundled" | "remote" | "mcp_config" | "models.yml";
   status: "enabled" | "disabled" | "error";
   manifest: PluginManifest;
   config: PluginConfig;
