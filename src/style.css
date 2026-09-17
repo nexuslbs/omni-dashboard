@@ -617,6 +617,12 @@ a.thread-row {
   border: 1px solid rgba(148, 163, 184, 0.2);
 }
 
+.badge-golden {
+  background: rgba(250, 204, 21, 0.12);
+  color: #facc15;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+}
+
 /* ── Plugin disabled card (yellowed/amber hue) ── */
 .plugin-disabled-card {
   border-color: rgba(245, 158, 11, 0.25) !important;

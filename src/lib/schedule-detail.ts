@@ -201,7 +201,7 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
               ? `
           <div style="margin-bottom:0.75rem;">
             <div class="detail-label">Action</div>
-            <div style="color:var(--accent-cyan);font-weight:500;">${escapeHtml(job.action_name || job.action_id || "-")}</div>
+            <div><span class="badge badge-golden" title="${escapeHtml(job.action_name || job.action_id || "")}">action: ${escapeHtml(job.action_id || "-")}</span></div>
           </div>`
               : ""
           }
@@ -226,6 +226,7 @@ export async function loadScheduleDetail(cronId: string): Promise<any> {
           ? `
       <div style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
         <div class="detail-label">Action</div>
+        <div style="margin-bottom:0.5rem;"><span class="badge badge-golden" title="${escapeHtml(job.action_name || job.action_id || "")}">action: ${escapeHtml(job.action_id || "")}</span></div>
         <div style="background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:0.75rem;font-size:0.9rem;color:var(--accent-cyan);font-weight:500;">${escapeHtml(job.action_name || job.action_id || "")}</div>
         <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">This job runs without an agent: the scheduler executes the action directly.</div>
       </div>`

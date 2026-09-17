@@ -59,7 +59,7 @@ export async function loadCronJobs(
                 <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--text-muted);font-size:0.8rem;">
                   ${
                     j.mode === "action"
-                      ? `<span style="color:var(--accent-cyan);font-weight:500;">${escapeHtml(j.action_id ? formatActionLabel(j.action_id, j.action_name, "Action") : "Action")}</span>`
+                      ? `<span class="badge badge-golden" title="${escapeHtml(j.action_name || j.action_id || "")}">action: ${escapeHtml(j.action_id || "Action")}</span>`
                       : escapeHtml(j.prompt_preview || "")
                   }
                 </td>

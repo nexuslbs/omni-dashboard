@@ -70,7 +70,12 @@ async function loadHookInfo(hookId: string): Promise<Record<string, any> | null>
           ${infoRow("Channel", escapeHtml(hook.channel || "- (Inherit from event)"))}
           ${infoRow("Template", escapeHtml(hook.template || "- (None)"))}
           ${infoRow("Toolset", escapeHtml(hook.toolset || "- (Default)"))}
-          ${infoRow("Action ID", escapeHtml(hook.action_id || "-"))}
+          ${infoRow(
+            "Action ID",
+            hook.mode === "action"
+              ? `<span class="badge badge-golden" title="${escapeHtml(hook.action_name || hook.action_id || "")}">action: ${escapeHtml(hook.action_id || "-")}</span>`
+              : escapeHtml(hook.action_id || "-"),
+          )}
           ${infoRow("Updated", escapeHtml(formatHookDate(hook.updated_at || hook.created_at || null)))}
         </div>
       </div>

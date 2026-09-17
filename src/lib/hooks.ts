@@ -21,6 +21,7 @@ export interface Hook {
   mode: string;
   prompt: string | null;
   action_id: string | null;
+  action_name: string | null;
   profile: string | null;
   channel: string | null;
   plan: boolean;

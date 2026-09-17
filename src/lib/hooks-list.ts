@@ -74,7 +74,11 @@ export async function loadHooks(onStateChange?: () => void): Promise<void> {
                 </td>
                 <td><span class="badge ${eventBadgeClass(String(h.event || ""))}">${escapeHtml(EVENT_LABELS[h.event] || h.event || "-")}</span></td>
                 <td><span class="badge ${scopeBadgeClass(String(h.scope || ""))}">${escapeHtml(SCOPE_LABELS[h.scope] || h.scope || "-")}</span></td>
-                <td style="font-size:0.8rem;color:var(--text-muted);">${escapeHtml(h.target || "-")}</td>
+                <td style="font-size:0.8rem;color:var(--text-muted);">${
+                  h.mode === "action"
+                    ? `<span class="badge badge-golden" title="${escapeHtml(h.action_name || h.action_id || "")}">action: ${escapeHtml(h.action_id || "-")}</span>`
+                    : escapeHtml(h.target || "-")
+                }</td>
                 <td><span class="badge ${modeBadgeClass(String(h.mode || ""))}">${escapeHtml(MODE_LABELS[h.mode] || h.mode || "-")}</span></td>
                 <td style="font-size:0.8rem;color:var(--text-secondary);max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escapeHtml(formatHookCounter(h.counter, String(h.scope || "global")))}">
                   <span style="color:var(--accent-cyan);font-weight:500;">${escapeHtml(formatHookCounter(h.counter, String(h.scope || "global")))}</span>
