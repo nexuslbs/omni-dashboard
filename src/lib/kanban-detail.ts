@@ -9,6 +9,7 @@ import { enhanceSelectElement, syncSelectDisplayEl } from "./dropdown";
 import { STATUS_LABELS, statusBadge, moveTask, renderTagChips } from "./kanban-board";
 // ── Helper imports ──
 import { escapeHtml, formatApiError } from "./helpers";
+import { renderThreadStatus } from "./thread-status";
 import { taskModalHTML, wireTaskModal, openTaskModal } from "./kanban-create";
 import { createMarkdownToggle } from "./markdown";
 import { showToast } from "./utils";
@@ -149,6 +150,10 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
         <div>
           <div class="detail-label">Status</div>
           <div><span class="badge ${statusBadge(task.status)}">${STATUS_LABELS[task.status] || task.status}</span></div>
+        </div>
+        <div>
+          <div class="detail-label">Thread status</div>
+          <div>${renderThreadStatus(task)}</div>
         </div>
         <div>
           <div class="detail-label">Priority</div>

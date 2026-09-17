@@ -259,6 +259,13 @@ export interface KanbanTask {
   plan?: boolean;
   tags?: string[];
   /**
+   * Live thread status of the task's workflow thread: `scheduled` (queued) or
+   * `running` (processing), as returned by `GET /kanban/tasks/{id}`. Absent or
+   * null when the task has no live workflow thread; the Task Details page then
+   * shows "No status defined" instead of a badge.
+   */
+  thread_status?: string | null;
+  /**
    * Per-role workflow attempt counters. Present on `GET /kanban/tasks/{id}`
    * (detail) only; the board list omits the key.
    */
