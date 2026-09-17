@@ -193,36 +193,6 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
             : ""
         }
         <div>
-          <div class="detail-label">Goal phase</div>
-          <div>${
-            task.goal_phase
-              ? `<span class="badge ${task.goal_phase === "blocked" ? "badge-error" : task.goal_phase === "active" ? "badge-warning" : "badge-neutral"}">${escapeHtml(task.goal_phase)}</span>${
-                  task.goal_max_rounds
-                    ? ` <code style="font-size:0.7rem;color:var(--text-muted);">rounds ≤ ${escapeHtml(String(task.goal_max_rounds))}</code>`
-                    : ""
-                }`
-              : "<em>None</em>"
-          }</div>
-        </div>
-        ${
-          task.goal_blocked_code || task.goal_blocked_message
-            ? `
-        <div>
-          <div class="detail-label">Blocked reason</div>
-          <div>${
-            task.goal_blocked_code
-              ? `<span class="badge badge-error" style="font-size:0.7rem;">${escapeHtml(task.goal_blocked_code)}</span> `
-              : ""
-          }${
-            task.goal_blocked_message
-              ? `<span style="color:var(--text-secondary);font-size:0.8rem;">${escapeHtml(task.goal_blocked_message)}</span>`
-              : ""
-          }</div>
-        </div>
-        `
-            : ""
-        }
-        <div>
           <div class="detail-label">Created</div>
           <div>${new Date(task.created_at).toLocaleString()}</div>
         </div>
