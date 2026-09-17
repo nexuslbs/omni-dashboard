@@ -83,7 +83,7 @@ Cron job list with mode indicators:
 
 Event-driven hooks manager backed by the hooks API (`config/tasks.yml` hook templates):
 
-- Lists hook task templates (thread_started / thread_finished / new_message events) with their channel, prompt, enabled state.
+- Lists hook task templates (thread_started / new_message / thread_completed / thread_interrupted / thread_failed / thread_skipped / thread_merged / thread_terminated events) with their channel, prompt, enabled state.
 - **Create/Edit modal** (custom enhanced selects for trigger event type and channel).
 - New hooks are registered as cron-scheduled tasks delivering events to the configured hook channel.
 
@@ -291,7 +291,7 @@ repo/
 │       ├── kanban-history.ts      # Kanban task workflow history (steps traversed per task)
 │       ├── workflows.ts           # Role-based workflow editor (config/workflows.yml: modes, auto_approve, review_on_fail)
 │       ├── schedule.ts            # Schedule page (cron job list + detail view)
-│       ├── hooks.ts               # Event-driven hooks manager (thread_started/thread_finished/new_message)
+│       ├── hooks.ts               # Event-driven hooks manager (thread_started/new_message + terminal lifecycle events)
 │       ├── secrets.ts             # Secrets manager (key-value viewer, eye toggle, add/delete)
 │       ├── profiles.ts            # Profiles management (provider/model config, tool access, channel usage)
 │       ├── channels.ts            # Channels management (open/close, status badges, filter controls)

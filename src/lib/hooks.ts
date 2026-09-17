@@ -46,8 +46,15 @@ export function hookName(hook: Record<string, unknown>): string {
 // ── Labels ──
 export const EVENT_LABELS: Record<string, string> = {
   thread_started: "Thread Started",
-  thread_finished: "Thread Finished",
   new_message: "New Message",
+  thread_completed: "Thread Completed",
+  thread_interrupted: "Thread Interrupted",
+  thread_failed: "Thread Failed",
+  thread_skipped: "Thread Skipped",
+  thread_merged: "Thread Merged",
+  // Catch-all terminal event (fires on EVERY terminal transition, next to the
+  // per-status event above).
+  thread_terminated: "Thread Terminated",
 };
 
 export const SCOPE_LABELS: Record<string, string> = {
@@ -65,11 +72,17 @@ export const MODE_LABELS: Record<string, string> = {
 export function eventBadgeClass(event: string): string {
   switch (event) {
     case "thread_started":
+    case "thread_completed":
       return "badge-success";
-    case "thread_finished":
-      return "badge-info";
     case "new_message":
+    case "thread_failed":
+    case "thread_interrupted":
       return "badge-warning";
+    case "thread_terminated":
+    case "thread_skipped":
+      return "badge-info";
+    case "thread_merged":
+      return "badge-cyan";
     default:
       return "badge-neutral";
   }
