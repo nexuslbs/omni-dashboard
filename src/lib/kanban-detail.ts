@@ -182,7 +182,7 @@ export async function loadTaskDetail(taskId: string): Promise<void> {
             <span class="detail-label" style="font-size:0.68rem;">Workflow</span><br>
             ${
               task.workflow
-                ? `<code style="font-size:0.8rem;color:var(--accent-cyan);background:var(--bg-card);padding:0.15rem 0.4rem;border-radius:4px;">${escapeHtml(String(task.workflow))}</code>`
+                ? `<code style="font-size:0.8rem;color:var(--accent-cyan);background:var(--bg-card);padding:0.15rem 0.4rem;border-radius:4px;border:1px solid rgba(34, 211, 238, 0.25);">${escapeHtml(String(task.workflow))}</code>`
                 : '<em style="font-size:0.8rem;color:var(--text-muted);">None</em>'
             }
           </div>
