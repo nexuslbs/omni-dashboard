@@ -380,7 +380,19 @@ export function wirePluginButtons(
         const typeDir = pType + "s";
         const encodedName = encodeURIComponent(pluginName);
         const encodedSource = encodeURIComponent(source);
-        await apiPost(`/plugins/${typeDir}/${encodedSource}/${encodedName}/${endpoint}`, {});
+        const result = (await apiPost(`/plugins/${typeDir}/${encodedSource}/${encodedName}/${endpoint}`, {})) as {
+          status?: string;
+          status_message?: string;
+        } | null;
+        // Defensive: the API returns success only for a plugin that really
+        // started, but never paint a green "Enabled" card unless the returned
+        // state actually says enabled. A 200 whose detail is still error (or
+        // not_found/disabled) is a FAILED enable and must show the real reason.
+        if (!isCurrentlyEnabled && result && result.status && result.status !== "enabled") {
+          throw new Error(
+            result.status_message || `plugin did not start (status: ${result.status})`,
+          );
+        }
         showToast(isCurrentlyEnabled ? "Disabled" : "Enabled", "success");
         loadFn();
       } catch (e) {
