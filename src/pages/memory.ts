@@ -280,8 +280,10 @@ async function loadStats(): Promise<void> {
 async function loadSystemPrompt(): Promise<void> {
   const el = document.getElementById("mem-system-prompt")!;
   try {
-    // Use the prompt proxy (GET) to get the raw system prompt TEMPLATE
-    // without MEMORY content filled in (that has its own card)
+    // The prompt proxy (GET) returns the REAL prompt parts produced by the
+    // prompt generator the agent itself uses (no locally built template):
+    // `system` is the assembled system prompt, `template` the task template
+    // section, `user`/`context`/`memory` the remaining parts.
     const res = await fetch(`${API_BASE}/prompt/default`);
     if (res.ok) {
       const contentType = res.headers.get("content-type") || "";
@@ -289,7 +291,14 @@ async function loadSystemPrompt(): Promise<void> {
       let content: string;
       if (contentType.includes("application/json")) {
         const data = JSON.parse(text);
-        content = data.data?.content || data.content || text;
+        if (data.system !== undefined || data.messages !== undefined) {
+          const parts: string[] = [];
+          if (data.template) parts.push(`=== Task Template ===\n${data.template}`);
+          if (data.system) parts.push(data.system);
+          content = parts.join("\n\n");
+        } else {
+          content = data.data?.content || data.content || text;
+        }
       } else {
         content = text;
       }
