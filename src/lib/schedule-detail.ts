@@ -370,7 +370,7 @@ export async function showCronModal(
             <option value="">None (use default toolset)</option>
             ${toolsets.map((t: string) => `<option value="${escapeHtml(t)}" ${isEdit && job.toolset === t ? "selected" : ""}>${escapeHtml(t)}</option>`).join("")}
           </select>
-          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">First match wins: workflow role &gt; workflow &gt; task &gt; channel &gt; profile. Defined in config/toolsets.yml.</div>
+          <div style="font-size:0.75rem;color:var(--text-muted);margin-top:0.25rem;">First match wins: workflow role &gt; workflow &gt; task &gt; board &gt; channel &gt; profile. Defined in config/toolsets.yml.</div>
         </div>
         <div style="margin-bottom:1rem;">
           <label style="display:block;font-size:0.8rem;color:var(--text-muted);margin-bottom:0.375rem;">Mode</label>

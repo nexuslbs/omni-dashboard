@@ -289,7 +289,7 @@ export function taskModalHTML(mode: TaskModalMode): string {
                 <select id="${p}-toolset" style="${inputStyle}">
                   <option value="">None (use default toolset)</option>
                 </select>
-                <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">First match wins: workflow role &gt; workflow &gt; task &gt; channel &gt; profile. Defined in config/toolsets.yml.</div>
+                <div style="font-size:0.7rem;color:var(--text-muted);margin-top:0.2rem;">First match wins: workflow role &gt; workflow &gt; task &gt; board &gt; channel &gt; profile. Defined in config/toolsets.yml.</div>
               </div>
               <div>
                 <label style="${labelStyle}">Tags</label>

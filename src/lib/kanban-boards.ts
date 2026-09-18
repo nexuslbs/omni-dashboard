@@ -20,6 +20,7 @@ import {
   apiDelete,
   apiGet,
   apiPut,
+  fetchToolsets,
   fetchWorkflows,
   type BoardConfig,
   type BoardEntry,
@@ -96,6 +97,9 @@ export function boardMetaLabel(board: BoardConfig): string {
   const parts: string[] = [];
   if (board.workflow) parts.push(`workflow: ${board.workflow}`);
   if (board.channel) parts.push(`channel: ${board.channel}`);
+  // Toolset: shown ONLY when this board defines one - a board without a
+  // toolset keeps the line unchanged (no "toolset: none" noise).
+  if (board.toolset) parts.push(`toolset: ${board.toolset}`);
   return parts.join(" · ");
 }
 
@@ -167,6 +171,11 @@ function readBoardForm(): { key: string; board: BoardConfig } {
   if (plan !== "") board.plan = plan === "true";
   const template = readField("board-form-template");
   if (template) board.template = template;
+  // Toolset: "" (the "None (use default toolset)" entry) is OMITTED, so the
+  // saved board defines no toolset and the chain falls through to the
+  // channel/profile tiers (never an empty toolset = no tools).
+  const toolset = readField("board-form-toolset");
+  if (toolset) board.toolset = toolset;
   const priority = readField("board-form-priority");
   if (priority !== "") board.priority = parseInt(priority, 10);
   return { key, board };
@@ -186,6 +195,29 @@ export function renderWorkflowSelect(workflows: WorkflowEntry[], current?: strin
   return `<select id="board-form-workflow" style="${inputStyle}"${workflows.length === 0 ? " disabled" : ""}>
     ${options}
   </select>`;
+}
+
+/**
+ * HTML for the board toolset <select>. Same semantics as the other toolset
+ * selects: the explicit "" entry means "use default toolset" (the board
+ * contributes nothing), then every id defined in config/toolsets.yml. A
+ * saved id that is no longer defined is kept as a selectable entry (never
+ * silently dropped on save).
+ */
+export function renderToolsetSelect(toolsetIds: string[], current?: string | null): string {
+  const cur = (current ?? "").trim();
+  const options: string[] = ['<option value="">None (use default toolset)</option>'];
+  if (cur && !toolsetIds.includes(cur)) {
+    options.push(
+      `<option value="${escapeHtml(cur)}" selected>${escapeHtml(cur)} (not defined)</option>`,
+    );
+  }
+  for (const id of toolsetIds) {
+    options.push(
+      `<option value="${escapeHtml(id)}"${id === cur ? " selected" : ""}>${escapeHtml(id)}</option>`,
+    );
+  }
+  return `<select id="board-form-toolset" style="${inputStyle}">${options.join("")}</select>`;
 }
 
 /**
@@ -210,15 +242,17 @@ export async function openBoardModal(
   // start them all in the same tick so the modal pays max(call) instead of
   // sum(call). Workflows keeps its original error semantics (a rejection still
   // fails the open); the other three keep their per-source fallback.
-  const [workflows, channelsRes, profilesRes, templatesRes] = await Promise.all([
+  const [workflows, channelsRes, profilesRes, templatesRes, toolsetsRes] = await Promise.all([
     fetchWorkflows(),
     apiGet<unknown[]>("/channels").catch(() => null),
     apiGet<{ name: string }[]>("/profiles").catch(() => null),
     apiGet<{ name: string }[]>("/templates").catch(() => null),
+    fetchToolsets().catch(() => null),
   ]);
   const channels: unknown[] = channelsRes || [];
   const profiles: { name: string }[] = profilesRes || [];
   const templates: { name: string }[] = templatesRes || [];
+  const toolsetIds: string[] = Object.keys(toolsetsRes?.toolsets ?? {});
   const modal = document.createElement("div");
   modal.id = "board-modal";
   modal.style.cssText =
@@ -241,6 +275,7 @@ export async function openBoardModal(
           </select>`,
         )}
         ${fieldRow("board-form-template", "Template", `<select id="board-form-template" style="${inputStyle}"><option value="">- None -</option>${templates.map((t) => `<option value="${escapeHtml(t.name)}" ${String(b.template ?? "") === t.name ? "selected" : ""}>${escapeHtml(t.name)}</option>`).join("")}</select>`)}
+        ${fieldRow("board-form-toolset", "Toolset", renderToolsetSelect(toolsetIds, b.toolset), "First match wins: workflow role &gt; workflow &gt; task &gt; board &gt; channel &gt; profile. Defined in config/toolsets.yml.")}
         ${fieldRow("board-form-priority", "Priority", `<select id="board-form-priority" style="${inputStyle}"><option value="">- None -</option>${[0, 1, 2, 3, 4, 5].map((pr) => `<option value="${pr}" ${b.priority === pr ? "selected" : ""}>${pr}</option>`).join("")}</select>`)}
       </div>
       <div style="display:flex;gap:0.5rem;justify-content:space-between;margin-top:1rem;">

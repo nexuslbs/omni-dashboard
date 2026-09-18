@@ -35,7 +35,7 @@ export function renderWorkflows(container: HTMLElement): void {
     </div>
     <div class="wf-note">
       <span class="wf-note-icon">ℹ️</span>
-      <span><strong>Field precedence:</strong> workflow role &gt; workflow field &gt; kanban task &gt; channel &gt; global.</span>
+      <span><strong>Field precedence:</strong> workflow role &gt; workflow field &gt; kanban task &gt; board &gt; channel &gt; global.</span>
     </div>
     <div style="margin-bottom:1rem;">
       <button id="wf-new-btn" class="btn-primary" style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ New Workflow</button>
@@ -65,7 +65,7 @@ const _actions: { id: string; name: string }[] = [];
 // real identifier: channel-config.ts keeps its own copy for the channels page.
 let _providerErrors: ProviderError[] = [];
 // Toolset ids (config/toolsets.yml). First match wins:
-// workflow role > workflow > task > channel > profile.
+// workflow role > workflow > task > board > channel > profile.
 let _wfToolsets: string[] = [];
 
 // ── Data loading ──

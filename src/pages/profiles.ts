@@ -125,7 +125,7 @@ function renderProfilesPage(profiles: ProfileData[]): string {
           <div class="setting-controls" style="max-width:none;">
             <div class="setting-name">Toolset</div>
             ${renderProfileToolsetField(p.name, typeof p.toolset === "string" ? p.toolset : null)}
-            <div class="text-muted" style="font-size:0.75rem;margin-top:0.25rem;">First match wins: workflow role &gt; workflow &gt; task &gt; channel &gt; profile. "None (All tools allowed)" leaves every tool available.</div>
+            <div class="text-muted" style="font-size:0.75rem;margin-top:0.25rem;">First match wins: workflow role &gt; workflow &gt; task &gt; board &gt; channel &gt; profile. "None (All tools allowed)" leaves every tool available.</div>
           </div>
         </div>
         <div class="setting-row">

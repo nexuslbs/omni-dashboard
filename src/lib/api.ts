@@ -316,6 +316,12 @@ export interface BoardConfig {
   workflow?: string;
   plan?: boolean;
   template?: string;
+  /**
+   * Toolset id (config/toolsets.yml): the BOARD tier of the first-match chain
+   * `workflow_role > workflow > task > board > channel > profile`. Unset = the
+   * board contributes nothing (the chain falls through to channel/profile).
+   */
+  toolset?: string | null;
   priority?: number;
   [key: string]: unknown;
 }

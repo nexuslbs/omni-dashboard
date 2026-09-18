@@ -4,7 +4,7 @@
  * A toolset is a reusable list of tool names (exactly the names exposed to the
  * agent, e.g. `plugin__tool`). An EMPTY list is valid and means "no tool
  * allowed". A thread resolves its toolset with the first-match priority
- * workflow_role > workflow > task > channel > profile; when no level defines one
+ * workflow_role > workflow > task > board > channel > profile; when no level defines one
  * every tool is allowed.
  *
  * The page renders each toolset as a box (like the profiles page boxes) with a
@@ -81,7 +81,7 @@ export function renderToolsets(container: HTMLElement): void {
     <div class="page-header">
       <div>
         <h1 class="page-title">Toolsets</h1>
-        <p class="page-subtitle">Named tool allow-lists (config/toolsets.yml). A thread uses the first toolset defined by workflow role, workflow, task, channel or profile.</p>
+        <p class="page-subtitle">Named tool allow-lists (config/toolsets.yml). A thread uses the first toolset defined by workflow role, workflow, task, board, channel or profile.</p>
       </div>
       <button id="create-toolset-btn" class="btn-primary" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ Create Toolset</button>
     </div>
