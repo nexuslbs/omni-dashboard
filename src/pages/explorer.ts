@@ -73,6 +73,74 @@ function formatSize(bytes: number | null): string {
   return `${(bytes / 1024 / 1024).toFixed(1)} MiB`;
 }
 
+// ── Image preview ──
+
+// Extensions rendered as an actual image in the content pane instead of the
+// "Binary or unsupported file type" placeholder. Detection is by extension
+// (case-insensitive); SVG is rendered via <img> too, which never executes
+// scripts embedded in the SVG source.
+const IMAGE_MIME_BY_EXT: Record<string, string> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  jfif: "image/jpeg",
+  webp: "image/webp",
+  gif: "image/gif",
+  svg: "image/svg+xml",
+  bmp: "image/bmp",
+  ico: "image/x-icon",
+  avif: "image/avif",
+  apng: "image/apng",
+};
+
+/** Returns the image MIME type for a path with a known image extension, else null. */
+function imageMimeForPath(path: string): string | null {
+  const clean = path.split(/[?#]/)[0];
+  const dot = clean.lastIndexOf(".");
+  if (dot < 0) return null;
+  return IMAGE_MIME_BY_EXT[clean.slice(dot + 1).toLowerCase()] ?? null;
+}
+
+/** True when the file can be previewed as an image. */
+function isImagePath(path: string): boolean {
+  return imageMimeForPath(path) !== null;
+}
+
+/**
+ * Render an image file in the content pane. Bytes are loaded from the raw
+ * endpoint (inline, image content type); a failed load shows the normal error
+ * state instead of leaving a broken-image icon.
+ */
+function renderImagePreview(contentView: HTMLElement, path: string, size: number | null): void {
+  const rawUrl = `/api/fs/raw?path=${encodeURIComponent(path)}`;
+  contentView.innerHTML = `
+    <div class="file-header">
+      <span class="file-path">${escapeHtml(path)}</span>
+      <div class="file-header-actions">
+        <span class="file-size">${formatSize(size)}</span>
+        <button class="diff-toggle-btn" id="diff-toggle-btn" title="Show diff">↔</button>
+        <a class="file-download-btn" href="/api/fs/download?path=${encodeURIComponent(path)}" download title="Download file">⬇</a>
+      </div>
+    </div>
+    <div class="image-preview">
+      <img class="image-preview-img" id="explorer-image-preview" src="${rawUrl}" alt="${escapeHtml(path)}" loading="lazy">
+    </div>
+  `;
+  const img = document.getElementById("explorer-image-preview") as HTMLImageElement | null;
+  if (img) {
+    img.addEventListener("error", () => {
+      const wrap = img.closest(".image-preview");
+      if (!wrap) return;
+      wrap.innerHTML = `
+        <div class="empty-state" style="padding:3rem;text-align:center;color:var(--text-muted);">
+          <p>Could not load image</p>
+          <p style="font-size:0.875rem;margin-top:0.5rem;">${formatSize(size)}: cannot preview</p>
+        </div>
+      `;
+    });
+  }
+}
+
 // ── Tree node icons ──
 
 function getIcon(entry: FsEntry): string {
@@ -672,7 +740,13 @@ async function openFile(path: string): Promise<void> {
       const response = await apiGet<FsReadResponse>(`/fs/read?path=${encodeURIComponent(path)}`);
       const isMarkdown = path.toLowerCase().endsWith(".md");
 
-      if (response.binary) {
+      if (isImagePath(path)) {
+        // Image file: render the actual image from the raw-bytes endpoint
+        // instead of the binary placeholder. Takes precedence over the text
+        // branches too (an SVG reads as text but must render as an image).
+        renderImagePreview(contentView, path, response.size);
+        contentView.scrollTop = 0;
+      } else if (response.binary) {
         contentView.innerHTML = `
           <div class="file-header">
             <span class="file-path">${escapeHtml(path)}</span>

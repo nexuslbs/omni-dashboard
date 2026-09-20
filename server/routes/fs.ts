@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { existsSync, lstatSync, readdirSync, readFileSync, statSync } from "fs";
-import { join, basename, relative, resolve, sep } from "path";
+import { join, basename, extname, relative, resolve, sep } from "path";
 import { execSync } from "child_process";
 
 export const fsRouter = Router();
@@ -184,6 +184,53 @@ fsRouter.get("/download", (req, res) => {
     res.download(absPath, fileName);
   } catch (e) {
     res.status(500).json({ error: (e as Error).message || "Failed to download file" });
+  }
+});
+
+// Image extensions the Explorer can preview inline. Kept explicit so the
+// Content-Type is deterministic (and testable) regardless of the mime db.
+const IMAGE_MIME_BY_EXT: Record<string, string> = {
+  ".png": "image/png",
+  ".jpg": "image/jpeg",
+  ".jpeg": "image/jpeg",
+  ".jfif": "image/jpeg",
+  ".webp": "image/webp",
+  ".gif": "image/gif",
+  ".svg": "image/svg+xml",
+  ".bmp": "image/bmp",
+  ".ico": "image/x-icon",
+  ".avif": "image/avif",
+  ".apng": "image/apng",
+};
+
+// GET /api/fs/raw?path=<relative-path>
+// Serves a file INLINE (no Content-Disposition: attachment) with an image
+// Content-Type derived from the file extension. The Explorer page renders
+// images in an <img> element with this endpoint; the download button keeps
+// using /api/fs/download (attachment) unchanged.
+fsRouter.get("/raw", (req, res) => {
+  try {
+    const rawPath = (req.query.path as string) || "";
+    const absPath = sanitizePath(rawPath);
+
+    if (!existsSync(absPath)) {
+      res.status(404).json({ error: "File not found" });
+      return;
+    }
+    if (!statSync(absPath).isFile()) {
+      res.status(400).json({ error: "Not a file" });
+      return;
+    }
+
+    const ext = extname(absPath).toLowerCase();
+    const contentType = IMAGE_MIME_BY_EXT[ext] || "application/octet-stream";
+    res.setHeader("Content-Type", contentType);
+    // Inline so browsers render the bytes instead of prompting a download.
+    res.setHeader("Content-Disposition", `inline; filename="${basename(absPath).replace(/"/g, "")}"`);
+    res.setHeader("Cache-Control", "no-store");
+    res.sendFile(absPath);
+  } catch (e) {
+    res.status(500).json({ error: (e as Error).message || "Failed to read file" });
   }
 });
 
