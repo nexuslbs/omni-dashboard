@@ -317,3 +317,16 @@ document.body.addEventListener("drop", async (e) => {
 // Shared modal behavior: internal scrolling + page scroll lock (src/lib/modal.ts).
 // Dynamic import: the helper only needs the DOM and must not delay first paint.
 void import("./lib/modal").then(({ initModalScrollLock }) => initModalScrollLock());
+
+// ── PWA service worker ──
+// Chrome (Android) only offers a real "Install app" (manifest icon + navy
+// splash) when the page registers a service worker with a fetch handler.
+// Without it the browser degrades to "Add to Home screen" with a generated
+// icon. public/sw.js is served from the origin root by the dashboard server.
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("/sw.js", { scope: "/" }).catch((err) => {
+      console.warn("[pwa] service worker registration failed", err);
+    });
+  });
+}

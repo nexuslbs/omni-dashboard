@@ -78,3 +78,61 @@ describe("PWA install icons (public/icons)", () => {
     });
   }
 });
+
+// ── PWA installability: service worker with a fetch handler ──
+// Android Chrome only offers "Install app" (manifest icon + navy splash) when
+// the page registers a service worker with a fetch handler; without one the
+// browser degrades to "Add to Home screen" with a browser-generated icon.
+// Regression test for task task_omnidev_dashboard_pwa_install_shows_no_app
+// (reopened 2026-09-20, ships in v0.3.2).
+
+describe("PWA service worker (public/sw.js)", () => {
+  const sw = readFileSync(new URL("../public/sw.js", import.meta.url), "utf-8");
+
+  it("registers a fetch handler (Chrome install criterion)", () => {
+    assert.match(sw, /addEventListener\(\s*["']fetch["']/);
+  });
+
+  it("skips waiting so an update goes live on the next load", () => {
+    assert.match(sw, /skipWaiting\(\)/);
+    assert.match(sw, /clients\.claim\(\)/);
+  });
+
+  it("never intercepts the dashboard API", () => {
+    assert.match(sw, /startsWith\(\s*["']\/api\/["']\s*\)/);
+  });
+
+  it("precaches the manifest and the raster install icons", () => {
+    for (const asset of [
+      "/manifest.webmanifest",
+      "/icons/icon-192.png",
+      "/icons/icon-512.png",
+      "/icons/icon-maskable-192.png",
+      "/icons/icon-maskable-512.png",
+    ]) {
+      assert.ok(sw.includes(`"${asset}"`), `${asset} must be precached`);
+    }
+  });
+});
+
+describe("PWA service worker registration", () => {
+  const entry = readFileSync(new URL("../src/index.ts", import.meta.url), "utf-8");
+
+  it("registers /sw.js from the app entry point", () => {
+    assert.match(entry, /navigator\.serviceWorker/);
+    assert.match(entry, /register\(\s*["']\/sw\.js["']/);
+  });
+});
+
+describe("PWA manifest install metadata", () => {
+  it("declares an install id and keeps the root scope", () => {
+    assert.equal(manifest.id, "/");
+    assert.equal(manifest.scope, "/");
+  });
+
+  it("lists a raster PNG icon before the SVG fallback", () => {
+    const types = (manifest.icons as Array<{ type: string }>).map((icon) => icon.type);
+    assert.equal(types[0], "image/png", "the first declared icon must be a raster PNG");
+    assert.ok(types.includes("image/svg+xml"), "the SVG fallback must stay declared");
+  });
+});

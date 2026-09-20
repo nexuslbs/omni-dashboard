@@ -347,7 +347,11 @@ if (existsSync(distPath)) {
     express.static(distPath, {
       maxAge: "1h",
       setHeaders(res: express.Response, filePath: string) {
-        if (filePath.endsWith("index.html")) {
+        if (
+          filePath.endsWith("index.html") ||
+          filePath.endsWith("sw.js") ||
+          filePath.endsWith("manifest.webmanifest")
+        ) {
           res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
           res.setHeader("Pragma", "no-cache");
           res.setHeader("Expires", "0");
