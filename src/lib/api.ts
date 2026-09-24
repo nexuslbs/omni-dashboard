@@ -294,6 +294,13 @@ export interface KanbanTaskCounters {
   executions: number;
   /** Executor attempts beyond the first (`executions - 1`, 0 when none). */
   retries: number;
+  /**
+   * UTC timestamp of the task's last workflow-executions reset
+   * (`workflow_state.executions_reset_at`), when it has one. The counters above
+   * are counted FROM it (attempts of a previous life are excluded), so a reset
+   * shows up as 0 instead of leaving the old numbers in place.
+   */
+  executions_reset_at?: string;
 }
 
 export interface KanbanColumn {

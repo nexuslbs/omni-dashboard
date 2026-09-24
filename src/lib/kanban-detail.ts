@@ -62,7 +62,20 @@ function renderWorkflowCounters(task: { counters?: KanbanTaskCounters }): string
     "Executor (running) = executor attempts, Tester (testing) = tester attempts, " +
     "Reviewer (review) = reviewer attempts. Executions/retries = executor attempts " +
     "(retries = executions - 1); reworks and re-tests add attempts. " +
-    "Counts are per attempt, not threads currently in that status.";
+    "Counts are per attempt, not threads currently in that status." +
+    (c.executions_reset_at
+      ? " Counted since the last workflow-executions reset (" +
+        c.executions_reset_at +
+        "); older attempts belong to a previous life of the task."
+      : "");
+
+  // After "Reset workflow execution" (dashboard button or a dispatch from Todo)
+  // the counters restart from 0; show the baseline so the reset is visible.
+  const sinceChip = c.executions_reset_at
+    ? ` <span class="badge badge-neutral" style="font-size:0.72rem;font-weight:400;" title="${escapeHtml(
+        "Counters are counted since this reset: attempts made before it were cleared and belong to a previous life of the task.",
+      )}">counted since: <strong>${escapeHtml(formatResetAt(c.executions_reset_at))}</strong></span>`
+    : "";
 
   return `
         <div style="grid-column:1 / -1;" id="task-workflow-counters">
@@ -71,9 +84,15 @@ function renderWorkflowCounters(task: { counters?: KanbanTaskCounters }): string
             ${chip("Executor (running)", executor, "Executor attempts: threads dispatched for the executor role, which works in the running column. Includes every attempt, also finished/failed ones.")}
             ${chip("Tester (testing)", tester, "Tester attempts: threads dispatched for the tester role, which works in the testing column. Includes every attempt, also finished/failed ones.")}
             ${chip("Reviewer (review)", reviewer, "Reviewer attempts: threads dispatched for the reviewer role, which works in the review column. Includes every attempt, also finished/failed ones.")}
-            <span class="badge badge-neutral" style="font-size:0.72rem;font-weight:400;" title="${escapeHtml("Executions/retries: total executor attempts for this task, and the attempts beyond the first (executions - 1). Reworks add executor attempts; re-tests and reviews add tester/reviewer attempts.")}">Executions/retries: <strong>${executions}</strong> <span style="opacity:0.7;">(retries: ${retries})</span></span>
+            <span class="badge badge-neutral" style="font-size:0.72rem;font-weight:400;" title="${escapeHtml("Executions/retries: total executor attempts for this task, and the attempts beyond the first (executions - 1). Reworks add executor attempts; re-tests and reviews add tester/reviewer attempts.")}">Executions/retries: <strong>${executions}</strong> <span style="opacity:0.7;">(retries: ${retries})</span></span>${sinceChip}
           </div>
         </div>`;
+}
+
+/** `2026-09-24T15:20:31.123456Z` -> `2026-09-24 15:20 UTC` (raw value when odd). */
+function formatResetAt(iso: string): string {
+  const m = /^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/.exec(iso);
+  return m ? `${m[1]} ${m[2]} UTC` : iso;
 }
 
 export async function loadTaskDetail(taskId: string): Promise<void> {

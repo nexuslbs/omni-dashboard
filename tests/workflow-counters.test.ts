@@ -64,4 +64,20 @@ describe("Task Details workflow counters", () => {
   test("loadTaskDetail injects the counters block into the detail grid", () => {
     assert.match(detail, /\$\{renderWorkflowCounters\(task as \{ counters\?: KanbanTaskCounters \}\)\}/);
   });
+
+  test("shows the reset baseline so an operator reset is visible as 0", () => {
+    // The dashboard button (and a dispatch from Todo) reset the counters; the
+    // API then reports the baseline the numbers are counted from, so the UI
+    // explains why the chips are back at 0 ("executions were not reset" bug).
+    assert.match(api, /executions_reset_at\?: string;/);
+    assert.ok(
+      detail.includes("counted since:"),
+      "the counters block must render the reset baseline",
+    );
+    assert.match(detail, /function formatResetAt\(/);
+    assert.ok(
+      detail.includes("Counters are counted since this reset"),
+      "the baseline chip must explain that older attempts were cleared",
+    );
+  });
 });
