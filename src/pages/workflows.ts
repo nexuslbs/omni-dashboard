@@ -38,8 +38,8 @@ export function renderWorkflows(container: HTMLElement): void {
       <span><strong>Field precedence:</strong> workflow role &gt; workflow field &gt; kanban task &gt; board &gt; channel &gt; global.</span>
     </div>
     <div style="margin-bottom:1rem;">
-      <button id="wf-new-btn" class="btn-primary" style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ New Workflow</button>
-      <button id="wf-import-btn" class="btn" style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;margin-left:0.5rem;">Import</button>
+      <button id="wf-new-btn" class="btn-primary" style="background:rgba(125,211,252,0.15);border:1px solid rgba(125,211,252,0.3);color:var(--accent-cyan, #7dd3fc);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ New Workflow</button>
+      <button id="wf-import-btn" class="btn" style="background:rgba(125,211,252,0.15);border:1px solid rgba(125,211,252,0.3);color:var(--accent-cyan, #7dd3fc);border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;margin-left:0.5rem;">Import</button>
       <div class="db-hint" style="margin-top:.4rem;">Changes are written to workflows.yml and apply on save.</div>
     </div>
     <div id="workflow-form-wrap" style="display:none;"></div>

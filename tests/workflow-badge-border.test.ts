@@ -25,7 +25,7 @@ describe("Task Details: main-box Workflow badge has a border", () => {
   it("the message-box workflow badge (reference) declares a 1px cyan border", () => {
     const card = readFileSync(new URL("../src/lib/message-card.ts", import.meta.url), "utf-8");
     assert.ok(card.includes('class="ev-workflow-badge"'), "message boxes use .ev-workflow-badge");
-    assert.equal(messageBoxBorder, "1px solid rgba(34, 211, 238, 0.25)");
+    assert.equal(messageBoxBorder, "1px solid rgba(125, 211, 252, 0.25)");
   });
 
   it("kanban-detail renders the workflow value with that same border", () => {

@@ -65,7 +65,7 @@ export function renderModels(container: HTMLElement): void {
         <input type="text" id="filter-provider" class="filter-input" placeholder="Search provider..." />
       </div>
       <div class="filter-actions" style="margin-left:auto;">
-        <button id="models-import-btn" class="btn" style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;">Import</button>
+        <button id="models-import-btn" class="btn" style="background:rgba(125,211,252,0.15);border:1px solid rgba(125,211,252,0.3);color:var(--accent-cyan, #7dd3fc);border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;">Import</button>
         <button id="add-provider-btn" class="btn" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:#a78bfa;border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;">+ Add Provider</button>
         <button id="refresh-models-btn" class="btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#34d399;border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">↻ Refresh</button>
       </div>

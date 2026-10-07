@@ -16,7 +16,7 @@ describe("Import button wiring (plugin-list.ts)", () => {
     assert.match(listSrc, /importBtnId/);
     assert.match(listSrc, /\$\{ibId\}/);
     assert.match(listSrc, /Import/);
-    assert.match(listSrc, /rgba\(6,182,212/); // cyan/teal accent
+    assert.match(listSrc, /rgba\(125,211,252/); // pastel cyan/teal accent
   });
 
   it("wires the Import button to showImportModal with a page reload", () => {

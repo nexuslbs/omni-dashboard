@@ -195,7 +195,7 @@ export function renderConfigField(
             ${fallbackOption(String(value ?? ""), field.allowed_values)}
             ${options.join("")}
           </select>
-          <button type="button" class="plugin-refresh-models-btn" title="Refresh models" data-plugin-config="true" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.85rem;color:#22d3ee;white-space:nowrap;line-height:1;">⟳</button>
+          <button type="button" class="plugin-refresh-models-btn" title="Refresh models" data-plugin-config="true" data-key="${escapeHtml(field.key)}" data-depends-on="${escapeHtml(field.depends_on || "")}" style="background:rgba(125,211,252,0.1);border:1px solid rgba(125,211,252,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.85rem;color:var(--accent-cyan);white-space:nowrap;line-height:1;">⟳</button>
         </div>`;
       break;
     }

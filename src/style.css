@@ -1,5 +1,11 @@
 /* ── Design System: Dark SaaS Theme ── */
 :root {
+  /* Native controls and their popups (native <select> popup shell, scrollbars,
+     date pickers, tooltips) must follow the dark theme. Without this the OS
+     renders them light: a white popup, and white-on-white text on hover
+     (operator report 2026-10-06). */
+  color-scheme: dark;
+
   --bg-primary: #0a0f1e;
   --bg-secondary: #111827;
   --bg-card: rgba(255, 255, 255, 0.03);
@@ -19,14 +25,15 @@
 
   --accent-purple: #8b5cf6;
   --accent: #8b5cf6;
-  --accent-cyan: #06b6d4;
+  /* Softer pastel accent (was the harsh #06b6d4 cyan) - operator report 2026-10-06. */
+  --accent-cyan: #7dd3fc;
   --accent-amber: #f59e0b;
   --accent-rose: #f43f5e;
   --accent-emerald: #10b981;
   --accent-blue: #3b82f6;
 
   --glow-purple: 0 0 20px rgba(139, 92, 246, 0.15);
-  --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.15);
+  --glow-cyan: 0 0 20px rgba(125, 211, 252, 0.15);
 
   --glass-bg: rgba(255, 255, 255, 0.03);
   --glass-border: rgba(255, 255, 255, 0.06);
@@ -588,9 +595,9 @@ a.thread-row {
 }
 
 .badge-info {
-  background: rgba(6, 182, 212, 0.1);
-  color: #22d3ee;
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  background: rgba(125, 211, 252, 0.1);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(125, 211, 252, 0.2);
 }
 
 .badge-purple {
@@ -600,9 +607,9 @@ a.thread-row {
 }
 
 .badge-cyan {
-  background: rgba(6, 182, 212, 0.1);
-  color: #22d3ee;
-  border: 1px solid rgba(6, 182, 212, 0.2);
+  background: rgba(125, 211, 252, 0.1);
+  color: var(--accent-cyan);
+  border: 1px solid rgba(125, 211, 252, 0.2);
 }
 
 .badge-blue {
@@ -2222,28 +2229,41 @@ a.thread-row {
    inline fixed-positioning is applied in JS to avoid clipping by parent stacking contexts. */
 .select-options {
   /* Base styles only: position/sizing handled by JS */
-  background: var(--bg-secondary, #1a1a2e);
+  background: var(--bg-secondary, #111827);
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  color: var(--text-primary, #f1f5f9);
 }
 
 .select-option {
   padding: 0.5rem;
   cursor: pointer;
-  color: #e0e0e0;
+  color: var(--text-primary, #f1f5f9);
   font-size: 0.85rem;
   transition: background 0.1s;
 }
 
-.select-option:hover {
-  background: rgba(139, 92, 246, 0.15);
-  color: #fff;
+/* Dark-appropriate hover/selection: an elevated dark surface with readable text.
+   Never a white background and never white-on-white (operator report 2026-10-06). */
+.select-option:hover,
+.select-option:focus-visible {
+  background: var(--bg-card-hover, rgba(255, 255, 255, 0.06));
+  color: var(--text-primary, #f1f5f9);
 }
 
 .select-option.selected {
-  background: rgba(139, 92, 246, 0.1);
-  color: var(--accent-purple, #a78bfa);
+  background: rgba(139, 92, 246, 0.18);
+  color: var(--text-accent, #a78bfa);
+}
+
+/* Informational empty state: a popup with no entries says so instead of
+   rendering as an empty box (operator report 2026-10-06). */
+.select-empty {
+  padding: 0.6rem 0.75rem;
+  color: var(--text-muted, #64748b);
+  font-size: 0.8rem;
+  font-style: italic;
 }
 
 /* Markdown rendered content */
@@ -3385,7 +3405,7 @@ a.thread-row {
   font-family: var(--font-mono, monospace);
   color: var(--accent-cyan);
   background: var(--bg-card, rgba(255, 255, 255, 0.04));
-  border: 1px solid rgba(34, 211, 238, 0.25);
+  border: 1px solid rgba(125, 211, 252, 0.25);
   border-radius: 4px;
   padding: 0.05rem 0.35rem;
   white-space: nowrap;
@@ -4510,10 +4530,13 @@ a.kanban-card {
 
 .select-options {
   /* Base styles only: position/sizing handled by JS */
-  background: var(--bg-secondary, #1a1a2e);
+  background: var(--bg-secondary, #111827);
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  /* Explicit dark text: the popup is appended to <body>, so it must never
+     inherit a light text colour from an outer context (white-on-white). */
+  color: var(--text-primary, #f1f5f9);
 }
 
 .select-option {
@@ -4523,8 +4546,10 @@ a.kanban-card {
   cursor: pointer;
 }
 
-.select-option:hover {
-  background: rgba(139, 92, 246, 0.15);
+.select-option:hover,
+.select-option:focus-visible {
+  background: var(--bg-card-hover, rgba(255, 255, 255, 0.06));
+  color: var(--text-primary);
 }
 
 .select-option.selected {
@@ -5792,10 +5817,11 @@ a.kanban-card {
 
 .select-options {
   z-index: 10000;
-  background: var(--bg-secondary, #1a1a2e);
+  background: var(--bg-secondary, #111827);
   border: 1px solid var(--glass-border, rgba(255, 255, 255, 0.08));
   border-radius: 8px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+  color: var(--text-primary, #f1f5f9);
   max-height: 240px;
   overflow-y: auto;
 }
@@ -5807,12 +5833,14 @@ a.kanban-card {
   cursor: pointer;
   transition: background 0.1s ease;
 }
-.select-option:hover {
-  background: rgba(139, 92, 246, 0.15);
+.select-option:hover,
+.select-option:focus-visible {
+  background: var(--bg-card-hover, rgba(255, 255, 255, 0.06));
+  color: var(--text-primary, #f1f5f9);
 }
 .select-option.selected {
-  background: rgba(139, 92, 246, 0.2);
-  color: var(--accent-purple, #8b5cf6);
+  background: rgba(139, 92, 246, 0.18);
+  color: var(--text-accent, #a78bfa);
 }
 
 /* ── Channel card layout ── */
@@ -5849,7 +5877,7 @@ a.kanban-card {
   border-color: #f59e0b !important;
 }
 .task-id-link.badge-cyan-link:hover {
-  border-color: #06b6d4 !important;
+  border-color: var(--accent-cyan) !important;
 }
 .task-id-link.badge-blue-link:hover {
   border-color: #3b82f6 !important;

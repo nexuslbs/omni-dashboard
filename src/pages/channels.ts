@@ -56,7 +56,7 @@ export function renderChannels(container: HTMLElement): void {
         </select>
       </div>
       <div class="filter-actions" style="margin-left:auto;">
-        <button id="channels-import-btn" class="btn" style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">Import</button>
+        <button id="channels-import-btn" class="btn" style="background:rgba(125,211,252,0.15);border:1px solid rgba(125,211,252,0.3);color:var(--accent-cyan, #7dd3fc);border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">Import</button>
         <button id="refresh-channels-btn" class="btn" style="background:rgba(16,185,129,0.1);border:1px solid rgba(16,185,129,0.2);color:#34d399;border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">↻ Refresh</button>
         <button id="reset-channels-filter" class="btn" style="background:rgba(244,63,94,0.1);border:1px solid rgba(244,63,94,0.2);color:#fb7185;border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;font-weight:500;line-height:12px;white-space:nowrap;">✕ Reset</button>
       </div>

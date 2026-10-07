@@ -127,12 +127,14 @@ export function enhanceSelectElement(select: HTMLSelectElement): void {
       float.style.maxHeight = `${Math.min(spaceBelow - 8, 240)}px`;
     }
 
-    float.innerHTML = Array.from(select.options)
-      .map(
-        (o) =>
-          `<div class="select-option${o.selected ? " selected" : ""}" data-value="${o.value}">${escapeHtml(o.label)}</div>`,
-      )
-      .join("");
+    float.innerHTML = Array.from(select.options).length
+      ? Array.from(select.options)
+          .map(
+            (o) =>
+              `<div class="select-option${o.selected ? " selected" : ""}" data-value="${o.value}">${escapeHtml(o.label)}</div>`,
+          )
+          .join("")
+      : '<div class="select-empty">No options available</div>';
 
     float.addEventListener("click", (ev) => {
       const opt = (ev.target as HTMLElement).closest(".select-option") as HTMLElement;

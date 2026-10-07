@@ -12,7 +12,7 @@ export function renderSettings(container: HTMLElement): void {
         <h1 class="page-title">Settings</h1>
         <p class="page-subtitle">System configuration and environment variables</p>
       </div>
-      <button id="settings-import-btn" class="btn" style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">Import</button>
+      <button id="settings-import-btn" class="btn" style="background:rgba(125,211,252,0.15);border:1px solid rgba(125,211,252,0.3);color:var(--accent-cyan, #7dd3fc);border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">Import</button>
     </div>
     <div id="settings-content"><div class="loading" style="padding:3rem;text-align:center;">Loading settings...</div></div>
   `;

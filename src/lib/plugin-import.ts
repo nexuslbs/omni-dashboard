@@ -680,7 +680,7 @@ export function showImportFlow(config: ImportFlowConfig, onDone?: () => void): v
         </label>
         <div style="display:flex;gap:0.5rem;justify-content:flex-end;margin-top:1.25rem;">
           <button id="import-cancel" class="btn btn-danger" style="background:rgba(244,63,94,0.15);border:1px solid rgba(244,63,94,0.3);color:#fb7185;border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;">Cancel</button>
-          <button id="import-fetch" class="btn-primary" style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;font-weight:500;">Fetch &amp; Preview</button>
+          <button id="import-fetch" class="btn-primary" style="background:rgba(125,211,252,0.15);border:1px solid rgba(125,211,252,0.3);color:var(--accent-cyan, #7dd3fc);border-radius:6px;padding:0.375rem 0.9rem;cursor:pointer;font-size:0.8rem;font-weight:500;">Fetch &amp; Preview</button>
         </div>
       </div>
 

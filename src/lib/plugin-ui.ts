@@ -206,7 +206,7 @@ export function renderActionButtons(
 
   if (showReinstall) {
     buttons.push(
-      `<button type="button" class="plugin-reinstall-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>`,
+      `<button type="button" class="plugin-reinstall-btn" style="background:rgba(125,211,252,0.1);border:1px solid rgba(125,211,252,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Reinstall</button>`,
     );
   }
 
@@ -218,13 +218,13 @@ export function renderActionButtons(
 
   if (showDownload) {
     buttons.push(
-      `<button type="button" class="plugin-download-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Download</button>`,
+      `<button type="button" class="plugin-download-btn" style="background:rgba(125,211,252,0.1);border:1px solid rgba(125,211,252,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Download</button>`,
     );
   }
 
   if (showUpdate) {
     buttons.push(
-      `<button type="button" class="plugin-update-btn" style="background:rgba(6,182,212,0.1);border:1px solid rgba(6,182,212,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Update</button>`,
+      `<button type="button" class="plugin-update-btn" style="background:rgba(125,211,252,0.1);border:1px solid rgba(125,211,252,0.2);border-radius:6px;padding:0.25rem 0.5rem;cursor:pointer;font-size:0.75rem;color:#22d3ee;">Update</button>`,
     );
   }
 

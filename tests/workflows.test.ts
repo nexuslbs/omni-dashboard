@@ -273,8 +273,8 @@ describe("Workflows page form (selects, checkboxes, tel, role sections)", () => 
     );
     assert.ok(page.includes('id="wf-new-btn" class="btn-primary"'), "new workflow button");
     assert.ok(
-      page.includes("background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee"),
-      "new workflow is cyan (Import style)",
+      page.includes("background:rgba(125,211,252,0.15);border:1px solid rgba(125,211,252,0.3);color:var(--accent-cyan, #7dd3fc)"),
+      "new workflow is pastel cyan (Import style)",
     );
     assert.ok(
       page.includes("background:rgba(16,185,129,0.1);color:#34d399;border:1px solid rgba(16,185,129,0.2)"),

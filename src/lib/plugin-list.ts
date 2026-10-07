@@ -126,7 +126,7 @@ export function createPluginPage(cfg: PluginPageConfig) {
         </div>
         <div style="display:flex;gap:0.5rem;">
           <button id="btn-reload-plugins" class="btn-secondary" title="Reload all plugins from disk configuration" style="background:rgba(148,163,184,0.1);border:1px solid var(--glass-border);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;color:var(--text-secondary);">⟳ Reload</button>
-          <button id="${ibId}" class="btn-primary" title="Batch install/override/remove from a remote.yml URL" style="background:rgba(6,182,212,0.15);border:1px solid rgba(6,182,212,0.3);color:#22d3ee;border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">Import</button>
+          <button id="${ibId}" class="btn-primary" title="Batch install/override/remove from a remote.yml URL" style="background:rgba(125,211,252,0.15);border:1px solid rgba(125,211,252,0.3);color:var(--accent-cyan, #7dd3fc);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">Import</button>
           <button id="${abId}" class="btn-primary" style="background:rgba(139,92,246,0.15);border:1px solid rgba(139,92,246,0.3);color:var(--accent-purple);border-radius:6px;padding:0.375rem 0.75rem;cursor:pointer;font-size:0.8rem;font-weight:500;white-space:nowrap;">+ Add</button>
         </div>
       </div>

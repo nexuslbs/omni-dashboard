@@ -633,7 +633,7 @@ function showStatus(el: HTMLElement, message: string, type: "success" | "error" 
   const colors: Record<string, string> = {
     success: "background:rgba(16,185,129,0.15);color:#34d399;border:1px solid rgba(16,185,129,0.3);",
     error: "background:rgba(244,63,94,0.15);color:#fb7185;border:1px solid rgba(244,63,94,0.3);",
-    info: "background:rgba(6,182,212,0.15);color:#22d3ee;border:1px solid rgba(6,182,212,0.3);",
+    info: "background:rgba(125,211,252,0.15);color:var(--accent-cyan, #7dd3fc);border:1px solid rgba(125,211,252,0.3);",
   };
   el.style.cssText += colors[type] || colors.info;
 }

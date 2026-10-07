@@ -2,7 +2,7 @@
   <defs>
     <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" stop-color="#8b5cf6"/>
-      <stop offset="100%" stop-color="#06b6d4"/>
+      <stop offset="100%" stop-color="#7dd3fc"/>
     </linearGradient>
   </defs>
   <polygon points="32,4 58,20 58,44 32,60 6,44 6,20" fill="url(#g)" opacity="0.9"/>

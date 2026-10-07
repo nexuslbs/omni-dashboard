@@ -49,7 +49,7 @@ const TYPE_COLORS: Record<string, string> = {
   tool_output: "#a78bfa",
   iteration: "#64748b",
   delegate_result: "#f43f5e",
-  skill: "#06b6d4",
+  skill: "#7dd3fc",
 };
 
 export function typeColor(type: string): string {

@@ -90,10 +90,10 @@ async function loadHookInfo(hookId: string): Promise<Record<string, any> | null>
       <div id="hook-counters" style="margin-top:1rem;padding-top:1rem;border-top:1px solid var(--border-primary);">
         <div class="detail-label">Counters</div>
         <div style="display:flex;align-items:center;gap:1rem;margin-bottom:0.5rem;">
-          <div style="font-size:1.35rem;font-weight:600;color:var(--accent-cyan,#22d3ee);">${escapeHtml(formatHookCounter(hook.counter, scope))}</div>
+          <div style="font-size:1.35rem;font-weight:600;color:var(--accent-cyan);">${escapeHtml(formatHookCounter(hook.counter, scope))}</div>
           <div style="font-size:0.8rem;color:var(--text-muted);">trigger count: ${escapeHtml(String(hook.count ?? 1))}</div>
         </div>
-        <pre style="background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:6px;padding:0.625rem;font-size:0.75rem;color:var(--accent-cyan,#22d3ee);white-space:pre-wrap;word-break:break-word;margin:0;">${escapeHtml(formatHookCounterJson(hook.counter))}</pre>
+        <pre style="background:rgba(0,0,0,0.3);border:1px solid var(--glass-border);border-radius:6px;padding:0.625rem;font-size:0.75rem;color:var(--accent-cyan);white-space:pre-wrap;word-break:break-word;margin:0;">${escapeHtml(formatHookCounterJson(hook.counter))}</pre>
       </div>
     `;
     return hook;
