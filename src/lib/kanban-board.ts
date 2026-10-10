@@ -245,18 +245,24 @@ export function renderTaskCard(task: KanbanTask): string {
         ? "kanban-priority-med"
         : "kanban-priority-low";
   const timeAgo = formatRelativeTime(task.created_at);
-  // The card IS a real anchor to the task details route (`/kanban/<id>`), so
-  // the browser's native link semantics apply: middle-click and Ctrl/Cmd+click
-  // open the details page in a new tab, the context menu offers "open in new
-  // tab", the target URL shows on hover. The `draggable="false"` attribute
-  // suppresses the native LINK drag (which would put the URL, not the task id,
-  // on the dataTransfer); the board wires the card's own drag-and-drop via
-  // `card.draggable = true` in loadBoard, so press-and-drag still drags the
-  // card exactly as before.
   const href = `/kanban/${encodeURIComponent(task.id)}`;
+  // Responsive link-vs-drag: cards are real links to the task details route
+  // (`/kanban/<id>`) ONLY on large, fine-pointer screens, where the browser's
+  // native link semantics apply (middle-click and Ctrl/Cmd+click open a new
+  // tab, the context menu offers "open in new tab", the URL shows on hover).
+  // On small / primary-touch screens the card renders as a plain <div>: the
+  // native link gesture swallows the touch drag (the released link change
+  // broke dragging there), and drag & drop is handled entirely by the touch
+  // handlers (long-press, then move in any direction). `draggable="false"`
+  // suppresses the native LINK drag on desktop (which would put the URL, not
+  // the task id, on the dataTransfer); loadBoard flips cards to
+  // `card.draggable = true` so the board's own desktop drag-and-drop works.
+  const asLink = cardIsLink();
+  const cardTag = asLink ? "a" : "div";
+  const hrefAttr = asLink ? ` href="${href}"` : "";
 
   return `
-    <a class="kanban-card" href="${href}" data-task-id="${escapeHtml(task.id)}" draggable="false">
+    <${cardTag} class="kanban-card${asLink ? " kanban-card-link" : ""}"${hrefAttr} data-task-id="${escapeHtml(task.id)}" draggable="false">
       <div class="kanban-card-top">
         <span class="kanban-priority ${priorityClass}">${priorityLabel}</span>
         <span class="kanban-task-id" style="font-size:0.7rem;color:var(--text-muted);font-family:monospace;">${task.display_id || task.id}</span>
@@ -268,8 +274,124 @@ export function renderTaskCard(task: KanbanTask): string {
         ${task.assignee ? `<span class="kanban-assignee">@${escapeHtml(task.assignee)}</span>` : ""}
         <span class="kanban-time">${timeAgo}</span>
       </div>
-    </a>
+    </${cardTag}>
   `;
+}
+
+// ── Responsive card mode: real links only on large, fine-pointer screens ──
+// The card is a real `<a href="/kanban/<id>">` (native link semantics:
+// middle-click/Ctrl+click new tab, "open in new tab" menu, hover URL) ONLY
+// when the primary pointer is fine and the viewport is wide enough. On small
+// / primary-touch screens the card renders as a plain <div>: there the native
+// link gesture swallows the touch drag (the regression this fixes), and drag
+// & drop is handled by the touch handlers. `(pointer: coarse)` matches
+// phones/tablets; `(max-width: 640px)` covers narrow viewports too.
+const cardLinkMQ: MediaQueryList = window.matchMedia("(pointer: coarse), (max-width: 640px)");
+let lastShowArchived = false;
+let cardModeReloadBound = false;
+
+/** True when task cards should render as real links (large, fine-pointer screens). */
+export function cardIsLink(): boolean {
+  return !cardLinkMQ.matches;
+}
+
+/** Re-render the board when the link-vs-div card mode flips (resize/rotate). */
+function bindCardModeReload(): void {
+  if (cardModeReloadBound) return;
+  cardModeReloadBound = true;
+  const onChange = (): void => {
+    // The `<a>` vs `<div>` choice is baked into the rendered markup, so
+    // crossing the breakpoint must re-render the board for the flip to apply.
+    if (document.getElementById("kanban-board")) {
+      void loadBoard(lastShowArchived, currentBoardKey());
+    }
+  };
+  if (typeof cardLinkMQ.addEventListener === "function") {
+    cardLinkMQ.addEventListener("change", onChange);
+  } else {
+    // Legacy Safari (< 14): MediaQueryList#addListener
+    cardLinkMQ.addListener?.(onChange);
+  }
+}
+
+// ── Auto-scroll while dragging ──
+// While a card drag is in flight (desktop HTML5 drag & drop or an armed touch
+// drag), this rAF loop scrolls the page when the pointer nears a viewport
+// edge, so a card can be dropped into a panel that was off-screen. The
+// dashboard scrolls inside `.main-content` (not the window), so the loop
+// scrolls the nearest scrollable ancestor of the board; the window itself is
+// scrolled as a fallback (also horizontally). Pointer coords are refreshed by
+// `dragover` (desktop) and `touchmove` (touch); the loop stops on
+// dragend/touchend/touchcancel.
+const SCROLL_EDGE_PX = 56;
+const SCROLL_MAX_STEP = 14;
+let autoScrollRaf: number | null = null;
+let dragPointerX = 0;
+let dragPointerY = 0;
+let dragPointerDocBound = false;
+
+function setDragPointer(x: number, y: number): void {
+  dragPointerX = x;
+  dragPointerY = y;
+}
+
+/** Nearest ancestor (inclusive) that can scroll on the given axis. */
+function scrollableAncestor(start: HTMLElement | null, axis: "x" | "y"): HTMLElement | null {
+  const overflow = axis === "x" ? "overflowX" : "overflowY";
+  const avail = axis === "x" ? "scrollWidth" : "scrollHeight";
+  const client = axis === "x" ? "clientWidth" : "clientHeight";
+  let node: HTMLElement | null = start;
+  while (node) {
+    const s = window.getComputedStyle(node);
+    const mode = s[overflow];
+    if ((mode === "auto" || mode === "scroll" || mode === "overlay") && node[avail] > node[client] + 1) {
+      return node;
+    }
+    node = node.parentElement;
+  }
+  return null;
+}
+
+function startAutoScroll(): void {
+  if (autoScrollRaf !== null) return;
+  const frame = (): void => {
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const edge = SCROLL_EDGE_PX;
+    let dx = 0;
+    if (dragPointerX < edge) dx = -1;
+    else if (dragPointerX > vw - edge) dx = 1;
+    let dy = 0;
+    if (dragPointerY < edge) dy = -1;
+    else if (dragPointerY > vh - edge) dy = 1;
+    if (dx !== 0 || dy !== 0) {
+      const boardEl = document.getElementById("kanban-board");
+      const distX = dx < 0 ? dragPointerX : vw - dragPointerX;
+      const distY = dy < 0 ? dragPointerY : vh - dragPointerY;
+      const doc = document.scrollingElement || document.documentElement;
+      if (dy !== 0 && distY < edge) {
+        const step = Math.max(4, Math.round(SCROLL_MAX_STEP * ((edge - distY) / edge)));
+        const scroller = scrollableAncestor(boardEl, "y");
+        if (scroller) scroller.scrollTop += dy * step;
+        if (doc.scrollHeight > doc.clientHeight + 1) window.scrollBy(0, dy * step);
+      }
+      if (dx !== 0 && distX < edge) {
+        const step = Math.max(4, Math.round(SCROLL_MAX_STEP * ((edge - distX) / edge)));
+        const scroller = scrollableAncestor(boardEl, "x");
+        if (scroller) scroller.scrollLeft += dx * step;
+        if (doc.scrollWidth > doc.clientWidth + 1) window.scrollBy(dx * step, 0);
+      }
+    }
+    autoScrollRaf = window.requestAnimationFrame(frame);
+  };
+  autoScrollRaf = window.requestAnimationFrame(frame);
+}
+
+function stopAutoScroll(): void {
+  if (autoScrollRaf !== null) {
+    window.cancelAnimationFrame(autoScrollRaf);
+    autoScrollRaf = null;
+  }
 }
 
 export async function moveTask(taskId: string, status: string): Promise<void> {
@@ -327,6 +449,8 @@ export async function loadBoard(
   boardKey: string | null = null,
   tagFilter?: string,
 ): Promise<void> {
+  lastShowArchived = showArchived;
+  bindCardModeReload();
   // A reload after a card move may omit the board key; stay on the current
   // board (URL ?board= wins, then the last visited board) instead of falling
   // back to the "choose a board" prompt.
@@ -479,11 +603,31 @@ export async function loadBoard(
     });
 
     // ── Touch-based drag-and-drop (mobile support) ──
+    // HTML5 drag & drop does not exist on touch devices, so the board runs its
+    // own touch drag: a LONG-PRESS (hold ~250ms without moving) arms the drag,
+    // after which the card follows the finger in ANY direction (panels are
+    // stacked full-width on small screens, so cross-panel moves are often
+    // mostly vertical). Immediate swipe gestures keep scrolling the page, and
+    // a quick tap still opens the task details page. While dragging, the
+    // auto-scroll loop keeps the page moving when the finger rests near a
+    // viewport edge, so a card can be dropped into an off-screen panel.
     let touchDragTaskId: string | null = null;
     let touchStartY = 0;
     let touchStartX = 0;
     let isTouchDragging = false;
     let touchMoved = false;
+    let longPressTimer: number | null = null;
+    let longPressArmed = false;
+    const TOUCH_LONG_PRESS_MS = 250;
+    const TOUCH_DRAG_THRESHOLD = 12;
+
+    const cancelTouchLongPress = (): void => {
+      if (longPressTimer !== null) {
+        window.clearTimeout(longPressTimer);
+        longPressTimer = null;
+      }
+      longPressArmed = false;
+    };
 
     document.querySelectorAll(".kanban-card").forEach((card) => {
       card.addEventListener(
@@ -492,11 +636,26 @@ export async function loadBoard(
           if ((e.target as HTMLElement).closest("button, select, input, textarea")) return;
           const te = e as TouchEvent;
           const touch = te.touches[0];
+          if (!touch) return;
+          cancelTouchLongPress();
           touchStartX = touch.clientX;
           touchStartY = touch.clientY;
           touchDragTaskId = card.getAttribute("data-task-id");
           isTouchDragging = false;
           touchMoved = false;
+          // Arm the drag via long-press: an immediate swipe is a page scroll,
+          // a stationary hold turns any subsequent movement into a card drag.
+          longPressTimer = window.setTimeout(() => {
+            longPressTimer = null;
+            if (touchDragTaskId && !touchMoved) {
+              longPressArmed = true;
+              // Claim the gesture so the browser does not turn it into a
+              // scroll or a system long-press preview.
+              (card as HTMLElement).style.touchAction = "none";
+              setDragPointer(touchStartX, touchStartY);
+              startAutoScroll();
+            }
+          }, TOUCH_LONG_PRESS_MS);
         },
         { passive: true },
       );
@@ -507,22 +666,29 @@ export async function loadBoard(
           if (!touchDragTaskId) return;
           const te = e as TouchEvent;
           const touch = te.touches[0];
+          if (!touch) return;
           const dx = touch.clientX - touchStartX;
           const dy = touch.clientY - touchStartY;
           const dist = Math.hypot(dx, dy);
-          // Only treat as drag if horizontal movement dominates (not scroll)
-          if (dist > 15 && Math.abs(dx) > Math.abs(dy) && !isTouchDragging) {
-            isTouchDragging = true;
-          }
           // ANY movement while touching is drag intent: the release must not
           // be treated as an open-card tap. 2 px is a jitter tolerance so a
           // zero-movement tap still opens the task detail page.
-          if (dist > 2) {
-            touchMoved = true;
+          if (dist > 2) touchMoved = true;
+          if (!isTouchDragging && !longPressArmed && dist > TOUCH_DRAG_THRESHOLD) {
+            // Movement before the long-press fired: this is a page scroll (or
+            // a swipe that should stay a scroll), not a drag - disarm it.
+            cancelTouchLongPress();
+            touchDragTaskId = null;
+            return;
+          }
+          if (!isTouchDragging && longPressArmed && dist > 2) {
+            // Long-press engaged: any movement is now the drag itself.
+            isTouchDragging = true;
           }
           if (isTouchDragging) {
             e.preventDefault();
-            // Highlight column under finger
+            setDragPointer(touch.clientX, touch.clientY);
+            // Highlight the column under the finger
             document.querySelectorAll(".kanban-col-body").forEach((col) => {
               const rect = col.getBoundingClientRect();
               if (
@@ -544,21 +710,28 @@ export async function loadBoard(
       card.addEventListener(
         "touchend",
         (e) => {
+          const cardEl = card as HTMLElement;
+          cardEl.style.touchAction = "";
+          cancelTouchLongPress();
+          stopAutoScroll();
           if (!touchDragTaskId) return;
           const te = e as TouchEvent;
           const touch = te.changedTouches[0];
-          // A touch drag (started or completed) can still surface a
-          // synthesized click; suppress it so the board view is kept.
-          if (isTouchDragging || touchMoved) armClickSuppression();
+          // A touch drag (started, or a long-press arm, or any real movement)
+          // can still surface a synthesized click; suppress it so the board
+          // view is kept.
+          if (isTouchDragging || touchMoved || longPressArmed) armClickSuppression();
           if (isTouchDragging) {
-            // Find column under the release point
-            const dropEl = document.elementFromPoint(touch.clientX, touch.clientY);
+            // Find the column under the release point (the auto-scroll may
+            // have settled a different panel under the finger).
+            const dropEl = touch ? document.elementFromPoint(touch.clientX, touch.clientY) : null;
             const colBody = dropEl?.closest(".kanban-col-body");
             const newStatus = colBody?.getAttribute("data-column");
             if (newStatus && touchDragTaskId) {
               const id = touchDragTaskId;
               touchDragTaskId = null;
               isTouchDragging = false;
+              longPressArmed = false;
               // Reset highlights
               document.querySelectorAll(".kanban-col-body").forEach((col) => {
                 (col as HTMLElement).style.background = "";
@@ -581,9 +754,22 @@ export async function loadBoard(
           });
           touchDragTaskId = null;
           isTouchDragging = false;
+          longPressArmed = false;
         },
         { passive: true },
       );
+
+      card.addEventListener("touchcancel", () => {
+        (card as HTMLElement).style.touchAction = "";
+        cancelTouchLongPress();
+        stopAutoScroll();
+        document.querySelectorAll(".kanban-col-body").forEach((col) => {
+          (col as HTMLElement).style.background = "";
+        });
+        touchDragTaskId = null;
+        isTouchDragging = false;
+        longPressArmed = false;
+      });
     });
 
     // ── Desktop drag-and-drop ──
@@ -614,6 +800,10 @@ export async function loadBoard(
           (e as DragEvent).dataTransfer!.setData("text/plain", taskId);
           (e as DragEvent).dataTransfer!.effectAllowed = "move";
         }
+        // Feed + start the auto-scroll loop: the pointer near a viewport edge
+        // scrolls the page so the card can be dropped in an off-screen panel.
+        setDragPointer((e as DragEvent).clientX, (e as DragEvent).clientY);
+        startAutoScroll();
         // Remember the source column: a cross-column drop must land the moved
         // task at the TOP of the destination column (not at the drop point).
         dragSourceColumn =
@@ -621,12 +811,22 @@ export async function loadBoard(
       });
       card.addEventListener("dragend", () => {
         dragSourceColumn = null;
+        stopAutoScroll();
         // The drop can be followed by a click on the card (same-place drop in
         // Chromium, every dragend in Firefox/Safari); consume it so the board
         // is not left.
         armClickSuppression();
       });
     });
+
+    // Feed the desktop auto-scroll loop: `dragover` fires continuously while
+    // a drag is in flight, giving us the cursor position for edge detection.
+    if (!dragPointerDocBound) {
+      dragPointerDocBound = true;
+      document.addEventListener("dragover", (e) => {
+        setDragPointer((e as DragEvent).clientX, (e as DragEvent).clientY);
+      });
+    }
 
     // Wire up drag-and-drop columns
     document.querySelectorAll(".kanban-col-body").forEach((col) => {
